@@ -1,0 +1,60 @@
+# Dependencies
+node_modules
+npm-debug.log*
+.npm
+
+# Testing
+coverage
+.nyc_output
+*.log
+
+# Build outputs (Vercel will build)
+.next
+out
+dist
+
+# Environment files (use Vercel env vars instead)
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE files
+.vscode
+.idea
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Development files
+README.md
+*.md
+.eslintrc.json
+.prettierrc
+.prettierignore
+jest.config.js
+jest.setup.js
+playwright.config.ts
+vitest.config.ts
+
+# Templates and docs
+templates/
+docs/
+e2e/
+.storybook/
+stories/
+
+# CI/CD
+.github/
+.husky/
+ci/
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
