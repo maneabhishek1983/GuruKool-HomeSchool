@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useSyncContext } from '../../../../lib/syncContext';
+import { useSessionStore, defaultSessions } from '@/store/sessionStore';
 
 interface SessionDetails {
   id: string;
@@ -14,13 +15,13 @@ interface SessionDetails {
   time: string;
   address: string;
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
-  notes?: string;
-  lessonPlan?: string;
-  materials?: string[];
+  notes?: string | undefined;
+  lessonPlan?: string | undefined;
+  materials?: string[] | undefined;
   previousSessions?: {
     date: string;
     notes: string;
-  }[];
+  }[] | undefined;
 }
 
 export default function SessionDetailsPage() {
@@ -31,84 +32,46 @@ export default function SessionDetailsPage() {
   const [session, setSession] = useState<SessionDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState('');
+  const { startSession, completeSession, cancelSession, addNote } = useSessionStore();
 
   useEffect(() => {
-    // In a real app, this would be an API call
+    // Use local store as data source for now
     const fetchSessionDetails = async () => {
       setLoading(true);
       try {
-        // Simulating API call with timeout
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Mock data based on session ID
-        if (sessionId === '1') {
-          setSession({
-            id: '1',
-            childName: 'Emma Smith',
-            parentName: 'John Smith',
-            subject: 'Mathematics',
-            date: '2025-04-04',
-            time: '14:00 - 16:00',
-            address: '123 Main St, Anytown, USA',
-            status: 'scheduled',
+        await new Promise(resolve => setTimeout(resolve, 200));
+        const mapLesson: Record<string, Partial<SessionDetails>> = {
+          '1': {
             lessonPlan: 'Review multiplication tables, introduce basic algebra concepts, practice word problems.',
             materials: ['Textbook pages 45-50', 'Worksheet on basic equations', 'Multiplication flash cards'],
             previousSessions: [
-              {
-                date: '2025-03-28',
-                notes: 'Completed addition and subtraction review. Emma is making good progress.'
-              },
-              {
-                date: '2025-03-21',
-                notes: 'Introduced fractions. Need more practice next time.'
-              }
-            ]
-          });
-        } else if (sessionId === '2') {
-          setSession({
-            id: '2',
-            childName: 'Noah Smith',
-            parentName: 'John Smith',
-            subject: 'Science',
-            date: '2025-04-05',
-            time: '10:00 - 12:00',
-            address: '123 Main St, Anytown, USA',
-            status: 'scheduled',
+              { date: '2025-03-28', notes: 'Completed addition and subtraction review. Emma is making good progress.' },
+              { date: '2025-03-21', notes: 'Introduced fractions. Need more practice next time.' },
+            ],
+          },
+          '2': {
             lessonPlan: 'Introduction to the solar system, planet characteristics, and space exploration.',
             materials: ['Science textbook chapter 8', 'Solar system model', 'NASA videos'],
             previousSessions: [
-              {
-                date: '2025-03-29',
-                notes: 'Completed unit on ecosystems. Noah showed great interest in marine biology.'
-              }
-            ]
-          });
-        } else if (sessionId === '3') {
-          setSession({
-            id: '3',
-            childName: 'Olivia Johnson',
-            parentName: 'Sarah Johnson',
-            subject: 'English',
-            date: '2025-04-03',
-            time: '13:00 - 15:00',
-            address: '456 Oak Ave, Anytown, USA',
-            status: 'completed',
-            notes: 'Covered chapters 3-5. Homework assigned for next week.',
-            lessonPlan: 'Reading comprehension exercises, grammar review, and creative writing practice.',
+              { date: '2025-03-29', notes: 'Completed unit on ecosystems. Noah showed great interest in marine biology.' },
+            ],
+          },
+          '3': {
+            lessonPlan: 'Reading comprehension, grammar review, and creative writing practice.',
             materials: ['English textbook', 'Grammar worksheet', 'Short story collection'],
             previousSessions: [
-              {
-                date: '2025-03-27',
-                notes: 'Focused on vocabulary building and sentence structure. Olivia is progressing well.'
-              },
-              {
-                date: '2025-03-20',
-                notes: 'Introduced essay writing techniques. Need to work on paragraph transitions.'
-              }
-            ]
-          });
+              { date: '2025-03-27', notes: 'Vocabulary building and sentence structure.' },
+              { date: '2025-03-20', notes: 'Essay writing techniques and transitions.' },
+            ],
+          },
+        };
+
+        const raw = localStorage.getItem('gkh_sessions_v1');
+        const list = raw ? JSON.parse(raw) : defaultSessions;
+        const base = list.find((s: any) => s.id === sessionId);
+        if (base) {
+          setSession({ ...base, ...(mapLesson[sessionId] || {}) });
         } else {
-          // Default fallback for unknown IDs
           setSession(null);
         }
       } catch (error) {
@@ -123,32 +86,22 @@ export default function SessionDetailsPage() {
 
   const handleStartSession = () => {
     if (session) {
-      // In a real app, this would update the session status via API
-      setSession({
-        ...session,
-        status: 'in-progress'
-      });
+      startSession(session.id);
+      setSession({ ...session, status: 'in-progress' });
     }
   };
 
   const handleCompleteSession = () => {
     if (session) {
-      // In a real app, this would update the session status via API
-      setSession({
-        ...session,
-        status: 'completed',
-        notes: notes || session.notes
-      });
+      completeSession(session.id, notes || session.notes);
+      setSession({ ...session, status: 'completed', notes: notes || session.notes });
     }
   };
 
   const handleCancelSession = () => {
     if (session) {
-      // In a real app, this would update the session status via API
-      setSession({
-        ...session,
-        status: 'cancelled'
-      });
+      cancelSession(session.id);
+      setSession({ ...session, status: 'cancelled' });
     }
   };
 

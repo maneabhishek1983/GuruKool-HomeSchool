@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useSessionStore } from '@/store/sessionStore';
 import { useSearchParams } from 'next/navigation';
 import { useSyncContext } from '../../../lib/syncContext';
 
@@ -17,52 +18,27 @@ interface SessionState {
   notes?: string;
 }
 
-export default function TeacherSessionsPage() {
+function TeacherSessionsContent() {
   const { isOnline } = useSyncContext();
   const searchParams = useSearchParams();
   const filter = searchParams.get('filter') || 'all';
 
-  // State for sessions
-  const [sessions, setSessions] = useState<SessionState[]>([
-    {
-      id: '1',
-      childName: 'Emma Smith',
-      parentName: 'John Smith',
-      subject: 'Mathematics',
-      date: '2025-04-04',
-      time: '14:00 - 16:00',
-      address: '123 Main St, Anytown, USA',
-      status: 'scheduled'
-    },
-    {
-      id: '2',
-      childName: 'Noah Smith',
-      parentName: 'John Smith',
-      subject: 'Science',
-      date: '2025-04-05',
-      time: '10:00 - 12:00',
-      address: '123 Main St, Anytown, USA',
-      status: 'scheduled'
-    },
-    {
-      id: '3',
-      childName: 'Olivia Johnson',
-      parentName: 'Sarah Johnson',
-      subject: 'English',
-      date: '2025-04-03',
-      time: '13:00 - 15:00',
-      address: '456 Oak Ave, Anytown, USA',
-      status: 'completed',
-      notes: 'Covered chapters 3-5. Homework assigned for next week.'
-    }
-  ]);
+  const { sessions, startSession } = useSessionStore();
 
   // Filter sessions based on status
   const filteredSessions = sessions.filter(session => {
-    if (filter === 'all') return true;
-    if (filter === 'upcoming') return session.status === 'scheduled';
-    if (filter === 'completed') return session.status === 'completed';
-    if (filter === 'cancelled') return session.status === 'cancelled';
+    if (filter === 'all') {
+      return true;
+    }
+    if (filter === 'upcoming') {
+      return session.status === 'scheduled';
+    }
+    if (filter === 'completed') {
+      return session.status === 'completed';
+    }
+    if (filter === 'cancelled') {
+      return session.status === 'cancelled';
+    }
     return true;
   });
 
@@ -94,7 +70,7 @@ export default function TeacherSessionsPage() {
         </div>
 
         {filteredSessions.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredSessions.map((session) => (
               <div key={session.id} className={`border rounded-lg p-4 shadow-sm ${
                 session.status === 'completed' ? 'bg-green-50' : 
@@ -127,7 +103,7 @@ export default function TeacherSessionsPage() {
                     View Details
                   </Link>
                   {session.status === 'scheduled' && (
-                    <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                    <button onClick={() => startSession(session.id)} className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
                       Start Session
                     </button>
                   )}
@@ -140,5 +116,13 @@ export default function TeacherSessionsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function TeacherSessionsPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto px-4 py-8"><h1 className="text-2xl font-bold mb-6">Loading sessions...</h1></div>}>
+      <TeacherSessionsContent />
+    </Suspense>
   );
 }
