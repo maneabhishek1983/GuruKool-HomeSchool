@@ -7,7 +7,7 @@ import {
   AutoCompleteInput,
   DateTimePicker,
   FileUpload,
-} from '../../design-system/components/forms';
+} from '@/design-system/components/forms';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),

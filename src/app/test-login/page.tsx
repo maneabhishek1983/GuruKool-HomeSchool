@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthContext } from '../../lib/authContext';
+import { useAuthContext } from '@/lib/authContext';
 
 export default function TestLoginPage() {
   const router = useRouter();

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuthContext } from '../../../lib/authContext';
+import { useAuthContext } from '@/lib/authContext';
 import Link from 'next/link';
 
 export default function AdminDashboard() {

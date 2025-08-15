@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import { QRAuthIntegration } from '../../../components/auth/QRAuthIntegration';
+import { QRAuthIntegration } from '@/components/auth/QRAuthIntegration';
 
 function QRAuthContent() {
   return <QRAuthIntegration />;

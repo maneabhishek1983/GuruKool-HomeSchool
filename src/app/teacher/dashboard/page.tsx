@@ -2,18 +2,18 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuthContext } from '../../../lib/authContext';
-import { enhancedSessionStore } from '../../../store/session.store';
-import { User } from '../../../types';
+import { useAuthContext } from '@/lib/authContext';
+import { enhancedSessionStore } from '@/store/session.store';
+import { User } from '@/types';
 import {
   SessionRecord,
   AIRecommendation,
   SchedulingConflict,
-} from '../../../types/session.types';
-import AILessonPlanSuggestions from '../../../components/teacher/AILessonPlanSuggestions';
-import VoiceToTextNotes from '../../../components/teacher/VoiceToTextNotes';
-import LocationAwareSessionManager from '../../../components/teacher/LocationAwareSessionManager';
-import DragDropScheduleManager from '../../../components/teacher/DragDropScheduleManager';
+} from '@/types/session.types';
+import AILessonPlanSuggestions from '@/components/teacher/AILessonPlanSuggestions';
+import VoiceToTextNotes from '@/components/teacher/VoiceToTextNotes';
+import LocationAwareSessionManager from '@/components/teacher/LocationAwareSessionManager';
+import DragDropScheduleManager from '@/components/teacher/DragDropScheduleManager';
 
 export default function TeacherDashboard() {
   const { user } = useAuthContext();

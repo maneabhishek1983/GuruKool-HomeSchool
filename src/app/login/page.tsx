@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuthContext } from '../../lib/authContext';
+import { useAuthContext } from '@/lib/authContext';
 import {
   QRAuthProvider,
   QRCodeDisplay,
-} from '../../components/auth/QRAuthProvider';
+} from '@/components/auth/QRAuthProvider';
 
 export default function LoginPage() {
   const router = useRouter();

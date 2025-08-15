@@ -11,20 +11,20 @@ import {
   generateSampleNotifications,
   ProgressTracker,
   generateSampleProgressData,
-} from '../../design-system/components/interactive';
+} from '@/design-system/components/interactive';
 import type {
   SwipeAction,
   AnalyticsData,
   Notification,
   ProgressData,
-} from '../../design-system/components/interactive';
+} from '@/design-system/components/interactive';
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
-} from '../../design-system/components/base/Card';
-import { animationPresets } from '../../design-system/animations/presets';
+} from '@/design-system/components/base/Card';
+import { animationPresets } from '@/design-system/animations/presets';
 
 export default function InteractiveDemoPage() {
   const [notifications, setNotifications] = useState<Notification[]>(

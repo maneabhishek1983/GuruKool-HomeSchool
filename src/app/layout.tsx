@@ -1,9 +1,9 @@
 import React from 'react';
-import { SyncProvider } from './lib/syncContext';
-import { AuthProvider } from './lib/authContext';
-import { ThemeProvider } from './design-system/themes/theme-provider';
-import { Header } from './components/Header';
-import { DemoNavigation } from './components/navigation/DemoNavigation';
+import { SyncProvider } from '@/lib/syncContext';
+import { AuthProvider } from '@/lib/authContext';
+import { ThemeProvider } from '@/design-system/themes/theme-provider';
+import { Header } from '@/components/Header';
+import { DemoNavigation } from '@/components/navigation/DemoNavigation';
 import './globals.css';
 
 export default function RootLayout({

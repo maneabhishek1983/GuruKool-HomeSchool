@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuthContext } from '../../../lib/authContext';
-import AIPriorityFeed from '../../../components/parent/AIPriorityFeed';
-import TeacherLocationTracker from '../../../components/parent/TeacherLocationTracker';
-import InteractiveProgressCharts from '../../../components/parent/InteractiveProgressCharts';
-import SmartNotificationSystem from '../../../components/parent/SmartNotificationSystem';
-import CreateStudentForm from '../../../components/parent/CreateStudentForm';
+import { useAuthContext } from '@/lib/authContext';
+import AIPriorityFeed from '@/components/parent/AIPriorityFeed';
+import TeacherLocationTracker from '@/components/parent/TeacherLocationTracker';
+import InteractiveProgressCharts from '@/components/parent/InteractiveProgressCharts';
+import SmartNotificationSystem from '@/components/parent/SmartNotificationSystem';
+import CreateStudentForm from '@/components/parent/CreateStudentForm';
 
 export default function ParentDashboard() {
   const { user } = useAuthContext();
