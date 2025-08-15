@@ -2,17 +2,96 @@
 
 import { useAuthContext } from '@/lib/authContext';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+interface Student {
+  id: string;
+  name: string;
+  age: number;
+  grade: string;
+  subjects: string[];
+  teacher?: string;
+  progress: number;
+  createdAt: Date;
+}
+
+interface Teacher {
+  id: string;
+  name: string;
+  email: string;
+  subjects: string[];
+  status: 'available' | 'assigned';
+}
 
 export default function ParentDashboard() {
   const { user, logout } = useAuthContext();
   const router = useRouter();
+  const [students, setStudents] = useState<Student[]>([
+    {
+      id: '1',
+      name: 'Emma Johnson',
+      age: 8,
+      grade: 'Grade 3',
+      subjects: ['Mathematics', 'English', 'Science'],
+      teacher: 'John Teacher',
+      progress: 75,
+      createdAt: new Date('2024-01-15'),
+    },
+    {
+      id: '2',
+      name: 'James Johnson',
+      age: 10,
+      grade: 'Grade 5',
+      subjects: ['Mathematics', 'English', 'Science', 'History'],
+      progress: 82,
+      createdAt: new Date('2024-01-20'),
+    },
+  ]);
+
+  const [teachers, setTeachers] = useState<Teacher[]>([
+    {
+      id: '1',
+      name: 'John Teacher',
+      email: 'john.teacher@example.com',
+      subjects: ['Mathematics', 'Science'],
+      status: 'assigned',
+    },
+    {
+      id: '2',
+      name: 'Sarah Wilson',
+      email: 'sarah.wilson@example.com',
+      subjects: ['English', 'History'],
+      status: 'available',
+    },
+    {
+      id: '3',
+      name: 'Mike Brown',
+      email: 'mike.brown@example.com',
+      subjects: ['Mathematics', 'Physics'],
+      status: 'available',
+    },
+  ]);
+
+  const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [showTeacherModal, setShowTeacherModal] = useState(false);
+  const [showInsightsModal, setShowInsightsModal] = useState(false);
+  const [showMessagesModal, setShowMessagesModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  const [newStudent, setNewStudent] = useState({
+    name: '',
+    age: 0,
+    grade: '',
+    subjects: [] as string[],
+  });
+
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   useEffect(() => {
     if (!user) {
       router.push('/login');
     } else if (user.role !== 'parent') {
-      // Redirect non-parent users to appropriate dashboard
       if (user.role === 'admin') {
         router.push('/admin/dashboard');
       } else {
@@ -26,37 +105,60 @@ export default function ParentDashboard() {
     router.push('/login');
   };
 
+  const handleCreateStudent = () => {
+    if (newStudent.name && newStudent.age && newStudent.grade) {
+      const student: Student = {
+        id: Date.now().toString(),
+        name: newStudent.name,
+        age: newStudent.age,
+        grade: newStudent.grade,
+        subjects: newStudent.subjects,
+        progress: 0,
+        createdAt: new Date(),
+      };
+      setStudents([...students, student]);
+      setNewStudent({ name: '', age: 0, grade: '', subjects: [] });
+      setShowCreateStudentModal(false);
+      alert(`Student ${student.name} created successfully!`);
+    } else {
+      alert('Please fill in all required fields');
+    }
+  };
+
+  const handleAssignTeacher = (studentId: string, teacherId: string) => {
+    const teacher = teachers.find(t => t.id === teacherId);
+    const updatedStudents = students.map(s =>
+      s.id === studentId ? { ...s, teacher: teacher?.name } : s
+    );
+    setStudents(updatedStudents);
+
+    const updatedTeachers = teachers.map(t =>
+      t.id === teacherId ? { ...t, status: 'assigned' as const } : t
+    );
+    setTeachers(updatedTeachers);
+
+    alert(`Teacher ${teacher?.name} assigned to student successfully!`);
+  };
+
   const handleButtonClick = (action: string) => {
     switch (action) {
       case 'manage-students':
-        alert(
-          "Student Management: This would open a comprehensive student profile management interface where you can add, edit, and manage your children's learning profiles."
-        );
+        setShowCreateStudentModal(true);
         break;
       case 'view-progress':
-        alert(
-          'Progress Tracking: This would display detailed progress reports, learning analytics, and achievement tracking for your children.'
-        );
+        setShowProgressModal(true);
         break;
       case 'manage-teachers':
-        alert(
-          'Teacher Assignment: This would allow you to assign teachers to your children, manage communication preferences, and view teacher profiles.'
-        );
+        setShowTeacherModal(true);
         break;
       case 'view-insights':
-        alert(
-          'AI Insights: This would show personalized AI-powered recommendations, learning suggestions, and educational insights for your children.'
-        );
+        setShowInsightsModal(true);
         break;
       case 'open-messages':
-        alert(
-          'Communication Hub: This would open a messaging interface to communicate with teachers, receive updates, and manage notifications.'
-        );
+        setShowMessagesModal(true);
         break;
       case 'open-settings':
-        alert(
-          'Settings: This would open your account settings, notification preferences, and dashboard customization options.'
-        );
+        setShowSettingsModal(true);
         break;
       default:
         alert('Feature coming soon!');
@@ -295,6 +397,338 @@ export default function ParentDashboard() {
           </div>
         </div>
       </main>
+
+      {/* Create Student Modal */}
+      {showCreateStudentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">
+              Create New Student Profile
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Student Name *
+                </label>
+                <input
+                  type="text"
+                  value={newStudent.name}
+                  onChange={e =>
+                    setNewStudent({ ...newStudent, name: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter student name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Age *
+                </label>
+                <input
+                  type="number"
+                  value={newStudent.age || ''}
+                  onChange={e =>
+                    setNewStudent({
+                      ...newStudent,
+                      age: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter age"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Grade Level *
+                </label>
+                <select
+                  value={newStudent.grade}
+                  onChange={e =>
+                    setNewStudent({ ...newStudent, grade: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select Grade</option>
+                  <option value="Grade 1">Grade 1</option>
+                  <option value="Grade 2">Grade 2</option>
+                  <option value="Grade 3">Grade 3</option>
+                  <option value="Grade 4">Grade 4</option>
+                  <option value="Grade 5">Grade 5</option>
+                  <option value="Grade 6">Grade 6</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Subjects
+                </label>
+                <div className="space-y-2">
+                  {[
+                    'Mathematics',
+                    'English',
+                    'Science',
+                    'History',
+                    'Geography',
+                    'Art',
+                  ].map(subject => (
+                    <label key={subject} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={newStudent.subjects.includes(subject)}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setNewStudent({
+                              ...newStudent,
+                              subjects: [...newStudent.subjects, subject],
+                            });
+                          } else {
+                            setNewStudent({
+                              ...newStudent,
+                              subjects: newStudent.subjects.filter(
+                                s => s !== subject
+                              ),
+                            });
+                          }
+                        }}
+                        className="mr-2"
+                      />
+                      {subject}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowCreateStudentModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateStudent}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Create Student
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Progress Modal */}
+      {showProgressModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+            <h3 className="text-lg font-semibold mb-4">
+              Student Progress Overview
+            </h3>
+            <div className="space-y-4">
+              {students.map(student => (
+                <div
+                  key={student.id}
+                  className="border border-gray-200 rounded-lg p-4"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-medium">
+                      {student.name} ({student.grade})
+                    </h4>
+                    <span className="text-sm text-gray-600">
+                      Age: {student.age}
+                    </span>
+                  </div>
+                  <div className="mb-2">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Overall Progress</span>
+                      <span>{student.progress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-green-600 h-2 rounded-full"
+                        style={{ width: `${student.progress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <p>Subjects: {student.subjects.join(', ')}</p>
+                    {student.teacher && <p>Teacher: {student.teacher}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowProgressModal(false)}
+              className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Teacher Assignment Modal */}
+      {showTeacherModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+            <h3 className="text-lg font-semibold mb-4">Teacher Assignment</h3>
+            <div className="space-y-4">
+              {students.map(student => (
+                <div
+                  key={student.id}
+                  className="border border-gray-200 rounded-lg p-4"
+                >
+                  <h4 className="font-medium mb-2">{student.name}</h4>
+                  <p className="text-sm text-gray-600 mb-2">
+                    Current Teacher: {student.teacher || 'None assigned'}
+                  </p>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium">
+                      Assign Teacher:
+                    </label>
+                    <select
+                      onChange={e =>
+                        handleAssignTeacher(student.id, e.target.value)
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    >
+                      <option value="">Select Teacher</option>
+                      {teachers
+                        .filter(
+                          teacher =>
+                            teacher.status === 'available' ||
+                            teacher.name === student.teacher
+                        )
+                        .map(teacher => (
+                          <option key={teacher.id} value={teacher.id}>
+                            {teacher.name} ({teacher.subjects.join(', ')})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowTeacherModal(false)}
+              className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* AI Insights Modal */}
+      {showInsightsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">AI Learning Insights</h3>
+            <div className="space-y-4">
+              {students.map(student => (
+                <div key={student.id} className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">
+                    {student.name}
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <p>
+                      🎯 <strong>Recommendation:</strong> Focus on Mathematics
+                      practice
+                    </p>
+                    <p>
+                      📈 <strong>Strength:</strong> Excellent reading
+                      comprehension
+                    </p>
+                    <p>
+                      💡 <strong>Suggestion:</strong> Consider advanced Science
+                      projects
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowInsightsModal(false)}
+              className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Messages Modal */}
+      {showMessagesModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Communication Hub</h3>
+            <div className="space-y-4">
+              <div className="bg-green-50 p-3 rounded-lg">
+                <p className="text-green-800">
+                  📧 New message from John Teacher
+                </p>
+                <p className="text-sm text-green-600">
+                  Emma completed her math assignment successfully!
+                </p>
+              </div>
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-blue-800">📅 Upcoming session reminder</p>
+                <p className="text-sm text-blue-600">
+                  Science class with Sarah Wilson tomorrow at 2 PM
+                </p>
+              </div>
+              <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                Send New Message
+              </button>
+            </div>
+            <button
+              onClick={() => setShowMessagesModal(false)}
+              className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Account Settings</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="flex items-center">
+                  <input type="checkbox" className="mr-2" defaultChecked />
+                  Email notifications
+                </label>
+              </div>
+              <div>
+                <label className="flex items-center">
+                  <input type="checkbox" className="mr-2" defaultChecked />
+                  Progress report notifications
+                </label>
+              </div>
+              <div>
+                <label className="flex items-center">
+                  <input type="checkbox" className="mr-2" />
+                  Weekly summary emails
+                </label>
+              </div>
+              <div>
+                <label className="flex items-center">
+                  <input type="checkbox" className="mr-2" defaultChecked />
+                  Teacher communication alerts
+                </label>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowSettingsModal(false)}
+              className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            >
+              Save Settings
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

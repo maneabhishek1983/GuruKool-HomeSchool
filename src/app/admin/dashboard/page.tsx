@@ -2,17 +2,64 @@
 
 import { useAuthContext } from '@/lib/authContext';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'parent' | 'admin' | 'teacher';
+  status: 'active' | 'inactive';
+  createdAt: Date;
+}
 
 export default function AdminDashboard() {
   const { user, logout } = useAuthContext();
   const router = useRouter();
+  const [users, setUsers] = useState<User[]>([
+    {
+      id: '1',
+      name: 'Jane Parent',
+      email: 'parent@example.com',
+      role: 'parent',
+      status: 'active',
+      createdAt: new Date('2024-01-15'),
+    },
+    {
+      id: '2',
+      name: 'Admin User',
+      email: 'admin@example.com',
+      role: 'admin',
+      status: 'active',
+      createdAt: new Date('2024-01-10'),
+    },
+    {
+      id: '3',
+      name: 'John Teacher',
+      email: 'john.teacher@example.com',
+      role: 'teacher',
+      status: 'active',
+      createdAt: new Date('2024-01-20'),
+    },
+  ]);
+
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
+  const [showContentModal, setShowContentModal] = useState(false);
+  const [showHealthModal, setShowHealthModal] = useState(false);
+
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    role: 'parent' as 'parent' | 'admin' | 'teacher',
+  });
 
   useEffect(() => {
     if (!user) {
       router.push('/login');
     } else if (user.role !== 'admin') {
-      // Redirect non-admin users to appropriate dashboard
       if (user.role === 'parent') {
         router.push('/parent/dashboard');
       } else {
@@ -26,37 +73,50 @@ export default function AdminDashboard() {
     router.push('/login');
   };
 
+  const handleCreateUser = () => {
+    if (newUser.name && newUser.email) {
+      const user: User = {
+        id: Date.now().toString(),
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        status: 'active',
+        createdAt: new Date(),
+      };
+      setUsers([...users, user]);
+      setNewUser({ name: '', email: '', role: 'parent' });
+      setShowCreateUserModal(false);
+      alert(`User ${user.name} (${user.role}) created successfully!`);
+    } else {
+      alert('Please fill in all fields');
+    }
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    const updatedUsers = users.filter(u => u.id !== userId);
+    setUsers(updatedUsers);
+    alert('User deleted successfully!');
+  };
+
   const handleButtonClick = (action: string) => {
     switch (action) {
       case 'manage-users':
-        alert(
-          'User Management: This would open a comprehensive user management interface where you can manage parents, students, and teacher assignments across the platform.'
-        );
+        setShowCreateUserModal(true);
         break;
       case 'view-analytics':
-        alert(
-          'System Analytics: This would display detailed platform usage statistics, performance metrics, user engagement data, and system health reports.'
-        );
+        setShowAnalyticsModal(true);
         break;
       case 'configure-system':
-        alert(
-          'Platform Settings: This would allow you to configure system settings, security policies, user permissions, and platform-wide configurations.'
-        );
+        setShowSettingsModal(true);
         break;
       case 'security-dashboard':
-        alert(
-          'Security Monitoring: This would show security events, access logs, authentication attempts, and system security status with real-time monitoring.'
-        );
+        setShowSecurityModal(true);
         break;
       case 'manage-content':
-        alert(
-          'Content Management: This would provide tools to manage educational content, resources, curriculum materials, and platform content libraries.'
-        );
+        setShowContentModal(true);
         break;
       case 'health-dashboard':
-        alert(
-          'System Health: This would display system performance metrics, server status, database health, and overall platform operational status.'
-        );
+        setShowHealthModal(true);
         break;
       default:
         alert('Feature coming soon!');
@@ -376,6 +436,226 @@ export default function AdminDashboard() {
           </div>
         </div>
       </main>
+
+      {/* Create User Modal */}
+      {showCreateUserModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Create New User</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={newUser.name}
+                  onChange={e =>
+                    setNewUser({ ...newUser, name: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter user name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={newUser.email}
+                  onChange={e =>
+                    setNewUser({ ...newUser, email: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter user email"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Role
+                </label>
+                <select
+                  value={newUser.role}
+                  onChange={e =>
+                    setNewUser({ ...newUser, role: e.target.value as any })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="parent">Parent</option>
+                  <option value="admin">Admin</option>
+                  <option value="teacher">Teacher</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowCreateUserModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateUser}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Create User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Analytics Modal */}
+      {showAnalyticsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+            <h3 className="text-lg font-semibold mb-4">System Analytics</h3>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium text-blue-900">Total Users</h4>
+                <p className="text-2xl font-bold text-blue-600">
+                  {users.length}
+                </p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h4 className="font-medium text-green-900">Active Users</h4>
+                <p className="text-2xl font-bold text-green-600">
+                  {users.filter(u => u.status === 'active').length}
+                </p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium">User Breakdown:</h4>
+              <p>Parents: {users.filter(u => u.role === 'parent').length}</p>
+              <p>Admins: {users.filter(u => u.role === 'admin').length}</p>
+              <p>Teachers: {users.filter(u => u.role === 'teacher').length}</p>
+            </div>
+            <button
+              onClick={() => setShowAnalyticsModal(false)}
+              className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Platform Settings</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="flex items-center">
+                  <input type="checkbox" className="mr-2" defaultChecked />
+                  Enable email notifications
+                </label>
+              </div>
+              <div>
+                <label className="flex items-center">
+                  <input type="checkbox" className="mr-2" defaultChecked />
+                  Enable push notifications
+                </label>
+              </div>
+              <div>
+                <label className="flex items-center">
+                  <input type="checkbox" className="mr-2" />
+                  Require 2FA for admins
+                </label>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowSettingsModal(false)}
+              className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            >
+              Save Settings
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Security Modal */}
+      {showSecurityModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Security Dashboard</h3>
+            <div className="space-y-4">
+              <div className="bg-green-50 p-3 rounded-lg">
+                <p className="text-green-800">✅ System Status: Secure</p>
+              </div>
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-blue-800">📊 Recent Login Attempts: 12</p>
+              </div>
+              <div className="bg-yellow-50 p-3 rounded-lg">
+                <p className="text-yellow-800">⚠️ Failed Logins: 2</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowSecurityModal(false)}
+              className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Content Modal */}
+      {showContentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Content Management</h3>
+            <div className="space-y-4">
+              <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                Upload Educational Content
+              </button>
+              <button className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                Manage Resource Library
+              </button>
+              <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                Create Curriculum
+              </button>
+            </div>
+            <button
+              onClick={() => setShowContentModal(false)}
+              className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Health Modal */}
+      {showHealthModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">System Health</h3>
+            <div className="space-y-4">
+              <div className="bg-green-50 p-3 rounded-lg">
+                <p className="text-green-800">✅ Server Status: Healthy</p>
+              </div>
+              <div className="bg-green-50 p-3 rounded-lg">
+                <p className="text-green-800">✅ Database: Connected</p>
+              </div>
+              <div className="bg-green-50 p-3 rounded-lg">
+                <p className="text-green-800">✅ API Services: Operational</p>
+              </div>
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-blue-800">📊 Response Time: 45ms</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowHealthModal(false)}
+              className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
