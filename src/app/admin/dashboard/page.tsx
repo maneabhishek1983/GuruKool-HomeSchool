@@ -26,6 +26,43 @@ export default function AdminDashboard() {
     router.push('/login');
   };
 
+  const handleButtonClick = (action: string) => {
+    switch (action) {
+      case 'manage-users':
+        alert(
+          'User Management: This would open a comprehensive user management interface where you can manage parents, students, and teacher assignments across the platform.'
+        );
+        break;
+      case 'view-analytics':
+        alert(
+          'System Analytics: This would display detailed platform usage statistics, performance metrics, user engagement data, and system health reports.'
+        );
+        break;
+      case 'configure-system':
+        alert(
+          'Platform Settings: This would allow you to configure system settings, security policies, user permissions, and platform-wide configurations.'
+        );
+        break;
+      case 'security-dashboard':
+        alert(
+          'Security Monitoring: This would show security events, access logs, authentication attempts, and system security status with real-time monitoring.'
+        );
+        break;
+      case 'manage-content':
+        alert(
+          'Content Management: This would provide tools to manage educational content, resources, curriculum materials, and platform content libraries.'
+        );
+        break;
+      case 'health-dashboard':
+        alert(
+          'System Health: This would display system performance metrics, server status, database health, and overall platform operational status.'
+        );
+        break;
+      default:
+        alert('Feature coming soon!');
+    }
+  };
+
   if (!user || user.role !== 'admin') {
     return <div>Loading...</div>;
   }
@@ -80,7 +117,10 @@ export default function AdminDashboard() {
             <p className="text-gray-600 mb-4">
               Manage parents, students, and teacher assignments
             </p>
-            <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+            <button
+              onClick={() => handleButtonClick('manage-users')}
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+            >
               Manage Users
             </button>
           </div>
@@ -110,7 +150,10 @@ export default function AdminDashboard() {
             <p className="text-gray-600 mb-4">
               Monitor platform usage and performance metrics
             </p>
-            <button className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+            <button
+              onClick={() => handleButtonClick('view-analytics')}
+              className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
+            >
               View Analytics
             </button>
           </div>
@@ -146,7 +189,10 @@ export default function AdminDashboard() {
             <p className="text-gray-600 mb-4">
               Configure system settings and security policies
             </p>
-            <button className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors">
+            <button
+              onClick={() => handleButtonClick('configure-system')}
+              className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
+            >
               Configure System
             </button>
           </div>
@@ -176,7 +222,10 @@ export default function AdminDashboard() {
             <p className="text-gray-600 mb-4">
               Monitor security events and access logs
             </p>
-            <button className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
+            <button
+              onClick={() => handleButtonClick('security-dashboard')}
+              className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
+            >
               Security Dashboard
             </button>
           </div>
@@ -206,7 +255,10 @@ export default function AdminDashboard() {
             <p className="text-gray-600 mb-4">
               Manage educational content and resources
             </p>
-            <button className="w-full bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition-colors">
+            <button
+              onClick={() => handleButtonClick('manage-content')}
+              className="w-full bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition-colors"
+            >
               Manage Content
             </button>
           </div>
@@ -236,7 +288,10 @@ export default function AdminDashboard() {
             <p className="text-gray-600 mb-4">
               Monitor system performance and health status
             </p>
-            <button className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
+            <button
+              onClick={() => handleButtonClick('health-dashboard')}
+              className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
+            >
               Health Dashboard
             </button>
           </div>

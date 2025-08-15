@@ -26,6 +26,43 @@ export default function ParentDashboard() {
     router.push('/login');
   };
 
+  const handleButtonClick = (action: string) => {
+    switch (action) {
+      case 'manage-students':
+        alert(
+          "Student Management: This would open a comprehensive student profile management interface where you can add, edit, and manage your children's learning profiles."
+        );
+        break;
+      case 'view-progress':
+        alert(
+          'Progress Tracking: This would display detailed progress reports, learning analytics, and achievement tracking for your children.'
+        );
+        break;
+      case 'manage-teachers':
+        alert(
+          'Teacher Assignment: This would allow you to assign teachers to your children, manage communication preferences, and view teacher profiles.'
+        );
+        break;
+      case 'view-insights':
+        alert(
+          'AI Insights: This would show personalized AI-powered recommendations, learning suggestions, and educational insights for your children.'
+        );
+        break;
+      case 'open-messages':
+        alert(
+          'Communication Hub: This would open a messaging interface to communicate with teachers, receive updates, and manage notifications.'
+        );
+        break;
+      case 'open-settings':
+        alert(
+          'Settings: This would open your account settings, notification preferences, and dashboard customization options.'
+        );
+        break;
+      default:
+        alert('Feature coming soon!');
+    }
+  };
+
   if (!user || user.role !== 'parent') {
     return <div>Loading...</div>;
   }
@@ -80,7 +117,10 @@ export default function ParentDashboard() {
             <p className="text-gray-600 mb-4">
               Create and manage your children's learning profiles
             </p>
-            <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+            <button
+              onClick={() => handleButtonClick('manage-students')}
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+            >
               Manage Students
             </button>
           </div>
@@ -110,7 +150,10 @@ export default function ParentDashboard() {
             <p className="text-gray-600 mb-4">
               Monitor your children's learning progress and achievements
             </p>
-            <button className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+            <button
+              onClick={() => handleButtonClick('view-progress')}
+              className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
+            >
               View Progress
             </button>
           </div>
@@ -140,7 +183,10 @@ export default function ParentDashboard() {
             <p className="text-gray-600 mb-4">
               Assign teachers to your children and manage communication
             </p>
-            <button className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors">
+            <button
+              onClick={() => handleButtonClick('manage-teachers')}
+              className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
+            >
               Manage Teachers
             </button>
           </div>
@@ -170,7 +216,10 @@ export default function ParentDashboard() {
             <p className="text-gray-600 mb-4">
               Get personalized AI-powered recommendations for your children
             </p>
-            <button className="w-full bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition-colors">
+            <button
+              onClick={() => handleButtonClick('view-insights')}
+              className="w-full bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition-colors"
+            >
               View Insights
             </button>
           </div>
@@ -200,7 +249,10 @@ export default function ParentDashboard() {
             <p className="text-gray-600 mb-4">
               Stay connected with teachers and receive updates
             </p>
-            <button className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
+            <button
+              onClick={() => handleButtonClick('open-messages')}
+              className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
+            >
               Open Messages
             </button>
           </div>
@@ -234,7 +286,10 @@ export default function ParentDashboard() {
             <p className="text-gray-600 mb-4">
               Customize your dashboard and notification preferences
             </p>
-            <button className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors">
+            <button
+              onClick={() => handleButtonClick('open-settings')}
+              className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
+            >
               Open Settings
             </button>
           </div>
