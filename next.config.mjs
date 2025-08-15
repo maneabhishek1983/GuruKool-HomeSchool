@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Ensure environment variables are available during build
+  env: {
+    NODE_ENV: process.env.NODE_ENV || 'production',
+  },
   reactStrictMode: true,
   poweredByHeader: false,
   eslint: {
@@ -9,9 +13,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  experimental: {
-    missingSuspenseWithCSRError: false,
-  },
+
   async headers() {
     const isProd = process.env.NODE_ENV === 'production';
     const cspDirectives = [
