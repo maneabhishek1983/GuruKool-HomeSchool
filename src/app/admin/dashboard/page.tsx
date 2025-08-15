@@ -11,6 +11,8 @@ interface User {
   role: 'parent' | 'admin' | 'teacher';
   status: 'active' | 'inactive';
   createdAt: Date;
+  password?: string;
+  qrCode?: string;
 }
 
 export default function AdminDashboard() {
@@ -44,6 +46,7 @@ export default function AdminDashboard() {
   ]);
 
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showSecurityModal, setShowSecurityModal] = useState(false);
@@ -53,8 +56,9 @@ export default function AdminDashboard() {
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
-    role: 'parent' as 'parent' | 'admin' | 'teacher',
+    role: 'parent' as const,
   });
+  const [createdUser, setCreatedUser] = useState<User | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -73,8 +77,37 @@ export default function AdminDashboard() {
     router.push('/login');
   };
 
+  const generatePassword = () => {
+    const chars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
+  const generateQRCode = (email: string, password: string) => {
+    // Generate a simple QR code data string
+    const qrData = JSON.stringify({
+      email,
+      password,
+      timestamp: new Date().toISOString(),
+      type: 'login',
+    });
+    return `data:image/svg+xml;base64,${btoa(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+        <rect width="200" height="200" fill="white"/>
+        <text x="100" y="100" text-anchor="middle" font-family="monospace" font-size="8">${qrData}</text>
+      </svg>
+    `)}`;
+  };
+
   const handleCreateUser = () => {
     if (newUser.name && newUser.email) {
+      const password = generatePassword();
+      const qrCode = generateQRCode(newUser.email, password);
+
       const user: User = {
         id: Date.now().toString(),
         name: newUser.name,
@@ -82,11 +115,15 @@ export default function AdminDashboard() {
         role: newUser.role,
         status: 'active',
         createdAt: new Date(),
+        password,
+        qrCode,
       };
+
       setUsers([...users, user]);
+      setCreatedUser(user);
       setNewUser({ name: '', email: '', role: 'parent' });
       setShowCreateUserModal(false);
-      alert(`User ${user.name} (${user.role}) created successfully!`);
+      setShowCredentialsModal(true);
     } else {
       alert('Please fill in all fields');
     }
@@ -500,6 +537,155 @@ export default function AdminDashboard() {
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 Create User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Credentials Modal */}
+      {showCredentialsModal && createdUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-8 h-8 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                User Created Successfully!
+              </h3>
+              <p className="text-sm text-gray-600">
+                Share these credentials with {createdUser.name}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Name
+                  </label>
+                  <p className="text-sm font-medium text-gray-900">
+                    {createdUser.name}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <p className="text-sm font-medium text-gray-900">
+                    {createdUser.email}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Role
+                  </label>
+                  <p className="text-sm font-medium text-gray-900 capitalize">
+                    {createdUser.role}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Password
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <p className="text-sm font-mono text-gray-900 bg-white px-2 py-1 rounded border">
+                      {createdUser.password}
+                    </p>
+                    <button
+                      onClick={() =>
+                        navigator.clipboard.writeText(
+                          createdUser.password || ''
+                        )
+                      }
+                      className="text-blue-600 hover:text-blue-800"
+                      title="Copy password"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {createdUser.role === 'parent' && (
+              <div className="bg-blue-50 rounded-lg p-4 mb-4">
+                <h4 className="text-sm font-medium text-blue-900 mb-2">
+                  QR Code Login
+                </h4>
+                <div className="text-center">
+                  <img
+                    src={createdUser.qrCode}
+                    alt="QR Code for login"
+                    className="w-32 h-32 mx-auto border border-gray-300 rounded"
+                  />
+                  <p className="text-xs text-blue-700 mt-2">
+                    Users can scan this QR code to log in quickly
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-yellow-50 rounded-lg p-3 mb-4">
+              <div className="flex items-start">
+                <svg
+                  className="w-5 h-5 text-yellow-600 mt-0.5 mr-2 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+                <div className="text-sm text-yellow-800">
+                  <p className="font-medium">Important:</p>
+                  <ul className="mt-1 space-y-1 text-xs">
+                    <li>• Save these credentials securely</li>
+                    <li>• Share them with the user via secure channels</li>
+                    <li>• Users should change their password on first login</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowCredentialsModal(false);
+                  setCreatedUser(null);
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Done
               </button>
             </div>
           </div>
