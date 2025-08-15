@@ -18,7 +18,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:all": "npm run test && npm run test:e2e",
-    "prepare": "is-ci || husky",
+    "postinstall": "node -e \"if (process.env.NODE_ENV !== 'production' && !process.env.CI) { try { require('child_process').execSync('npx husky', { stdio: 'inherit' }); } catch (e) { console.log('Husky setup skipped'); } }\"",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "validate:tasks": "node scripts/validate-tasks.js",
