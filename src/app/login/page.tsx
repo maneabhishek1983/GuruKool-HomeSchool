@@ -3,8 +3,11 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuthContext } from '@/lib/authContext';
-import { QRAuthProvider, QRCodeDisplay } from '@/components/auth/QRAuthProvider';
+import { useAuthContext } from '../../lib/authContext';
+import {
+  QRAuthProvider,
+  QRCodeDisplay,
+} from '../../components/auth/QRAuthProvider';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,7 +40,7 @@ export default function LoginPage() {
     try {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Demo credentials validation
       if (email === 'teacher@example.com' && password === 'password') {
         login({
@@ -124,7 +127,13 @@ export default function LoginPage() {
             dashboard: {
               layout: 'detailed',
               theme: 'light',
-              widgets: ['sessions', 'analytics', 'notifications', 'users', 'system'],
+              widgets: [
+                'sessions',
+                'analytics',
+                'notifications',
+                'users',
+                'system',
+              ],
             },
             privacy: {
               dataSharing: true,
@@ -171,7 +180,7 @@ export default function LoginPage() {
             </h1>
             <div className="w-16 h-1 bg-gradient-to-r from-primary-500 to-secondary-500 mx-auto rounded-full mb-4" />
           </motion.div>
-          
+
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -235,7 +244,7 @@ export default function LoginPage() {
             >
               <QRAuthProvider>
                 <div className="bg-white rounded-3xl shadow-soft p-8">
-                  <QRCodeDisplay 
+                  <QRCodeDisplay
                     className="w-full"
                     showStatus={true}
                     showRefreshButton={true}
@@ -255,7 +264,10 @@ export default function LoginPage() {
                 <form onSubmit={handleTraditionalLogin} className="space-y-6">
                   {/* Email Field */}
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-2">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-neutral-700 mb-2"
+                    >
                       Email Address
                     </label>
                     <input
@@ -265,7 +277,7 @@ export default function LoginPage() {
                       autoComplete="email"
                       required
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={e => setEmail(e.target.value)}
                       className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 focus:bg-white"
                       placeholder="Enter your email"
                     />
@@ -273,7 +285,10 @@ export default function LoginPage() {
 
                   {/* Password Field */}
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-neutral-700 mb-2">
+                    <label
+                      htmlFor="password"
+                      className="block text-sm font-medium text-neutral-700 mb-2"
+                    >
                       Password
                     </label>
                     <div className="relative">
@@ -284,7 +299,7 @@ export default function LoginPage() {
                         autoComplete="current-password"
                         required
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={e => setPassword(e.target.value)}
                         className="w-full px-4 py-3 pr-12 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-50 focus:bg-white"
                         placeholder="Enter your password"
                       />
@@ -318,11 +333,19 @@ export default function LoginPage() {
 
                   {/* Demo Credentials */}
                   <div className="bg-neutral-50 rounded-xl p-4 text-center">
-                    <p className="text-xs text-neutral-600 mb-2 font-medium">Demo Credentials:</p>
+                    <p className="text-xs text-neutral-600 mb-2 font-medium">
+                      Demo Credentials:
+                    </p>
                     <div className="space-y-1 text-xs text-neutral-500">
-                      <p><strong>Teacher:</strong> teacher@example.com / password</p>
-                      <p><strong>Parent:</strong> parent@example.com / password</p>
-                      <p><strong>Admin:</strong> admin@example.com / admin123</p>
+                      <p>
+                        <strong>Teacher:</strong> teacher@example.com / password
+                      </p>
+                      <p>
+                        <strong>Parent:</strong> parent@example.com / password
+                      </p>
+                      <p>
+                        <strong>Admin:</strong> admin@example.com / admin123
+                      </p>
                     </div>
                   </div>
                 </form>

@@ -2,16 +2,18 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuthContext } from '@/lib/authContext';
-import AIPriorityFeed from '@/components/parent/AIPriorityFeed';
-import TeacherLocationTracker from '@/components/parent/TeacherLocationTracker';
-import InteractiveProgressCharts from '@/components/parent/InteractiveProgressCharts';
-import SmartNotificationSystem from '@/components/parent/SmartNotificationSystem';
-import CreateStudentForm from '@/components/parent/CreateStudentForm';
+import { useAuthContext } from '../../../lib/authContext';
+import AIPriorityFeed from '../../../components/parent/AIPriorityFeed';
+import TeacherLocationTracker from '../../../components/parent/TeacherLocationTracker';
+import InteractiveProgressCharts from '../../../components/parent/InteractiveProgressCharts';
+import SmartNotificationSystem from '../../../components/parent/SmartNotificationSystem';
+import CreateStudentForm from '../../../components/parent/CreateStudentForm';
 
 export default function ParentDashboard() {
   const { user } = useAuthContext();
-  const [activeTab, setActiveTab] = useState<'overview' | 'progress' | 'tracking' | 'notifications' | 'students'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'progress' | 'tracking' | 'notifications' | 'students'
+  >('overview');
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateStudent, setShowCreateStudent] = useState(false);
   const [childrenData, setChildrenData] = useState([
@@ -24,10 +26,10 @@ export default function ParentDashboard() {
       currentProgress: 78,
       lastSession: new Date(Date.now() - 24 * 60 * 60 * 1000),
       upcomingSession: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      teacher: 'John Teacher'
+      teacher: 'John Teacher',
     },
     {
-      id: 'student-2', 
+      id: 'student-2',
       name: 'James Johnson',
       age: 9,
       year: 'Year 4',
@@ -35,8 +37,8 @@ export default function ParentDashboard() {
       currentProgress: 85,
       lastSession: new Date(Date.now() - 12 * 60 * 60 * 1000),
       upcomingSession: new Date(Date.now() + 48 * 60 * 60 * 1000),
-      teacher: 'John Teacher'
-    }
+      teacher: 'John Teacher',
+    },
   ]);
 
   useEffect(() => {
@@ -69,7 +71,8 @@ export default function ParentDashboard() {
                 👨‍👩‍👧‍👦 Parent Dashboard
               </h1>
               <p className="text-sm text-gray-600">
-                Welcome back, {user?.name || 'Parent'} • Track your children&apos;s learning journey
+                Welcome back, {user?.name || 'Parent'} • Track your
+                children&apos;s learning journey
               </p>
             </div>
             <div className="flex items-center space-x-4">
@@ -90,8 +93,8 @@ export default function ParentDashboard() {
               { id: 'progress', label: 'Progress', icon: '📈' },
               { id: 'tracking', label: 'Live Tracking', icon: '📍' },
               { id: 'notifications', label: 'Notifications', icon: '🔔' },
-              { id: 'students', label: 'Students', icon: '👨‍🎓' }
-            ].map((tab) => (
+              { id: 'students', label: 'Students', icon: '👨‍🎓' },
+            ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
@@ -122,39 +125,57 @@ export default function ParentDashboard() {
             >
               {/* Children Overview Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {childrenData.map((child) => (
-                  <div key={child.id} className="bg-white rounded-lg shadow p-6">
+                {childrenData.map(child => (
+                  <div
+                    key={child.id}
+                    className="bg-white rounded-lg shadow p-6"
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{child.name}</h3>
-                        <p className="text-sm text-gray-600">{child.year} • Age {child.age}</p>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {child.name}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {child.year} • Age {child.age}
+                        </p>
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-blue-600">{child.currentProgress}%</div>
-                        <p className="text-xs text-gray-500">Overall Progress</p>
+                        <div className="text-2xl font-bold text-blue-600">
+                          {child.currentProgress}%
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          Overall Progress
+                        </p>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-3">
                       <div>
                         <p className="text-sm text-gray-600 mb-1">Subjects:</p>
                         <div className="flex flex-wrap gap-1">
-                          {child.subjects.map((subject) => (
-                            <span key={subject} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                          {child.subjects.map(subject => (
+                            <span
+                              key={subject}
+                              className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded"
+                            >
                               {subject}
                             </span>
                           ))}
                         </div>
                       </div>
-                      
+
                       <div className="pt-3 border-t border-gray-100">
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Last Session:</span>
-                          <span className="text-gray-900">{child.lastSession.toLocaleDateString()}</span>
+                          <span className="text-gray-900">
+                            {child.lastSession.toLocaleDateString()}
+                          </span>
                         </div>
                         <div className="flex justify-between text-sm mt-1">
                           <span className="text-gray-600">Next Session:</span>
-                          <span className="text-blue-600">{child.upcomingSession.toLocaleDateString()}</span>
+                          <span className="text-blue-600">
+                            {child.upcomingSession.toLocaleDateString()}
+                          </span>
                         </div>
                         <div className="flex justify-between text-sm mt-1">
                           <span className="text-gray-600">Teacher:</span>
@@ -169,14 +190,25 @@ export default function ParentDashboard() {
               {/* AI Priority Feed */}
               <div className="bg-white rounded-lg shadow">
                 <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">🤖 AI Priority Updates</h3>
-                  <p className="text-sm text-gray-600 mt-1">Important insights and recommendations for your children</p>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    🤖 AI Priority Updates
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Important insights and recommendations for your children
+                  </p>
                 </div>
                 <div className="p-6">
                   <AIPriorityFeed
                     childId={childrenData[0]?.id || 'student-1'}
                     parentId={user?.id || 'parent-1'}
-                    currentUser={user || { id: 'parent-1', name: 'Parent', role: 'parent' } as any}
+                    currentUser={
+                      user ||
+                      ({
+                        id: 'parent-1',
+                        name: 'Parent',
+                        role: 'parent',
+                      } as any)
+                    }
                   />
                 </div>
               </div>
@@ -208,8 +240,13 @@ export default function ParentDashboard() {
             >
               <div className="bg-white rounded-lg shadow">
                 <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">📍 Live Teacher Location</h3>
-                  <p className="text-sm text-gray-600 mt-1">Real-time tracking during active sessions for safety and transparency</p>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    📍 Live Teacher Location
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Real-time tracking during active sessions for safety and
+                    transparency
+                  </p>
                 </div>
                 <div className="p-6">
                   <TeacherLocationTracker
@@ -248,8 +285,12 @@ export default function ParentDashboard() {
               {/* Header with Add Student Button */}
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Student Profiles</h2>
-                  <p className="text-gray-600">Manage your children&apos;s learning profiles</p>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Student Profiles
+                  </h2>
+                  <p className="text-gray-600">
+                    Manage your children&apos;s learning profiles
+                  </p>
                 </div>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -264,7 +305,7 @@ export default function ParentDashboard() {
 
               {/* Students Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {childrenData.map((child) => (
+                {childrenData.map(child => (
                   <motion.div
                     key={child.id}
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -273,22 +314,33 @@ export default function ParentDashboard() {
                   >
                     <div className="flex items-center space-x-4 mb-4">
                       <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
-                        {child.name.split(' ').map(n => n[0]).join('')}
+                        {child.name
+                          .split(' ')
+                          .map(n => n[0])
+                          .join('')}
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{child.name}</h3>
-                        <p className="text-sm text-gray-600">{child.year} • Age {child.age}</p>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {child.name}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {child.year} • Age {child.age}
+                        </p>
                       </div>
                     </div>
 
                     <div className="space-y-3">
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-700">Overall Progress</span>
-                          <span className="text-sm font-bold text-blue-600">{child.currentProgress}%</span>
+                          <span className="text-sm font-medium text-gray-700">
+                            Overall Progress
+                          </span>
+                          <span className="text-sm font-bold text-blue-600">
+                            {child.currentProgress}%
+                          </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
+                          <div
                             className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
                             style={{ width: `${child.currentProgress}%` }}
                           ></div>
@@ -298,8 +350,11 @@ export default function ParentDashboard() {
                       <div>
                         <p className="text-sm text-gray-600 mb-2">Subjects:</p>
                         <div className="flex flex-wrap gap-1">
-                          {child.subjects.map((subject) => (
-                            <span key={subject} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                          {child.subjects.map(subject => (
+                            <span
+                              key={subject}
+                              className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
+                            >
                               {subject}
                             </span>
                           ))}
@@ -309,7 +364,9 @@ export default function ParentDashboard() {
                       <div className="pt-3 border-t border-gray-100">
                         <div className="flex justify-between text-xs text-gray-500 mb-1">
                           <span>Next Session:</span>
-                          <span>{child.upcomingSession.toLocaleDateString()}</span>
+                          <span>
+                            {child.upcomingSession.toLocaleDateString()}
+                          </span>
                         </div>
                         <div className="flex justify-between text-xs text-gray-500">
                           <span>Teacher:</span>
@@ -339,8 +396,12 @@ export default function ParentDashboard() {
                   <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
                     <span className="text-2xl text-gray-400">➕</span>
                   </div>
-                  <h3 className="text-lg font-medium text-gray-700 mb-2">Add New Student</h3>
-                  <p className="text-sm text-gray-500">Create a learning profile for your child</p>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">
+                    Add New Student
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Create a learning profile for your child
+                  </p>
                 </motion.div>
               </div>
             </motion.div>
@@ -363,22 +424,34 @@ export default function ParentDashboard() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Create Student Profile</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Create Student Profile
+                </h3>
                 <button
                   onClick={() => setShowCreateStudent(false)}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
 
-              <CreateStudentForm 
-                onSubmit={(studentData) => {
+              <CreateStudentForm
+                onSubmit={studentData => {
                   const newStudent = {
                     id: `student-${Date.now()}`,
                     name: studentData.name,
@@ -388,7 +461,7 @@ export default function ParentDashboard() {
                     currentProgress: 0,
                     lastSession: new Date(),
                     upcomingSession: new Date(Date.now() + 24 * 60 * 60 * 1000),
-                    teacher: 'John Teacher'
+                    teacher: 'John Teacher',
                   };
                   setChildrenData(prev => [...prev, newStudent]);
                   setShowCreateStudent(false);
