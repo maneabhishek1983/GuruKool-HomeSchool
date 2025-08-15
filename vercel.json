@@ -1,4 +1,5 @@
 {
+  "$comment": "Production deployment configuration",
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
@@ -17,7 +18,7 @@
     },
     {
       "source": "/teacher",
-      "destination": "/teacher/dashboard", 
+      "destination": "/teacher/dashboard",
       "permanent": false
     },
     {
