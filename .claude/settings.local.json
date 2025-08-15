@@ -14,7 +14,15 @@
       "Bash(npm run lint:*)",
       "Bash(npm test:*)",
       "Bash(NODE_ENV=production npm run build)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git config:*)",
+      "Bash(npx vercel:*)",
+      "Bash(git remote get-url:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(GIT_CURL_VERBOSE=1 git push origin main)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
