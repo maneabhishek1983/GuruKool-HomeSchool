@@ -1,9 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Ensure environment variables are available during build
-  env: {
-    NODE_ENV: process.env.NODE_ENV || 'production',
-  },
   reactStrictMode: true,
   poweredByHeader: false,
   eslint: {
