@@ -11,10 +11,20 @@ import {
   generateSampleNotifications,
   ProgressTracker,
   generateSampleProgressData,
-} from '@/design-system/components/interactive';
-import type { SwipeAction, AnalyticsData, Notification, ProgressData } from '@/design-system/components/interactive';
-import { Card, CardHeader, CardTitle, CardContent } from '@/design-system/components/base/Card';
-import { animationPresets } from '@/design-system/animations/presets';
+} from '../../design-system/components/interactive';
+import type {
+  SwipeAction,
+  AnalyticsData,
+  Notification,
+  ProgressData,
+} from '../../design-system/components/interactive';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from '../../design-system/components/base/Card';
+import { animationPresets } from '../../design-system/animations/presets';
 
 export default function InteractiveDemoPage() {
   const [notifications, setNotifications] = useState<Notification[]>(
@@ -114,7 +124,8 @@ export default function InteractiveDemoPage() {
             Interactive Dashboard Components
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300">
-            Premium UI components with advanced interactions and AI-powered features
+            Premium UI components with advanced interactions and AI-powered
+            features
           </p>
         </motion.div>
 
@@ -134,15 +145,15 @@ export default function InteractiveDemoPage() {
                 left: [presetSwipeActions.favorite, presetSwipeActions.share],
                 right: [presetSwipeActions.archive, presetSwipeActions.delete],
               }}
-              onSwipe={(direction, action) => 
+              onSwipe={(direction, action) =>
                 console.log(`Swiped ${direction}:`, action.label)
               }
             >
               <CardContent>
                 <h3 className="font-semibold mb-2">Swipeable Card</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Swipe left for favorite/share actions, right for archive/delete.
-                  Try dragging this card horizontally!
+                  Swipe left for favorite/share actions, right for
+                  archive/delete. Try dragging this card horizontally!
                 </p>
               </CardContent>
             </GestureCard>
@@ -156,8 +167,8 @@ export default function InteractiveDemoPage() {
               <CardContent>
                 <h3 className="font-semibold mb-2">Task Card</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Swipe right to complete or postpone this task.
-                  Includes haptic feedback on supported devices.
+                  Swipe right to complete or postpone this task. Includes haptic
+                  feedback on supported devices.
                 </p>
               </CardContent>
             </GestureCard>
@@ -222,14 +233,16 @@ export default function InteractiveDemoPage() {
               onNotificationDismiss={handleNotificationDismiss}
               onMarkAllRead={handleMarkAllRead}
             />
-            
+
             <Card variant="elevated">
               <CardHeader>
                 <CardTitle>Notification Controls</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <button
-                  onClick={() => setNotifications(generateSampleNotifications(5))}
+                  onClick={() =>
+                    setNotifications(generateSampleNotifications(5))
+                  }
                   className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                 >
                   Generate New Notifications
@@ -241,7 +254,10 @@ export default function InteractiveDemoPage() {
                   Clear All Notifications
                 </button>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
-                  <p>• AI filtering prioritizes notifications by urgency and relevance</p>
+                  <p>
+                    • AI filtering prioritizes notifications by urgency and
+                    relevance
+                  </p>
                   <p>• Hover over notifications to see dismiss buttons</p>
                   <p>• Click action buttons to interact with notifications</p>
                   <p>• Use filters to view specific notification types</p>

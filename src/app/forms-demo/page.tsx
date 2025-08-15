@@ -2,7 +2,12 @@
 
 import React from 'react';
 import { z } from 'zod';
-import { SmartForm, AutoCompleteInput, DateTimePicker, FileUpload } from '@/design-system/components/forms';
+import {
+  SmartForm,
+  AutoCompleteInput,
+  DateTimePicker,
+  FileUpload,
+} from '../../design-system/components/forms';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -22,8 +27,15 @@ export default function FormsDemo() {
 
   const handleSuggestionsFetch = async (query: string) => {
     // Simulate AI suggestions
-    const subjects = ['Mathematics', 'Science', 'English', 'History', 'Art', 'Music'];
-    return subjects.filter(subject => 
+    const subjects = [
+      'Mathematics',
+      'Science',
+      'English',
+      'History',
+      'Art',
+      'Music',
+    ];
+    return subjects.filter(subject =>
       subject.toLowerCase().includes(query.toLowerCase())
     );
   };
@@ -40,7 +52,7 @@ export default function FormsDemo() {
         severity: 'medium' as const,
       },
     ];
-    
+
     // Only return conflicts if the selected time overlaps
     const selectedHour = date.getHours();
     if (selectedHour >= 10 && selectedHour <= 12) {
@@ -62,7 +74,8 @@ export default function FormsDemo() {
             Advanced Form Components Demo
           </h1>
           <p className="text-gray-600">
-            Showcasing SmartForm, AutoCompleteInput, DateTimePicker, and FileUpload components
+            Showcasing SmartForm, AutoCompleteInput, DateTimePicker, and
+            FileUpload components
           </p>
         </div>
 
@@ -74,7 +87,10 @@ export default function FormsDemo() {
         >
           <div className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Student Name
               </label>
               <input
@@ -86,7 +102,10 @@ export default function FormsDemo() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Email Address
               </label>
               <input
@@ -102,7 +121,14 @@ export default function FormsDemo() {
               name="subject"
               label="Subject"
               placeholder="Select or type subject"
-              suggestions={['Mathematics', 'Science', 'English', 'History', 'Art', 'Music']}
+              suggestions={[
+                'Mathematics',
+                'Science',
+                'English',
+                'History',
+                'Art',
+                'Music',
+              ]}
               aiPowered={true}
               onSuggestionsFetch={handleSuggestionsFetch}
               required={true}
@@ -133,7 +159,9 @@ export default function FormsDemo() {
         </SmartForm>
 
         <div className="mt-12 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Features Demonstrated</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            Features Demonstrated
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
             <div>
               <h3 className="font-medium text-gray-900 mb-2">SmartForm</h3>
@@ -145,7 +173,9 @@ export default function FormsDemo() {
               </ul>
             </div>
             <div>
-              <h3 className="font-medium text-gray-900 mb-2">AutoCompleteInput</h3>
+              <h3 className="font-medium text-gray-900 mb-2">
+                AutoCompleteInput
+              </h3>
               <ul className="space-y-1">
                 <li>• AI-powered suggestions</li>
                 <li>• Keyboard navigation</li>

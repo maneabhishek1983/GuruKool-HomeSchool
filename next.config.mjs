@@ -2,6 +2,17 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Add webpack configuration to handle missing modules
+  webpack: (config, { isServer }) => {
+    // Add fallback for missing modules
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+    };
+    return config;
+  },
   eslint: {
     ignoreDuringBuilds: true,
     dirs: ['src'],
