@@ -37,7 +37,8 @@ const nextConfig = {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.supabase.co https://api.openai.com https://vercel.live",
+      "connect-src 'self' https://*.supabase.co https://api.openai.com https://vercel.live http://localhost:* https://localhost:*",
+      "frame-src 'self' https://vercel.live https://*.vercel.app",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'"
