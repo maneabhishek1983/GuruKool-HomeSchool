@@ -9,6 +9,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  experimental: {
+    missingSuspenseWithCSRError: false,
+  },
   async headers() {
     const isProd = process.env.NODE_ENV === 'production';
     const cspDirectives = [
