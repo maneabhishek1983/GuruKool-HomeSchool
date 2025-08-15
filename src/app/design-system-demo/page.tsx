@@ -2,12 +2,12 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Button, 
-  Card, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription, 
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
   CardContent,
   Container,
   Text,
@@ -25,10 +25,16 @@ import {
   Skeleton,
   SkeletonText,
   SkeletonAvatar,
-  SkeletonCard
+  SkeletonCard,
 } from '../../design-system';
-import { ThemeProvider, ThemeToggle } from '../../design-system/themes/theme-provider';
-import { animationPresets, staggerVariants } from '../../design-system/animations/presets';
+import {
+  ThemeProvider,
+  ThemeToggle,
+} from '../../design-system/themes/theme-provider';
+import {
+  animationPresets,
+  staggerVariants,
+} from '../../design-system/animations/presets';
 
 function DemoContent() {
   const [progress, setProgress] = useState(65);
@@ -52,11 +58,9 @@ function DemoContent() {
           Design System Demo
         </Display>
         <Text size="lg" color="secondary" className="max-w-2xl mx-auto">
-          Explore our premium UI components with smooth animations, dark mode support, and responsive design.
+          Explore our premium UI components with smooth animations, dark mode
+          support, and responsive design.
         </Text>
-        <div className="mt-6">
-          <ThemeToggle />
-        </div>
       </motion.div>
 
       {/* Components Grid */}
@@ -71,7 +75,10 @@ function DemoContent() {
           <Card padding="lg">
             <CardHeader>
               <CardTitle>Buttons</CardTitle>
-              <CardDescription>Interactive buttons with premium animations and multiple variants</CardDescription>
+              <CardDescription>
+                Interactive buttons with premium animations and multiple
+                variants
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <VStack spacing="lg">
@@ -82,7 +89,7 @@ function DemoContent() {
                   <Button variant="ghost">Ghost Button</Button>
                   <Button variant="danger">Danger Button</Button>
                 </HStack>
-                
+
                 <HStack spacing="md" wrap>
                   <Button size="xs">Extra Small</Button>
                   <Button size="sm">Small</Button>
@@ -90,10 +97,10 @@ function DemoContent() {
                   <Button size="lg">Large</Button>
                   <Button size="xl">Extra Large</Button>
                 </HStack>
-                
+
                 <HStack spacing="md" wrap>
-                  <Button 
-                    loading={loading} 
+                  <Button
+                    loading={loading}
                     onClick={handleLoadingDemo}
                     leftIcon={!loading ? <span>🚀</span> : undefined}
                   >
@@ -116,27 +123,33 @@ function DemoContent() {
           <Card padding="lg">
             <CardHeader>
               <CardTitle>Typography</CardTitle>
-              <CardDescription>Premium typography system with semantic components</CardDescription>
+              <CardDescription>
+                Premium typography system with semantic components
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <VStack spacing="lg">
                 <div>
                   <Display size="2xl">Display Text</Display>
-                  <Text color="secondary">Large, bold text for hero sections</Text>
+                  <Text color="secondary">
+                    Large, bold text for hero sections
+                  </Text>
                 </div>
-                
+
                 <div>
                   <Heading level={1}>Heading Level 1</Heading>
                   <Heading level={2}>Heading Level 2</Heading>
                   <Heading level={3}>Heading Level 3</Heading>
                 </div>
-                
+
                 <div>
                   <Text size="lg">Large body text for important content</Text>
                   <Text>Regular body text for general content</Text>
-                  <Text size="sm" color="secondary">Small text for captions and metadata</Text>
+                  <Text size="sm" color="secondary">
+                    Small text for captions and metadata
+                  </Text>
                 </div>
-                
+
                 <HStack spacing="lg" wrap>
                   <Text color="success">Success Text</Text>
                   <Text color="warning">Warning Text</Text>
@@ -153,26 +166,40 @@ function DemoContent() {
           <Card padding="lg">
             <CardHeader>
               <CardTitle>Layout Components</CardTitle>
-              <CardDescription>Flexible layout system with Grid, Stack, and Flex components</CardDescription>
+              <CardDescription>
+                Flexible layout system with Grid, Stack, and Flex components
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <VStack spacing="lg">
                 <div>
-                  <Text weight="medium" className="mb-4">Responsive Grid</Text>
+                  <Text weight="medium" className="mb-4">
+                    Responsive Grid
+                  </Text>
                   <Grid cols={1} responsive={{ sm: 2, lg: 4 }} gap="md">
-                    {[1, 2, 3, 4].map((i) => (
+                    {[1, 2, 3, 4].map(i => (
                       <GridItem key={i}>
-                        <Card variant="filled" padding="md" className="text-center">
+                        <Card
+                          variant="filled"
+                          padding="md"
+                          className="text-center"
+                        >
                           <Text>Grid Item {i}</Text>
                         </Card>
                       </GridItem>
                     ))}
                   </Grid>
                 </div>
-                
+
                 <div>
-                  <Text weight="medium" className="mb-4">Stack Layout</Text>
-                  <HStack spacing="md" justify="between" className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                  <Text weight="medium" className="mb-4">
+                    Stack Layout
+                  </Text>
+                  <HStack
+                    spacing="md"
+                    justify="between"
+                    className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                  >
                     <Card variant="elevated" padding="sm">
                       <Text size="sm">Item 1</Text>
                     </Card>
@@ -194,38 +221,58 @@ function DemoContent() {
           <Card padding="lg">
             <CardHeader>
               <CardTitle>Progress & Loading</CardTitle>
-              <CardDescription>Beautiful loading states and progress indicators</CardDescription>
+              <CardDescription>
+                Beautiful loading states and progress indicators
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <VStack spacing="lg">
                 <div>
-                  <Text weight="medium" className="mb-4">Progress Bars</Text>
+                  <Text weight="medium" className="mb-4">
+                    Progress Bars
+                  </Text>
                   <VStack spacing="md">
-                    <ProgressBar value={progress} showLabel label="Upload Progress" />
+                    <ProgressBar
+                      value={progress}
+                      showLabel
+                      label="Upload Progress"
+                    />
                     <ProgressBar value={85} color="success" size="sm" />
                     <ProgressBar value={45} color="warning" size="lg" />
                     <HStack spacing="md" justify="center">
-                      <Button size="sm" onClick={() => setProgress(Math.max(0, progress - 10))}>
+                      <Button
+                        size="sm"
+                        onClick={() => setProgress(Math.max(0, progress - 10))}
+                      >
                         Decrease
                       </Button>
-                      <Button size="sm" onClick={() => setProgress(Math.min(100, progress + 10))}>
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          setProgress(Math.min(100, progress + 10))
+                        }
+                      >
                         Increase
                       </Button>
                     </HStack>
                   </VStack>
                 </div>
-                
+
                 <div>
-                  <Text weight="medium" className="mb-4">Circular Progress</Text>
+                  <Text weight="medium" className="mb-4">
+                    Circular Progress
+                  </Text>
                   <HStack spacing="lg" justify="center">
                     <CircularProgress value={progress} showLabel />
                     <CircularProgress value={75} color="success" size={48} />
                     <CircularProgress value={30} color="warning" size={32} />
                   </HStack>
                 </div>
-                
+
                 <div>
-                  <Text weight="medium" className="mb-4">Loading Spinners</Text>
+                  <Text weight="medium" className="mb-4">
+                    Loading Spinners
+                  </Text>
                   <HStack spacing="lg" justify="center" align="center">
                     <LoadingSpinner variant="spin" />
                     <LoadingSpinner variant="pulse" color="secondary" />
@@ -243,12 +290,16 @@ function DemoContent() {
           <Card padding="lg">
             <CardHeader>
               <CardTitle>Skeleton Loading</CardTitle>
-              <CardDescription>Elegant loading placeholders for better UX</CardDescription>
+              <CardDescription>
+                Elegant loading placeholders for better UX
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Grid cols={1} responsive={{ md: 2 }} gap="lg">
                 <div>
-                  <Text weight="medium" className="mb-4">Basic Skeletons</Text>
+                  <Text weight="medium" className="mb-4">
+                    Basic Skeletons
+                  </Text>
                   <VStack spacing="md">
                     <HStack spacing="md" align="center">
                       <SkeletonAvatar size={48} />
@@ -258,12 +309,18 @@ function DemoContent() {
                       </VStack>
                     </HStack>
                     <SkeletonText lines={3} />
-                    <Skeleton variant="rectangular" height={120} className="rounded-lg" />
+                    <Skeleton
+                      variant="rectangular"
+                      height={120}
+                      className="rounded-lg"
+                    />
                   </VStack>
                 </div>
-                
+
                 <div>
-                  <Text weight="medium" className="mb-4">Card Skeleton</Text>
+                  <Text weight="medium" className="mb-4">
+                    Card Skeleton
+                  </Text>
                   <Card variant="outlined" padding="none">
                     <SkeletonCard />
                   </Card>
@@ -278,21 +335,39 @@ function DemoContent() {
           <Card padding="lg">
             <CardHeader>
               <CardTitle>Interactive Cards</CardTitle>
-              <CardDescription>Hover and tap animations with premium effects</CardDescription>
+              <CardDescription>
+                Hover and tap animations with premium effects
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Grid cols={1} responsive={{ sm: 2, lg: 3 }} gap="lg">
                 {[
-                  { title: 'Analytics Dashboard', desc: 'View your performance metrics', icon: '📊' },
-                  { title: 'User Management', desc: 'Manage users and permissions', icon: '👥' },
-                  { title: 'Settings', desc: 'Configure your preferences', icon: '⚙️' },
+                  {
+                    title: 'Analytics Dashboard',
+                    desc: 'View your performance metrics',
+                    icon: '📊',
+                  },
+                  {
+                    title: 'User Management',
+                    desc: 'Manage users and permissions',
+                    icon: '👥',
+                  },
+                  {
+                    title: 'Settings',
+                    desc: 'Configure your preferences',
+                    icon: '⚙️',
+                  },
                 ].map((item, index) => (
                   <Card key={index} interactive variant="elevated" padding="lg">
                     <VStack spacing="md">
                       <div className="text-3xl">{item.icon}</div>
                       <div className="text-center">
-                        <Text weight="semibold" size="lg">{item.title}</Text>
-                        <Text color="secondary" size="sm">{item.desc}</Text>
+                        <Text weight="semibold" size="lg">
+                          {item.title}
+                        </Text>
+                        <Text color="secondary" size="sm">
+                          {item.desc}
+                        </Text>
                       </div>
                       <Button variant="outline" size="sm" fullWidth>
                         Learn More
@@ -310,7 +385,9 @@ function DemoContent() {
           <Card padding="lg">
             <CardHeader>
               <CardTitle>Animation Showcase</CardTitle>
-              <CardDescription>Smooth animations and micro-interactions</CardDescription>
+              <CardDescription>
+                Smooth animations and micro-interactions
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Grid cols={1} responsive={{ sm: 2, lg: 4 }} gap="md">
@@ -324,9 +401,14 @@ function DemoContent() {
                     key={index}
                     className="p-4 bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 rounded-lg text-center"
                     {...animation.preset}
-                    transition={{ ...animation.preset.transition, delay: index * 0.1 }}
+                    transition={{
+                      ...animation.preset.transition,
+                      delay: index * 0.1,
+                    }}
                   >
-                    <Text weight="medium" size="sm">{animation.name}</Text>
+                    <Text weight="medium" size="sm">
+                      {animation.name}
+                    </Text>
                   </motion.div>
                 ))}
               </Grid>
@@ -342,6 +424,9 @@ export default function DesignSystemDemo() {
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="absolute top-4 right-4 z-10">
+          <ThemeToggle />
+        </div>
         <DemoContent />
       </div>
     </ThemeProvider>
