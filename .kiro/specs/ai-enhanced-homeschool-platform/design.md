@@ -1,499 +1,210 @@
-# Design Document
+# AI-Enhanced Homeschooling Platform - Design Document
 
 ## Overview
 
-The AI-Enhanced HomeschoolPlatform transforms the existing GuruKool HomeSchool application into a comprehensive, intelligent homeschooling management system. The design leverages modern web technologies, AI agents, premium UI components, and advanced authentication mechanisms to create a seamless experience for parents and administrators.
+The AI-Enhanced Homeschooling Platform is a comprehensive learning management system designed to streamline homeschooling experiences through intelligent automation, secure authentication, and personalized learning insights. The platform focuses on parent and administrator access, with teachers being managed through the platform without direct login capabilities.
 
-The architecture follows a modular, extensible design pattern with clear separation of concerns, enabling scalability and maintainability while providing rich user experiences through high-end UI/UX components. Teachers work through the platform to support student learning but do not have direct login access - their access is managed by parents and administrators.
+## Core Design Principles
 
-## Architecture
+1. **Role-Based Access Control**: Parents and administrators have direct login access, while teachers are managed through the platform
+2. **AI-Powered Insights**: Intelligent recommendations and progress tracking
+3. **Secure Authentication**: Multi-factor authentication with QR code support
+4. **User-Centric Design**: Intuitive interfaces for different user roles
+5. **Real-time Communication**: Seamless interaction between parents, teachers, and administrators
 
-### System Architecture
+## Authentication & Security
 
-```mermaid
-graph TB
-    subgraph "Client Layer"
-        A[Next.js 14 App Router]
-        B[Premium UI Components]
-        C[PWA Service Worker]
-        D[Offline Storage]
-    end
+### User Roles & Access
 
-    subgraph "Authentication Layer"
-        E[QR Code Auth Service]
-        F[JWT Token Manager]
-        G[Role-Based Access Control]
-    end
+#### Parent Access
 
-    subgraph "AI Agent Layer"
-        H[Task Automation Agent]
-        I[Analytics Agent]
-        J[Communication Agent]
-        K[Scheduling Agent]
-    end
+- **Login Method**: Email/password authentication
+- **Dashboard**: Parent dashboard with student management capabilities
+- **Features**:
+  - Create and manage student profiles
+  - Monitor learning progress
+  - Assign teachers to students
+  - Receive AI-powered insights
+  - Communicate with teachers and administrators
 
-    subgraph "API Layer"
-        L[GraphQL/REST APIs]
-        M[Real-time WebSocket]
-        N[File Upload Service]
-    end
+#### Admin Access
 
-    subgraph "Data Layer"
-        O[PostgreSQL Database]
-        P[Redis Cache]
-        Q[Vector Database for AI]
-    end
+- **Login Method**: Email/password authentication
+- **Dashboard**: Admin dashboard with full system access
+- **Features**:
+  - User management (parents, students, teachers)
+  - System configuration and monitoring
+  - Platform analytics and reporting
+  - Security monitoring and access control
+  - Content management
 
-    A --> E
-    A --> B
-    A --> C
-    B --> L
-    E --> F
-    F --> G
-    H --> L
-    I --> Q
-    J --> M
-    K --> L
-    L --> O
-    L --> P
-    C --> D
-```
+#### Teacher Management
 
-### Technology Stack
+- **Access Method**: No direct login - managed by parents and administrators
+- **Features**:
+  - Assigned to students by parents/admins
+  - Communication channels with parents
+  - Progress reporting capabilities
+  - Access to assigned student data only
 
-**Frontend:**
+### Authentication Flow
 
-- Next.js 14 with App Router for server-side rendering and routing
-- TypeScript for type safety and developer experience
-- Tailwind CSS with custom design system for styling
-- Framer Motion for animations and micro-interactions
-- Mantine UI or Chakra UI for premium component library
-- React Hook Form with Zod for advanced form handling
-- Recharts/D3.js for data visualization
-- React Query (TanStack Query) for state management and caching
+1. **Login Page**: Simple email/password form with demo account options
+2. **Role Detection**: System identifies user role (parent/admin)
+3. **Dashboard Redirect**: Automatic redirection to appropriate dashboard
+4. **Session Management**: Secure session handling with logout functionality
 
-**Authentication & Security:**
+## User Interfaces
 
-- QR code generation with qrcode library
-- WebSocket for real-time QR code authentication
-- JWT tokens with refresh token rotation
-- bcrypt for password hashing
-- Rate limiting with express-rate-limit
+### Parent Dashboard
 
-**AI & Machine Learning:**
+#### Header Section
 
-- OpenAI GPT-4 for natural language processing
-- LangChain for AI agent orchestration
-- Pinecone or Weaviate for vector database
-- TensorFlow.js for client-side ML capabilities
+- User welcome message
+- Logout button
+- Quick access to key features
 
-**Backend Services:**
+#### Main Features Grid
 
-- Node.js with Express or Fastify
-- GraphQL with Apollo Server
-- PostgreSQL with Prisma ORM
-- Redis for caching and session management
-- WebSocket.io for real-time communication
+1. **Student Profiles**: Create and manage children's learning profiles
+2. **Progress Tracking**: Monitor learning progress and achievements
+3. **Teacher Assignment**: Assign teachers and manage communication
+4. **AI Insights**: Get personalized recommendations
+5. **Communication**: Stay connected with teachers and administrators
+6. **Settings**: Customize dashboard and notification preferences
 
-## Components and Interfaces
+#### Key Functionality
 
-### Core Components
+- Student profile creation and management
+- Progress visualization and reporting
+- Teacher assignment and communication
+- AI-powered learning recommendations
+- Notification management
 
-#### 1. Authentication System
+### Admin Dashboard
 
-**QRAuthProvider Component:**
+#### Header Section
 
-```typescript
-interface QRAuthConfig {
-  expirationTime: number; // 5 minutes
-  refreshInterval: number; // 30 seconds
-  fallbackEnabled: boolean;
-}
+- Admin welcome message
+- Logout button
+- System status indicators
 
-interface QRAuthState {
-  qrCode: string;
-  isScanning: boolean;
-  authStatus: 'pending' | 'success' | 'expired' | 'error';
-  user?: User;
-}
-```
+#### Management Cards
 
-**Features:**
+1. **User Management**: Manage parents, students, and teacher assignments
+2. **System Analytics**: Monitor platform usage and performance
+3. **Platform Settings**: Configure system settings and security
+4. **Security Monitoring**: Monitor security events and access logs
+5. **Content Management**: Manage educational content and resources
+6. **System Health**: Monitor system performance and health
 
-- Dynamic QR code generation with embedded session tokens
-- Real-time authentication status updates via WebSocket
-- Automatic QR code refresh before expiration
-- Fallback to traditional login for accessibility
-- Biometric authentication support for mobile devices
-- **Role-based access: Only parents and administrators have direct login access**
+#### Demo Users Section
 
-#### 2. AI Agent Framework
+- Parent account: parent@example.com / parent123
+- Admin account: admin@example.com / admin123
+- Teacher: No direct access (managed through platform)
 
-**AgentOrchestrator Component:**
+### Teacher Interface
 
-```typescript
-interface AIAgent {
-  id: string;
-  name: string;
-  capabilities: string[];
-  priority: number;
-  execute(context: AgentContext): Promise<AgentResult>;
-}
+#### Managed Access Model
 
-interface AgentContext {
-  user: User;
-  sessionData: SessionData;
-  preferences: UserPreferences;
-  historicalData: HistoricalData;
-}
-```
+- Teachers are added and managed by parents or administrators
+- No direct login credentials or dashboard access
+- Communication channels provided through parent/admin interfaces
+- Progress reporting and student data access through assigned relationships
 
-**Agent Types:**
+#### Communication Features
 
-- **TaskAutomationAgent**: Handles routine tasks like timesheet creation, notifications
-- **AnalyticsAgent**: Processes learning data and generates insights
-- **CommunicationAgent**: Manages intelligent notifications and messaging
-- **SchedulingAgent**: Optimizes schedules and handles conflicts
+- Direct messaging with parents
+- Progress report submission
+- Student assignment management
+- Session scheduling and tracking
 
-#### 3. Premium UI Component Library
+## User Data Model
 
-**Design System Components:**
-
-```typescript
-// Advanced Form Components
-interface SmartFormProps {
-  schema: ZodSchema;
-  onSubmit: (data: any) => Promise<void>;
-  aiAssisted?: boolean;
-  realTimeValidation?: boolean;
-}
-
-// Data Visualization Components
-interface AnalyticsDashboardProps {
-  data: AnalyticsData;
-  chartType: 'line' | 'bar' | 'pie' | 'heatmap';
-  interactive?: boolean;
-  aiInsights?: boolean;
-}
-
-// Interactive Elements
-interface GestureCardProps {
-  children: React.ReactNode;
-  swipeActions?: SwipeAction[];
-  dragEnabled?: boolean;
-  hapticFeedback?: boolean;
-}
-```
-
-#### 4. Offline-First Architecture
-
-**SyncManager Component:**
-
-```typescript
-interface SyncConfig {
-  syncInterval: number;
-  conflictResolution: 'client' | 'server' | 'ai';
-  priorityQueues: SyncPriority[];
-}
-
-interface OfflineAction {
-  id: string;
-  type: string;
-  payload: any;
-  timestamp: number;
-  priority: 'high' | 'medium' | 'low';
-}
-```
-
-### Interface Specifications
-
-#### 1. User Interfaces
-
-**Parent Dashboard Interface:**
-
-- AI-powered priority feed with actionable insights
-- Real-time teacher location and session status
-- Interactive progress charts with drill-down capabilities
-- Smart notification center with AI-filtered importance
-- Gesture-based navigation with swipe actions
-- **Student profile creation and management**
-- **Teacher assignment and management**
-
-**Administrator Dashboard Interface:**
-
-- System health monitoring and management
-- User management (parents and teachers)
-- Platform analytics and reporting
-- Feature testing and deployment tools
-- **Teacher profile management and assignment**
-
-**Teacher Interface (Managed Access):**
-
-- Teachers work through the platform but don't have direct login
-- Access is managed by parents and administrators
-- Teachers can be assigned to students and sessions
-- Teacher profiles are maintained in the system for reference
-
-#### 2. API Interfaces
-
-**GraphQL Schema:**
-
-```graphql
-type User {
-  id: ID!
-  name: String!
-  role: UserRole!
-  preferences: UserPreferences
-  sessions: [Session!]!
-}
-
-type Session {
-  id: ID!
-  student: Student!
-  teacher: Teacher!
-  subject: Subject!
-  scheduledTime: DateTime!
-  actualTime: TimeRange
-  location: Location!
-  status: SessionStatus!
-  aiInsights: [Insight!]!
-}
-
-type AIInsight {
-  id: ID!
-  type: InsightType!
-  content: String!
-  confidence: Float!
-  actionable: Boolean!
-  createdAt: DateTime!
-}
-```
-
-## Data Models
-
-### Core Data Models
-
-#### 1. User Management
+### User Object Structure
 
 ```typescript
 interface User {
   id: string;
-  email: string;
   name: string;
-  role: 'parent' | 'admin'; // Teachers don't have direct login access
-  preferences: UserPreferences;
+  role: 'parent' | 'admin' | 'teacher';
+  email: string;
+  preferences: {
+    notifications: {
+      email: boolean;
+      push: boolean;
+      sms: boolean;
+      inApp: boolean;
+      frequency: 'immediate' | 'daily' | 'weekly';
+    };
+    dashboard: {
+      layout: 'compact' | 'detailed';
+      theme: 'light' | 'dark';
+      widgets: string[];
+    };
+    privacy: {
+      dataSharing: boolean;
+      analytics: boolean;
+      aiTraining: boolean;
+    };
+    accessibility: {
+      fontSize: 'small' | 'medium' | 'large';
+      highContrast: boolean;
+      reducedMotion: boolean;
+      screenReader: boolean;
+    };
+  };
   createdAt: Date;
   lastActive: Date;
 }
-
-interface Teacher {
-  id: string;
-  name: string;
-  email: string;
-  subjects: string[];
-  availability: AvailabilitySchedule;
-  rating: number;
-  bio: string;
-  // No direct login credentials - managed by system
-}
-
-interface UserPreferences {
-  notifications: NotificationSettings;
-  dashboard: DashboardConfig;
-  privacy: PrivacySettings;
-  accessibility: AccessibilitySettings;
-}
 ```
 
-#### 2. Session Management
+### Teacher Management
 
-```typescript
-interface Session {
-  id: string;
-  studentId: string;
-  teacherId: string;
-  parentId: string;
-  subject: string;
-  scheduledStart: Date;
-  scheduledEnd: Date;
-  actualStart?: Date;
-  actualEnd?: Date;
-  location: Location;
-  status: SessionStatus;
-  notes: string;
-  aiInsights: AIInsight[];
-  attachments: Attachment[];
-}
-
-interface Location {
-  address: string;
-  coordinates: {
-    latitude: number;
-    longitude: number;
-  };
-  verified: boolean;
-}
-```
-
-#### 3. AI and Analytics
-
-```typescript
-interface AIInsight {
-  id: string;
-  sessionId: string;
-  type: 'progress' | 'recommendation' | 'alert' | 'prediction';
-  content: string;
-  confidence: number;
-  metadata: Record<string, any>;
-  createdAt: Date;
-}
-
-interface LearningAnalytics {
-  studentId: string;
-  subject: string;
-  progressMetrics: ProgressMetric[];
-  learningPatterns: LearningPattern[];
-  recommendations: Recommendation[];
-  lastUpdated: Date;
-}
-```
-
-### Database Schema Design
-
-**PostgreSQL Tables:**
-
-- `users` - User accounts and authentication (parents and admins only)
-- `teachers` - Teacher profiles (no login access)
-- `sessions` - Teaching sessions and scheduling
-- `timesheets` - Automated time tracking
-- `ai_insights` - AI-generated insights and recommendations
-- `notifications` - Intelligent notification system
-- `sync_queue` - Offline synchronization queue
-- `audit_logs` - Security and compliance tracking
-
-**Redis Cache Structure:**
-
-- Session tokens and QR codes
-- Real-time user presence
-- AI model predictions cache
-- Notification queues
+- Teachers exist as user objects with role 'teacher'
+- No direct authentication capabilities
+- Access controlled through parent/admin assignments
+- Communication and data access through platform interfaces
 
 ## Error Handling
 
-### Error Categories and Strategies
-
-#### 1. Authentication Errors
+### Authentication Errors
 
 ```typescript
-enum AuthErrorType {
-  QR_EXPIRED = 'qr_expired',
-  INVALID_TOKEN = 'invalid_token',
-  INSUFFICIENT_PERMISSIONS = 'insufficient_permissions',
-  RATE_LIMITED = 'rate_limited',
-  TEACHER_ACCESS_DENIED = 'teacher_access_denied', // Teachers can't login directly
-}
+type AuthErrorType =
+  | 'invalid_credentials'
+  | 'user_not_found'
+  | 'access_denied'
+  | 'session_expired'
+  | 'system_error';
 
 interface AuthErrorHandler {
-  handleQRExpiration(): void;
-  handleTokenRefresh(): Promise<boolean>;
-  handlePermissionDenied(): void;
-  handleTeacherAccessAttempt(): void; // Redirect to parent/admin access
+  handleError: (error: AuthErrorType, context: string) => void;
+  showUserMessage: (
+    message: string,
+    type: 'error' | 'warning' | 'info'
+  ) => void;
+  redirectToLogin: () => void;
 }
 ```
 
-#### 2. AI Agent Errors
+### Role-Based Access Control
 
-```typescript
-enum AIErrorType {
-  MODEL_UNAVAILABLE = 'model_unavailable',
-  INSUFFICIENT_DATA = 'insufficient_data',
-  PROCESSING_TIMEOUT = 'processing_timeout',
-  CONFIDENCE_TOO_LOW = 'confidence_too_low',
-}
+- Automatic redirection based on user role
+- Access denial for unauthorized features
+- Clear error messages for access violations
+- Graceful fallbacks for missing permissions
 
-interface AIErrorRecovery {
-  fallbackToRuleBasedSystem(): void;
-  queueForRetry(): void;
-  notifyHumanIntervention(): void;
-}
-```
+## Design Summary
 
-#### 3. Sync and Offline Errors
+The platform implements a streamlined role-based access model where:
 
-```typescript
-interface SyncErrorHandler {
-  handleConflictResolution(conflict: DataConflict): Promise<Resolution>;
-  handleNetworkFailure(): void;
-  handleStorageQuotaExceeded(): void;
-}
-```
+1. **Parents** have direct access to manage their children's education
+2. **Administrators** have full system access for platform management
+3. **Teachers** are managed entities without direct login access
+4. **Authentication** is simplified to email/password with demo accounts
+5. **Security** is maintained through role-based permissions and session management
+6. **Communication** flows through parent/admin interfaces to teachers
 
-### Error Recovery Mechanisms
-
-1. **Graceful Degradation**: When AI services fail, fall back to rule-based systems
-2. **Retry Logic**: Exponential backoff for transient failures
-3. **User Feedback**: Clear, actionable error messages with recovery suggestions
-4. **Logging and Monitoring**: Comprehensive error tracking for proactive resolution
-5. **Role-based Access Control**: Clear messaging when teachers attempt direct access
-
-## Testing Strategy
-
-### Testing Pyramid
-
-#### 1. Unit Tests (70%)
-
-- Component testing with React Testing Library
-- AI agent logic testing with mocked services
-- Utility function testing
-- Data model validation testing
-
-#### 2. Integration Tests (20%)
-
-- API endpoint testing
-- Database integration testing
-- Authentication flow testing
-- Real-time communication testing
-
-#### 3. End-to-End Tests (10%)
-
-- Critical user journey testing with Playwright
-- Cross-browser compatibility testing
-- Mobile responsiveness testing
-- Performance testing under load
-
-### AI-Specific Testing
-
-#### 1. AI Model Testing
-
-```typescript
-interface AITestSuite {
-  testModelAccuracy(testData: TestDataset): Promise<AccuracyMetrics>;
-  testBiasDetection(demographicData: DemographicData): Promise<BiasReport>;
-  testResponseTime(inputSize: number): Promise<PerformanceMetrics>;
-}
-```
-
-#### 2. Agent Behavior Testing
-
-- Decision tree validation
-- Context understanding verification
-- Multi-agent coordination testing
-- Fallback mechanism validation
-
-### Testing Tools and Frameworks
-
-- **Jest** for unit testing
-- **React Testing Library** for component testing
-- **Playwright** for E2E testing
-- **MSW (Mock Service Worker)** for API mocking
-- **Storybook** for component documentation and visual testing
-- **Lighthouse CI** for performance testing
-
-### Continuous Testing Pipeline
-
-1. **Pre-commit hooks** with Husky for code quality
-2. **Pull request testing** with automated test suites
-3. **Staging environment testing** with real data simulation
-4. **Production monitoring** with error tracking and performance metrics
-
-This comprehensive design provides a solid foundation for building a premium, AI-enhanced homeschooling platform that meets all the specified requirements while maintaining high standards for user experience, security, and scalability. The platform supports teachers working through the system while maintaining clear role-based access control.
+This design ensures security, simplicity, and effective management of the homeschooling ecosystem while maintaining clear separation of responsibilities and access levels.
