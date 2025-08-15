@@ -1,9 +1,14 @@
+import path from 'path';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  // Add webpack configuration to handle missing modules
+  // Add webpack configuration to handle missing modules and path aliases
   webpack: (config, { isServer }) => {
+    // Add webpack alias for @/ path resolution
+    config.resolve.alias['@'] = path.join(__dirname, 'src');
+    
     // Add fallback for missing modules
     config.resolve.fallback = {
       ...config.resolve.fallback,
