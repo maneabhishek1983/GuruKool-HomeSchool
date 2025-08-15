@@ -432,3 +432,6 @@ export default function DesignSystemDemo() {
     </ThemeProvider>
   );
 }
+
+// Force dynamic rendering to avoid SSR issues with theme context
+export const dynamic = 'force-dynamic';

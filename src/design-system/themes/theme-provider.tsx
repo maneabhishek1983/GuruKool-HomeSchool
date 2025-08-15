@@ -116,8 +116,31 @@ export function useTheme() {
   return context;
 }
 
+// Client-only wrapper component
+function ClientOnly({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
+  return <>{children}</>;
+}
+
 // Theme toggle component
 export function ThemeToggle({ className = '' }: { className?: string }) {
+  return (
+    <ClientOnly>
+      <ThemeToggleInner className={className} />
+    </ClientOnly>
+  );
+}
+
+function ThemeToggleInner({ className = '' }: { className?: string }) {
   const { theme, toggleTheme } = useTheme();
 
   return (
