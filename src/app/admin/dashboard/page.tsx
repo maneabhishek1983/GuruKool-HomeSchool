@@ -6,7 +6,7 @@ import { useAuthContext } from '@/lib/authContext';
 import Link from 'next/link';
 
 export default function AdminDashboard() {
-  const { user } = useAuthContext();
+  const { user, logout } = useAuthContext();
   const [activeTab, setActiveTab] = useState<
     'overview' | 'users' | 'system' | 'features' | 'ai' | 'testing'
   >('overview');
@@ -36,6 +36,10 @@ export default function AdminDashboard() {
       activeAdmins: newAdmins,
       totalSessions: Math.floor(Math.random() * 500) + 1200,
     }));
+  };
+
+  const handleLogout = () => {
+    logout();
   };
 
   const handleTestFeature = (featureName: string) => {
@@ -180,6 +184,13 @@ export default function AdminDashboard() {
               >
                 {systemStats.systemHealth}
               </div>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
+              >
+                <span>🚪</span>
+                <span>Logout</span>
+              </button>
             </div>
           </div>
         </div>
@@ -658,22 +669,24 @@ export default function AdminDashboard() {
                   <div className="space-y-4">
                     {[
                       {
-                        role: 'Teacher',
-                        email: 'teacher@example.com',
-                        password: 'password',
-                        features: 'Session management, AI tools, Dashboard',
-                      },
-                      {
                         role: 'Parent',
                         email: 'parent@example.com',
                         password: 'password',
-                        features: 'Progress tracking, Communication',
+                        features:
+                          'Progress tracking, Student management, Communication',
                       },
                       {
                         role: 'Admin',
                         email: 'admin@example.com',
                         password: 'admin123',
                         features: 'Full system access, All features',
+                      },
+                      {
+                        role: 'Teacher',
+                        email: 'N/A',
+                        password: 'N/A',
+                        features:
+                          'Work through parents/admins, No direct access',
                       },
                     ].map((user, index) => (
                       <div

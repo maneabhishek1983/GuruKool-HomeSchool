@@ -23,9 +23,7 @@ export default function LoginPage() {
   // Redirect if already authenticated
   React.useEffect(() => {
     if (user) {
-      if (user.role === 'teacher') {
-        router.push('/teacher/dashboard');
-      } else if (user.role === 'admin') {
+      if (user.role === 'admin') {
         router.push('/admin/dashboard');
       } else {
         router.push('/parent/dashboard');
@@ -41,42 +39,8 @@ export default function LoginPage() {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Demo credentials validation
-      if (email === 'teacher@example.com' && password === 'password') {
-        login({
-          id: 'teacher-1',
-          name: 'John Teacher',
-          role: 'teacher',
-          email: 'teacher@example.com',
-          preferences: {
-            notifications: {
-              email: true,
-              push: true,
-              sms: false,
-              inApp: true,
-              frequency: 'immediate',
-            },
-            dashboard: {
-              layout: 'detailed',
-              theme: 'light',
-              widgets: ['sessions', 'analytics', 'notifications'],
-            },
-            privacy: {
-              dataSharing: false,
-              analytics: true,
-              aiTraining: true,
-            },
-            accessibility: {
-              fontSize: 'medium',
-              highContrast: false,
-              reducedMotion: false,
-              screenReader: false,
-            },
-          },
-          createdAt: new Date(),
-          lastActive: new Date(),
-        });
-      } else if (email === 'parent@example.com' && password === 'password') {
+      // Demo credentials validation - only parent and admin
+      if (email === 'parent@example.com' && password === 'password') {
         login({
           id: 'parent-1',
           name: 'Jane Parent',
@@ -337,9 +301,6 @@ export default function LoginPage() {
                       Demo Credentials:
                     </p>
                     <div className="space-y-1 text-xs text-neutral-500">
-                      <p>
-                        <strong>Teacher:</strong> teacher@example.com / password
-                      </p>
                       <p>
                         <strong>Parent:</strong> parent@example.com / password
                       </p>

@@ -10,7 +10,7 @@ import SmartNotificationSystem from '@/components/parent/SmartNotificationSystem
 import CreateStudentForm from '@/components/parent/CreateStudentForm';
 
 export default function ParentDashboard() {
-  const { user } = useAuthContext();
+  const { user, logout } = useAuthContext();
   const [activeTab, setActiveTab] = useState<
     'overview' | 'progress' | 'tracking' | 'notifications' | 'students'
   >('overview');
@@ -49,6 +49,10 @@ export default function ParentDashboard() {
     return () => clearTimeout(timer);
   }, []);
 
+  const handleLogout = () => {
+    logout();
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -79,6 +83,13 @@ export default function ParentDashboard() {
               <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
                 👥 {childrenData.length} Children
               </div>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
+              >
+                <span>🚪</span>
+                <span>Logout</span>
+              </button>
             </div>
           </div>
         </div>

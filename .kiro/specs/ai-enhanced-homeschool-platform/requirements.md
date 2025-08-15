@@ -2,21 +2,22 @@
 
 ## Introduction
 
-This document outlines the requirements for enhancing the existing GuruKool HomeSchool mobile web application with AI agent capabilities, advanced tools, and QR code-based authentication. The enhancement will transform the basic teacher visit tracking system into a comprehensive AI-powered homeschooling management platform that serves parents, teachers, and students with intelligent automation, activity tracking, and seamless authentication.
+This document outlines the requirements for enhancing the existing GuruKool HomeSchool mobile web application with AI agent capabilities, advanced tools, and QR code-based authentication. The enhancement will transform the basic teacher visit tracking system into a comprehensive AI-powered homeschooling management platform that serves parents and administrators with intelligent automation, activity tracking, and seamless authentication. Teachers work through the platform to support student learning but do not have direct login access - their access is managed by parents and administrators.
 
 ## Requirements
 
 ### Requirement 1: QR Code Authentication System
 
-**User Story:** As a parent or teacher, I want to authenticate using QR codes so that I can quickly and securely access the platform without typing credentials on mobile devices.
+**User Story:** As a parent or administrator, I want to authenticate using QR codes so that I can quickly and securely access the platform without typing credentials on mobile devices.
 
 #### Acceptance Criteria
 
 1. WHEN a user visits the login page THEN the system SHALL display a QR code for authentication
 2. WHEN a user scans the QR code with their mobile device THEN the system SHALL authenticate them automatically
-3. WHEN authentication is successful THEN the system SHALL redirect users to their appropriate dashboard based on role
+3. WHEN authentication is successful THEN the system SHALL redirect users to their appropriate dashboard based on role (parent or admin)
 4. WHEN a QR code expires (after 5 minutes) THEN the system SHALL generate a new QR code automatically
 5. IF a user doesn't have QR scanning capability THEN the system SHALL provide a fallback traditional login option
+6. **Teachers SHALL NOT have direct login access - they work through parents and administrators**
 
 ### Requirement 2: AI Agent Integration for Task Automation
 
@@ -44,15 +45,16 @@ This document outlines the requirements for enhancing the existing GuruKool Home
 
 ### Requirement 4: Enhanced Teacher Management with AI Tools
 
-**User Story:** As a teacher, I want AI-powered tools to help me plan lessons, track student progress, and manage my schedule efficiently.
+**User Story:** As a parent or administrator, I want AI-powered tools to help manage teachers, plan lessons, track student progress, and manage schedules efficiently.
 
 #### Acceptance Criteria
 
-1. WHEN I start a session THEN the AI SHALL provide lesson suggestions based on student's current progress and learning style
-2. WHEN I complete a session THEN the AI SHALL help me generate detailed session notes and progress updates
+1. WHEN I assign a teacher to a session THEN the AI SHALL provide lesson suggestions based on student's current progress and learning style
+2. WHEN a session is completed THEN the AI SHALL help generate detailed session notes and progress updates
 3. WHEN planning future sessions THEN the AI SHALL recommend activities and resources based on curriculum requirements
 4. WHEN students struggle with concepts THEN the AI SHALL suggest alternative teaching approaches and materials
-5. IF my schedule changes THEN the AI SHALL automatically coordinate with parents and suggest optimal rescheduling options
+5. IF a teacher's schedule changes THEN the AI SHALL automatically coordinate with parents and suggest optimal rescheduling options
+6. **Teachers SHALL be managed through the platform by parents and administrators**
 
 ### Requirement 5: Smart Timesheet and Billing Automation
 
@@ -68,7 +70,7 @@ This document outlines the requirements for enhancing the existing GuruKool Home
 
 ### Requirement 6: Multi-Role Dashboard with AI Insights
 
-**User Story:** As a user (parent/teacher), I want role-specific dashboards with AI-powered insights so that I can quickly understand what needs my attention and make informed decisions.
+**User Story:** As a user (parent/administrator), I want role-specific dashboards with AI-powered insights so that I can quickly understand what needs my attention and make informed decisions.
 
 #### Acceptance Criteria
 
@@ -77,6 +79,7 @@ This document outlines the requirements for enhancing the existing GuruKool Home
 3. WHEN viewing analytics THEN the system SHALL provide AI-interpreted insights rather than just raw data
 4. WHEN planning ahead THEN the AI SHALL suggest optimal scheduling and resource allocation
 5. IF urgent issues arise THEN the system SHALL prominently display them with AI-recommended solutions
+6. **Administrators SHALL have access to teacher management and system oversight features**
 
 ### Requirement 7: Offline-First Architecture with Smart Sync
 
@@ -113,6 +116,7 @@ This document outlines the requirements for enhancing the existing GuruKool Home
 3. WHEN storing data THEN the system SHALL implement end-to-end encryption for sensitive information
 4. WHEN users request data deletion THEN the system SHALL remove all traces including AI training data
 5. IF security threats are detected THEN the AI SHALL automatically implement protective measures and alert administrators
+6. **Teacher access SHALL be managed through secure role-based permissions**
 
 ### Requirement 10: Premium UI/UX with High-End Design Components
 
@@ -139,3 +143,4 @@ This document outlines the requirements for enhancing the existing GuruKool Home
 3. WHEN data needs to be exported THEN the system SHALL provide comprehensive export options in standard formats
 4. WHEN integrating with calendar systems THEN the AI SHALL automatically sync schedules and prevent conflicts
 5. IF new educational standards emerge THEN the system SHALL be adaptable to incorporate them through configuration
+6. **Teacher profiles and assignments SHALL be manageable through the platform's extensible framework**

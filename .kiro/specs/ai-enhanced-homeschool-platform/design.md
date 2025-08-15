@@ -2,9 +2,9 @@
 
 ## Overview
 
-The AI-Enhanced HomeschoolPlatform transforms the existing GuruKool HomeSchool application into a comprehensive, intelligent homeschooling management system. The design leverages modern web technologies, AI agents, premium UI components, and advanced authentication mechanisms to create a seamless experience for parents, teachers, and students.
+The AI-Enhanced HomeschoolPlatform transforms the existing GuruKool HomeSchool application into a comprehensive, intelligent homeschooling management system. The design leverages modern web technologies, AI agents, premium UI components, and advanced authentication mechanisms to create a seamless experience for parents and administrators.
 
-The architecture follows a modular, extensible design pattern with clear separation of concerns, enabling scalability and maintainability while providing rich user experiences through high-end UI/UX components.
+The architecture follows a modular, extensible design pattern with clear separation of concerns, enabling scalability and maintainability while providing rich user experiences through high-end UI/UX components. Teachers work through the platform to support student learning but do not have direct login access - their access is managed by parents and administrators.
 
 ## Architecture
 
@@ -18,32 +18,32 @@ graph TB
         C[PWA Service Worker]
         D[Offline Storage]
     end
-    
+
     subgraph "Authentication Layer"
         E[QR Code Auth Service]
         F[JWT Token Manager]
         G[Role-Based Access Control]
     end
-    
+
     subgraph "AI Agent Layer"
         H[Task Automation Agent]
         I[Analytics Agent]
         J[Communication Agent]
         K[Scheduling Agent]
     end
-    
+
     subgraph "API Layer"
         L[GraphQL/REST APIs]
         M[Real-time WebSocket]
         N[File Upload Service]
     end
-    
+
     subgraph "Data Layer"
         O[PostgreSQL Database]
         P[Redis Cache]
         Q[Vector Database for AI]
     end
-    
+
     A --> E
     A --> B
     A --> C
@@ -62,6 +62,7 @@ graph TB
 ### Technology Stack
 
 **Frontend:**
+
 - Next.js 14 with App Router for server-side rendering and routing
 - TypeScript for type safety and developer experience
 - Tailwind CSS with custom design system for styling
@@ -72,6 +73,7 @@ graph TB
 - React Query (TanStack Query) for state management and caching
 
 **Authentication & Security:**
+
 - QR code generation with qrcode library
 - WebSocket for real-time QR code authentication
 - JWT tokens with refresh token rotation
@@ -79,12 +81,14 @@ graph TB
 - Rate limiting with express-rate-limit
 
 **AI & Machine Learning:**
+
 - OpenAI GPT-4 for natural language processing
 - LangChain for AI agent orchestration
 - Pinecone or Weaviate for vector database
 - TensorFlow.js for client-side ML capabilities
 
 **Backend Services:**
+
 - Node.js with Express or Fastify
 - GraphQL with Apollo Server
 - PostgreSQL with Prisma ORM
@@ -98,6 +102,7 @@ graph TB
 #### 1. Authentication System
 
 **QRAuthProvider Component:**
+
 ```typescript
 interface QRAuthConfig {
   expirationTime: number; // 5 minutes
@@ -114,15 +119,18 @@ interface QRAuthState {
 ```
 
 **Features:**
+
 - Dynamic QR code generation with embedded session tokens
 - Real-time authentication status updates via WebSocket
 - Automatic QR code refresh before expiration
 - Fallback to traditional login for accessibility
 - Biometric authentication support for mobile devices
+- **Role-based access: Only parents and administrators have direct login access**
 
 #### 2. AI Agent Framework
 
 **AgentOrchestrator Component:**
+
 ```typescript
 interface AIAgent {
   id: string;
@@ -141,6 +149,7 @@ interface AgentContext {
 ```
 
 **Agent Types:**
+
 - **TaskAutomationAgent**: Handles routine tasks like timesheet creation, notifications
 - **AnalyticsAgent**: Processes learning data and generates insights
 - **CommunicationAgent**: Manages intelligent notifications and messaging
@@ -149,6 +158,7 @@ interface AgentContext {
 #### 3. Premium UI Component Library
 
 **Design System Components:**
+
 ```typescript
 // Advanced Form Components
 interface SmartFormProps {
@@ -178,6 +188,7 @@ interface GestureCardProps {
 #### 4. Offline-First Architecture
 
 **SyncManager Component:**
+
 ```typescript
 interface SyncConfig {
   syncInterval: number;
@@ -199,28 +210,34 @@ interface OfflineAction {
 #### 1. User Interfaces
 
 **Parent Dashboard Interface:**
+
 - AI-powered priority feed with actionable insights
 - Real-time teacher location and session status
 - Interactive progress charts with drill-down capabilities
 - Smart notification center with AI-filtered importance
 - Gesture-based navigation with swipe actions
+- **Student profile creation and management**
+- **Teacher assignment and management**
 
-**Teacher Dashboard Interface:**
-- Location-aware session management
-- AI-suggested lesson plans and resources
-- Voice-to-text session notes with AI enhancement
-- Drag-and-drop schedule management
-- Offline-capable timesheet tracking
+**Administrator Dashboard Interface:**
 
-**Student Interface (Future Enhancement):**
-- Gamified learning progress tracking
-- AI-powered study recommendations
-- Interactive assignment submission
-- Peer collaboration tools
+- System health monitoring and management
+- User management (parents and teachers)
+- Platform analytics and reporting
+- Feature testing and deployment tools
+- **Teacher profile management and assignment**
+
+**Teacher Interface (Managed Access):**
+
+- Teachers work through the platform but don't have direct login
+- Access is managed by parents and administrators
+- Teachers can be assigned to students and sessions
+- Teacher profiles are maintained in the system for reference
 
 #### 2. API Interfaces
 
 **GraphQL Schema:**
+
 ```graphql
 type User {
   id: ID!
@@ -257,15 +274,27 @@ type AIInsight {
 ### Core Data Models
 
 #### 1. User Management
+
 ```typescript
 interface User {
   id: string;
   email: string;
   name: string;
-  role: 'parent' | 'teacher' | 'admin';
+  role: 'parent' | 'admin'; // Teachers don't have direct login access
   preferences: UserPreferences;
   createdAt: Date;
   lastActive: Date;
+}
+
+interface Teacher {
+  id: string;
+  name: string;
+  email: string;
+  subjects: string[];
+  availability: AvailabilitySchedule;
+  rating: number;
+  bio: string;
+  // No direct login credentials - managed by system
 }
 
 interface UserPreferences {
@@ -277,6 +306,7 @@ interface UserPreferences {
 ```
 
 #### 2. Session Management
+
 ```typescript
 interface Session {
   id: string;
@@ -306,6 +336,7 @@ interface Location {
 ```
 
 #### 3. AI and Analytics
+
 ```typescript
 interface AIInsight {
   id: string;
@@ -330,7 +361,9 @@ interface LearningAnalytics {
 ### Database Schema Design
 
 **PostgreSQL Tables:**
-- `users` - User accounts and authentication
+
+- `users` - User accounts and authentication (parents and admins only)
+- `teachers` - Teacher profiles (no login access)
 - `sessions` - Teaching sessions and scheduling
 - `timesheets` - Automated time tracking
 - `ai_insights` - AI-generated insights and recommendations
@@ -339,6 +372,7 @@ interface LearningAnalytics {
 - `audit_logs` - Security and compliance tracking
 
 **Redis Cache Structure:**
+
 - Session tokens and QR codes
 - Real-time user presence
 - AI model predictions cache
@@ -349,28 +383,32 @@ interface LearningAnalytics {
 ### Error Categories and Strategies
 
 #### 1. Authentication Errors
+
 ```typescript
 enum AuthErrorType {
   QR_EXPIRED = 'qr_expired',
   INVALID_TOKEN = 'invalid_token',
   INSUFFICIENT_PERMISSIONS = 'insufficient_permissions',
-  RATE_LIMITED = 'rate_limited'
+  RATE_LIMITED = 'rate_limited',
+  TEACHER_ACCESS_DENIED = 'teacher_access_denied', // Teachers can't login directly
 }
 
 interface AuthErrorHandler {
   handleQRExpiration(): void;
   handleTokenRefresh(): Promise<boolean>;
   handlePermissionDenied(): void;
+  handleTeacherAccessAttempt(): void; // Redirect to parent/admin access
 }
 ```
 
 #### 2. AI Agent Errors
+
 ```typescript
 enum AIErrorType {
   MODEL_UNAVAILABLE = 'model_unavailable',
   INSUFFICIENT_DATA = 'insufficient_data',
   PROCESSING_TIMEOUT = 'processing_timeout',
-  CONFIDENCE_TOO_LOW = 'confidence_too_low'
+  CONFIDENCE_TOO_LOW = 'confidence_too_low',
 }
 
 interface AIErrorRecovery {
@@ -381,6 +419,7 @@ interface AIErrorRecovery {
 ```
 
 #### 3. Sync and Offline Errors
+
 ```typescript
 interface SyncErrorHandler {
   handleConflictResolution(conflict: DataConflict): Promise<Resolution>;
@@ -395,24 +434,28 @@ interface SyncErrorHandler {
 2. **Retry Logic**: Exponential backoff for transient failures
 3. **User Feedback**: Clear, actionable error messages with recovery suggestions
 4. **Logging and Monitoring**: Comprehensive error tracking for proactive resolution
+5. **Role-based Access Control**: Clear messaging when teachers attempt direct access
 
 ## Testing Strategy
 
 ### Testing Pyramid
 
 #### 1. Unit Tests (70%)
+
 - Component testing with React Testing Library
 - AI agent logic testing with mocked services
 - Utility function testing
 - Data model validation testing
 
 #### 2. Integration Tests (20%)
+
 - API endpoint testing
 - Database integration testing
 - Authentication flow testing
 - Real-time communication testing
 
 #### 3. End-to-End Tests (10%)
+
 - Critical user journey testing with Playwright
 - Cross-browser compatibility testing
 - Mobile responsiveness testing
@@ -421,6 +464,7 @@ interface SyncErrorHandler {
 ### AI-Specific Testing
 
 #### 1. AI Model Testing
+
 ```typescript
 interface AITestSuite {
   testModelAccuracy(testData: TestDataset): Promise<AccuracyMetrics>;
@@ -430,6 +474,7 @@ interface AITestSuite {
 ```
 
 #### 2. Agent Behavior Testing
+
 - Decision tree validation
 - Context understanding verification
 - Multi-agent coordination testing
@@ -451,4 +496,4 @@ interface AITestSuite {
 3. **Staging environment testing** with real data simulation
 4. **Production monitoring** with error tracking and performance metrics
 
-This comprehensive design provides a solid foundation for building a premium, AI-enhanced homeschooling platform that meets all the specified requirements while maintaining high standards for user experience, security, and scalability.
+This comprehensive design provides a solid foundation for building a premium, AI-enhanced homeschooling platform that meets all the specified requirements while maintaining high standards for user experience, security, and scalability. The platform supports teachers working through the system while maintaining clear role-based access control.
