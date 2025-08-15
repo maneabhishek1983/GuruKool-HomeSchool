@@ -31,14 +31,13 @@ const nextConfig = {
   },
 
   async headers() {
-    const isProd = process.env.NODE_ENV === 'production';
     const cspDirectives = [
       "default-src 'self'",
-      "script-src 'self'" + (isProd ? '' : " 'unsafe-eval' 'unsafe-inline'"),
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel.app",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob:",
+      "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self'",
+      "connect-src 'self' https://*.supabase.co https://api.openai.com https://vercel.live",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'"

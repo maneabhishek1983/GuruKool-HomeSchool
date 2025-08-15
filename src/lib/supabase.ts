@@ -2,17 +2,33 @@ import { createClient } from '@supabase/supabase-js';
 import { createBrowserClient } from '@supabase/ssr';
 
 // Supabase configuration
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'your-anon-key';
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://your-project.supabase.co';
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'your-anon-key';
 
-// Create Supabase client for browser
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
+// Singleton pattern to prevent multiple instances
+let supabaseInstance: ReturnType<typeof createBrowserClient> | null = null;
+let supabaseAdminInstance: ReturnType<typeof createClient> | null = null;
 
-// Create admin client for server-side operations
-export const supabaseAdmin = createClient(
-  supabaseUrl,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || 'your-service-role-key'
-);
+// Create Supabase client for browser (singleton)
+export const supabase = (() => {
+  if (!supabaseInstance) {
+    supabaseInstance = createBrowserClient(supabaseUrl, supabaseAnonKey);
+  }
+  return supabaseInstance;
+})();
+
+// Create admin client for server-side operations (singleton)
+export const supabaseAdmin = (() => {
+  if (!supabaseAdminInstance) {
+    supabaseAdminInstance = createClient(
+      supabaseUrl,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || 'your-service-role-key'
+    );
+  }
+  return supabaseAdminInstance;
+})();
 
 // Database types
 export interface Database {
