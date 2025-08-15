@@ -16,7 +16,7 @@ JWT_SECRET=your_jwt_secret_minimum_32_characters
 
 # Application Configuration
 NODE_ENV=production
-NEXT_PUBLIC_APP_URL=https://your-vercel-domain.vercel.app
+NEXT_PUBLIC_APP_URL=https://gurukool-homeschool-dpjucoitx-abhishek-manes-projects-efbe2a67.vercel.app
 
 # Instructions:
 # 1. Replace all 'your_*' values with your actual credentials
