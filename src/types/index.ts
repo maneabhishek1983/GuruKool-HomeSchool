@@ -44,7 +44,12 @@ export interface AccessibilitySettings {
 }
 
 // Session Management Types
-export type SessionStatus = 'scheduled' | 'in-progress' | 'completed' | 'cancelled' | 'rescheduled';
+export type SessionStatus =
+  | 'scheduled'
+  | 'in-progress'
+  | 'completed'
+  | 'cancelled'
+  | 'rescheduled';
 
 export interface Session {
   id: string;
@@ -252,14 +257,14 @@ export enum AuthErrorType {
   QR_EXPIRED = 'qr_expired',
   INVALID_TOKEN = 'invalid_token',
   INSUFFICIENT_PERMISSIONS = 'insufficient_permissions',
-  RATE_LIMITED = 'rate_limited'
+  RATE_LIMITED = 'rate_limited',
 }
 
 export enum AIErrorType {
   MODEL_UNAVAILABLE = 'model_unavailable',
   INSUFFICIENT_DATA = 'insufficient_data',
   PROCESSING_TIMEOUT = 'processing_timeout',
-  CONFIDENCE_TOO_LOW = 'confidence_too_low'
+  CONFIDENCE_TOO_LOW = 'confidence_too_low',
 }
 
 // UI Component Types
@@ -290,4 +295,192 @@ export interface SwipeAction {
   icon: string;
   color: string;
   action: () => void;
+}
+
+// Academic Standards and Syllabus Types
+export type Country = 'UK' | 'US' | 'India';
+
+export interface AcademicStandard {
+  country: Country;
+  name: string;
+  description: string;
+  gradeLevels: GradeLevel[];
+  subjects: Subject[];
+  assessmentMethods: string[];
+  learningOutcomes: LearningOutcome[];
+}
+
+export interface GradeLevel {
+  id: string;
+  name: string;
+  ageRange: string;
+  description: string;
+  subjects: Subject[];
+  keySkills: string[];
+  assessmentCriteria: string[];
+}
+
+export interface Subject {
+  id: string;
+  name: string;
+  description: string;
+  topics: Topic[];
+  skills: string[];
+  assessmentMethods: string[];
+  resources: string[];
+  countrySpecific?: {
+    [key in Country]?: {
+      name: string;
+      topics: Topic[];
+      assessmentMethods: string[];
+    };
+  };
+}
+
+export interface Topic {
+  id: string;
+  name: string;
+  description: string;
+  learningObjectives: string[];
+  activities: string[];
+  resources: string[];
+  assessmentCriteria: string[];
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+}
+
+export interface LearningOutcome {
+  id: string;
+  category: string;
+  outcomes: string[];
+  assessmentMethods: string[];
+  gradeLevel: string;
+}
+
+// Homeschooling Options Types
+export interface HomeschoolingOptions {
+  socialization: SocializationOption[];
+  physicalEducation: PhysicalEducationOption[];
+  extracurricular: ExtracurricularOption[];
+  communityInvolvement: CommunityInvolvementOption[];
+}
+
+export interface SocializationOption {
+  id: string;
+  name: string;
+  description: string;
+  frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly';
+  groupSize: 'small' | 'medium' | 'large';
+  ageGroups: string[];
+  activities: string[];
+  benefits: string[];
+  requirements: string[];
+  cost: 'free' | 'low' | 'medium' | 'high';
+  location: 'online' | 'local' | 'hybrid';
+}
+
+export interface PhysicalEducationOption {
+  id: string;
+  name: string;
+  description: string;
+  category:
+    | 'sports'
+    | 'fitness'
+    | 'outdoor'
+    | 'dance'
+    | 'martial-arts'
+    | 'swimming'
+    | 'yoga'
+    | 'other';
+  frequency: 'daily' | 'weekly' | 'monthly';
+  duration: string;
+  ageGroups: string[];
+  skills: string[];
+  equipment: string[];
+  benefits: string[];
+  requirements: string[];
+  cost: 'free' | 'low' | 'medium' | 'high';
+  location: 'home' | 'local' | 'gym' | 'outdoor' | 'online';
+}
+
+export interface ExtracurricularOption {
+  id: string;
+  name: string;
+  description: string;
+  category:
+    | 'arts'
+    | 'music'
+    | 'science'
+    | 'technology'
+    | 'language'
+    | 'cooking'
+    | 'gardening'
+    | 'other';
+  frequency: 'weekly' | 'monthly' | 'quarterly';
+  ageGroups: string[];
+  activities: string[];
+  skills: string[];
+  benefits: string[];
+  requirements: string[];
+  cost: 'free' | 'low' | 'medium' | 'high';
+  location: 'home' | 'local' | 'online';
+}
+
+export interface CommunityInvolvementOption {
+  id: string;
+  name: string;
+  description: string;
+  category:
+    | 'volunteering'
+    | 'clubs'
+    | 'religious'
+    | 'cultural'
+    | 'sports-teams'
+    | 'scouting'
+    | 'other';
+  frequency: 'weekly' | 'monthly' | 'quarterly';
+  ageGroups: string[];
+  activities: string[];
+  benefits: string[];
+  requirements: string[];
+  cost: 'free' | 'low' | 'medium' | 'high';
+  location: 'local' | 'online';
+}
+
+// Enhanced Student Types
+export interface Student {
+  id: string;
+  name: string;
+  age: number;
+  grade: string;
+  country: Country;
+  academicStandard: AcademicStandard;
+  subjects: Subject[];
+  homeschoolingOptions: HomeschoolingOptions;
+  learningStyle?: string;
+  specialNeeds?: string;
+  interests?: string;
+  teacher?: string;
+  progress: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface StudentProfile {
+  id: string;
+  name: string;
+  age: number;
+  grade: string;
+  country: Country;
+  academicStandard: AcademicStandard;
+  selectedSubjects: Subject[];
+  selectedSocialization: SocializationOption[];
+  selectedPhysicalEducation: PhysicalEducationOption[];
+  selectedExtracurricular: ExtracurricularOption[];
+  selectedCommunityInvolvement: CommunityInvolvementOption[];
+  learningStyle?: string;
+  specialNeeds?: string;
+  interests?: string;
+  parentId: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
