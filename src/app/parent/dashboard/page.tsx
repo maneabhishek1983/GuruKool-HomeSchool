@@ -10,7 +10,7 @@ interface Student {
   age: number;
   grade: string;
   subjects: string[];
-  teacher?: string;
+  teacher?: string | undefined;
   progress: number;
   createdAt: Date;
 }
@@ -21,6 +21,29 @@ interface Teacher {
   email: string;
   subjects: string[];
   status: 'available' | 'assigned';
+  hourlyRate?: number;
+}
+
+interface TimesheetEntry {
+  id: string;
+  teacherId: string;
+  teacherName: string;
+  studentId: string;
+  studentName: string;
+  subject: string;
+  date: Date;
+  startTime: string;
+  endTime: string;
+  hours: number;
+  description: string;
+  status: 'completed' | 'scheduled' | 'cancelled';
+}
+
+interface TimesheetSummary {
+  daily: { [date: string]: number };
+  weekly: { [week: string]: number };
+  monthly: { [month: string]: number };
+  total: number;
 }
 
 export default function ParentDashboard() {
@@ -75,6 +98,7 @@ export default function ParentDashboard() {
   const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [showTeacherModal, setShowTeacherModal] = useState(false);
+  const [showTimesheetModal, setShowTimesheetModal] = useState(false);
   const [showInsightsModal, setShowInsightsModal] = useState(false);
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -87,6 +111,57 @@ export default function ParentDashboard() {
   });
 
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [timesheetEntries, setTimesheetEntries] = useState<TimesheetEntry[]>([
+    {
+      id: '1',
+      teacherId: '1',
+      teacherName: 'John Teacher',
+      studentId: '1',
+      studentName: 'Emma Johnson',
+      subject: 'Mathematics',
+      date: new Date('2024-01-15'),
+      startTime: '09:00',
+      endTime: '10:30',
+      hours: 1.5,
+      description: 'Algebra fundamentals and problem solving',
+      status: 'completed',
+    },
+    {
+      id: '2',
+      teacherId: '1',
+      teacherName: 'John Teacher',
+      studentId: '1',
+      studentName: 'Emma Johnson',
+      subject: 'Science',
+      date: new Date('2024-01-16'),
+      startTime: '14:00',
+      endTime: '15:00',
+      hours: 1.0,
+      description: 'Introduction to chemistry',
+      status: 'completed',
+    },
+    {
+      id: '3',
+      teacherId: '2',
+      teacherName: 'Sarah Wilson',
+      studentId: '2',
+      studentName: 'James Johnson',
+      subject: 'English',
+      date: new Date('2024-01-17'),
+      startTime: '10:00',
+      endTime: '11:30',
+      hours: 1.5,
+      description: 'Reading comprehension and essay writing',
+      status: 'scheduled',
+    },
+  ]);
+
+  const [timesheetSummary, setTimesheetSummary] = useState<TimesheetSummary>({
+    daily: {},
+    weekly: {},
+    monthly: {},
+    total: 0,
+  });
 
   useEffect(() => {
     if (!user) {
@@ -128,7 +203,7 @@ export default function ParentDashboard() {
   const handleAssignTeacher = (studentId: string, teacherId: string) => {
     const teacher = teachers.find(t => t.id === teacherId);
     const updatedStudents = students.map(s =>
-      s.id === studentId ? { ...s, teacher: teacher?.name } : s
+      s.id === studentId ? { ...s, teacher: teacher?.name || undefined } : s
     );
     setStudents(updatedStudents);
 
@@ -139,6 +214,65 @@ export default function ParentDashboard() {
 
     alert(`Teacher ${teacher?.name} assigned to student successfully!`);
   };
+
+  const calculateTimesheetSummary = () => {
+    const daily: { [date: string]: number } = {};
+    const weekly: { [week: string]: number } = {};
+    const monthly: { [month: string]: number } = {};
+    let total = 0;
+
+    timesheetEntries.forEach(entry => {
+      const date = entry.date.toISOString().split('T')[0];
+      const week = getWeekNumber(entry.date);
+      const month = entry.date.toISOString().slice(0, 7); // YYYY-MM
+
+      daily[date] = (daily[date] || 0) + entry.hours;
+      weekly[week] = (weekly[week] || 0) + entry.hours;
+      monthly[month] = (monthly[month] || 0) + entry.hours;
+      total += entry.hours;
+    });
+
+    setTimesheetSummary({ daily, weekly, monthly, total });
+  };
+
+  const getWeekNumber = (date: Date): string => {
+    const d = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+    );
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return `${d.getUTCFullYear()}-W${Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)}`;
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const formatTime = (time: string) => {
+    return time;
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'scheduled':
+        return 'bg-blue-100 text-blue-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  useEffect(() => {
+    calculateTimesheetSummary();
+  }, [timesheetEntries]);
 
   const handleButtonClick = (action: string) => {
     switch (action) {
@@ -151,13 +285,16 @@ export default function ParentDashboard() {
       case 'manage-teachers':
         setShowTeacherModal(true);
         break;
+      case 'view-timesheet':
+        setShowTimesheetModal(true);
+        break;
       case 'view-insights':
         setShowInsightsModal(true);
         break;
-      case 'open-messages':
+      case 'communication':
         setShowMessagesModal(true);
         break;
-      case 'open-settings':
+      case 'settings':
         setShowSettingsModal(true);
         break;
       default:
@@ -283,14 +420,22 @@ export default function ParentDashboard() {
               </h3>
             </div>
             <p className="text-gray-600 mb-4">
-              Assign teachers to your children and manage communication
+              Assign teachers and track timesheet hours
             </p>
-            <button
-              onClick={() => handleButtonClick('manage-teachers')}
-              className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              Manage Teachers
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={() => handleButtonClick('manage-teachers')}
+                className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                Manage Teachers
+              </button>
+              <button
+                onClick={() => handleButtonClick('view-timesheet')}
+                className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                View Timesheet
+              </button>
+            </div>
           </div>
 
           {/* AI Insights Card */}
@@ -352,7 +497,7 @@ export default function ParentDashboard() {
               Stay connected with teachers and receive updates
             </p>
             <button
-              onClick={() => handleButtonClick('open-messages')}
+              onClick={() => handleButtonClick('communication')}
               className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
             >
               Open Messages
@@ -389,7 +534,7 @@ export default function ParentDashboard() {
               Customize your dashboard and notification preferences
             </p>
             <button
-              onClick={() => handleButtonClick('open-settings')}
+              onClick={() => handleButtonClick('settings')}
               className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
             >
               Open Settings
@@ -685,6 +830,296 @@ export default function ParentDashboard() {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Timesheet Modal */}
+      {showTimesheetModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-semibold">Timesheet Tracking</h3>
+              <button
+                onClick={() => setShowTimesheetModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Timesheet Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-blue-50 rounded-lg p-4">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                    <svg
+                      className="w-5 h-5 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm text-blue-600">Total Hours</p>
+                    <p className="text-2xl font-bold text-blue-900">
+                      {timesheetSummary.total.toFixed(1)}h
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-green-50 rounded-lg p-4">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                    <svg
+                      className="w-5 h-5 text-green-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm text-green-600">Completed</p>
+                    <p className="text-2xl font-bold text-green-900">
+                      {
+                        timesheetEntries.filter(e => e.status === 'completed')
+                          .length
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 rounded-lg p-4">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
+                    <svg
+                      className="w-5 h-5 text-yellow-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm text-yellow-600">Scheduled</p>
+                    <p className="text-2xl font-bold text-yellow-900">
+                      {
+                        timesheetEntries.filter(e => e.status === 'scheduled')
+                          .length
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-purple-50 rounded-lg p-4">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                    <svg
+                      className="w-5 h-5 text-purple-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm text-purple-600">Teachers</p>
+                    <p className="text-2xl font-bold text-purple-900">
+                      {new Set(timesheetEntries.map(e => e.teacherId)).size}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Timesheet Entries Table */}
+            <div className="bg-white rounded-lg border">
+              <div className="px-6 py-4 border-b">
+                <h4 className="text-lg font-medium text-gray-900">
+                  Timesheet Entries
+                </h4>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Teacher
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Student
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Subject
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Time
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Hours
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Description
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {timesheetEntries.map(entry => (
+                      <tr key={entry.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {formatDate(entry.date)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {entry.teacherName}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {entry.studentName}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {entry.subject}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {formatTime(entry.startTime)} -{' '}
+                          {formatTime(entry.endTime)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {entry.hours}h
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(entry.status)}`}
+                          >
+                            {entry.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                          {entry.description}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Hours Summary by Period */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Daily Hours */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h5 className="text-sm font-medium text-gray-900 mb-3">
+                  Daily Hours
+                </h5>
+                <div className="space-y-2">
+                  {Object.entries(timesheetSummary.daily)
+                    .slice(0, 7)
+                    .map(([date, hours]) => (
+                      <div key={date} className="flex justify-between text-sm">
+                        <span className="text-gray-600">
+                          {new Date(date).toLocaleDateString()}
+                        </span>
+                        <span className="font-medium">{hours.toFixed(1)}h</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              {/* Weekly Hours */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h5 className="text-sm font-medium text-gray-900 mb-3">
+                  Weekly Hours
+                </h5>
+                <div className="space-y-2">
+                  {Object.entries(timesheetSummary.weekly)
+                    .slice(0, 4)
+                    .map(([week, hours]) => (
+                      <div key={week} className="flex justify-between text-sm">
+                        <span className="text-gray-600">
+                          Week {week.split('-W')[1]}
+                        </span>
+                        <span className="font-medium">{hours.toFixed(1)}h</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              {/* Monthly Hours */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h5 className="text-sm font-medium text-gray-900 mb-3">
+                  Monthly Hours
+                </h5>
+                <div className="space-y-2">
+                  {Object.entries(timesheetSummary.monthly)
+                    .slice(0, 6)
+                    .map(([month, hours]) => (
+                      <div key={month} className="flex justify-between text-sm">
+                        <span className="text-gray-600">
+                          {new Date(month + '-01').toLocaleDateString('en-US', {
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </span>
+                        <span className="font-medium">{hours.toFixed(1)}h</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowTimesheetModal(false)}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
