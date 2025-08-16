@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withRateLimit } from '@/lib/api-security';
 
-export async function GET(request: NextRequest) {
-  try {
-    // Prometheus metrics format
-    const metrics = `
+export const GET = withRateLimit({ keyPrefix: 'api:metrics', max: 60 })(
+  async function GET(request: NextRequest) {
+    try {
+      // Prometheus metrics format
+      const metrics = `
 # HELP nodejs_version_info Node.js version info
 # TYPE nodejs_version_info gauge
 nodejs_version_info{version="${process.version}"} 1
@@ -35,16 +37,17 @@ http_request_duration_seconds_sum ${Math.random() * 100}
 http_request_duration_seconds_count ${Math.floor(Math.random() * 400)}
 `;
 
-    return new NextResponse(metrics, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/plain; version=0.0.4; charset=utf-8',
-      },
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to generate metrics' },
-      { status: 500 }
-    );
+      return new NextResponse(metrics, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/plain; version=0.0.4; charset=utf-8',
+        },
+      });
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Failed to generate metrics' },
+        { status: 500 }
+      );
+    }
   }
-}
+);

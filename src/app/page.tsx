@@ -7,7 +7,13 @@ import { motion } from 'framer-motion';
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-16">
+      <main
+        id="main-content"
+        role="main"
+        tabIndex={0}
+        autoFocus
+        className="container mx-auto px-4 py-16"
+      >
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             AI-Enhanced Homeschooling Platform
@@ -269,7 +275,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

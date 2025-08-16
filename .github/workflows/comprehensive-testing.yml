@@ -1,0 +1,498 @@
+name: Comprehensive Testing Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run security tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  # Unit and Integration Tests
+  unit-tests:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run unit tests
+        run: npm run test
+        
+      - name: Run type checking
+        run: npm run type-check
+        
+      - name: Run linting
+        run: npm run lint
+        
+      - name: Upload test coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+
+  # E2E Tests
+  e2e-tests:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+        
+      - name: Start application
+        run: npm run dev &
+        env:
+          NODE_ENV: test
+          
+      - name: Wait for application to start
+        run: npx wait-on http://localhost:3000
+        
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          BASE_URL: http://localhost:3000
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: test-results/
+          retention-days: 30
+
+  # Security & Penetration Tests
+  security-tests:
+    name: Security & Penetration Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+        
+      - name: Start application
+        run: npm run dev &
+        env:
+          NODE_ENV: test
+          
+      - name: Wait for application to start
+        run: npx wait-on http://localhost:3000
+        
+      - name: Run security tests
+        run: npm run test:security
+        env:
+          BASE_URL: http://localhost:3000
+          
+      - name: Upload security test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: security-test-results
+          path: test-results/
+          retention-days: 30
+
+  # Regression Tests
+  regression-tests:
+    name: Regression Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+        
+      - name: Start application
+        run: npm run dev &
+        env:
+          NODE_ENV: test
+          
+      - name: Wait for application to start
+        run: npx wait-on http://localhost:3000
+        
+      - name: Run regression tests
+        run: npm run test:regression
+        env:
+          BASE_URL: http://localhost:3000
+          
+      - name: Upload regression test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: regression-test-results
+          path: test-results/
+          retention-days: 30
+
+  # Performance Tests
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Start application
+        run: npm run dev &
+        env:
+          NODE_ENV: test
+          
+      - name: Wait for application to start
+        run: npx wait-on http://localhost:3000
+        
+      - name: Run performance tests
+        run: npm run test:performance
+        env:
+          BASE_URL: http://localhost:3000
+          
+      - name: Upload performance test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: performance-test-results
+          path: test-results/
+          retention-days: 30
+
+  # Comprehensive Testing (All-in-one)
+  comprehensive-tests:
+    name: Comprehensive Testing
+    runs-on: ubuntu-latest
+    needs: [unit-tests, e2e-tests, security-tests, regression-tests, performance-tests]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+        
+      - name: Start application
+        run: npm run dev &
+        env:
+          NODE_ENV: test
+          
+      - name: Wait for application to start
+        run: npx wait-on http://localhost:3000
+        
+      - name: Run comprehensive tests
+        run: npm run test:comprehensive
+        env:
+          BASE_URL: http://localhost:3000
+          
+      - name: Upload comprehensive test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: comprehensive-test-results
+          path: test-results/
+          retention-days: 30
+
+  # Accessibility Tests
+  accessibility-tests:
+    name: Accessibility Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+        
+      - name: Start application
+        run: npm run dev &
+        env:
+          NODE_ENV: test
+          
+      - name: Wait for application to start
+        run: npx wait-on http://localhost:3000
+        
+      - name: Run accessibility tests
+        run: npx playwright test --grep "accessibility"
+        env:
+          BASE_URL: http://localhost:3000
+          
+      - name: Upload accessibility test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: accessibility-test-results
+          path: test-results/
+          retention-days: 30
+
+  # Cross-browser Tests
+  cross-browser-tests:
+    name: Cross-browser Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+        
+      - name: Start application
+        run: npm run dev &
+        env:
+          NODE_ENV: test
+          
+      - name: Wait for application to start
+        run: npx wait-on http://localhost:3000
+        
+      - name: Run cross-browser tests
+        run: npx playwright test --project=${{ matrix.browser }}
+        env:
+          BASE_URL: http://localhost:3000
+          
+      - name: Upload cross-browser test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: cross-browser-test-results-${{ matrix.browser }}
+          path: test-results/
+          retention-days: 30
+
+  # Test Summary and Reporting
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [unit-tests, e2e-tests, security-tests, regression-tests, performance-tests, comprehensive-tests, accessibility-tests, cross-browser-tests]
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download all test results
+        uses: actions/download-artifact@v3
+        with:
+          path: test-results/
+          
+      - name: Generate test summary
+        run: |
+          echo "## Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Results Overview" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check if test result files exist and summarize
+          if [ -f "test-results/comprehensive-test-results/comprehensive-test-report.json" ]; then
+            echo "✅ Comprehensive Tests: Completed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Comprehensive Tests: Failed or not found" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -f "test-results/performance-test-results/performance-test-report.json" ]; then
+            echo "✅ Performance Tests: Completed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Performance Tests: Failed or not found" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -f "test-results/security-test-results/" ]; then
+            echo "✅ Security Tests: Completed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Security Tests: Failed or not found" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -f "test-results/regression-test-results/" ]; then
+            echo "✅ Regression Tests: Completed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Regression Tests: Failed or not found" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Detailed test reports are available in the workflow artifacts." >> $GITHUB_STEP_SUMMARY
+          
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            let comment = '## 🧪 Test Results Summary\n\n';
+            
+            // Check test results and generate summary
+            const testTypes = [
+              'comprehensive',
+              'performance', 
+              'security',
+              'regression',
+              'accessibility'
+            ];
+            
+            testTypes.forEach(type => {
+              const reportPath = `test-results/${type}-test-results/${type}-test-report.json`;
+              if (fs.existsSync(reportPath)) {
+                try {
+                  const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+                  const summary = report.summary;
+                  comment += `### ${type.charAt(0).toUpperCase() + type.slice(1)} Tests\n`;
+                  comment += `- **Status**: ✅ Passed\n`;
+                  comment += `- **Duration**: ${summary.duration}\n`;
+                  comment += `- **Total Tests**: ${summary.totalTests}\n\n`;
+                } catch (error) {
+                  comment += `### ${type.charAt(0).toUpperCase() + type.slice(1)} Tests\n`;
+                  comment += `- **Status**: ⚠️ Completed with issues\n\n`;
+                }
+              } else {
+                comment += `### ${type.charAt(0).toUpperCase() + type.slice(1)} Tests\n`;
+                comment += `- **Status**: ❌ Failed\n\n`;
+              }
+            });
+            
+            comment += '📊 Detailed reports are available in the workflow artifacts.';
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # Security Alert on Critical Issues
+  security-alert:
+    name: Security Alert
+    runs-on: ubuntu-latest
+    needs: [security-tests, comprehensive-tests]
+    if: always() && (needs.security-tests.result == 'failure' || needs.comprehensive-tests.result == 'failure')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download test results
+        uses: actions/download-artifact@v3
+        with:
+          path: test-results/
+          
+      - name: Check for security vulnerabilities
+        run: |
+          echo "🚨 SECURITY ALERT: Critical vulnerabilities detected!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Please review the security test results immediately." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Action Required:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review security test artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "2. Address identified vulnerabilities" >> $GITHUB_STEP_SUMMARY
+          echo "3. Re-run security tests after fixes" >> $GITHUB_STEP_SUMMARY
+          
+      - name: Create security issue
+        if: github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Security Vulnerabilities Detected',
+              body: `## Security Alert
+              
+              Critical security vulnerabilities were detected during automated testing.
+              
+              **Branch:** ${context.ref}
+              **Commit:** ${context.sha}
+              **Workflow:** ${context.workflow}
+              
+              Please review the security test results in the workflow artifacts and address the issues immediately.
+              
+              ### Required Actions:
+              1. Review security test artifacts
+              2. Address identified vulnerabilities
+              3. Re-run security tests after fixes
+              4. Update this issue with resolution details
+              
+              **Priority:** 🔴 Critical`,
+              labels: ['security', 'critical', 'bug'],
+              assignees: ['@security-team']
+            });
