@@ -22,7 +22,12 @@
       "Bash(git remote get-url:*)",
       "Bash(git remote set-url:*)",
       "Bash(GIT_CURL_VERBOSE=1 git push origin main)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(BASE_URL=http://localhost:3002 npm run test:comprehensive)",
+      "Bash(npm run test:e2e:*)",
+      "Bash(npm run test:security:*)",
+      "Bash(npm run test:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
