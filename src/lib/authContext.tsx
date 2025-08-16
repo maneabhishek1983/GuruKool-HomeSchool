@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Demo credentials validation - only parent and admin
+      // Demo credentials validation - parent, admin, and teacher
       if (email === 'parent@example.com' && password === 'parent123') {
         const userData: User = {
           id: 'parent-1',
@@ -99,9 +99,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               widgets: ['sessions', 'progress', 'notifications'],
             },
             privacy: {
-              dataSharing: false,
+              dataSharing: true,
               analytics: true,
-              aiTraining: true,
+              aiTraining: false,
             },
             accessibility: {
               fontSize: 'medium',
@@ -110,10 +110,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               screenReader: false,
             },
           },
-          createdAt: new Date(),
+          createdAt: new Date('2024-01-15'),
           lastActive: new Date(),
         };
-
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
         return { success: true, user: userData };
@@ -127,20 +126,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             notifications: {
               email: true,
               push: true,
-              sms: true,
+              sms: false,
               inApp: true,
-              frequency: 'immediate',
+              frequency: 'daily',
             },
             dashboard: {
               layout: 'detailed',
               theme: 'light',
-              widgets: [
-                'sessions',
-                'analytics',
-                'notifications',
-                'users',
-                'system',
-              ],
+              widgets: ['analytics', 'users', 'system'],
             },
             privacy: {
               dataSharing: true,
@@ -154,22 +147,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               screenReader: false,
             },
           },
-          createdAt: new Date(),
+          createdAt: new Date('2024-01-01'),
           lastActive: new Date(),
         };
-
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        return { success: true, user: userData };
+      } else if (email === 'teacher@example.com' && password === 'teacher123') {
+        const userData: User = {
+          id: 'teacher-1',
+          name: 'Sarah Teacher',
+          role: 'teacher',
+          email: 'teacher@example.com',
+          preferences: {
+            notifications: {
+              email: true,
+              push: true,
+              sms: false,
+              inApp: true,
+              frequency: 'immediate',
+            },
+            dashboard: {
+              layout: 'compact',
+              theme: 'light',
+              widgets: ['students', 'lessons', 'progress'],
+            },
+            privacy: {
+              dataSharing: true,
+              analytics: true,
+              aiTraining: false,
+            },
+            accessibility: {
+              fontSize: 'medium',
+              highContrast: false,
+              reducedMotion: false,
+              screenReader: false,
+            },
+          },
+          createdAt: new Date('2024-01-10'),
+          lastActive: new Date(),
+        };
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
         return { success: true, user: userData };
       } else {
         return {
           success: false,
-          error:
-            'Invalid credentials. Please use demo accounts: parent@example.com/parent123 or admin@example.com/admin123',
+          error: 'Invalid email or password. Please try again.',
         };
       }
     } catch (error) {
-      return { success: false, error: 'An unexpected error occurred' };
+      console.error('Login error:', error);
+      return {
+        success: false,
+        error: 'An unexpected error occurred. Please try again.',
+      };
     }
   };
 

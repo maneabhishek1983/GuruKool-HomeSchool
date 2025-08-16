@@ -23,6 +23,8 @@ export default function LoginPage() {
         // Redirect based on role
         if (result.user?.role === 'admin') {
           router.push('/admin/dashboard');
+        } else if (result.user?.role === 'teacher') {
+          router.push('/teacher/dashboard');
         } else {
           router.push('/parent/dashboard');
         }
@@ -36,7 +38,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoLogin = async (role: 'parent' | 'admin') => {
+  const handleDemoLogin = async (role: 'parent' | 'admin' | 'teacher') => {
     setIsLoading(true);
     setError('');
 
@@ -50,12 +52,17 @@ export default function LoginPage() {
       } else if (role === 'admin') {
         demoEmail = 'admin@example.com';
         demoPassword = 'admin123';
+      } else if (role === 'teacher') {
+        demoEmail = 'teacher@example.com';
+        demoPassword = 'teacher123';
       }
 
       const result = await login(demoEmail, demoPassword);
       if (result.success) {
         if (role === 'admin') {
           router.push('/admin/dashboard');
+        } else if (role === 'teacher') {
+          router.push('/teacher/dashboard');
         } else {
           router.push('/parent/dashboard');
         }
@@ -187,6 +194,42 @@ export default function LoginPage() {
 
               <div className="bg-white rounded border p-3">
                 <div className="flex items-center mb-2">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                    <svg
+                      className="w-3 h-3 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">
+                    Teacher Account
+                  </span>
+                </div>
+                <div className="text-xs text-gray-600 space-y-1">
+                  <p>
+                    <span className="font-medium">Email:</span>{' '}
+                    teacher@example.com
+                  </p>
+                  <p>
+                    <span className="font-medium">Password:</span> teacher123
+                  </p>
+                  <p className="text-blue-600">
+                    → Access: Student assignments, lesson planning, progress
+                    tracking
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded border p-3">
+                <div className="flex items-center mb-2">
                   <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center mr-2">
                     <svg
                       className="w-3 h-3 text-purple-600"
@@ -232,6 +275,13 @@ export default function LoginPage() {
               Demo Parent Login
             </button>
             <button
+              onClick={() => handleDemoLogin('teacher')}
+              disabled={isLoading}
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Demo Teacher Login
+            </button>
+            <button
               onClick={() => handleDemoLogin('admin')}
               disabled={isLoading}
               className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -251,14 +301,23 @@ export default function LoginPage() {
               <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
               <p>
                 <strong>Parent:</strong> Access dashboard to manage students,
-                track progress, assign teachers
+                track progress, assign teachers, create student profiles with
+                country-specific academic standards
+              </p>
+            </div>
+            <div className="flex items-start">
+              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
+              <p>
+                <strong>Teacher:</strong> Access dashboard to manage assigned
+                students, create lesson plans, track progress, and provide
+                feedback
               </p>
             </div>
             <div className="flex items-start">
               <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
               <p>
                 <strong>Admin:</strong> Access dashboard to manage users, view
-                analytics, configure system
+                analytics, configure system, and manage academic standards
               </p>
             </div>
             <div className="flex items-start">
