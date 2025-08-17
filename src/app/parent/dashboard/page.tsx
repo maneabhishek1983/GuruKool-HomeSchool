@@ -8,6 +8,7 @@ import CreateStudentForm from '@/components/parent/CreateStudentForm';
 import StudentProfileCard from '@/components/parent/StudentProfileCard';
 import { DataSheetsViewer } from '@/components/parent/DataSheetsViewer';
 import TeacherCreationForm from '@/components/parent/TeacherCreationForm';
+import TeacherQRCodes from '@/components/parent/TeacherQRCodes';
 import { StudentProfile, Country, TeacherProfile } from '@/types';
 import { academicStandardsService } from '@/services/academic-standards.service';
 import { DatabaseService } from '@/services/database.service';
@@ -54,6 +55,9 @@ export default function ParentDashboard() {
   const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
   const [showCreateTeacherModal, setShowCreateTeacherModal] = useState(false);
   const [showDataSheetsModal, setShowDataSheetsModal] = useState(false);
+  const [showTeacherQRModal, setShowTeacherQRModal] = useState(false);
+  const [selectedTeacherForQR, setSelectedTeacherForQR] =
+    useState<Teacher | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<StudentProfile | null>(
     null
   );
@@ -165,7 +169,14 @@ export default function ParentDashboard() {
     }
 
     try {
-      const newTeacher = await DatabaseService.createTeacher(formData, user.id);
+      // Get assigned student IDs from form data
+      const assignedStudentIds = formData.assignedStudents || [];
+
+      const newTeacher = await DatabaseService.createTeacher(
+        formData,
+        user.id,
+        assignedStudentIds
+      );
 
       if (newTeacher) {
         const teacherForState: Teacher = {
@@ -216,6 +227,11 @@ export default function ParentDashboard() {
       console.error('Error deleting teacher:', err);
       setError('Failed to delete teacher. Please try again.');
     }
+  };
+
+  const handleViewTeacherQRCodes = (teacher: Teacher) => {
+    setSelectedTeacherForQR(teacher);
+    setShowTeacherQRModal(true);
   };
 
   const handleEditStudent = (student: StudentProfile) => {
@@ -854,10 +870,16 @@ export default function ParentDashboard() {
                         </p>
                       </div>
                     )}
-                    <div className="pt-2">
+                    <div className="pt-2 space-y-2">
+                      <button
+                        onClick={() => handleViewTeacherQRCodes(teacher)}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium block"
+                      >
+                        View QR Codes
+                      </button>
                       <button
                         onClick={() => handleDeleteTeacher(teacher.id)}
-                        className="text-red-600 hover:text-red-800 text-sm font-medium"
+                        className="text-red-600 hover:text-red-800 text-sm font-medium block"
                       >
                         Delete Teacher
                       </button>
@@ -1086,6 +1108,41 @@ export default function ParentDashboard() {
             setSelectedStudent(null);
           }}
         />
+      )}
+
+      {/* Teacher QR Codes Modal */}
+      {showTeacherQRModal && selectedTeacherForQR && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">
+                QR Codes for {selectedTeacherForQR.name}
+              </h2>
+              <button
+                onClick={() => setShowTeacherQRModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <TeacherQRCodes
+              teacherId={selectedTeacherForQR.id}
+              parentId={user?.id || ''}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

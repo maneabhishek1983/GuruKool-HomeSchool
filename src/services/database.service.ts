@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { StudentProfile, TeacherProfile } from '@/types';
+import { TeacherQRService } from './teacher-qr.service';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -201,7 +202,8 @@ export class DatabaseService {
 
   static async createTeacher(
     teacherData: any,
-    parentId: string
+    parentId: string,
+    assignedStudentIds: string[] = []
   ): Promise<TeacherProfile | null> {
     try {
       // First create a user account for the teacher
@@ -245,6 +247,20 @@ export class DatabaseService {
 
       if (error) {
         throw error;
+      }
+
+      // Generate QR codes for assigned students
+      if (assignedStudentIds.length > 0) {
+        try {
+          await TeacherQRService.createTeacherQRCodes(
+            data.id,
+            assignedStudentIds,
+            parentId
+          );
+        } catch (qrError) {
+          console.error('Error creating QR codes for teacher:', qrError);
+          // Don't fail the teacher creation if QR code creation fails
+        }
       }
 
       return this.mapDatabaseTeacherToProfile(data);
