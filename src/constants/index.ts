@@ -1,21 +1,40 @@
-// Application Constants
-export const APP_NAME = 'GuruKool HomeSchool';
-export const APP_VERSION = '2.0.0';
+// WebSocket Events
+export const WS_EVENTS = {
+  // Authentication events
+  QR_AUTH_STATUS: 'qr_auth_status',
+  QR_GENERATE_REQUEST: 'qr_generate_request',
+  QR_VERIFY_REQUEST: 'qr_verify_request',
 
-// Authentication Constants
-export const QR_CODE_EXPIRY_TIME = 5 * 60 * 1000; // 5 minutes in milliseconds
-export const QR_CODE_REFRESH_INTERVAL = 30 * 1000; // 30 seconds
-export const JWT_EXPIRY_TIME = 24 * 60 * 60 * 1000; // 24 hours
-export const REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 days
+  // Session events
+  SESSION_UPDATE: 'session_update',
+  SESSION_START: 'session_start',
+  SESSION_END: 'session_end',
 
-// Storage Keys
-export const STORAGE_KEYS = {
-  USER: 'gkh_user_v2',
-  AUTH_TOKEN: 'gkh_auth_token_v2',
-  SESSIONS: 'gkh_sessions_v2',
-  PREFERENCES: 'gkh_preferences_v2',
-  OFFLINE_ACTIONS: 'gkh_offline_actions_v2',
-  SYNC_STATUS: 'gkh_sync_status_v2',
+  // Communication events
+  MESSAGE: 'message',
+  NOTIFICATION: 'notification',
+  TYPING_INDICATOR: 'typing_indicator',
+  READ_RECEIPT: 'read_receipt',
+
+  // System events
+  HEARTBEAT: 'heartbeat',
+  HEARTBEAT_RESPONSE: 'heartbeat_response',
+  SYNC_STATUS: 'sync_status',
+  AI_INSIGHT: 'ai_insight',
+
+  // Real-time events
+  REALTIME_MESSAGE: 'realtime_message',
+  MESSAGE_ACK: 'message_ack',
+  DELIVERY_CONFIRMATION: 'delivery_confirmation',
+
+  // Location events
+  LOCATION_UPDATE: 'location_update',
+  LOCATION_VERIFY: 'location_verify',
+
+  // Error events
+  ERROR: 'error',
+  CONNECTION_ERROR: 'connection_error',
+  AUTH_ERROR: 'auth_error',
 } as const;
 
 // API Endpoints
@@ -27,62 +46,61 @@ export const API_ENDPOINTS = {
     QR_GENERATE: '/api/auth/qr/generate',
     QR_VERIFY: '/api/auth/qr/verify',
   },
+  USERS: {
+    PROFILE: '/api/users/profile',
+    PREFERENCES: '/api/users/preferences',
+    SESSIONS: '/api/users/sessions',
+  },
   SESSIONS: {
     LIST: '/api/sessions',
     CREATE: '/api/sessions',
-    UPDATE: '/api/sessions',
-    DELETE: '/api/sessions',
+    UPDATE: '/api/sessions/:id',
+    DELETE: '/api/sessions/:id',
+    ANALYTICS: '/api/sessions/:id/analytics',
   },
   AI: {
     INSIGHTS: '/api/ai/insights',
     RECOMMENDATIONS: '/api/ai/recommendations',
-    ANALYTICS: '/api/ai/analytics',
-  },
-  SYNC: {
-    UPLOAD: '/api/sync/upload',
-    DOWNLOAD: '/api/sync/download',
-    STATUS: '/api/sync/status',
+    PATTERNS: '/api/ai/patterns',
   },
 } as const;
 
-// WebSocket Events
-export const WS_EVENTS = {
-  QR_AUTH_STATUS: 'qr_auth_status',
-  SESSION_UPDATE: 'session_update',
-  NOTIFICATION: 'notification',
+// Storage Keys
+export const STORAGE_KEYS = {
+  AUTH_TOKEN: 'auth_token',
+  REFRESH_TOKEN: 'refresh_token',
+  USER_PREFERENCES: 'user_preferences',
+  OFFLINE_QUEUE: 'offline_queue',
   SYNC_STATUS: 'sync_status',
-  AI_INSIGHT: 'ai_insight',
+  CACHED_DATA: 'cached_data',
 } as const;
 
-// UI Constants
-export const ANIMATION_DURATION = {
-  FAST: 150,
-  NORMAL: 300,
-  SLOW: 500,
-} as const;
+// Error Codes
+export const ERROR_CODES = {
+  // Authentication errors
+  AUTH_INVALID_TOKEN: 'AUTH_INVALID_TOKEN',
+  AUTH_TOKEN_EXPIRED: 'AUTH_TOKEN_EXPIRED',
+  AUTH_INSUFFICIENT_PERMISSIONS: 'AUTH_INSUFFICIENT_PERMISSIONS',
 
-export const BREAKPOINTS = {
-  SM: 640,
-  MD: 768,
-  LG: 1024,
-  XL: 1280,
-  '2XL': 1536,
-} as const;
+  // QR Code errors
+  QR_EXPIRED: 'QR_EXPIRED',
+  QR_INVALID: 'QR_INVALID',
+  QR_ALREADY_USED: 'QR_ALREADY_USED',
 
-// AI Configuration
-export const AI_CONFIG = {
-  MAX_RETRIES: 3,
-  TIMEOUT: 30000, // 30 seconds
-  MIN_CONFIDENCE: 0.7,
-  BATCH_SIZE: 10,
-} as const;
+  // Session errors
+  SESSION_NOT_FOUND: 'SESSION_NOT_FOUND',
+  SESSION_CONFLICT: 'SESSION_CONFLICT',
+  SESSION_INVALID_STATUS: 'SESSION_INVALID_STATUS',
 
-// Session Status
-export const SESSION_STATUS = {
-  SCHEDULED: 'scheduled',
-  IN_PROGRESS: 'in-progress',
-  COMPLETED: 'completed',
-  CANCELLED: 'cancelled',
+  // Network errors
+  NETWORK_ERROR: 'NETWORK_ERROR',
+  CONNECTION_TIMEOUT: 'CONNECTION_TIMEOUT',
+  SERVER_ERROR: 'SERVER_ERROR',
+
+  // Validation errors
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  INVALID_INPUT: 'INVALID_INPUT',
+  MISSING_REQUIRED_FIELD: 'MISSING_REQUIRED_FIELD',
 } as const;
 
 // User Roles
@@ -92,17 +110,108 @@ export const USER_ROLES = {
   ADMIN: 'admin',
 } as const;
 
-// Notification Types
-export const NOTIFICATION_TYPES = {
-  INFO: 'info',
-  SUCCESS: 'success',
-  WARNING: 'warning',
-  ERROR: 'error',
+// Session Status
+export const SESSION_STATUS = {
+  SCHEDULED: 'scheduled',
+  IN_PROGRESS: 'in-progress',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+  RESCHEDULED: 'rescheduled',
 } as const;
 
-// Sync Priorities
-export const SYNC_PRIORITIES = {
+// Notification Types
+export const NOTIFICATION_TYPES = {
+  SESSION_REMINDER: 'session_reminder',
+  SESSION_STARTED: 'session_started',
+  SESSION_COMPLETED: 'session_completed',
+  SESSION_CANCELLED: 'session_cancelled',
+  MESSAGE_RECEIVED: 'message_received',
+  AI_INSIGHT: 'ai_insight',
+  SYSTEM_UPDATE: 'system_update',
+} as const;
+
+// Priority Levels
+export const PRIORITY_LEVELS = {
+  CRITICAL: 'critical',
   HIGH: 'high',
   MEDIUM: 'medium',
   LOW: 'low',
 } as const;
+
+// Theme Constants
+export const THEMES = {
+  LIGHT: 'light',
+  DARK: 'dark',
+  AUTO: 'auto',
+} as const;
+
+// Animation Durations (in milliseconds)
+export const ANIMATION_DURATIONS = {
+  FAST: 150,
+  NORMAL: 300,
+  SLOW: 500,
+  EXTRA_SLOW: 1000,
+} as const;
+
+// Breakpoints (in pixels)
+export const BREAKPOINTS = {
+  SM: 640,
+  MD: 768,
+  LG: 1024,
+  XL: 1280,
+  '2XL': 1536,
+} as const;
+
+// Default Values
+export const DEFAULTS = {
+  SESSION_DURATION: 60, // minutes
+  QR_EXPIRY_TIME: 5, // minutes
+  HEARTBEAT_INTERVAL: 30, // seconds
+  RECONNECT_INTERVAL: 5, // seconds
+  MAX_RECONNECT_ATTEMPTS: 10,
+  MESSAGE_TIMEOUT: 30, // seconds
+  TYPING_TIMEOUT: 3, // seconds
+  MAX_QUEUE_SIZE: 1000,
+} as const;
+
+// File Upload Constants
+export const FILE_UPLOAD = {
+  MAX_SIZE: 10 * 1024 * 1024, // 10MB
+  ALLOWED_TYPES: [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'application/pdf',
+    'text/plain',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ],
+  CHUNK_SIZE: 1024 * 1024, // 1MB chunks
+} as const;
+
+// Validation Rules
+export const VALIDATION = {
+  EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  PASSWORD_MIN_LENGTH: 8,
+  NAME_MIN_LENGTH: 2,
+  NAME_MAX_LENGTH: 50,
+  MESSAGE_MAX_LENGTH: 1000,
+  PHONE_REGEX: /^\+?[\d\s\-\(\)]+$/,
+} as const;
+
+export default {
+  WS_EVENTS,
+  API_ENDPOINTS,
+  STORAGE_KEYS,
+  ERROR_CODES,
+  USER_ROLES,
+  SESSION_STATUS,
+  NOTIFICATION_TYPES,
+  PRIORITY_LEVELS,
+  THEMES,
+  ANIMATION_DURATIONS,
+  BREAKPOINTS,
+  DEFAULTS,
+  FILE_UPLOAD,
+  VALIDATION,
+};
