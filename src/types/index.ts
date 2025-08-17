@@ -487,6 +487,7 @@ export interface TeacherProfile {
     };
   };
   bio?: string;
+  status?: 'available' | 'assigned' | 'unavailable';
   parentId: string; // parent who created this teacher
   createdAt: Date;
   updatedAt: Date;

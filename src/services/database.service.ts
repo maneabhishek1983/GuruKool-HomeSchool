@@ -1,163 +1,98 @@
-import { supabase, supabaseAdmin, Database } from '@/lib/supabase';
-import { User, Session, AIInsight, LearningAnalytics } from '@/types';
+import { createClient } from '@supabase/supabase-js';
+import { StudentProfile, TeacherProfile } from '@/types';
 
-type Tables = Database['public']['Tables'];
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export interface DatabaseStudent {
+  id: string;
+  parent_id: string;
+  name: string;
+  age: number;
+  country: 'UK' | 'US' | 'INDIA';
+  grade_level: string;
+  grade_system: 'uk_year' | 'us_grade' | 'india_class';
+  birth_date?: string;
+  learning_preferences?: any;
+  special_needs?: any;
+  academic_standards?: any;
+  profile_picture_url?: string;
+  assigned_teachers?: string[];
+  teacher_notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DatabaseTeacher {
+  id: string;
+  user_id: string;
+  parent_id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  subjects: string[];
+  experience_years: number;
+  qualifications: string[];
+  specializations: string[];
+  hourly_rate: number;
+  availability: any;
+  location: any;
+  bio?: string;
+  status: 'available' | 'assigned' | 'unavailable';
+  verification_status: 'pending' | 'verified' | 'rejected';
+  profile_picture_url?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export class DatabaseService {
-  private static instance: DatabaseService;
-
-  private constructor() {}
-
-  public static getInstance(): DatabaseService {
-    if (!DatabaseService.instance) {
-      DatabaseService.instance = new DatabaseService();
-    }
-    return DatabaseService.instance;
-  }
-
-  // User Management
-  async createUser(userData: Omit<Tables['users']['Insert'], 'id'>): Promise<User | null> {
-    try {
-      const { data, error } = await supabaseAdmin
-        .from('users')
-        .insert(userData)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return this.mapDatabaseUserToUser(data);
-    } catch (error) {
-      console.error('Error creating user:', error);
-      return null;
-    }
-  }
-
-  async getUserById(id: string): Promise<User | null> {
+  // Student Operations
+  static async getStudents(parentId: string): Promise<StudentProfile[]> {
     try {
       const { data, error } = await supabase
-        .from('users')
+        .from('students')
         .select('*')
-        .eq('id', id)
-        .single();
+        .eq('parent_id', parentId)
+        .order('created_at', { ascending: false });
 
       if (error) {
         throw error;
       }
 
-      return this.mapDatabaseUserToUser(data);
+      return data?.map(this.mapDatabaseStudentToProfile) || [];
     } catch (error) {
-      console.error('Error fetching user:', error);
-      return null;
-    }
-  }
-
-  async getUserByEmail(email: string): Promise<User | null> {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return this.mapDatabaseUserToUser(data);
-    } catch (error) {
-      console.error('Error fetching user by email:', error);
-      return null;
-    }
-  }
-
-  async updateUser(id: string, updates: Tables['users']['Update']): Promise<User | null> {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return this.mapDatabaseUserToUser(data);
-    } catch (error) {
-      console.error('Error updating user:', error);
-      return null;
-    }
-  }
-
-  // Session Management
-  async createSession(sessionData: Omit<Tables['sessions']['Insert'], 'id'>): Promise<Session | null> {
-    try {
-      const { data, error } = await supabase
-        .from('sessions')
-        .insert(sessionData)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return this.mapDatabaseSessionToSession(data);
-    } catch (error) {
-      console.error('Error creating session:', error);
-      return null;
-    }
-  }
-
-  async getSessionById(id: string): Promise<Session | null> {
-    try {
-      const { data, error } = await supabase
-        .from('sessions')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return this.mapDatabaseSessionToSession(data);
-    } catch (error) {
-      console.error('Error fetching session:', error);
-      return null;
-    }
-  }
-
-  async getSessionsByUserId(userId: string, role: 'teacher' | 'parent'): Promise<Session[]> {
-    try {
-      const column = role === 'teacher' ? 'teacher_id' : 'parent_id';
-      const { data, error } = await supabase
-        .from('sessions')
-        .select('*')
-        .eq(column, userId)
-        .order('scheduled_start', { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-
-      return data.map(this.mapDatabaseSessionToSession);
-    } catch (error) {
-      console.error('Error fetching user sessions:', error);
+      console.error('Error fetching students:', error);
       return [];
     }
   }
 
-  async updateSession(id: string, updates: Tables['sessions']['Update']): Promise<Session | null> {
+  static async createStudent(
+    studentData: Partial<StudentProfile>,
+    parentId: string
+  ): Promise<StudentProfile | null> {
     try {
+      const dbStudent = {
+        parent_id: parentId,
+        name: studentData.name!,
+        age: studentData.age!,
+        country: studentData.country!,
+        grade_level: studentData.grade!,
+        grade_system: this.mapCountryToGradeSystem(studentData.country!),
+        learning_preferences: {
+          learning_style: studentData.learningStyle,
+          special_needs: studentData.specialNeeds,
+          interests: studentData.interests,
+        },
+        academic_standards: studentData.academicStandard,
+        assigned_teachers: studentData.assignedTeachers || [],
+        teacher_notes: studentData.teacherNotes || '',
+      };
+
       const { data, error } = await supabase
-        .from('sessions')
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', id)
+        .from('students')
+        .insert(dbStudent)
         .select()
         .single();
 
@@ -165,61 +100,73 @@ export class DatabaseService {
         throw error;
       }
 
-      return this.mapDatabaseSessionToSession(data);
+      return this.mapDatabaseStudentToProfile(data);
     } catch (error) {
-      console.error('Error updating session:', error);
+      console.error('Error creating student:', error);
       return null;
     }
   }
 
-  // Authentication Session Management
-  async createAuthSession(authData: Omit<Tables['auth_sessions']['Insert'], 'id'>): Promise<string | null> {
+  static async updateStudent(
+    studentId: string,
+    updates: Partial<StudentProfile>
+  ): Promise<StudentProfile | null> {
     try {
-      const { data, error } = await supabaseAdmin
-        .from('auth_sessions')
-        .insert(authData)
-        .select('id')
+      const dbUpdates: any = {};
+
+      if (updates.name) {
+        dbUpdates.name = updates.name;
+      }
+      if (updates.age) {
+        dbUpdates.age = updates.age;
+      }
+      if (updates.country) {
+        dbUpdates.country = updates.country;
+      }
+      if (updates.grade) {
+        dbUpdates.grade_level = updates.grade;
+      }
+      if (updates.learningStyle || updates.specialNeeds || updates.interests) {
+        dbUpdates.learning_preferences = {
+          learning_style: updates.learningStyle,
+          special_needs: updates.specialNeeds,
+          interests: updates.interests,
+        };
+      }
+      if (updates.academicStandard) {
+        dbUpdates.academic_standards = updates.academicStandard;
+      }
+      if (updates.assignedTeachers) {
+        dbUpdates.assigned_teachers = updates.assignedTeachers;
+      }
+      if (updates.teacherNotes) {
+        dbUpdates.teacher_notes = updates.teacherNotes;
+      }
+
+      const { data, error } = await supabase
+        .from('students')
+        .update(dbUpdates)
+        .eq('id', studentId)
+        .select()
         .single();
 
       if (error) {
         throw error;
       }
 
-      return data.id;
+      return this.mapDatabaseStudentToProfile(data);
     } catch (error) {
-      console.error('Error creating auth session:', error);
+      console.error('Error updating student:', error);
       return null;
     }
   }
 
-  async getAuthSession(sessionId: string): Promise<Tables['auth_sessions']['Row'] | null> {
+  static async deleteStudent(studentId: string): Promise<boolean> {
     try {
-      const { data, error } = await supabaseAdmin
-        .from('auth_sessions')
-        .select('*')
-        .eq('session_id', sessionId)
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error fetching auth session:', error);
-      return null;
-    }
-  }
-
-  async updateAuthSession(
-    sessionId: string, 
-    updates: Tables['auth_sessions']['Update']
-  ): Promise<boolean> {
-    try {
-      const { error } = await supabaseAdmin
-        .from('auth_sessions')
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('session_id', sessionId);
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', studentId);
 
       if (error) {
         throw error;
@@ -227,100 +174,72 @@ export class DatabaseService {
 
       return true;
     } catch (error) {
-      console.error('Error updating auth session:', error);
+      console.error('Error deleting student:', error);
       return false;
     }
   }
 
-  async cleanupExpiredAuthSessions(): Promise<number> {
-    try {
-      const { data, error } = await supabaseAdmin
-        .from('auth_sessions')
-        .delete()
-        .lt('expires_at', new Date().toISOString())
-        .select('id');
-
-      if (error) {
-        throw error;
-      }
-
-      return data.length;
-    } catch (error) {
-      console.error('Error cleaning up expired auth sessions:', error);
-      return 0;
-    }
-  }
-
-  // AI Insights Management
-  async createAIInsight(insightData: Omit<Tables['ai_insights']['Insert'], 'id'>): Promise<AIInsight | null> {
+  // Teacher Operations
+  static async getTeachers(parentId: string): Promise<TeacherProfile[]> {
     try {
       const { data, error } = await supabase
-        .from('ai_insights')
-        .insert(insightData)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return this.mapDatabaseInsightToInsight(data);
-    } catch (error) {
-      console.error('Error creating AI insight:', error);
-      return null;
-    }
-  }
-
-  async getAIInsightsBySessionId(sessionId: string): Promise<AIInsight[]> {
-    try {
-      const { data, error } = await supabase
-        .from('ai_insights')
+        .from('teachers')
         .select('*')
-        .eq('session_id', sessionId)
+        .eq('parent_id', parentId)
         .order('created_at', { ascending: false });
 
       if (error) {
         throw error;
       }
 
-      return data.map(this.mapDatabaseInsightToInsight);
+      return data?.map(this.mapDatabaseTeacherToProfile) || [];
     } catch (error) {
-      console.error('Error fetching AI insights:', error);
+      console.error('Error fetching teachers:', error);
       return [];
     }
   }
 
-  async getAIInsightsByUserId(userId: string): Promise<AIInsight[]> {
+  static async createTeacher(
+    teacherData: any,
+    parentId: string
+  ): Promise<TeacherProfile | null> {
     try {
-      const { data, error } = await supabase
-        .from('ai_insights')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(50);
+      // First create a user account for the teacher
+      const { data: userData, error: userError } = await supabase.auth.signUp({
+        email: teacherData.email,
+        password: this.generatePassword(), // Generate a random password
+        options: {
+          data: {
+            name: teacherData.name,
+            role: 'teacher',
+          },
+        },
+      });
 
-      if (error) {
-        throw error;
+      if (userError) {
+        throw userError;
       }
 
-      return data.map(this.mapDatabaseInsightToInsight);
-    } catch (error) {
-      console.error('Error fetching user AI insights:', error);
-      return [];
-    }
-  }
+      const dbTeacher = {
+        user_id: userData.user!.id,
+        parent_id: parentId,
+        name: teacherData.name,
+        email: teacherData.email,
+        phone: teacherData.phone,
+        subjects: teacherData.subjects,
+        experience_years: parseInt(teacherData.experience) || 0,
+        qualifications: teacherData.qualifications,
+        specializations: teacherData.specializations,
+        hourly_rate: parseFloat(teacherData.hourlyRate) || 0,
+        availability: teacherData.availability,
+        location: teacherData.location,
+        bio: teacherData.bio,
+        status: 'available',
+      };
 
-  // Learning Analytics Management
-  async createOrUpdateLearningAnalytics(
-    analyticsData: Omit<Tables['learning_analytics']['Insert'], 'id'>
-  ): Promise<LearningAnalytics | null> {
-    try {
       const { data, error } = await supabase
-        .from('learning_analytics')
-        .upsert(analyticsData, { 
-          onConflict: 'student_id,subject',
-          ignoreDuplicates: false 
-        })
+        .from('teachers')
+        .insert(dbTeacher)
         .select()
         .single();
 
@@ -328,113 +247,149 @@ export class DatabaseService {
         throw error;
       }
 
-      return this.mapDatabaseAnalyticsToAnalytics(data);
+      return this.mapDatabaseTeacherToProfile(data);
     } catch (error) {
-      console.error('Error creating/updating learning analytics:', error);
+      console.error('Error creating teacher:', error);
       return null;
     }
   }
 
-  async getLearningAnalyticsByStudentId(studentId: string): Promise<LearningAnalytics[]> {
+  static async updateTeacher(
+    teacherId: string,
+    updates: Partial<TeacherProfile>
+  ): Promise<TeacherProfile | null> {
     try {
+      const dbUpdates: any = {};
+
+      if (updates.name) {
+        dbUpdates.name = updates.name;
+      }
+      if (updates.email) {
+        dbUpdates.email = updates.email;
+      }
+      if (updates.subjects) {
+        dbUpdates.subjects = updates.subjects;
+      }
+      if (updates.hourlyRate) {
+        dbUpdates.hourly_rate = updates.hourlyRate;
+      }
+      if (updates.availability) {
+        dbUpdates.availability = updates.availability;
+      }
+      if (updates.bio) {
+        dbUpdates.bio = updates.bio;
+      }
+
       const { data, error } = await supabase
-        .from('learning_analytics')
-        .select('*')
-        .eq('student_id', studentId)
-        .order('updated_at', { ascending: false });
+        .from('teachers')
+        .update(dbUpdates)
+        .eq('id', teacherId)
+        .select()
+        .single();
 
       if (error) {
         throw error;
       }
 
-      return data.map(this.mapDatabaseAnalyticsToAnalytics);
+      return this.mapDatabaseTeacherToProfile(data);
     } catch (error) {
-      console.error('Error fetching learning analytics:', error);
-      return [];
+      console.error('Error updating teacher:', error);
+      return null;
     }
   }
 
-  // Database Health Check
-  async healthCheck(): Promise<{ healthy: boolean; latency: number }> {
-    const startTime = Date.now();
-    
+  static async deleteTeacher(teacherId: string): Promise<boolean> {
     try {
       const { error } = await supabase
-        .from('users')
-        .select('id')
-        .limit(1);
+        .from('teachers')
+        .delete()
+        .eq('id', teacherId);
 
-      const latency = Date.now() - startTime;
+      if (error) {
+        throw error;
+      }
 
-      return {
-        healthy: !error,
-        latency,
-      };
+      return true;
     } catch (error) {
-      return {
-        healthy: false,
-        latency: Date.now() - startTime,
-      };
+      console.error('Error deleting teacher:', error);
+      return false;
     }
   }
 
-  // Mapping functions
-  private mapDatabaseUserToUser(dbUser: Tables['users']['Row']): User {
+  // Helper methods
+  private static mapDatabaseStudentToProfile(
+    dbStudent: DatabaseStudent
+  ): StudentProfile {
     return {
-      id: dbUser.id,
-      email: dbUser.email,
-      name: dbUser.name,
-      role: dbUser.role,
-      preferences: dbUser.preferences || {
-        notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
-        dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
-        privacy: { dataSharing: false, analytics: true, aiTraining: true },
-        accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
-      },
-      createdAt: new Date(dbUser.created_at),
-      lastActive: new Date(dbUser.last_active),
+      id: dbStudent.id,
+      name: dbStudent.name,
+      age: dbStudent.age,
+      grade: dbStudent.grade_level,
+      country: dbStudent.country,
+      academicStandard: dbStudent.academic_standards,
+      selectedSubjects: [],
+      selectedSocialization: [],
+      selectedPhysicalEducation: [],
+      selectedExtracurricular: [],
+      selectedCommunityInvolvement: [],
+      selectedSensoryActivities: [],
+      selectedWritingActivities: [],
+      selectedCommunicationActivities: [],
+      selectedSocialActivities: [],
+      selectedMotorActivities: [],
+      selectedAcademicActivities: [],
+      learningStyle: dbStudent.learning_preferences?.learning_style || '',
+      specialNeeds: dbStudent.learning_preferences?.special_needs || '',
+      interests: dbStudent.learning_preferences?.interests || '',
+      assignedTeachers: dbStudent.assigned_teachers || [],
+      teacherNotes: dbStudent.teacher_notes || '',
+      parentId: dbStudent.parent_id,
+      createdAt: new Date(dbStudent.created_at),
+      updatedAt: new Date(dbStudent.updated_at),
     };
   }
 
-  private mapDatabaseSessionToSession(dbSession: Tables['sessions']['Row']): Session {
+  private static mapDatabaseTeacherToProfile(
+    dbTeacher: DatabaseTeacher
+  ): TeacherProfile {
     return {
-      id: dbSession.id,
-      studentId: dbSession.student_id,
-      teacherId: dbSession.teacher_id,
-      parentId: dbSession.parent_id,
-      subject: dbSession.subject,
-      scheduledStart: new Date(dbSession.scheduled_start),
-      scheduledEnd: new Date(dbSession.scheduled_end),
-      actualStart: dbSession.actual_start ? new Date(dbSession.actual_start) : undefined,
-      actualEnd: dbSession.actual_end ? new Date(dbSession.actual_end) : undefined,
-      location: dbSession.location,
-      status: dbSession.status,
-      notes: dbSession.notes || undefined,
-      aiInsights: [], // Would be populated separately
-      attachments: [], // Would be populated separately
+      id: dbTeacher.id,
+      name: dbTeacher.name,
+      email: dbTeacher.email,
+      phone: dbTeacher.phone,
+      subjects: dbTeacher.subjects,
+      experience: dbTeacher.experience_years,
+      qualifications: dbTeacher.qualifications,
+      specializations: dbTeacher.specializations,
+      hourlyRate: dbTeacher.hourly_rate,
+      availability: dbTeacher.availability,
+      location: dbTeacher.location,
+      bio: dbTeacher.bio,
+      parentId: dbTeacher.parent_id,
+      createdAt: new Date(dbTeacher.created_at),
+      updatedAt: new Date(dbTeacher.updated_at),
     };
   }
 
-  private mapDatabaseInsightToInsight(dbInsight: Tables['ai_insights']['Row']): AIInsight {
-    return {
-      id: dbInsight.id,
-      sessionId: dbInsight.session_id || '',
-      type: dbInsight.type,
-      content: dbInsight.content,
-      confidence: dbInsight.confidence,
-      metadata: dbInsight.metadata || {},
-      createdAt: new Date(dbInsight.created_at),
-    };
+  private static mapCountryToGradeSystem(
+    country: string
+  ): 'uk_year' | 'us_grade' | 'india_class' {
+    switch (country) {
+      case 'UK':
+        return 'uk_year';
+      case 'US':
+        return 'us_grade';
+      case 'INDIA':
+        return 'india_class';
+      default:
+        return 'uk_year';
+    }
   }
 
-  private mapDatabaseAnalyticsToAnalytics(dbAnalytics: Tables['learning_analytics']['Row']): LearningAnalytics {
-    return {
-      studentId: dbAnalytics.student_id,
-      subject: dbAnalytics.subject,
-      progressMetrics: dbAnalytics.progress_metrics || [],
-      learningPatterns: dbAnalytics.learning_patterns || [],
-      recommendations: dbAnalytics.recommendations || [],
-      lastUpdated: new Date(dbAnalytics.updated_at),
-    };
+  private static generatePassword(): string {
+    return (
+      Math.random().toString(36).slice(-8) +
+      Math.random().toString(36).slice(-8)
+    );
   }
 }

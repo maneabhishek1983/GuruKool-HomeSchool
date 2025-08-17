@@ -10,6 +10,7 @@ import { DataSheetsViewer } from '@/components/parent/DataSheetsViewer';
 import TeacherCreationForm from '@/components/parent/TeacherCreationForm';
 import { StudentProfile, Country, TeacherProfile } from '@/types';
 import { academicStandardsService } from '@/services/academic-standards.service';
+import { DatabaseService } from '@/services/database.service';
 
 interface Teacher {
   id: string;
@@ -47,6 +48,8 @@ export default function ParentDashboard() {
   const router = useRouter();
   const [students, setStudents] = useState<StudentProfile[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
   const [showCreateTeacherModal, setShowCreateTeacherModal] = useState(false);
@@ -62,159 +65,226 @@ export default function ParentDashboard() {
     total: 0,
   });
 
-  // Initialize with empty students array - no demo data
+  // Load data from database on component mount
   useEffect(() => {
-    // Load students from localStorage
-    const storedStudents = localStorage.getItem('parent-students');
-    if (storedStudents) {
-      try {
-        const parsedStudents = JSON.parse(storedStudents);
-        const studentsWithDates = parsedStudents.map((student: any) => ({
-          ...student,
-          createdAt: new Date(student.createdAt),
-          updatedAt: new Date(student.updatedAt),
-        }));
-        setStudents(studentsWithDates);
-      } catch (error) {
-        console.error('Error parsing stored students:', error);
-        setStudents([]);
-      }
-    } else {
-      setStudents([]);
-    }
-
-    // Load teachers from localStorage
-    const storedTeachers = localStorage.getItem('parent-teachers');
-    if (storedTeachers) {
-      try {
-        const parsedTeachers = JSON.parse(storedTeachers);
-        setTeachers(parsedTeachers);
-      } catch (error) {
-        console.error('Error parsing stored teachers:', error);
-        setTeachers([]);
-      }
-    } else {
-      setTeachers([]);
+    if (user?.id) {
+      loadData();
     }
   }, [user?.id]);
 
-  // Save students to localStorage whenever students change
-  useEffect(() => {
-    if (students.length > 0) {
-      localStorage.setItem('parent-students', JSON.stringify(students));
-    } else {
-      localStorage.removeItem('parent-students');
+  const loadData = async () => {
+    if (!user?.id) {
+      return;
     }
-  }, [students]);
 
-  // Save teachers to localStorage whenever teachers change
-  useEffect(() => {
-    if (teachers.length > 0) {
-      localStorage.setItem('parent-teachers', JSON.stringify(teachers));
-    } else {
-      localStorage.removeItem('parent-teachers');
-    }
-  }, [teachers]);
+    setIsLoading(true);
+    setError(null);
 
-  const handleCreateStudent = (formData: any) => {
-    // Convert form data to StudentProfile format
-    const newStudent: StudentProfile = {
-      id: `student-${Date.now()}`,
-      name: formData.name,
-      age: parseInt(formData.age),
-      grade: formData.gradeLevel,
-      country: formData.country,
-      academicStandard: academicStandardsService.getAcademicStandard(
-        formData.country
-      ),
-      selectedSubjects: formData.selectedSubjects,
-      selectedSocialization: formData.selectedSocialization,
-      selectedPhysicalEducation: formData.selectedPhysicalEducation,
-      selectedExtracurricular: formData.selectedExtracurricular,
-      selectedCommunityInvolvement: formData.selectedCommunityInvolvement,
-      // Data Sheet Activity Categories
-      selectedSensoryActivities: formData.selectedSensoryActivities || [],
-      selectedWritingActivities: formData.selectedWritingActivities || [],
-      selectedCommunicationActivities:
-        formData.selectedCommunicationActivities || [],
-      selectedSocialActivities: formData.selectedSocialActivities || [],
-      selectedMotorActivities: formData.selectedMotorActivities || [],
-      selectedAcademicActivities: formData.selectedAcademicActivities || [],
-      // Teacher Assignment
-      assignedTeachers: formData.assignedTeachers || [],
-      teacherNotes: formData.teacherNotes || '',
-      learningStyle: formData.learningStyle,
-      specialNeeds: formData.specialNeeds,
-      interests: formData.interests,
-      parentId: user?.id || 'parent-1',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    try {
+      // Load students and teachers in parallel
+      const [studentsData, teachersData] = await Promise.all([
+        DatabaseService.getStudents(user.id),
+        DatabaseService.getTeachers(user.id),
+      ]);
 
-    setStudents(prev => [...prev, newStudent]);
-    setShowCreateStudentModal(false);
-  };
-
-  const handleCreateTeacher = (formData: any) => {
-    const newTeacher: Teacher = {
-      id: `teacher-${Date.now()}`,
-      name: formData.name,
-      email: formData.email,
-      subjects: formData.subjects,
-      status: 'available',
-      hourlyRate: parseFloat(formData.hourlyRate),
-    };
-
-    setTeachers(prev => [...prev, newTeacher]);
-    setShowCreateTeacherModal(false);
-  };
-
-  const handleDeleteStudent = (studentId: string) => {
-    setStudents(prev => prev.filter(student => student.id !== studentId));
-  };
-
-  const handleDeleteTeacher = (teacherId: string) => {
-    setTeachers(prev => prev.filter(teacher => teacher.id !== teacherId));
-  };
-
-  const handleClearAllData = () => {
-    if (
-      window.confirm(
-        'Are you sure you want to clear all student and teacher data? This action cannot be undone.'
-      )
-    ) {
-      setStudents([]);
-      setTeachers([]);
-      localStorage.removeItem('parent-students');
-      localStorage.removeItem('parent-teachers');
+      setStudents(studentsData);
+      setTeachers(
+        teachersData.map(teacher => ({
+          id: teacher.id,
+          name: teacher.name,
+          email: teacher.email,
+          subjects: teacher.subjects,
+          status: teacher.status as 'available' | 'assigned',
+          hourlyRate: teacher.hourlyRate,
+        }))
+      );
+    } catch (err) {
+      console.error('Error loading data:', err);
+      setError('Failed to load data. Please try refreshing the page.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleClearStudents = () => {
-    if (
-      window.confirm(
-        'Are you sure you want to clear all student data? This action cannot be undone.'
-      )
-    ) {
-      setStudents([]);
-      localStorage.removeItem('parent-students');
+  const handleCreateStudent = async (formData: any) => {
+    if (!user?.id) {
+      return;
+    }
+
+    try {
+      // Convert form data to StudentProfile format
+      const studentData: Partial<StudentProfile> = {
+        name: formData.name,
+        age: parseInt(formData.age),
+        grade: formData.gradeLevel,
+        country: formData.country,
+        academicStandard: academicStandardsService.getAcademicStandard(
+          formData.country
+        ),
+        selectedSubjects: formData.selectedSubjects,
+        selectedSocialization: formData.selectedSocialization,
+        selectedPhysicalEducation: formData.selectedPhysicalEducation,
+        selectedExtracurricular: formData.selectedExtracurricular,
+        selectedCommunityInvolvement: formData.selectedCommunityInvolvement,
+        // Data Sheet Activity Categories
+        selectedSensoryActivities: formData.selectedSensoryActivities || [],
+        selectedWritingActivities: formData.selectedWritingActivities || [],
+        selectedCommunicationActivities:
+          formData.selectedCommunicationActivities || [],
+        selectedSocialActivities: formData.selectedSocialActivities || [],
+        selectedMotorActivities: formData.selectedMotorActivities || [],
+        selectedAcademicActivities: formData.selectedAcademicActivities || [],
+        // Teacher Assignment
+        assignedTeachers: formData.assignedTeachers || [],
+        teacherNotes: formData.teacherNotes || '',
+        learningStyle: formData.learningStyle,
+        specialNeeds: formData.specialNeeds,
+        interests: formData.interests,
+      };
+
+      const newStudent = await DatabaseService.createStudent(
+        studentData,
+        user.id
+      );
+
+      if (newStudent) {
+        setStudents(prev => [newStudent, ...prev]);
+        setShowCreateStudentModal(false);
+      } else {
+        setError('Failed to create student. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error creating student:', err);
+      setError('Failed to create student. Please try again.');
     }
   };
 
-  const handleClearTeachers = () => {
-    if (
-      window.confirm(
-        'Are you sure you want to clear all teacher data? This action cannot be undone.'
-      )
-    ) {
-      setTeachers([]);
-      localStorage.removeItem('parent-teachers');
+  const handleCreateTeacher = async (formData: any) => {
+    if (!user?.id) {
+      return;
+    }
+
+    try {
+      const newTeacher = await DatabaseService.createTeacher(formData, user.id);
+
+      if (newTeacher) {
+        const teacherForState: Teacher = {
+          id: newTeacher.id,
+          name: newTeacher.name,
+          email: newTeacher.email,
+          subjects: newTeacher.subjects,
+          status: 'available',
+          hourlyRate: newTeacher.hourlyRate,
+        };
+
+        setTeachers(prev => [teacherForState, ...prev]);
+        setShowCreateTeacherModal(false);
+      } else {
+        setError('Failed to create teacher. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error creating teacher:', err);
+      setError('Failed to create teacher. Please try again.');
+    }
+  };
+
+  const handleDeleteStudent = async (studentId: string) => {
+    try {
+      const success = await DatabaseService.deleteStudent(studentId);
+
+      if (success) {
+        setStudents(prev => prev.filter(student => student.id !== studentId));
+      } else {
+        setError('Failed to delete student. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error deleting student:', err);
+      setError('Failed to delete student. Please try again.');
+    }
+  };
+
+  const handleDeleteTeacher = async (teacherId: string) => {
+    try {
+      const success = await DatabaseService.deleteTeacher(teacherId);
+
+      if (success) {
+        setTeachers(prev => prev.filter(teacher => teacher.id !== teacherId));
+      } else {
+        setError('Failed to delete teacher. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error deleting teacher:', err);
+      setError('Failed to delete teacher. Please try again.');
     }
   };
 
   const handleEditStudent = (student: StudentProfile) => {
     setSelectedStudent(student);
     setShowCreateStudentModal(true);
+  };
+
+  const handleClearAllData = async () => {
+    if (
+      window.confirm(
+        'Are you sure you want to clear all student and teacher data? This action cannot be undone.'
+      )
+    ) {
+      try {
+        // Delete all students and teachers for this parent
+        const deletePromises = [
+          ...students.map(student => DatabaseService.deleteStudent(student.id)),
+          ...teachers.map(teacher => DatabaseService.deleteTeacher(teacher.id)),
+        ];
+
+        await Promise.all(deletePromises);
+
+        setStudents([]);
+        setTeachers([]);
+      } catch (err) {
+        console.error('Error clearing data:', err);
+        setError('Failed to clear data. Please try again.');
+      }
+    }
+  };
+
+  const handleClearStudents = async () => {
+    if (
+      window.confirm(
+        'Are you sure you want to clear all student data? This action cannot be undone.'
+      )
+    ) {
+      try {
+        const deletePromises = students.map(student =>
+          DatabaseService.deleteStudent(student.id)
+        );
+
+        await Promise.all(deletePromises);
+        setStudents([]);
+      } catch (err) {
+        console.error('Error clearing students:', err);
+        setError('Failed to clear students. Please try again.');
+      }
+    }
+  };
+
+  const handleClearTeachers = async () => {
+    if (
+      window.confirm(
+        'Are you sure you want to clear all teacher data? This action cannot be undone.'
+      )
+    ) {
+      try {
+        const deletePromises = teachers.map(teacher =>
+          DatabaseService.deleteTeacher(teacher.id)
+        );
+
+        await Promise.all(deletePromises);
+        setTeachers([]);
+      } catch (err) {
+        console.error('Error clearing teachers:', err);
+        setError('Failed to clear teachers. Please try again.');
+      }
+    }
   };
 
   const getCountryFlag = (country: Country) => {
@@ -236,6 +306,17 @@ export default function ParentDashboard() {
           <p className="text-gray-600">
             Please log in to access the parent dashboard.
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your data...</p>
         </div>
       </div>
     );
@@ -304,6 +385,47 @@ export default function ParentDashboard() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Error Display */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-red-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+              <div className="ml-auto pl-3">
+                <button
+                  onClick={() => setError(null)}
+                  className="text-red-400 hover:text-red-600"
+                >
+                  <svg
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <motion.div
