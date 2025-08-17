@@ -64,9 +64,57 @@ export default function ParentDashboard() {
 
   // Initialize with empty students array - no demo data
   useEffect(() => {
-    // Students will be loaded from actual data source or created by parent
-    setStudents([]);
+    // Load students from localStorage
+    const storedStudents = localStorage.getItem('parent-students');
+    if (storedStudents) {
+      try {
+        const parsedStudents = JSON.parse(storedStudents);
+        const studentsWithDates = parsedStudents.map((student: any) => ({
+          ...student,
+          createdAt: new Date(student.createdAt),
+          updatedAt: new Date(student.updatedAt),
+        }));
+        setStudents(studentsWithDates);
+      } catch (error) {
+        console.error('Error parsing stored students:', error);
+        setStudents([]);
+      }
+    } else {
+      setStudents([]);
+    }
+
+    // Load teachers from localStorage
+    const storedTeachers = localStorage.getItem('parent-teachers');
+    if (storedTeachers) {
+      try {
+        const parsedTeachers = JSON.parse(storedTeachers);
+        setTeachers(parsedTeachers);
+      } catch (error) {
+        console.error('Error parsing stored teachers:', error);
+        setTeachers([]);
+      }
+    } else {
+      setTeachers([]);
+    }
   }, [user?.id]);
+
+  // Save students to localStorage whenever students change
+  useEffect(() => {
+    if (students.length > 0) {
+      localStorage.setItem('parent-students', JSON.stringify(students));
+    } else {
+      localStorage.removeItem('parent-students');
+    }
+  }, [students]);
+
+  // Save teachers to localStorage whenever teachers change
+  useEffect(() => {
+    if (teachers.length > 0) {
+      localStorage.setItem('parent-teachers', JSON.stringify(teachers));
+    } else {
+      localStorage.removeItem('parent-teachers');
+    }
+  }, [teachers]);
 
   const handleCreateStudent = (formData: any) => {
     // Convert form data to StudentProfile format
@@ -123,6 +171,45 @@ export default function ParentDashboard() {
 
   const handleDeleteStudent = (studentId: string) => {
     setStudents(prev => prev.filter(student => student.id !== studentId));
+  };
+
+  const handleDeleteTeacher = (teacherId: string) => {
+    setTeachers(prev => prev.filter(teacher => teacher.id !== teacherId));
+  };
+
+  const handleClearAllData = () => {
+    if (
+      window.confirm(
+        'Are you sure you want to clear all student and teacher data? This action cannot be undone.'
+      )
+    ) {
+      setStudents([]);
+      setTeachers([]);
+      localStorage.removeItem('parent-students');
+      localStorage.removeItem('parent-teachers');
+    }
+  };
+
+  const handleClearStudents = () => {
+    if (
+      window.confirm(
+        'Are you sure you want to clear all student data? This action cannot be undone.'
+      )
+    ) {
+      setStudents([]);
+      localStorage.removeItem('parent-students');
+    }
+  };
+
+  const handleClearTeachers = () => {
+    if (
+      window.confirm(
+        'Are you sure you want to clear all teacher data? This action cannot be undone.'
+      )
+    ) {
+      setTeachers([]);
+      localStorage.removeItem('parent-teachers');
+    }
   };
 
   const handleEditStudent = (student: StudentProfile) => {
@@ -354,6 +441,82 @@ export default function ParentDashboard() {
           </motion.div>
         </div>
 
+        {/* Data Management Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+            Data Management
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button
+              onClick={handleClearAllData}
+              className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+              <span>Clear All Data</span>
+            </button>
+            <button
+              onClick={handleClearStudents}
+              className="bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 transition-colors flex items-center space-x-2"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+              <span>Clear Students</span>
+            </button>
+            <button
+              onClick={handleClearTeachers}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+              <span>Clear Teachers</span>
+            </button>
+          </div>
+          <div className="mt-6 text-center text-sm text-gray-600">
+            <p>
+              Student data:{' '}
+              {students.length > 0 ? 'Persisted' : 'Not persisted'}
+            </p>
+            <p>
+              Teacher data:{' '}
+              {teachers.length > 0 ? 'Persisted' : 'Not persisted'}
+            </p>
+          </div>
+        </div>
+
         {/* Student Management Section */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
@@ -569,6 +732,14 @@ export default function ParentDashboard() {
                         </p>
                       </div>
                     )}
+                    <div className="pt-2">
+                      <button
+                        onClick={() => handleDeleteTeacher(teacher.id)}
+                        className="text-red-600 hover:text-red-800 text-sm font-medium"
+                      >
+                        Delete Teacher
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               ))}
