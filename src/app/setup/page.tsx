@@ -25,8 +25,8 @@ export default function SetupPage() {
       // Users exist, redirect to login
       router.push('/login');
     } else {
-      // No users exist, show setup
-      setShowSetup(true);
+      // No users exist, redirect to admin portal
+      router.push('/admin-portal');
     }
   }, [getAllUsers, router]);
 

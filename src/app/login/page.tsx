@@ -23,10 +23,10 @@ export default function LoginPage() {
       );
     }
 
-    // Check if any users exist, if not redirect to setup
+    // Check if any users exist, if not redirect to admin portal
     const users = getAllUsers();
     if (users.length === 0) {
-      router.push('/setup');
+      router.push('/admin-portal');
     }
   }, [searchParams, getAllUsers, router]);
 
@@ -294,7 +294,7 @@ export default function LoginPage() {
 
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <a
               href="/contact-admin"
               className="text-blue-600 hover:text-blue-700 font-medium"
