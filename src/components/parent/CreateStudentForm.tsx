@@ -882,9 +882,27 @@ export default function CreateStudentForm({
   const renderLearningPreferences = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Learning Preferences (Optional)
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Learning Preferences (Optional)
+          </h3>
+          <button
+            type="button"
+            onClick={() => {
+              // Clear learning preferences and move to next step
+              setFormData(prev => ({
+                ...prev,
+                learningStyle: '',
+                interests: '',
+                specialNeeds: '',
+              }));
+              setCurrentStep(currentStep + 1);
+            }}
+            className="text-sm text-gray-500 hover:text-gray-700 underline"
+          >
+            Skip this section
+          </button>
+        </div>
 
         <div className="space-y-4">
           <div>
@@ -959,9 +977,26 @@ export default function CreateStudentForm({
   const renderTeacherAssignment = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Teacher Assignment
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Teacher Assignment
+          </h3>
+          <button
+            type="button"
+            onClick={() => {
+              // Clear teacher assignments and move to next step
+              setFormData(prev => ({
+                ...prev,
+                assignedTeachers: [],
+                teacherNotes: '',
+              }));
+              setCurrentStep(currentStep + 1);
+            }}
+            className="text-sm text-gray-500 hover:text-gray-700 underline"
+          >
+            Skip this section
+          </button>
+        </div>
         <p className="text-sm text-gray-600 mb-6">
           Assign teachers to your student. You can create new teacher profiles
           or select from existing ones.
@@ -1088,6 +1123,25 @@ export default function CreateStudentForm({
               className="text-sm px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
             >
               Clear All Categories
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                // Clear all activity selections and move to next step
+                setFormData(prev => ({
+                  ...prev,
+                  selectedSensoryActivities: [],
+                  selectedWritingActivities: [],
+                  selectedCommunicationActivities: [],
+                  selectedSocialActivities: [],
+                  selectedMotorActivities: [],
+                  selectedAcademicActivities: [],
+                }));
+                setCurrentStep(currentStep + 1);
+              }}
+              className="text-sm text-gray-500 hover:text-gray-700 underline"
+            >
+              Skip this section
             </button>
           </div>
         </div>
