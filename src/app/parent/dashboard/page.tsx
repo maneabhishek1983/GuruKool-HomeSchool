@@ -84,6 +84,14 @@ export default function ParentDashboard() {
       selectedPhysicalEducation: formData.selectedPhysicalEducation,
       selectedExtracurricular: formData.selectedExtracurricular,
       selectedCommunityInvolvement: formData.selectedCommunityInvolvement,
+      // Data Sheet Activity Categories
+      selectedSensoryActivities: formData.selectedSensoryActivities || [],
+      selectedWritingActivities: formData.selectedWritingActivities || [],
+      selectedCommunicationActivities:
+        formData.selectedCommunicationActivities || [],
+      selectedSocialActivities: formData.selectedSocialActivities || [],
+      selectedMotorActivities: formData.selectedMotorActivities || [],
+      selectedAcademicActivities: formData.selectedAcademicActivities || [],
       learningStyle: formData.learningStyle,
       specialNeeds: formData.specialNeeds,
       interests: formData.interests,

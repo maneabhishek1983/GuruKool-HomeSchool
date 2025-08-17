@@ -355,6 +355,79 @@ const ukAcademicStandard: AcademicStandard = {
         'Field guides',
       ],
     },
+    {
+      id: 'uk-geography',
+      name: 'Geography',
+      description: 'Core subject covering physical and human geography',
+      topics: [
+        {
+          id: 'uk-geography-physical',
+          name: 'Physical Geography',
+          description: 'Study of natural features and processes',
+          learningObjectives: [
+            'Understand physical features of the Earth',
+            'Explore weather and climate',
+            'Investigate natural processes',
+          ],
+          activities: ['Field trips', 'Map reading', 'Weather observations'],
+          resources: [
+            'Geography textbooks',
+            'Maps and atlases',
+            'Weather instruments',
+          ],
+          assessmentCriteria: [
+            'Map skills tests',
+            'Field work reports',
+            'Geographical investigations',
+          ],
+          difficulty: 'intermediate',
+        },
+        {
+          id: 'uk-geography-human',
+          name: 'Human Geography',
+          description: 'Study of human populations and settlements',
+          learningObjectives: [
+            'Understand human settlements',
+            'Explore population patterns',
+            'Investigate economic activities',
+          ],
+          activities: [
+            'Case studies',
+            'Population analysis',
+            'Settlement mapping',
+          ],
+          resources: [
+            'Geography textbooks',
+            'Population data',
+            'Case study materials',
+          ],
+          assessmentCriteria: [
+            'Case study reports',
+            'Population analysis',
+            'Settlement investigations',
+          ],
+          difficulty: 'intermediate',
+        },
+      ],
+      skills: [
+        'Map reading',
+        'Geographical inquiry',
+        'Data analysis',
+        'Field work skills',
+      ],
+      assessmentMethods: [
+        'Map skills tests',
+        'Field work reports',
+        'Case studies',
+        'Coursework',
+      ],
+      resources: [
+        'Textbooks',
+        'Maps and atlases',
+        'Field work equipment',
+        'Online resources',
+      ],
+    },
   ],
   assessmentMethods: [
     'Written exams',
@@ -704,6 +777,75 @@ const usAcademicStandard: AcademicStandard = {
         'Calculators',
       ],
     },
+    {
+      id: 'us-geography',
+      name: 'Geography',
+      description: 'Core subject covering physical and human geography',
+      topics: [
+        {
+          id: 'us-geography-physical',
+          name: 'Physical Geography',
+          description: "Study of Earth's physical features and processes",
+          learningObjectives: [
+            "Understand Earth's physical systems",
+            'Explore climate and weather patterns',
+            'Investigate natural resources',
+          ],
+          activities: ['Map studies', 'Climate analysis', 'Field observations'],
+          resources: ['Geography textbooks', 'Maps and globes', 'Weather data'],
+          assessmentCriteria: [
+            'Map skills assessments',
+            'Climate studies',
+            'Geographic investigations',
+          ],
+          difficulty: 'intermediate',
+        },
+        {
+          id: 'us-geography-human',
+          name: 'Human Geography',
+          description: 'Study of human populations and cultural patterns',
+          learningObjectives: [
+            'Understand human settlement patterns',
+            'Explore cultural diversity',
+            'Investigate economic systems',
+          ],
+          activities: [
+            'Population studies',
+            'Cultural analysis',
+            'Economic mapping',
+          ],
+          resources: [
+            'Geography textbooks',
+            'Population data',
+            'Cultural resources',
+          ],
+          assessmentCriteria: [
+            'Population analysis',
+            'Cultural studies',
+            'Economic investigations',
+          ],
+          difficulty: 'intermediate',
+        },
+      ],
+      skills: [
+        'Map reading',
+        'Geographic analysis',
+        'Data interpretation',
+        'Spatial thinking',
+      ],
+      assessmentMethods: [
+        'Map skills tests',
+        'Geographic investigations',
+        'Research projects',
+        'Portfolio',
+      ],
+      resources: [
+        'Textbooks',
+        'Maps and atlases',
+        'Online resources',
+        'Field work materials',
+      ],
+    },
   ],
   assessmentMethods: [
     'Standardized tests',
@@ -924,6 +1066,80 @@ const indiaAcademicStandard: AcademicStandard = {
         'Online resources',
         'Math manipulatives',
         'Real-world examples',
+      ],
+    },
+    {
+      id: 'india-geography',
+      name: 'Geography',
+      description: 'Core subject covering physical and human geography',
+      topics: [
+        {
+          id: 'india-geography-physical',
+          name: 'Physical Geography',
+          description:
+            "Study of Earth's physical features and natural processes",
+          learningObjectives: [
+            'Understand physical features of India and the world',
+            'Explore climate and weather patterns',
+            'Investigate natural resources',
+          ],
+          activities: ['Map reading', 'Weather observations', 'Field studies'],
+          resources: [
+            'Geography textbooks',
+            'Maps and atlases',
+            'Weather instruments',
+          ],
+          assessmentCriteria: [
+            'Map skills tests',
+            'Field work reports',
+            'Geographic investigations',
+          ],
+          difficulty: 'intermediate',
+        },
+        {
+          id: 'india-geography-human',
+          name: 'Human Geography',
+          description: 'Study of human populations and cultural patterns',
+          learningObjectives: [
+            'Understand population patterns',
+            'Explore cultural diversity',
+            'Investigate economic activities',
+          ],
+          activities: [
+            'Population studies',
+            'Cultural analysis',
+            'Economic mapping',
+          ],
+          resources: [
+            'Geography textbooks',
+            'Population data',
+            'Cultural resources',
+          ],
+          assessmentCriteria: [
+            'Population analysis',
+            'Cultural studies',
+            'Economic investigations',
+          ],
+          difficulty: 'intermediate',
+        },
+      ],
+      skills: [
+        'Map reading',
+        'Geographic inquiry',
+        'Data analysis',
+        'Field work skills',
+      ],
+      assessmentMethods: [
+        'Map skills tests',
+        'Field work reports',
+        'Case studies',
+        'Continuous assessment',
+      ],
+      resources: [
+        'Textbooks',
+        'Maps and atlases',
+        'Field work equipment',
+        'Online resources',
       ],
     },
   ],

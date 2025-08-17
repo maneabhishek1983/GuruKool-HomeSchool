@@ -24,6 +24,13 @@ interface StudentFormData {
   selectedPhysicalEducation: PhysicalEducationOption[];
   selectedExtracurricular: ExtracurricularOption[];
   selectedCommunityInvolvement: CommunityInvolvementOption[];
+  // Data Sheet Activity Categories
+  selectedSensoryActivities: string[];
+  selectedWritingActivities: string[];
+  selectedCommunicationActivities: string[];
+  selectedSocialActivities: string[];
+  selectedMotorActivities: string[];
+  selectedAcademicActivities: string[];
   learningStyle?: string;
   specialNeeds?: string;
   interests?: string;
@@ -35,6 +42,115 @@ interface CreateStudentFormProps {
 }
 
 const learningStyles = ['Visual', 'Auditory', 'Kinesthetic', 'Reading/Writing'];
+
+// Data Sheet Activity Options
+const sensoryActivities = [
+  'Visual tracking exercises',
+  'Auditory discrimination games',
+  'Tactile exploration activities',
+  'Olfactory (smell) activities',
+  'Gustatory (taste) activities',
+  'Proprioceptive activities',
+  'Vestibular activities',
+  'Sensory integration exercises',
+  'Texture exploration',
+  'Sound discrimination',
+  'Visual scanning exercises',
+  'Body awareness activities',
+];
+
+const writingActivities = [
+  'Handwriting practice',
+  'Letter formation',
+  'Word writing',
+  'Sentence writing',
+  'Paragraph writing',
+  'Creative writing',
+  'Journal writing',
+  'Story writing',
+  'Essay writing',
+  'Note-taking',
+  'Copy work',
+  'Dictation exercises',
+  'Writing prompts',
+  'Grammar exercises',
+  'Spelling practice',
+];
+
+const communicationActivities = [
+  'Verbal expression',
+  'Listening comprehension',
+  'Conversation skills',
+  'Public speaking',
+  'Storytelling',
+  'Role-playing',
+  'Debate activities',
+  'Presentation skills',
+  'Question and answer sessions',
+  'Vocabulary building',
+  'Language games',
+  'Sign language (if applicable)',
+  'Non-verbal communication',
+  'Active listening exercises',
+];
+
+const socialActivities = [
+  'Peer interaction',
+  'Group activities',
+  'Team building exercises',
+  'Social skills training',
+  'Conflict resolution',
+  'Empathy building',
+  'Friendship skills',
+  'Cooperation activities',
+  'Leadership development',
+  'Community involvement',
+  'Cultural awareness',
+  'Social etiquette',
+  'Play skills',
+  'Social problem solving',
+];
+
+const motorActivities = [
+  'Fine motor activities',
+  'Gross motor activities',
+  'Hand-eye coordination',
+  'Balance exercises',
+  'Coordination activities',
+  'Motor planning',
+  'Motor control exercises',
+  'Strength building',
+  'Endurance activities',
+  'Motor skills development',
+  'Physical activities',
+  'Sports participation',
+  'Dance activities',
+  'Yoga exercises',
+  'Gymnastics',
+  'Swimming',
+  'Running activities',
+  'Jumping exercises',
+  'Climbing activities',
+  'Throwing and catching',
+];
+
+const academicActivities = [
+  'Mathematics exercises',
+  'Reading comprehension',
+  'Science experiments',
+  'History studies',
+  'Geography exploration',
+  'Art projects',
+  'Music activities',
+  'Physical education',
+  'Computer skills',
+  'Research projects',
+  'Study skills',
+  'Test preparation',
+  'Homework assistance',
+  'Educational games',
+  'Field trips',
+];
 
 export default function CreateStudentForm({
   onSubmit,
@@ -50,6 +166,13 @@ export default function CreateStudentForm({
     selectedPhysicalEducation: [],
     selectedExtracurricular: [],
     selectedCommunityInvolvement: [],
+    // Data Sheet Activity Categories
+    selectedSensoryActivities: [],
+    selectedWritingActivities: [],
+    selectedCommunicationActivities: [],
+    selectedSocialActivities: [],
+    selectedMotorActivities: [],
+    selectedAcademicActivities: [],
     learningStyle: '',
     specialNeeds: '',
     interests: '',
@@ -172,8 +295,27 @@ export default function CreateStudentForm({
     }));
   };
 
+  // Activity toggle functions for data sheet activities
+  const handleActivityToggle = (
+    activity: string,
+    category:
+      | 'selectedSensoryActivities'
+      | 'selectedWritingActivities'
+      | 'selectedCommunicationActivities'
+      | 'selectedSocialActivities'
+      | 'selectedMotorActivities'
+      | 'selectedAcademicActivities'
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      [category]: prev[category].includes(activity)
+        ? prev[category].filter(a => a !== activity)
+        : [...prev[category], activity],
+    }));
+  };
+
   const nextStep = () => {
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -186,7 +328,7 @@ export default function CreateStudentForm({
 
   const renderStepIndicator = () => (
     <div className="flex items-center justify-center mb-6">
-      {[1, 2, 3, 4].map(step => (
+      {[1, 2, 3, 4, 5].map(step => (
         <div key={step} className="flex items-center">
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
@@ -197,7 +339,7 @@ export default function CreateStudentForm({
           >
             {step}
           </div>
-          {step < 4 && (
+          {step < 5 && (
             <div
               className={`w-12 h-1 mx-2 ${
                 step < currentStep ? 'bg-blue-600' : 'bg-gray-200'
@@ -717,6 +859,175 @@ export default function CreateStudentForm({
     </div>
   );
 
+  const renderDataSheetActivities = () => (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Data Sheet Activity Categories
+        </h3>
+        <p className="text-sm text-gray-600 mb-6">
+          Select activities for each category that will be tracked in your
+          student's data sheets.
+        </p>
+      </div>
+
+      {/* Sensory Activities */}
+      <div>
+        <h4 className="text-md font-medium text-gray-900 mb-3">
+          Sensory Activities
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {sensoryActivities.map(activity => (
+            <label
+              key={activity}
+              className="flex items-center space-x-3 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={formData.selectedSensoryActivities.includes(activity)}
+                onChange={() =>
+                  handleActivityToggle(activity, 'selectedSensoryActivities')
+                }
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">{activity}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Writing Activities */}
+      <div>
+        <h4 className="text-md font-medium text-gray-900 mb-3">
+          Writing Activities
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {writingActivities.map(activity => (
+            <label
+              key={activity}
+              className="flex items-center space-x-3 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={formData.selectedWritingActivities.includes(activity)}
+                onChange={() =>
+                  handleActivityToggle(activity, 'selectedWritingActivities')
+                }
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">{activity}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Communication Activities */}
+      <div>
+        <h4 className="text-md font-medium text-gray-900 mb-3">
+          Communication Activities
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {communicationActivities.map(activity => (
+            <label
+              key={activity}
+              className="flex items-center space-x-3 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={formData.selectedCommunicationActivities.includes(
+                  activity
+                )}
+                onChange={() =>
+                  handleActivityToggle(
+                    activity,
+                    'selectedCommunicationActivities'
+                  )
+                }
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">{activity}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Social Activities */}
+      <div>
+        <h4 className="text-md font-medium text-gray-900 mb-3">
+          Social Activities
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {socialActivities.map(activity => (
+            <label
+              key={activity}
+              className="flex items-center space-x-3 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={formData.selectedSocialActivities.includes(activity)}
+                onChange={() =>
+                  handleActivityToggle(activity, 'selectedSocialActivities')
+                }
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">{activity}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Motor Activities */}
+      <div>
+        <h4 className="text-md font-medium text-gray-900 mb-3">
+          Motor Activities
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {motorActivities.map(activity => (
+            <label
+              key={activity}
+              className="flex items-center space-x-3 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={formData.selectedMotorActivities.includes(activity)}
+                onChange={() =>
+                  handleActivityToggle(activity, 'selectedMotorActivities')
+                }
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">{activity}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Academic Activities */}
+      <div>
+        <h4 className="text-md font-medium text-gray-900 mb-3">
+          Academic Activities
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {academicActivities.map(activity => (
+            <label
+              key={activity}
+              className="flex items-center space-x-3 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={formData.selectedAcademicActivities.includes(activity)}
+                onChange={() =>
+                  handleActivityToggle(activity, 'selectedAcademicActivities')
+                }
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">{activity}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
@@ -726,7 +1037,10 @@ export default function CreateStudentForm({
       case 3:
         return renderHomeschoolingOptions();
       case 4:
+        return renderDataSheetActivities();
+      case 5:
         return renderLearningPreferences();
+
       default:
         return null;
     }
@@ -752,7 +1066,7 @@ export default function CreateStudentForm({
           </motion.button>
 
           <div className="flex space-x-3">
-            {currentStep < 4 ? (
+            {currentStep < 5 ? (
               <motion.button
                 type="button"
                 whileHover={{ scale: 1.02 }}

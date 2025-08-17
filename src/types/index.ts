@@ -477,6 +477,13 @@ export interface StudentProfile {
   selectedPhysicalEducation: PhysicalEducationOption[];
   selectedExtracurricular: ExtracurricularOption[];
   selectedCommunityInvolvement: CommunityInvolvementOption[];
+  // Data Sheet Activity Categories
+  selectedSensoryActivities?: string[];
+  selectedWritingActivities?: string[];
+  selectedCommunicationActivities?: string[];
+  selectedSocialActivities?: string[];
+  selectedMotorActivities?: string[];
+  selectedAcademicActivities?: string[];
   learningStyle?: string;
   specialNeeds?: string;
   interests?: string;
