@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthContext } from '@/lib/authContext';
 import { motion } from 'framer-motion';
+import { DataSheetsManager } from '@/components/teacher/DataSheetsManager';
+import { TimesheetManager } from '@/components/teacher/TimesheetManager';
 
 export default function TeacherDashboard() {
   const { user } = useAuthContext();
@@ -510,19 +512,10 @@ export default function TeacherDashboard() {
         )}
 
         {activeTab === 'data-sheets' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="bg-white rounded-lg shadow-sm border p-6"
-          >
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Data Sheets Management
-            </h2>
-            <p className="text-gray-600">
-              Data sheets interface coming soon...
-            </p>
-          </motion.div>
+          <DataSheetsManager
+            teacherId={user?.id || 'teacher-1'}
+            selectedDate={new Date().toISOString().split('T')[0] || ''}
+          />
         )}
 
         {activeTab === 'students' && (
@@ -542,19 +535,7 @@ export default function TeacherDashboard() {
         )}
 
         {activeTab === 'sessions' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="bg-white rounded-lg shadow-sm border p-6"
-          >
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Teaching Sessions
-            </h2>
-            <p className="text-gray-600">
-              Session management interface coming soon...
-            </p>
-          </motion.div>
+          <TimesheetManager teacherId={user?.id || 'teacher-1'} />
         )}
       </div>
     </div>

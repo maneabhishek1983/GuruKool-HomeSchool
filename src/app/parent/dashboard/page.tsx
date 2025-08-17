@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import CreateStudentForm from '@/components/parent/CreateStudentForm';
 import StudentProfileCard from '@/components/parent/StudentProfileCard';
+import { DataSheetsViewer } from '@/components/parent/DataSheetsViewer';
 import { StudentProfile, Country } from '@/types';
 import { academicStandardsService } from '@/services/academic-standards.service';
 
@@ -71,6 +72,7 @@ export default function ParentDashboard() {
   const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [showTeacherModal, setShowTeacherModal] = useState(false);
+  const [showDataSheetsModal, setShowDataSheetsModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<StudentProfile | null>(
     null
   );
@@ -467,6 +469,10 @@ export default function ParentDashboard() {
                     student={student}
                     onEdit={() => handleEditStudent(student)}
                     onDelete={() => handleDeleteStudent(student.id)}
+                    onViewDataSheets={() => {
+                      setSelectedStudent(student);
+                      setShowDataSheetsModal(true);
+                    }}
                   />
                 </motion.div>
               ))}
@@ -874,6 +880,18 @@ export default function ParentDashboard() {
             </div>
           </motion.div>{' '}
         </div>
+      )}
+
+      {/* Data Sheets Modal */}
+      {showDataSheetsModal && selectedStudent && (
+        <DataSheetsViewer
+          studentId={selectedStudent.id}
+          studentName={selectedStudent.name}
+          onClose={() => {
+            setShowDataSheetsModal(false);
+            setSelectedStudent(null);
+          }}
+        />
       )}
     </div>
   );
