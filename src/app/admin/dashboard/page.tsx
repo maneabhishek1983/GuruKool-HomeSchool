@@ -17,34 +17,9 @@ interface User {
 }
 
 export default function AdminDashboard() {
-  const { user, logout } = useAuthContext();
+  const { user, logout, createUser, getAllUsers } = useAuthContext();
   const router = useRouter();
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: '1',
-      name: 'Jane Parent',
-      email: 'parent@example.com',
-      role: 'parent',
-      status: 'active',
-      createdAt: new Date('2024-01-15'),
-    },
-    {
-      id: '2',
-      name: 'Admin User',
-      email: 'admin@example.com',
-      role: 'admin',
-      status: 'active',
-      createdAt: new Date('2024-01-10'),
-    },
-    {
-      id: '3',
-      name: 'John Teacher',
-      email: 'john.teacher@example.com',
-      role: 'teacher',
-      status: 'active',
-      createdAt: new Date('2024-01-20'),
-    },
-  ]);
+  const [users, setUsers] = useState<User[]>([]);
 
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
@@ -70,8 +45,21 @@ export default function AdminDashboard() {
       } else {
         router.push('/login');
       }
+    } else {
+      // Load users from auth context
+      const allUsers = getAllUsers();
+      setUsers(
+        allUsers.map(u => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          status: 'active' as const,
+          createdAt: u.createdAt,
+        }))
+      );
     }
-  }, [user, router]);
+  }, [user, router, getAllUsers]);
 
   const handleLogout = () => {
     logout();
@@ -129,7 +117,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleCreateUser = () => {
+  const handleCreateUser = async () => {
     if (newUser.name && newUser.email) {
       try {
         console.log('Creating new user:', newUser);
@@ -140,33 +128,80 @@ export default function AdminDashboard() {
         const qrCode = generateQRCode(newUser.email, password);
         console.log('Generated QR code:', qrCode ? 'Success' : 'Failed');
 
-        const user: User = {
-          id: Date.now().toString(),
+        // Create user with proper preferences structure
+        const userData = {
           name: newUser.name,
           email: newUser.email,
           role: newUser.role,
-          status: 'active',
-          createdAt: new Date(),
           password,
-          qrCode,
+          preferences: {
+            notifications: {
+              email: true,
+              push: true,
+              sms: false,
+              inApp: true,
+              frequency: 'immediate' as const,
+            },
+            dashboard: {
+              layout: 'compact' as const,
+              theme: 'light' as const,
+              widgets: ['sessions', 'progress', 'notifications'],
+            },
+            privacy: {
+              dataSharing: true,
+              analytics: true,
+              aiTraining: false,
+            },
+            accessibility: {
+              fontSize: 'medium' as const,
+              highContrast: false,
+              reducedMotion: false,
+              screenReader: false,
+            },
+          },
         };
 
-        console.log('Created user object:', {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          hasPassword: !!user.password,
-          hasQRCode: !!user.qrCode,
-        });
+        // Use the auth context to create the user
+        const result = await createUser(userData);
 
-        setUsers([...users, user]);
-        setCreatedUser(user);
-        setNewUser({ name: '', email: '', role: 'parent' });
-        setShowCreateUserModal(false);
-        setShowCredentialsModal(true);
+        if (result.success && result.user) {
+          const createdUser = {
+            ...result.user,
+            qrCode,
+            status: 'active' as const,
+          };
 
-        console.log('User creation completed successfully');
+          console.log('Created user object:', {
+            id: createdUser.id,
+            name: createdUser.name,
+            email: createdUser.email,
+            role: createdUser.role,
+            hasPassword: !!createdUser.password,
+            hasQRCode: !!createdUser.qrCode,
+          });
+
+          // Update local users list
+          const allUsers = getAllUsers();
+          setUsers(
+            allUsers.map(u => ({
+              id: u.id,
+              name: u.name,
+              email: u.email,
+              role: u.role,
+              status: 'active' as const,
+              createdAt: u.createdAt,
+            }))
+          );
+
+          setCreatedUser(createdUser);
+          setNewUser({ name: '', email: '', role: 'parent' });
+          setShowCreateUserModal(false);
+          setShowCredentialsModal(true);
+
+          console.log('User creation completed successfully');
+        } else {
+          alert(result.error || 'Failed to create user');
+        }
       } catch (error) {
         console.error('Error creating user:', error);
         alert('Error creating user. Please check console for details.');
@@ -680,54 +715,52 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {createdUser.role === 'parent' && createdUser.qrCode && (
+            {createdUser.role === 'parent' && (
               <div className="bg-blue-50 rounded-lg p-4 mb-4">
                 <h4 className="text-sm font-medium text-blue-900 mb-2">
                   QR Code Login
                 </h4>
                 <div className="text-center">
-                  <img
-                    src={createdUser.qrCode}
-                    alt="QR Code for login"
-                    className="w-32 h-32 mx-auto border border-gray-300 rounded"
-                    onError={e => {
-                      console.error('QR Code image failed to load:', e);
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling?.classList.remove(
-                        'hidden'
-                      );
-                    }}
-                  />
-                  <div className="hidden w-32 h-32 mx-auto border border-gray-300 rounded bg-red-50 flex items-center justify-center">
-                    <p className="text-xs text-red-600">QR Code Error</p>
-                  </div>
-                  <p className="text-xs text-blue-700 mt-2">
-                    Users can scan this QR code to log in quickly
-                  </p>
-                  <button
-                    onClick={() => {
-                      if (createdUser.qrCode) {
-                        navigator.clipboard.writeText(createdUser.qrCode);
-                        alert('QR Code data copied to clipboard');
-                      }
-                    }}
-                    className="mt-2 text-xs text-blue-600 hover:text-blue-800 underline"
-                  >
-                    Copy QR Code Data
-                  </button>
+                  {createdUser.qrCode ? (
+                    <>
+                      <img
+                        src={createdUser.qrCode}
+                        alt="QR Code for login"
+                        className="w-32 h-32 mx-auto border border-gray-300 rounded"
+                        onError={e => {
+                          console.error('QR Code image failed to load:', e);
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove(
+                            'hidden'
+                          );
+                        }}
+                      />
+                      <div className="hidden w-32 h-32 mx-auto border border-gray-300 rounded bg-red-50 flex items-center justify-center">
+                        <p className="text-xs text-red-600">QR Code Error</p>
+                      </div>
+                      <p className="text-xs text-blue-700 mt-2">
+                        Users can scan this QR code to log in quickly
+                      </p>
+                      <button
+                        onClick={() => {
+                          if (createdUser.qrCode) {
+                            navigator.clipboard.writeText(createdUser.qrCode);
+                            alert('QR Code data copied to clipboard');
+                          }
+                        }}
+                        className="mt-2 text-xs text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Copy QR Code Data
+                      </button>
+                    </>
+                  ) : (
+                    <div className="w-32 h-32 mx-auto border border-gray-300 rounded bg-yellow-50 flex items-center justify-center">
+                      <p className="text-xs text-yellow-600">
+                        QR Code Not Generated
+                      </p>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
-
-            {createdUser.role === 'parent' && !createdUser.qrCode && (
-              <div className="bg-yellow-50 rounded-lg p-4 mb-4">
-                <h4 className="text-sm font-medium text-yellow-900 mb-2">
-                  QR Code Not Generated
-                </h4>
-                <p className="text-xs text-yellow-700">
-                  QR code could not be generated. Please check console for
-                  errors.
-                </p>
               </div>
             )}
 

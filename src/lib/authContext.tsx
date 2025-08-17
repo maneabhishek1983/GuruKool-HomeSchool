@@ -7,6 +7,7 @@ export interface User {
   name: string;
   role: 'parent' | 'admin' | 'teacher';
   email: string;
+  password?: string; // Add password for new users
   preferences: {
     notifications: {
       email: boolean;
@@ -44,6 +45,10 @@ interface AuthContextType {
   ) => Promise<{ success: boolean; user?: User; error?: string }>;
   logout: () => void;
   isLoading: boolean;
+  createUser: (
+    userData: Omit<User, 'id' | 'createdAt' | 'lastActive'>
+  ) => Promise<{ success: boolean; user?: User; error?: string }>;
+  getAllUsers: () => User[];
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,40 +56,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
 
+  // Initialize with demo users
   useEffect(() => {
-    // Check for stored user data on mount
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        // Convert date strings back to Date objects
-        parsedUser.createdAt = new Date(parsedUser.createdAt);
-        parsedUser.lastActive = new Date(parsedUser.lastActive);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('user');
-      }
-    }
-    setIsLoading(false);
-  }, []);
-
-  const login = async (
-    email: string,
-    password: string
-  ): Promise<{ success: boolean; user?: User; error?: string }> => {
-    try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Demo credentials validation - parent, admin, and teacher
-      if (email === 'parent@example.com' && password === 'parent123') {
-        const userData: User = {
+    const initializeUsers = () => {
+      const demoUsers: User[] = [
+        {
           id: 'parent-1',
           name: 'Jane Parent',
           role: 'parent',
           email: 'parent@example.com',
+          password: 'parent123',
           preferences: {
             notifications: {
               email: true,
@@ -112,16 +95,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
           createdAt: new Date('2024-01-15'),
           lastActive: new Date(),
-        };
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
-        return { success: true, user: userData };
-      } else if (email === 'admin@example.com' && password === 'admin123') {
-        const userData: User = {
+        },
+        {
           id: 'admin-1',
           name: 'Admin User',
           role: 'admin',
           email: 'admin@example.com',
+          password: 'admin123',
           preferences: {
             notifications: {
               email: true,
@@ -149,16 +129,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
           createdAt: new Date('2024-01-01'),
           lastActive: new Date(),
-        };
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
-        return { success: true, user: userData };
-      } else if (email === 'teacher@example.com' && password === 'teacher123') {
-        const userData: User = {
+        },
+        {
           id: 'teacher-1',
           name: 'Sarah Teacher',
           role: 'teacher',
           email: 'teacher@example.com',
+          password: 'teacher123',
           preferences: {
             notifications: {
               email: true,
@@ -186,10 +163,125 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
           createdAt: new Date('2024-01-10'),
           lastActive: new Date(),
+        },
+      ];
+
+      // Load existing users from localStorage
+      const storedUsers = localStorage.getItem('allUsers');
+      if (storedUsers) {
+        try {
+          const parsedUsers = JSON.parse(storedUsers);
+          // Convert date strings back to Date objects
+          const usersWithDates = parsedUsers.map((u: any) => ({
+            ...u,
+            createdAt: new Date(u.createdAt),
+            lastActive: new Date(u.lastActive),
+          }));
+          setAllUsers(usersWithDates);
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error('Error parsing stored users:', error);
+          setAllUsers(demoUsers);
+        }
+      } else {
+        setAllUsers(demoUsers);
+        localStorage.setItem('allUsers', JSON.stringify(demoUsers));
+      }
+    };
+
+    initializeUsers();
+  }, []);
+
+  useEffect(() => {
+    // Check for stored user data on mount
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        // Convert date strings back to Date objects
+        parsedUser.createdAt = new Date(parsedUser.createdAt);
+        parsedUser.lastActive = new Date(parsedUser.lastActive);
+        setUser(parsedUser);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Error parsing stored user data:', error);
+        localStorage.removeItem('user');
+      }
+    }
+    setIsLoading(false);
+  }, []);
+
+  const createUser = async (
+    userData: Omit<User, 'id' | 'createdAt' | 'lastActive'>
+  ): Promise<{ success: boolean; user?: User; error?: string }> => {
+    try {
+      // Check if user already exists
+      const existingUser = allUsers.find(u => u.email === userData.email);
+      if (existingUser) {
+        return {
+          success: false,
+          error: 'User with this email already exists.',
         };
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
-        return { success: true, user: userData };
+      }
+
+      // Create new user
+      const newUser: User = {
+        ...userData,
+        id: `user-${Date.now()}`,
+        createdAt: new Date(),
+        lastActive: new Date(),
+      };
+
+      // Add to users list
+      const updatedUsers = [...allUsers, newUser];
+      setAllUsers(updatedUsers);
+      localStorage.setItem('allUsers', JSON.stringify(updatedUsers));
+
+      // eslint-disable-next-line no-console
+      console.log('User created successfully:', newUser);
+
+      return { success: true, user: newUser };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error creating user:', error);
+      return {
+        success: false,
+        error: 'Failed to create user. Please try again.',
+      };
+    }
+  };
+
+  const getAllUsers = (): User[] => {
+    return allUsers;
+  };
+
+  const login = async (
+    email: string,
+    password: string
+  ): Promise<{ success: boolean; user?: User; error?: string }> => {
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Find user in allUsers array
+      const foundUser = allUsers.find(
+        u => u.email === email && u.password === password
+      );
+
+      if (foundUser) {
+        // Update last active
+        const updatedUser = { ...foundUser, lastActive: new Date() };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+
+        // Update in allUsers array
+        const updatedUsers = allUsers.map(u =>
+          u.id === foundUser.id ? updatedUser : u
+        );
+        setAllUsers(updatedUsers);
+        localStorage.setItem('allUsers', JSON.stringify(updatedUsers));
+
+        return { success: true, user: updatedUser };
       } else {
         return {
           success: false,
@@ -197,10 +289,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Login error:', error);
       return {
         success: false,
-        error: 'An unexpected error occurred. Please try again.',
+        error: 'An error occurred during login. Please try again.',
       };
     }
   };
@@ -211,7 +304,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        logout,
+        isLoading,
+        createUser,
+        getAllUsers,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
