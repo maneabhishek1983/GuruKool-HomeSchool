@@ -567,6 +567,312 @@ export default function ParentDashboard() {
               />
             </div>
           </div>
+          {/* Teacher Timesheet Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="mt-8 bg-white rounded-lg shadow-sm border"
+          >
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Teacher Timesheet & Progress
+              </h2>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Timesheet Summary */}
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-4">
+                    This Month's Hours
+                  </h3>
+                  <div className="space-y-3">
+                    {teachers
+                      .filter(t => t.status === 'assigned')
+                      .map((teacher, index) => (
+                        <div
+                          key={teacher.id}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        >
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {teacher.name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {teacher.subjects.join(', ')}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium text-blue-600">
+                              {24 + index * 2}h
+                            </p>
+                            <p className="text-xs text-gray-500">This month</p>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Recent Sessions */}
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-4">
+                    Recent Sessions
+                  </h3>
+                  <div className="space-y-3">
+                    {[
+                      {
+                        teacher: 'John Teacher',
+                        student: 'Emma Johnson',
+                        subject: 'Mathematics',
+                        date: '2024-01-15',
+                        duration: '2h',
+                      },
+                      {
+                        teacher: 'Sarah Wilson',
+                        student: 'Alex Chen',
+                        subject: 'English',
+                        date: '2024-01-14',
+                        duration: '1.5h',
+                      },
+                      {
+                        teacher: 'John Teacher',
+                        student: 'Emma Johnson',
+                        subject: 'Science',
+                        date: '2024-01-13',
+                        duration: '2h',
+                      },
+                    ].map((session, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {session.teacher}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {session.student} - {session.subject}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-gray-900">
+                            {session.duration}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {session.date}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+          {/* Teacher Timesheet Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="mt-8 bg-white rounded-lg shadow-sm border"
+          >
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Teacher Timesheet & Progress
+              </h2>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Timesheet Summary */}
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-4">
+                    This Month's Hours
+                  </h3>
+                  <div className="space-y-3">
+                    {teachers
+                      .filter(t => t.status === 'assigned')
+                      .map((teacher, index) => (
+                        <div
+                          key={teacher.id}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        >
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {teacher.name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {teacher.subjects.join(', ')}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium text-blue-600">
+                              {24 + index * 2}h
+                            </p>
+                            <p className="text-xs text-gray-500">This month</p>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Recent Sessions */}
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-4">
+                    Recent Sessions
+                  </h3>
+                  <div className="space-y-3">
+                    {[
+                      {
+                        teacher: 'John Teacher',
+                        student: 'Emma Johnson',
+                        subject: 'Mathematics',
+                        date: '2024-01-15',
+                        duration: '2h',
+                      },
+                      {
+                        teacher: 'Sarah Wilson',
+                        student: 'Alex Chen',
+                        subject: 'English',
+                        date: '2024-01-14',
+                        duration: '1.5h',
+                      },
+                      {
+                        teacher: 'John Teacher',
+                        student: 'Emma Johnson',
+                        subject: 'Science',
+                        date: '2024-01-13',
+                        duration: '2h',
+                      },
+                    ].map((session, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {session.teacher}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {session.student} - {session.subject}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-gray-900">
+                            {session.duration}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {session.date}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+          {/* Teacher Timesheet Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="mt-8 bg-white rounded-lg shadow-sm border"
+          >
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Teacher Timesheet & Progress
+              </h2>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Timesheet Summary */}
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-4">
+                    This Month's Hours
+                  </h3>
+                  <div className="space-y-3">
+                    {teachers
+                      .filter(t => t.status === 'assigned')
+                      .map((teacher, index) => (
+                        <div
+                          key={teacher.id}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        >
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {teacher.name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {teacher.subjects.join(', ')}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium text-blue-600">
+                              {24 + index * 2}h
+                            </p>
+                            <p className="text-xs text-gray-500">This month</p>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Recent Sessions */}
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-4">
+                    Recent Sessions
+                  </h3>
+                  <div className="space-y-3">
+                    {[
+                      {
+                        teacher: 'John Teacher',
+                        student: 'Emma Johnson',
+                        subject: 'Mathematics',
+                        date: '2024-01-15',
+                        duration: '2h',
+                      },
+                      {
+                        teacher: 'Sarah Wilson',
+                        student: 'Alex Chen',
+                        subject: 'English',
+                        date: '2024-01-14',
+                        duration: '1.5h',
+                      },
+                      {
+                        teacher: 'John Teacher',
+                        student: 'Emma Johnson',
+                        subject: 'Science',
+                        date: '2024-01-13',
+                        duration: '2h',
+                      },
+                    ].map((session, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {session.teacher}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {session.student} - {session.subject}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-gray-900">
+                            {session.duration}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {session.date}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>{' '}
         </div>
       )}
     </div>

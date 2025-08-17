@@ -35,20 +35,22 @@ class EmailService {
     contactRequest: ContactRequest
   ): Promise<boolean> {
     try {
-      // In a real implementation, this would use a service like:
-      // - SendGrid
-      // - AWS SES
-      // - Nodemailer with SMTP
-      // - Resend
-      // - Mailgun
-
       const emailContent = this.generateContactEmailContent(contactRequest);
 
-      console.log('Sending contact notification to:', this.config.adminEmail);
-      console.log('Email content:', emailContent);
+      console.log(
+        '📧 Sending contact notification to:',
+        this.config.adminEmail
+      );
+      console.log('📧 Email content:', emailContent);
 
-      // Simulate email sending
+      // In production, this would use a real email service
+      // For now, we'll simulate successful email sending
       await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Log to file for debugging
+      const logEntry = `${new Date().toISOString()} - Contact request from ${contactRequest.email}: ${contactRequest.message}\n`;
+      // Note: In a real implementation, you'd use a proper logging service
+      // fs.appendFileSync('contact-requests.log', logEntry);
 
       return true;
     } catch (error) {
@@ -67,8 +69,8 @@ class EmailService {
       const emailContent =
         this.generateConfirmationEmailContent(contactRequest);
 
-      console.log('Sending confirmation email to:', contactRequest.email);
-      console.log('Email content:', emailContent);
+      console.log('📧 Sending confirmation email to:', contactRequest.email);
+      console.log('📧 Email content:', emailContent);
 
       // Simulate email sending
       await new Promise(resolve => setTimeout(resolve, 1000));

@@ -791,18 +791,57 @@ export default function AdminDashboard() {
       {/* Content Modal */}
       {showContentModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
             <h3 className="text-lg font-semibold mb-4">Content Management</h3>
             <div className="space-y-4">
-              <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                Upload Educational Content
-              </button>
-              <button className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                Manage Resource Library
-              </button>
-              <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-                Create Curriculum
-              </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 mb-2">
+                    Upload Content
+                  </h4>
+                  <input
+                    type="file"
+                    className="w-full p-2 border border-gray-300 rounded"
+                  />
+                  <button className="mt-2 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Upload File
+                  </button>
+                </div>
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 mb-2">
+                    Create Resource
+                  </h4>
+                  <input
+                    type="text"
+                    placeholder="Resource name"
+                    className="w-full p-2 border border-gray-300 rounded mb-2"
+                  />
+                  <textarea
+                    placeholder="Description"
+                    className="w-full p-2 border border-gray-300 rounded mb-2"
+                    rows={3}
+                  ></textarea>
+                  <button className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    Create Resource
+                  </button>
+                </div>
+              </div>
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-2">
+                  Manage Curriculum
+                </h4>
+                <div className="space-y-2">
+                  <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    UK Curriculum Management
+                  </button>
+                  <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    US Standards Management
+                  </button>
+                  <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    India NEP 2020 Management
+                  </button>
+                </div>
+              </div>
             </div>
             <button
               onClick={() => setShowContentModal(false)}

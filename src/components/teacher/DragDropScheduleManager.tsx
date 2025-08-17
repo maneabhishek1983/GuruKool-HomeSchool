@@ -1,412 +1,605 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, Reorder } from 'framer-motion';
-import { SessionRecord, User, SchedulingConflict } from '@/types';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Card } from '@/design-system/components/base/Card';
+import { User, SessionRecord } from '@/types';
+import {
+  SessionStatus,
+  SchedulingRequest,
+  SchedulingResult,
+} from '@/types/session.types';
 import { enhancedSessionStore } from '@/store/session.store';
 
+interface TimeSlot {
+  id: string;
+  start: Date;
+  end: Date;
+  duration: number;
+}
+
+interface DraggedSession {
+  session: SessionRecord;
+  originalSlot: TimeSlot;
+}
+
+interface ConflictInfo {
+  type: 'time' | 'location' | 'teacher' | 'student';
+  description: string;
+  severity: 'low' | 'medium' | 'high';
+  suggestions: string[];
+}
+
 interface DragDropScheduleManagerProps {
-  sessions: SessionRecord[];
-  currentUser: User;
-  onScheduleUpdate?: (updatedSessions: SessionRecord[]) => void;
-  onConflictDetected?: (conflicts: SchedulingConflict[]) => void;
+  teacherId: string;
+  user: User;
+  onScheduleUpdate?: (sessions: SessionRecord[]) => void;
   className?: string;
 }
 
-interface ScheduleItem {
-  id: string;
-  session: SessionRecord;
-  isDragging: boolean;
-  conflicts: SchedulingConflict[];
-}
-
-export default function DragDropScheduleManager({
-  sessions,
-  currentUser,
-  onScheduleUpdate,
-  onConflictDetected,
-  className = ''
-}: DragDropScheduleManagerProps) {
-  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
-  const [draggedItem, setDraggedItem] = useState<string | null>(null);
-  const [conflicts, setConflicts] = useState<SchedulingConflict[]>([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<Date | null>(null);
+export const DragDropScheduleManager: React.FC<
+  DragDropScheduleManagerProps
+> = ({ teacherId, user, onScheduleUpdate, className = '' }) => {
+  const [sessions, setSessions] = useState<SessionRecord[]>([]);
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [draggedSession, setDraggedSession] = useState<DraggedSession | null>(
+    null
+  );
+  const [dragOverSlot, setDragOverSlot] = useState<string | null>(null);
+  const [conflicts, setConflicts] = useState<ConflictInfo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
 
   useEffect(() => {
-    // Initialize schedule items
-    const items: ScheduleItem[] = sessions.map(session => ({
-      id: session.id,
-      session,
-      isDragging: false,
-      conflicts: []
-    }));
-    setScheduleItems(items);
-  }, [sessions]);
+    loadScheduleData();
+    generateTimeSlots();
+  }, [teacherId, selectedDate, viewMode]);
 
-  useEffect(() => {
-    // Analyze conflicts whenever schedule changes
-    analyzeConflicts();
-  }, [scheduleItems]);
-
-  const analyzeConflicts = async () => {
-    setIsAnalyzing(true);
-    
+  const loadScheduleData = async () => {
     try {
-      const sessionData = scheduleItems.map(item => item.session);
-      
-      // Use the enhanced session store to detect conflicts
-      const allConflicts: SchedulingConflict[] = [];
-      
-      // Check for time conflicts
-      for (let i = 0; i < sessionData.length; i++) {
-        for (let j = i + 1; j < sessionData.length; j++) {
-          const session1 = sessionData[i];
-          const session2 = sessionData[j];
-          
-          if (hasTimeConflict(session1, session2)) {
-            allConflicts.push({
-              type: 'time',
-              description: `Sessions overlap: ${session1.subject} and ${session2.subject}`,
-              severity: 'high',
-              affectedSessions: [session1.id, session2.id],
-              suggestedResolutions: [
-                'Reschedule one session',
-                'Reduce session duration',
-                'Combine sessions if appropriate'
-              ]
-            });
-          }
-        }
+      setIsLoading(true);
+
+      const startDate = new Date(selectedDate);
+      const endDate = new Date(selectedDate);
+
+      if (viewMode === 'week') {
+        startDate.setDate(startDate.getDate() - startDate.getDay());
+        endDate.setDate(startDate.getDate() + 6);
       }
 
-      // Check for teacher conflicts (same teacher, overlapping times)
-      const teacherConflicts = detectTeacherConflicts(sessionData);
-      allConflicts.push(...teacherConflicts);
+      endDate.setHours(23, 59, 59, 999);
 
-      // Check for location conflicts
-      const locationConflicts = detectLocationConflicts(sessionData);
-      allConflicts.push(...locationConflicts);
+      const teacherSessions =
+        await enhancedSessionStore.getSessionsWithInsights({
+          teacherId,
+          dateRange: { start: startDate, end: endDate },
+          sortBy: 'date',
+          sortOrder: 'asc',
+        });
 
-      setConflicts(allConflicts);
-      onConflictDetected?.(allConflicts);
-
-      // Update conflicts for each schedule item
-      setScheduleItems(prev => prev.map(item => ({
-        ...item,
-        conflicts: allConflicts.filter(conflict => 
-          conflict.affectedSessions.includes(item.session.id)
-        )
-      })));
-
+      setSessions(teacherSessions);
+      onScheduleUpdate?.(teacherSessions);
     } catch (error) {
-      console.error('Error analyzing conflicts:', error);
+      console.error('Failed to load schedule data:', error);
     } finally {
-      setIsAnalyzing(false);
+      setIsLoading(false);
     }
   };
 
-  const hasTimeConflict = (session1: SessionRecord, session2: SessionRecord): boolean => {
-    const start1 = new Date(session1.scheduledStart).getTime();
-    const end1 = new Date(session1.scheduledEnd).getTime();
-    const start2 = new Date(session2.scheduledStart).getTime();
-    const end2 = new Date(session2.scheduledEnd).getTime();
+  const generateTimeSlots = () => {
+    const slots: TimeSlot[] = [];
+    const startHour = 8; // 8 AM
+    const endHour = 18; // 6 PM
+    const slotDuration = 60; // 60 minutes
 
-    return start1 < end2 && start2 < end1;
-  };
+    if (viewMode === 'day') {
+      for (let hour = startHour; hour < endHour; hour++) {
+        const start = new Date(selectedDate);
+        start.setHours(hour, 0, 0, 0);
 
-  const detectTeacherConflicts = (sessions: SessionRecord[]): SchedulingConflict[] => {
-    const conflicts: SchedulingConflict[] = [];
-    const teacherSessions = new Map<string, SessionRecord[]>();
+        const end = new Date(start);
+        end.setMinutes(end.getMinutes() + slotDuration);
 
-    // Group sessions by teacher
-    sessions.forEach(session => {
-      if (!teacherSessions.has(session.teacherId)) {
-        teacherSessions.set(session.teacherId, []);
+        slots.push({
+          id: `slot-${hour}`,
+          start,
+          end,
+          duration: slotDuration,
+        });
       }
-      teacherSessions.get(session.teacherId)!.push(session);
-    });
+    } else {
+      // Week view - generate slots for each day
+      for (let day = 0; day < 7; day++) {
+        const currentDate = new Date(selectedDate);
+        currentDate.setDate(currentDate.getDate() - currentDate.getDay() + day);
 
-    // Check for overlapping sessions per teacher
-    teacherSessions.forEach((teacherSessions, teacherId) => {
-      for (let i = 0; i < teacherSessions.length; i++) {
-        for (let j = i + 1; j < teacherSessions.length; j++) {
-          if (hasTimeConflict(teacherSessions[i], teacherSessions[j])) {
-            conflicts.push({
-              type: 'teacher',
-              description: `Teacher has overlapping sessions: ${teacherSessions[i].subject} and ${teacherSessions[j].subject}`,
-              severity: 'high',
-              affectedSessions: [teacherSessions[i].id, teacherSessions[j].id],
-              suggestedResolutions: [
-                'Assign different teacher',
-                'Reschedule one session',
-                'Request substitute teacher'
-              ]
-            });
-          }
+        for (let hour = startHour; hour < endHour; hour++) {
+          const start = new Date(currentDate);
+          start.setHours(hour, 0, 0, 0);
+
+          const end = new Date(start);
+          end.setMinutes(end.getMinutes() + slotDuration);
+
+          slots.push({
+            id: `slot-${day}-${hour}`,
+            start,
+            end,
+            duration: slotDuration,
+          });
         }
       }
-    });
+    }
+
+    setTimeSlots(slots);
+  };
+
+  const handleDragStart = (session: SessionRecord, originalSlot: TimeSlot) => {
+    setDraggedSession({ session, originalSlot });
+  };
+
+  const handleDragOver = (e: React.DragEvent, slotId: string) => {
+    e.preventDefault();
+    setDragOverSlot(slotId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverSlot(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetSlot: TimeSlot) => {
+    e.preventDefault();
+    setDragOverSlot(null);
+
+    if (!draggedSession) {
+      return;
+    }
+
+    const { session } = draggedSession;
+
+    // Check for conflicts
+    const detectedConflicts = await detectSchedulingConflicts(
+      session,
+      targetSlot
+    );
+
+    if (detectedConflicts.length > 0) {
+      setConflicts(detectedConflicts);
+      return;
+    }
+
+    // Update session with new time
+    await updateSessionSchedule(session, targetSlot);
+    setDraggedSession(null);
+  };
+
+  const detectSchedulingConflicts = async (
+    session: SessionRecord,
+    newSlot: TimeSlot
+  ): Promise<ConflictInfo[]> => {
+    const conflicts: ConflictInfo[] = [];
+
+    // Check for time conflicts with other sessions
+    const conflictingSessions = sessions.filter(
+      s =>
+        s.id !== session.id &&
+        s.status !== 'cancelled' &&
+        isTimeOverlap(newSlot, {
+          start: s.scheduledStart,
+          end: s.scheduledEnd,
+        })
+    );
+
+    if (conflictingSessions.length > 0) {
+      conflicts.push({
+        type: 'time',
+        description: `Time conflict with ${conflictingSessions.length} existing session(s)`,
+        severity: 'high',
+        suggestions: [
+          'Choose a different time slot',
+          'Reschedule conflicting sessions',
+          'Extend session duration if needed',
+        ],
+      });
+    }
+
+    // Check for location conflicts (if sessions are at the same location)
+    const locationConflicts = conflictingSessions.filter(
+      s => s.location.address === session.location.address
+    );
+
+    if (locationConflicts.length > 0) {
+      conflicts.push({
+        type: 'location',
+        description: `Location conflict at ${session.location.address}`,
+        severity: 'medium',
+        suggestions: [
+          'Change session location',
+          'Schedule sessions back-to-back',
+          'Allow travel time between sessions',
+        ],
+      });
+    }
+
+    // Check for student conflicts
+    const studentConflicts = conflictingSessions.filter(
+      s => s.studentId === session.studentId
+    );
+
+    if (studentConflicts.length > 0) {
+      conflicts.push({
+        type: 'student',
+        description: `Student has another session at this time`,
+        severity: 'high',
+        suggestions: [
+          'Choose a different time slot',
+          'Combine sessions if appropriate',
+          'Reschedule one of the sessions',
+        ],
+      });
+    }
 
     return conflicts;
   };
 
-  const detectLocationConflicts = (sessions: SessionRecord[]): SchedulingConflict[] => {
-    const conflicts: SchedulingConflict[] = [];
-    const locationSessions = new Map<string, SessionRecord[]>();
+  const isTimeOverlap = (
+    slot1: { start: Date; end: Date },
+    slot2: { start: Date; end: Date }
+  ): boolean => {
+    return slot1.start < slot2.end && slot1.end > slot2.start;
+  };
 
-    // Group sessions by location
-    sessions.forEach(session => {
-      const locationKey = session.location?.address || 'unknown';
-      if (!locationSessions.has(locationKey)) {
-        locationSessions.set(locationKey, []);
+  const updateSessionSchedule = async (
+    session: SessionRecord,
+    newSlot: TimeSlot
+  ) => {
+    try {
+      const updatedSession = await enhancedSessionStore.updateSession(
+        {
+          sessionId: session.id,
+          updates: {
+            scheduledStart: newSlot.start,
+            scheduledEnd: newSlot.end,
+          },
+          requestedBy: user.id,
+          reason: 'Schedule rearrangement via drag and drop',
+        },
+        user
+      );
+
+      if (updatedSession) {
+        // Reload schedule data
+        await loadScheduleData();
       }
-      locationSessions.get(locationKey)!.push(session);
-    });
+    } catch (error) {
+      console.error('Failed to update session schedule:', error);
+    }
+  };
 
-    // Check for overlapping sessions at same location
-    locationSessions.forEach((locationSessions, location) => {
-      for (let i = 0; i < locationSessions.length; i++) {
-        for (let j = i + 1; j < locationSessions.length; j++) {
-          if (hasTimeConflict(locationSessions[i], locationSessions[j])) {
-            conflicts.push({
-              type: 'location',
-              description: `Location conflict at ${location}: ${locationSessions[i].subject} and ${locationSessions[j].subject}`,
-              severity: 'medium',
-              affectedSessions: [locationSessions[i].id, locationSessions[j].id],
-              suggestedResolutions: [
-                'Use different location',
-                'Reschedule one session',
-                'Convert to virtual session'
-              ]
-            });
-          }
-        }
+  const resolveConflict = async (
+    conflictIndex: number,
+    resolution: 'force' | 'cancel'
+  ) => {
+    if (resolution === 'cancel') {
+      setConflicts([]);
+      setDraggedSession(null);
+      return;
+    }
+
+    if (resolution === 'force' && draggedSession) {
+      const targetSlot = timeSlots.find(slot => slot.id === dragOverSlot);
+      if (targetSlot) {
+        await updateSessionSchedule(draggedSession.session, targetSlot);
       }
+      setConflicts([]);
+      setDraggedSession(null);
+    }
+  };
+
+  const getSessionsForSlot = (slot: TimeSlot): SessionRecord[] => {
+    return sessions.filter(session => {
+      const sessionStart = new Date(session.scheduledStart);
+      const sessionEnd = new Date(session.scheduledEnd);
+
+      return (
+        (sessionStart.getTime() >= slot.start.getTime() &&
+          sessionStart.getTime() < slot.end.getTime()) ||
+        (sessionStart.getTime() < slot.start.getTime() &&
+          sessionEnd.getTime() > slot.start.getTime())
+      );
     });
-
-    return conflicts;
-  };
-
-  const handleDragStart = (itemId: string) => {
-    setDraggedItem(itemId);
-    setScheduleItems(prev => prev.map(item => 
-      item.id === itemId ? { ...item, isDragging: true } : item
-    ));
-  };
-
-  const handleDragEnd = () => {
-    setDraggedItem(null);
-    setScheduleItems(prev => prev.map(item => ({ ...item, isDragging: false })));
-  };
-
-  const handleReorder = (newOrder: ScheduleItem[]) => {
-    setScheduleItems(newOrder);
-    
-    // Update session times based on new order
-    const updatedSessions = newOrder.map((item, index) => {
-      const session = item.session;
-      const baseTime = new Date();
-      baseTime.setHours(9 + index * 2, 0, 0, 0); // Start at 9 AM, 2-hour intervals
-      
-      const updatedSession: SessionRecord = {
-        ...session,
-        scheduledStart: new Date(baseTime),
-        scheduledEnd: new Date(baseTime.getTime() + 2 * 60 * 60 * 1000), // 2 hours
-        updatedAt: new Date()
-      };
-      
-      return updatedSession;
-    });
-
-    onScheduleUpdate?.(updatedSessions);
   };
 
   const formatTime = (date: Date): string => {
-    return date.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
       minute: '2-digit',
-      hour12: true 
+      hour12: true,
     });
   };
 
   const formatDate = (date: Date): string => {
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
-  const getConflictIcon = (conflicts: SchedulingConflict[]) => {
-    if (conflicts.length === 0) return null;
-    
-    const hasHighSeverity = conflicts.some(c => c.severity === 'high');
-    const color = hasHighSeverity ? 'text-red-500' : 'text-yellow-500';
-    
-    return (
-      <div className={`w-6 h-6 rounded-full bg-red-100 flex items-center justify-center ${color}`}>
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-        </svg>
-      </div>
-    );
+  const getSessionStatusColor = (status: SessionStatus): string => {
+    switch (status) {
+      case 'scheduled':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'in-progress':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'completed':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
   };
+
+  const navigateDate = (direction: 'prev' | 'next') => {
+    const newDate = new Date(selectedDate);
+    if (viewMode === 'day') {
+      newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
+    } else {
+      newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
+    }
+    setSelectedDate(newDate);
+  };
+
+  if (isLoading) {
+    return (
+      <Card className={`p-6 ${className}`}>
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded mb-4"></div>
+          <div className="grid grid-cols-1 gap-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="h-16 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className={`space-y-4 ${className}`}>
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">
-          Drag & Drop Schedule Manager
-        </h3>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-500">AI Conflict Detection</span>
-          <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-          </svg>
-        </div>
-      </div>
-
-      {/* Conflict Summary */}
-      {conflicts.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-4 bg-red-50 border border-red-200 rounded-lg"
-        >
-          <div className="flex items-center space-x-2 mb-2">
-            <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            <span className="font-medium text-red-900">
-              {conflicts.length} Conflict{conflicts.length !== 1 ? 's' : ''} Detected
-            </span>
+      {/* Header Controls */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Schedule Manager
+          </h3>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setViewMode('day')}
+              className={`px-3 py-1 text-sm rounded ${
+                viewMode === 'day'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700'
+              }`}
+            >
+              Day
+            </button>
+            <button
+              onClick={() => setViewMode('week')}
+              className={`px-3 py-1 text-sm rounded ${
+                viewMode === 'week'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700'
+              }`}
+            >
+              Week
+            </button>
           </div>
-          <p className="text-sm text-red-700">
-            AI has detected scheduling conflicts. Review and resolve them to optimize your schedule.
-          </p>
-        </motion.div>
-      )}
+        </div>
 
-      {/* Schedule List */}
-      <div className="space-y-2">
-        <Reorder.Group
-          axis="y"
-          values={scheduleItems}
-          onReorder={handleReorder}
-          className="space-y-2"
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigateDate('prev')}
+            className="p-2 hover:bg-gray-100 rounded"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+
+          <h4 className="text-lg font-medium text-gray-900">
+            {viewMode === 'day'
+              ? formatDate(selectedDate)
+              : `Week of ${formatDate(selectedDate)}`}
+          </h4>
+
+          <button
+            onClick={() => navigateDate('next')}
+            className="p-2 hover:bg-gray-100 rounded"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        </div>
+      </Card>
+
+      {/* Schedule Grid */}
+      <Card className="p-4">
+        <div
+          className={`grid gap-2 ${viewMode === 'week' ? 'grid-cols-7' : 'grid-cols-1'}`}
         >
-          <AnimatePresence>
-            {scheduleItems.map((item) => (
-              <Reorder.Item
-                key={item.id}
-                value={item}
-                onDragStart={() => handleDragStart(item.id)}
-                onDragEnd={handleDragEnd}
-                className="cursor-grab active:cursor-grabbing"
-              >
-                <motion.div
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className={`p-4 bg-white border-2 rounded-lg shadow-sm transition-all duration-200 ${
-                    item.isDragging
-                      ? 'border-blue-500 shadow-lg scale-105'
-                      : item.conflicts.length > 0
-                      ? 'border-red-300 bg-red-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
+          {viewMode === 'week' && (
+            <>
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                <div
+                  key={day}
+                  className="text-center font-medium text-gray-700 py-2 border-b"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                        </svg>
+                  {day}
+                </div>
+              ))}
+            </>
+          )}
+
+          {timeSlots.map(slot => {
+            const slotSessions = getSessionsForSlot(slot);
+            const isDragOver = dragOverSlot === slot.id;
+
+            return (
+              <div
+                key={slot.id}
+                className={`min-h-[80px] p-2 border-2 border-dashed rounded-lg transition-colors ${
+                  isDragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-200'
+                }`}
+                onDragOver={e => handleDragOver(e, slot.id)}
+                onDragLeave={handleDragLeave}
+                onDrop={e => handleDrop(e, slot)}
+              >
+                <div className="text-xs text-gray-500 mb-2">
+                  {formatTime(slot.start)} - {formatTime(slot.end)}
+                </div>
+
+                <div className="space-y-1">
+                  {slotSessions.map(session => (
+                    <motion.div
+                      key={session.id}
+                      draggable
+                      onDragStart={() => handleDragStart(session, slot)}
+                      className={`p-2 rounded border cursor-move ${getSessionStatusColor(session.status)}`}
+                      whileHover={{ scale: 1.02 }}
+                      whileDrag={{ scale: 1.05, rotate: 2 }}
+                    >
+                      <div className="text-sm font-medium">
+                        {session.subject}
                       </div>
-                      
-                      <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">{item.session.subject}</h4>
-                        <p className="text-sm text-gray-600">
-                          {formatDate(item.session.scheduledStart)} • {formatTime(item.session.scheduledStart)} - {formatTime(item.session.scheduledEnd)}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {item.session.location?.address || 'Location TBD'}
-                        </p>
+                      <div className="text-xs">
+                        Student: {session.studentId}
                       </div>
+                      <div className="text-xs">{session.location.address}</div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {slotSessions.length === 0 && (
+                  <div className="text-center text-gray-400 text-sm py-4">
+                    Drop session here
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* Conflict Resolution Modal */}
+      <AnimatePresence>
+        {conflicts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+            >
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Scheduling Conflicts Detected
+              </h3>
+
+              <div className="space-y-4 mb-6">
+                {conflicts.map((conflict, index) => (
+                  <div
+                    key={index}
+                    className={`p-3 rounded-lg ${
+                      conflict.severity === 'high'
+                        ? 'bg-red-50 border border-red-200'
+                        : conflict.severity === 'medium'
+                          ? 'bg-yellow-50 border border-yellow-200'
+                          : 'bg-blue-50 border border-blue-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          conflict.severity === 'high'
+                            ? 'bg-red-500'
+                            : conflict.severity === 'medium'
+                              ? 'bg-yellow-500'
+                              : 'bg-blue-500'
+                        }`}
+                      ></div>
+                      <span className="font-medium text-gray-900">
+                        {conflict.description}
+                      </span>
                     </div>
 
-                    <div className="flex items-center space-x-2">
-                      {getConflictIcon(item.conflicts)}
-                      
-                      <div className="text-right">
-                        <span className="text-xs text-gray-500">Drag to reorder</span>
-                      </div>
+                    <div className="text-sm text-gray-600">
+                      <p className="font-medium mb-1">Suggestions:</p>
+                      <ul className="list-disc list-inside space-y-1">
+                        {conflict.suggestions.map((suggestion, idx) => (
+                          <li key={idx}>{suggestion}</li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
+                ))}
+              </div>
 
-                  {/* Conflict Details */}
-                  {item.conflicts.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="mt-3 pt-3 border-t border-red-200"
-                    >
-                      <div className="space-y-2">
-                        {item.conflicts.map((conflict, index) => (
-                          <div key={index} className="flex items-start space-x-2">
-                            <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            <div className="flex-1">
-                              <p className="text-sm text-red-700">{conflict.description}</p>
-                              <div className="mt-1">
-                                <span className="text-xs text-red-600 font-medium">Suggestions:</span>
-                                <ul className="text-xs text-red-600 mt-1 space-y-1">
-                                  {conflict.suggestedResolutions.map((resolution, idx) => (
-                                    <li key={idx} className="flex items-center space-x-1">
-                                      <span>•</span>
-                                      <span>{resolution}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </motion.div>
-              </Reorder.Item>
-            ))}
-          </AnimatePresence>
-        </Reorder.Group>
-      </div>
-
-      {/* Analysis Status */}
-      {isAnalyzing && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg"
-        >
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-          <span className="text-sm text-blue-700 font-medium">AI is analyzing schedule conflicts...</span>
-        </motion.div>
-      )}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => resolveConflict(0, 'force')}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700"
+                >
+                  Force Schedule
+                </button>
+                <button
+                  onClick={() => resolveConflict(0, 'cancel')}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Instructions */}
-      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <h4 className="font-medium text-gray-900 mb-2">How to use:</h4>
+      <Card className="p-4">
+        <h4 className="font-medium text-gray-900 mb-2">How to Use</h4>
         <ul className="text-sm text-gray-600 space-y-1">
-          <li>• Drag sessions to reorder them in your schedule</li>
-          <li>• AI will automatically detect and highlight conflicts</li>
-          <li>• Review conflict suggestions to optimize your schedule</li>
-          <li>• Changes are automatically saved and synchronized</li>
+          <li>• Drag sessions to different time slots to reschedule</li>
+          <li>• Conflicts will be automatically detected and highlighted</li>
+          <li>• Use day/week view to see different schedule perspectives</li>
+          <li>• Sessions are color-coded by status</li>
         </ul>
-      </div>
+      </Card>
     </div>
   );
-}
+};
