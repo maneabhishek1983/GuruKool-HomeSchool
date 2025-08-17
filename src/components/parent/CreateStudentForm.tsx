@@ -34,6 +34,9 @@ interface StudentFormData {
   learningStyle?: string;
   specialNeeds?: string;
   interests?: string;
+  // Teacher Assignment
+  assignedTeachers: string[];
+  teacherNotes?: string;
 }
 
 interface CreateStudentFormProps {
@@ -176,6 +179,8 @@ export default function CreateStudentForm({
     learningStyle: '',
     specialNeeds: '',
     interests: '',
+    assignedTeachers: [],
+    teacherNotes: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -204,6 +209,7 @@ export default function CreateStudentForm({
         setAvailableSubjects(subjects);
         setHomeschoolingOptions(options);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error loading academic standards:', error);
       }
     };
@@ -419,7 +425,7 @@ export default function CreateStudentForm({
 
   const renderStepIndicator = () => (
     <div className="flex items-center justify-center mb-6">
-      {[1, 2, 3, 4, 5].map(step => (
+      {[1, 2, 3, 4, 5, 6].map(step => (
         <div key={step} className="flex items-center">
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
@@ -430,7 +436,7 @@ export default function CreateStudentForm({
           >
             {step}
           </div>
-          {step < 5 && (
+          {step < 6 && (
             <div
               className={`w-12 h-1 mx-2 ${
                 step < currentStep ? 'bg-blue-600' : 'bg-gray-200'
@@ -950,6 +956,103 @@ export default function CreateStudentForm({
     </div>
   );
 
+  const renderTeacherAssignment = () => (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Teacher Assignment
+        </h3>
+        <p className="text-sm text-gray-600 mb-6">
+          Assign teachers to your student. You can create new teacher profiles
+          or select from existing ones.
+        </p>
+      </div>
+
+      <div className="bg-blue-50 p-4 rounded-lg mb-6">
+        <h4 className="font-medium text-blue-900 mb-2">Teacher Management</h4>
+        <p className="text-sm text-blue-700 mb-4">
+          You can create teacher profiles and assign them to your students.
+          Teachers will be able to access the platform and manage sessions.
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            // This will be handled by the parent component
+            if (onSubmit) {
+              // For now, we'll just show a message
+              alert(
+                'Teacher creation feature will be available in the parent dashboard'
+              );
+            }
+          }}
+          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+        >
+          Create New Teacher Profile
+        </button>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          Assigned Teachers
+        </label>
+        <div className="border border-gray-300 rounded-md p-4 min-h-[100px]">
+          {formData.assignedTeachers.length === 0 ? (
+            <p className="text-gray-500 text-sm">
+              No teachers assigned yet. Create teacher profiles to assign them
+              to your student.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {formData.assignedTeachers.map((teacherId, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-gray-50 p-3 rounded"
+                >
+                  <span className="text-sm text-gray-700">
+                    Teacher {index + 1} (ID: {teacherId})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData(prev => ({
+                        ...prev,
+                        assignedTeachers: prev.assignedTeachers.filter(
+                          (_, i) => i !== index
+                        ),
+                      }))
+                    }
+                    className="text-red-600 hover:text-red-800 text-sm"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <label
+          htmlFor="teacherNotes"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Teacher Notes (Optional)
+        </label>
+        <textarea
+          id="teacherNotes"
+          rows={3}
+          value={formData.teacherNotes}
+          onChange={e =>
+            setFormData(prev => ({ ...prev, teacherNotes: e.target.value }))
+          }
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Any specific notes or instructions for teachers..."
+        />
+      </div>
+    </div>
+  );
+
   const renderDataSheetActivities = () => (
     <div className="space-y-6">
       <div>
@@ -990,7 +1093,7 @@ export default function CreateStudentForm({
         </div>
         <p className="text-sm text-gray-600 mb-6">
           Select activities for each category that will be tracked in your
-          student's data sheets.
+          student&apos;s data sheets.
         </p>
       </div>
 
@@ -1271,6 +1374,8 @@ export default function CreateStudentForm({
         return renderDataSheetActivities();
       case 5:
         return renderLearningPreferences();
+      case 6:
+        return renderTeacherAssignment();
 
       default:
         return null;
@@ -1297,7 +1402,7 @@ export default function CreateStudentForm({
           </motion.button>
 
           <div className="flex space-x-3">
-            {currentStep < 5 ? (
+            {currentStep < 6 ? (
               <motion.button
                 type="button"
                 whileHover={{ scale: 1.02 }}

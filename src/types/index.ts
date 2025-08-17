@@ -465,6 +465,33 @@ export interface Student {
   updatedAt: Date;
 }
 
+export interface TeacherProfile {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  subjects: string[];
+  experience: number; // years of experience
+  qualifications: string[];
+  specializations: string[];
+  hourlyRate: number;
+  availability: {
+    days: string[];
+    timeSlots: string[];
+  };
+  location: {
+    address: string;
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+  bio?: string;
+  parentId: string; // parent who created this teacher
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface StudentProfile {
   id: string;
   name: string;
@@ -488,6 +515,8 @@ export interface StudentProfile {
   specialNeeds?: string;
   interests?: string;
   parentId: string;
+  assignedTeachers?: string[]; // Array of teacher IDs
+  teacherNotes?: string; // Notes for teachers
   createdAt: Date;
   updatedAt: Date;
 }
