@@ -202,8 +202,7 @@ export class DatabaseService {
 
   static async createTeacher(
     teacherData: any,
-    parentId: string,
-    assignedStudentIds: string[] = []
+    parentId: string
   ): Promise<TeacherProfile | null> {
     try {
       // First create a user account for the teacher
@@ -247,20 +246,6 @@ export class DatabaseService {
 
       if (error) {
         throw error;
-      }
-
-      // Generate QR codes for assigned students
-      if (assignedStudentIds.length > 0) {
-        try {
-          await TeacherQRService.createTeacherQRCodes(
-            data.id,
-            assignedStudentIds,
-            parentId
-          );
-        } catch (qrError) {
-          console.error('Error creating QR codes for teacher:', qrError);
-          // Don't fail the teacher creation if QR code creation fails
-        }
       }
 
       return this.mapDatabaseTeacherToProfile(data);
@@ -407,5 +392,148 @@ export class DatabaseService {
       Math.random().toString(36).slice(-8) +
       Math.random().toString(36).slice(-8)
     );
+  }
+
+  // Student-Teacher Assignment Methods
+  static async assignTeacherToStudent(
+    teacherId: string,
+    studentId: string,
+    parentId: string
+  ): Promise<boolean> {
+    try {
+      // Update student's assigned teachers
+      const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('assigned_teachers')
+        .eq('id', studentId)
+        .eq('parent_id', parentId)
+        .single();
+
+      if (studentError) {
+        throw studentError;
+      }
+
+      const currentAssignments = student.assigned_teachers || [];
+      if (!currentAssignments.includes(teacherId)) {
+        const updatedAssignments = [...currentAssignments, teacherId];
+
+        const { error: updateError } = await supabase
+          .from('students')
+          .update({ assigned_teachers: updatedAssignments })
+          .eq('id', studentId);
+
+        if (updateError) {
+          throw updateError;
+        }
+      }
+
+      // Create QR code for this teacher-student pair
+      try {
+        await TeacherQRService.createTeacherQRCodes(
+          teacherId,
+          [studentId],
+          parentId
+        );
+      } catch (qrError) {
+        console.error('Error creating QR code for assignment:', qrError);
+        // Don't fail the assignment if QR code creation fails
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error assigning teacher to student:', error);
+      return false;
+    }
+  }
+
+  static async unassignTeacherFromStudent(
+    teacherId: string,
+    studentId: string,
+    parentId: string
+  ): Promise<boolean> {
+    try {
+      // Update student's assigned teachers
+      const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('assigned_teachers')
+        .eq('id', studentId)
+        .eq('parent_id', parentId)
+        .single();
+
+      if (studentError) {
+        throw studentError;
+      }
+
+      const currentAssignments = student.assigned_teachers || [];
+      const updatedAssignments = currentAssignments.filter(
+        id => id !== teacherId
+      );
+
+      const { error: updateError } = await supabase
+        .from('students')
+        .update({ assigned_teachers: updatedAssignments })
+        .eq('id', studentId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      // Deactivate QR codes for this teacher-student pair
+      try {
+        const qrCodes = await TeacherQRService.getTeacherQRCodes(teacherId);
+        const studentQRCodes = qrCodes.filter(
+          qr => qr.student_id === studentId
+        );
+
+        for (const qrCode of studentQRCodes) {
+          await TeacherQRService.deactivateQRCode(qrCode.id);
+        }
+      } catch (qrError) {
+        console.error('Error deactivating QR codes for unassignment:', qrError);
+        // Don't fail the unassignment if QR code deactivation fails
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error unassigning teacher from student:', error);
+      return false;
+    }
+  }
+
+  static async getStudentAssignments(studentId: string): Promise<string[]> {
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('assigned_teachers')
+        .eq('id', studentId)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return data.assigned_teachers || [];
+    } catch (error) {
+      console.error('Error getting student assignments:', error);
+      return [];
+    }
+  }
+
+  static async getTeacherAssignments(teacherId: string): Promise<string[]> {
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('id, assigned_teachers')
+        .contains('assigned_teachers', [teacherId]);
+
+      if (error) {
+        throw error;
+      }
+
+      return data.map(student => student.id);
+    } catch (error) {
+      console.error('Error getting teacher assignments:', error);
+      return [];
+    }
   }
 }

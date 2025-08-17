@@ -9,18 +9,12 @@ import StudentProfileCard from '@/components/parent/StudentProfileCard';
 import { DataSheetsViewer } from '@/components/parent/DataSheetsViewer';
 import TeacherCreationForm from '@/components/parent/TeacherCreationForm';
 import TeacherQRCodes from '@/components/parent/TeacherQRCodes';
+import StudentTeacherAssignment from '@/components/parent/StudentTeacherAssignment';
 import { StudentProfile, Country, TeacherProfile } from '@/types';
 import { academicStandardsService } from '@/services/academic-standards.service';
 import { DatabaseService } from '@/services/database.service';
 
-interface Teacher {
-  id: string;
-  name: string;
-  email: string;
-  subjects: string[];
-  status: 'available' | 'assigned';
-  hourlyRate?: number;
-}
+// Use TeacherProfile type directly instead of Teacher interface
 
 interface TimesheetEntry {
   id: string;
@@ -48,7 +42,7 @@ export default function ParentDashboard() {
   const { user, logout } = useAuthContext();
   const router = useRouter();
   const [students, setStudents] = useState<StudentProfile[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [teachers, setTeachers] = useState<TeacherProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,7 +51,8 @@ export default function ParentDashboard() {
   const [showDataSheetsModal, setShowDataSheetsModal] = useState(false);
   const [showTeacherQRModal, setShowTeacherQRModal] = useState(false);
   const [selectedTeacherForQR, setSelectedTeacherForQR] =
-    useState<Teacher | null>(null);
+    useState<TeacherProfile | null>(null);
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<StudentProfile | null>(
     null
   );
@@ -92,16 +87,7 @@ export default function ParentDashboard() {
       ]);
 
       setStudents(studentsData);
-      setTeachers(
-        teachersData.map(teacher => ({
-          id: teacher.id,
-          name: teacher.name,
-          email: teacher.email,
-          subjects: teacher.subjects,
-          status: teacher.status as 'available' | 'assigned',
-          hourlyRate: teacher.hourlyRate,
-        }))
-      );
+      setTeachers(teachersData);
     } catch (err) {
       console.error('Error loading data:', err);
       setError('Failed to load data. Please try refreshing the page.');
@@ -169,26 +155,10 @@ export default function ParentDashboard() {
     }
 
     try {
-      // Get assigned student IDs from form data
-      const assignedStudentIds = formData.assignedStudents || [];
-
-      const newTeacher = await DatabaseService.createTeacher(
-        formData,
-        user.id,
-        assignedStudentIds
-      );
+      const newTeacher = await DatabaseService.createTeacher(formData, user.id);
 
       if (newTeacher) {
-        const teacherForState: Teacher = {
-          id: newTeacher.id,
-          name: newTeacher.name,
-          email: newTeacher.email,
-          subjects: newTeacher.subjects,
-          status: 'available',
-          hourlyRate: newTeacher.hourlyRate,
-        };
-
-        setTeachers(prev => [teacherForState, ...prev]);
+        setTeachers(prev => [newTeacher, ...prev]);
         setShowCreateTeacherModal(false);
       } else {
         setError('Failed to create teacher. Please try again.');
@@ -229,9 +199,14 @@ export default function ParentDashboard() {
     }
   };
 
-  const handleViewTeacherQRCodes = (teacher: Teacher) => {
+  const handleViewTeacherQRCodes = (teacher: TeacherProfile) => {
     setSelectedTeacherForQR(teacher);
     setShowTeacherQRModal(true);
+  };
+
+  const handleAssignmentChange = () => {
+    // Refresh data when assignments change
+    loadData();
   };
 
   const handleEditStudent = (student: StudentProfile) => {
@@ -749,27 +724,50 @@ export default function ParentDashboard() {
             <h2 className="text-2xl font-semibold text-gray-900">
               Teacher Management
             </h2>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowCreateTeacherModal(true)}
-              className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <div className="flex space-x-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowAssignmentModal(true)}
+                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-              <span>Add Teacher</span>
-            </motion.button>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <span>Manage Assignments</span>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowCreateTeacherModal(true)}
+                className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                <span>Add Teacher</span>
+              </motion.button>
+            </div>
           </div>
 
           {teachers.length === 0 ? (
@@ -1140,6 +1138,43 @@ export default function ParentDashboard() {
             <TeacherQRCodes
               teacherId={selectedTeacherForQR.id}
               parentId={user?.id || ''}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Student-Teacher Assignment Modal */}
+      {showAssignmentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Student-Teacher Assignments
+              </h2>
+              <button
+                onClick={() => setShowAssignmentModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <StudentTeacherAssignment
+              parentId={user?.id || ''}
+              students={students}
+              teachers={teachers}
+              onAssignmentChange={handleAssignmentChange}
             />
           </div>
         </div>
