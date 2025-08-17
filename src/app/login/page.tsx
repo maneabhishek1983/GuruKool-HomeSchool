@@ -124,74 +124,6 @@ function LoginForm() {
           </button>
         </form>
 
-        {/* Demo Credentials Info */}
-        <div className="mt-8 bg-gray-50 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Platform Access Information
-          </h3>
-          <div className="space-y-4">
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center mb-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                <span className="font-medium text-gray-900">
-                  Parent Account
-                </span>
-              </div>
-              <div className="text-xs text-gray-600 space-y-1">
-                <p>
-                  <span className="font-medium">Email:</span> parent@example.com
-                </p>
-                <p>
-                  <span className="font-medium">Password:</span> parent123
-                </p>
-                <p className="text-green-600">
-                  → Access: Student management, progress tracking, teacher
-                  communication
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center mb-2">
-                <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                <span className="font-medium text-gray-900">
-                  Teacher Account
-                </span>
-              </div>
-              <div className="text-xs text-gray-600 space-y-1">
-                <p>
-                  <span className="font-medium">Email:</span>{' '}
-                  teacher@example.com
-                </p>
-                <p>
-                  <span className="font-medium">Password:</span> teacher123
-                </p>
-                <p className="text-blue-600">
-                  → Access: Student sessions, lesson plans, progress reports
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center mb-2">
-                <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
-                <span className="font-medium text-gray-900">Admin Account</span>
-              </div>
-              <div className="text-xs text-gray-600 space-y-1">
-                <p>
-                  <span className="font-medium">Email:</span> admin@example.com
-                </p>
-                <p>
-                  <span className="font-medium">Password:</span> admin123
-                </p>
-                <p className="text-purple-600">
-                  → Access: User management, system analytics, platform settings
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* What Happens Next Info */}
         <div className="mt-8 bg-blue-50 rounded-lg p-4">
           <h3 className="text-sm font-medium text-blue-900 mb-2">
@@ -217,15 +149,8 @@ function LoginForm() {
             <div className="flex items-start">
               <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
               <p>
-                <strong>Admin:</strong> Access dashboard to manage users, view
-                analytics, configure system, and manage academic standards
-              </p>
-            </div>
-            <div className="flex items-start">
-              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
-              <p>
-                <strong>New Users:</strong> Admins can create new users with
-                generated passwords and QR codes
+                <strong>New Users:</strong> Contact your administrator to get
+                access credentials for the platform
               </p>
             </div>
           </div>
