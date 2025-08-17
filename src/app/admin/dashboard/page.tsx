@@ -3,6 +3,7 @@
 import { useAuthContext } from '@/lib/authContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { QRCodeGenerator } from '@/utils/qr-code-generator';
 
 interface User {
   id: string;
@@ -88,42 +89,88 @@ export default function AdminDashboard() {
   };
 
   const generateQRCode = (email: string, password: string) => {
-    // Generate a simple QR code data string
-    const qrData = JSON.stringify({
-      email,
-      password,
-      timestamp: new Date().toISOString(),
-      type: 'login',
-    });
-    return `data:image/svg+xml;base64,${btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
-        <rect width="200" height="200" fill="white"/>
-        <text x="100" y="100" text-anchor="middle" font-family="monospace" font-size="8">${qrData}</text>
-      </svg>
-    `)}`;
+    try {
+      // Generate a simple QR code data string
+      const qrData = JSON.stringify({
+        email,
+        password,
+        timestamp: new Date().toISOString(),
+        type: 'login',
+      });
+
+      // Create SVG content
+      const svgContent = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+          <rect width="200" height="200" fill="white"/>
+          <text x="100" y="100" text-anchor="middle" font-family="monospace" font-size="8">${qrData}</text>
+        </svg>
+      `;
+
+      // Convert to base64
+      const base64Data = btoa(svgContent);
+      const qrCodeUrl = `data:image/svg+xml;base64,${base64Data}`;
+
+      console.log('QR Code generated successfully:', {
+        email,
+        qrCodeLength: qrCodeUrl.length,
+        hasData: qrCodeUrl.includes(email),
+      });
+
+      return qrCodeUrl;
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+      // Return a fallback QR code
+      return `data:image/svg+xml;base64,${btoa(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+          <rect width="200" height="200" fill="white"/>
+          <text x="100" y="100" text-anchor="middle" font-family="monospace" font-size="12" fill="red">QR Code Error</text>
+        </svg>
+      `)}`;
+    }
   };
 
   const handleCreateUser = () => {
     if (newUser.name && newUser.email) {
-      const password = generatePassword();
-      const qrCode = generateQRCode(newUser.email, password);
+      try {
+        console.log('Creating new user:', newUser);
 
-      const user: User = {
-        id: Date.now().toString(),
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        status: 'active',
-        createdAt: new Date(),
-        password,
-        qrCode,
-      };
+        const password = generatePassword();
+        console.log('Generated password:', password);
 
-      setUsers([...users, user]);
-      setCreatedUser(user);
-      setNewUser({ name: '', email: '', role: 'parent' });
-      setShowCreateUserModal(false);
-      setShowCredentialsModal(true);
+        const qrCode = generateQRCode(newUser.email, password);
+        console.log('Generated QR code:', qrCode ? 'Success' : 'Failed');
+
+        const user: User = {
+          id: Date.now().toString(),
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role,
+          status: 'active',
+          createdAt: new Date(),
+          password,
+          qrCode,
+        };
+
+        console.log('Created user object:', {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          hasPassword: !!user.password,
+          hasQRCode: !!user.qrCode,
+        });
+
+        setUsers([...users, user]);
+        setCreatedUser(user);
+        setNewUser({ name: '', email: '', role: 'parent' });
+        setShowCreateUserModal(false);
+        setShowCredentialsModal(true);
+
+        console.log('User creation completed successfully');
+      } catch (error) {
+        console.error('Error creating user:', error);
+        alert('Error creating user. Please check console for details.');
+      }
     } else {
       alert('Please fill in all fields');
     }
@@ -633,7 +680,7 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {createdUser.role === 'parent' && (
+            {createdUser.role === 'parent' && createdUser.qrCode && (
               <div className="bg-blue-50 rounded-lg p-4 mb-4">
                 <h4 className="text-sm font-medium text-blue-900 mb-2">
                   QR Code Login
@@ -643,11 +690,44 @@ export default function AdminDashboard() {
                     src={createdUser.qrCode}
                     alt="QR Code for login"
                     className="w-32 h-32 mx-auto border border-gray-300 rounded"
+                    onError={e => {
+                      console.error('QR Code image failed to load:', e);
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.classList.remove(
+                        'hidden'
+                      );
+                    }}
                   />
+                  <div className="hidden w-32 h-32 mx-auto border border-gray-300 rounded bg-red-50 flex items-center justify-center">
+                    <p className="text-xs text-red-600">QR Code Error</p>
+                  </div>
                   <p className="text-xs text-blue-700 mt-2">
                     Users can scan this QR code to log in quickly
                   </p>
+                  <button
+                    onClick={() => {
+                      if (createdUser.qrCode) {
+                        navigator.clipboard.writeText(createdUser.qrCode);
+                        alert('QR Code data copied to clipboard');
+                      }
+                    }}
+                    className="mt-2 text-xs text-blue-600 hover:text-blue-800 underline"
+                  >
+                    Copy QR Code Data
+                  </button>
                 </div>
+              </div>
+            )}
+
+            {createdUser.role === 'parent' && !createdUser.qrCode && (
+              <div className="bg-yellow-50 rounded-lg p-4 mb-4">
+                <h4 className="text-sm font-medium text-yellow-900 mb-2">
+                  QR Code Not Generated
+                </h4>
+                <p className="text-xs text-yellow-700">
+                  QR code could not be generated. Please check console for
+                  errors.
+                </p>
               </div>
             )}
 
