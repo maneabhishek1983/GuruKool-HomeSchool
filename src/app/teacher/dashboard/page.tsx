@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuthContext } from '@/lib/authContext';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { DataSheetsManager } from '@/components/teacher/DataSheetsManager';
 import { TimesheetManager } from '@/components/teacher/TimesheetManager';
 
 export default function TeacherDashboard() {
-  const { user } = useAuthContext();
+  const { user, logout } = useAuthContext();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<
     'overview' | 'data-sheets' | 'students' | 'sessions'
   >('overview');
@@ -109,6 +111,28 @@ export default function TeacherDashboard() {
                   />
                 </svg>
               </div>
+              <button
+                onClick={() => {
+                  logout();
+                  router.push('/login');
+                }}
+                className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                <span>Logout</span>
+              </button>
             </div>
           </div>
         </div>
