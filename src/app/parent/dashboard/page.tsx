@@ -45,29 +45,7 @@ export default function ParentDashboard() {
   const { user, logout } = useAuthContext();
   const router = useRouter();
   const [students, setStudents] = useState<StudentProfile[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>([
-    {
-      id: '1',
-      name: 'John Teacher',
-      email: 'john.teacher@example.com',
-      subjects: ['Mathematics', 'Science'],
-      status: 'assigned',
-    },
-    {
-      id: '2',
-      name: 'Sarah Wilson',
-      email: 'sarah.wilson@example.com',
-      subjects: ['English', 'History'],
-      status: 'available',
-    },
-    {
-      id: '3',
-      name: 'Mike Brown',
-      email: 'mike.brown@example.com',
-      subjects: ['Mathematics', 'Physics'],
-      status: 'available',
-    },
-  ]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
 
   const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
@@ -84,73 +62,10 @@ export default function ParentDashboard() {
     total: 0,
   });
 
-  // Load demo students with academic standards
+  // Initialize with empty students array - no demo data
   useEffect(() => {
-    const loadDemoStudents = () => {
-      const demoStudents: StudentProfile[] = [
-        {
-          id: '1',
-          name: 'Emma Johnson',
-          age: 8,
-          grade: 'Year 3',
-          country: 'UK',
-          academicStandard: academicStandardsService.getAcademicStandard('UK'),
-          selectedSubjects: academicStandardsService
-            .getSubjects('UK')
-            .slice(0, 3),
-          selectedSocialization: academicStandardsService
-            .getSocializationOptions()
-            .slice(0, 2),
-          selectedPhysicalEducation: academicStandardsService
-            .getPhysicalEducationOptions()
-            .slice(0, 2),
-          selectedExtracurricular: academicStandardsService
-            .getExtracurricularOptions()
-            .slice(0, 2),
-          selectedCommunityInvolvement: academicStandardsService
-            .getCommunityInvolvementOptions()
-            .slice(0, 1),
-          learningStyle: 'Visual',
-          specialNeeds: '',
-          interests: 'Art, Science, Reading',
-          parentId: user?.id || 'parent-1',
-          createdAt: new Date('2024-01-15'),
-          updatedAt: new Date(),
-        },
-        {
-          id: '2',
-          name: 'Alex Chen',
-          age: 10,
-          grade: 'Grade 4',
-          country: 'US',
-          academicStandard: academicStandardsService.getAcademicStandard('US'),
-          selectedSubjects: academicStandardsService
-            .getSubjects('US')
-            .slice(0, 4),
-          selectedSocialization: academicStandardsService
-            .getSocializationOptions()
-            .slice(0, 1),
-          selectedPhysicalEducation: academicStandardsService
-            .getPhysicalEducationOptions()
-            .slice(0, 3),
-          selectedExtracurricular: academicStandardsService
-            .getExtracurricularOptions()
-            .slice(0, 3),
-          selectedCommunityInvolvement: academicStandardsService
-            .getCommunityInvolvementOptions()
-            .slice(0, 2),
-          learningStyle: 'Kinesthetic',
-          specialNeeds: '',
-          interests: 'Sports, Technology, Music',
-          parentId: user?.id || 'parent-1',
-          createdAt: new Date('2024-01-20'),
-          updatedAt: new Date(),
-        },
-      ];
-      setStudents(demoStudents);
-    };
-
-    loadDemoStudents();
+    // Students will be loaded from actual data source or created by parent
+    setStudents([]);
   }, [user?.id]);
 
   const handleCreateStudent = (formData: any) => {
@@ -749,51 +664,12 @@ export default function ParentDashboard() {
                     Recent Sessions
                   </h3>
                   <div className="space-y-3">
-                    {[
-                      {
-                        teacher: 'John Teacher',
-                        student: 'Emma Johnson',
-                        subject: 'Mathematics',
-                        date: '2024-01-15',
-                        duration: '2h',
-                      },
-                      {
-                        teacher: 'Sarah Wilson',
-                        student: 'Alex Chen',
-                        subject: 'English',
-                        date: '2024-01-14',
-                        duration: '1.5h',
-                      },
-                      {
-                        teacher: 'John Teacher',
-                        student: 'Emma Johnson',
-                        subject: 'Science',
-                        date: '2024-01-13',
-                        duration: '2h',
-                      },
-                    ].map((session, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                      >
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {session.teacher}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {session.student} - {session.subject}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-gray-900">
-                            {session.duration}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {session.date}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">No recent sessions</p>
+                      <p className="text-sm text-gray-400 mt-1">
+                        Sessions will appear here once teachers are assigned
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -819,29 +695,42 @@ export default function ParentDashboard() {
                     This Month's Hours
                   </h3>
                   <div className="space-y-3">
-                    {teachers
-                      .filter(t => t.status === 'assigned')
-                      .map((teacher, index) => (
-                        <div
-                          key={teacher.id}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                        >
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {teacher.name}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {teacher.subjects.join(', ')}
-                            </p>
+                    {teachers.filter(t => t.status === 'assigned').length >
+                    0 ? (
+                      teachers
+                        .filter(t => t.status === 'assigned')
+                        .map((teacher, index) => (
+                          <div
+                            key={teacher.id}
+                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                          >
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {teacher.name}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {teacher.subjects.join(', ')}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium text-blue-600">
+                                {24 + index * 2}h
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                This month
+                              </p>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-medium text-blue-600">
-                              {24 + index * 2}h
-                            </p>
-                            <p className="text-xs text-gray-500">This month</p>
-                          </div>
-                        </div>
-                      ))}
+                        ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">No assigned teachers</p>
+                        <p className="text-sm text-gray-400 mt-1">
+                          Teacher hours will appear here once teachers are
+                          assigned
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -851,51 +740,12 @@ export default function ParentDashboard() {
                     Recent Sessions
                   </h3>
                   <div className="space-y-3">
-                    {[
-                      {
-                        teacher: 'John Teacher',
-                        student: 'Emma Johnson',
-                        subject: 'Mathematics',
-                        date: '2024-01-15',
-                        duration: '2h',
-                      },
-                      {
-                        teacher: 'Sarah Wilson',
-                        student: 'Alex Chen',
-                        subject: 'English',
-                        date: '2024-01-14',
-                        duration: '1.5h',
-                      },
-                      {
-                        teacher: 'John Teacher',
-                        student: 'Emma Johnson',
-                        subject: 'Science',
-                        date: '2024-01-13',
-                        duration: '2h',
-                      },
-                    ].map((session, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                      >
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {session.teacher}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {session.student} - {session.subject}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-gray-900">
-                            {session.duration}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {session.date}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">No recent sessions</p>
+                      <p className="text-sm text-gray-400 mt-1">
+                        Sessions will appear here once teachers are assigned
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
