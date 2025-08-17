@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 export default function AdminPortalPage() {
   const { login, getAllUsers, createUser } = useAuthContext();
   const router = useRouter();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -52,7 +53,7 @@ export default function AdminPortalPage() {
     setError('');
 
     // Validation
-    if (!email || !password) {
+    if (!name || !email || !password) {
       setError('All fields are required');
       setIsLoading(false);
       return;
@@ -66,7 +67,7 @@ export default function AdminPortalPage() {
 
     try {
       const result = await createUser({
-        name: 'Admin User',
+        name: name,
         email: email,
         password: password,
         role: 'admin',
@@ -157,6 +158,26 @@ export default function AdminPortalPage() {
           onSubmit={showSetup ? handleSetup : handleLogin}
           className="space-y-6"
         >
+          {showSetup && (
+            <div>
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Full Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                placeholder="Enter your full name"
+                required
+              />
+            </div>
+          )}
+
           <div>
             <label
               htmlFor="email"
