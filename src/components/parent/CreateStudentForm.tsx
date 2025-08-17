@@ -314,6 +314,97 @@ export default function CreateStudentForm({
     }));
   };
 
+  // Select all activities for a category
+  const handleSelectAll = (
+    category:
+      | 'selectedSensoryActivities'
+      | 'selectedWritingActivities'
+      | 'selectedCommunicationActivities'
+      | 'selectedSocialActivities'
+      | 'selectedMotorActivities'
+      | 'selectedAcademicActivities'
+  ) => {
+    let allActivities: string[] = [];
+
+    switch (category) {
+      case 'selectedSensoryActivities':
+        allActivities = sensoryActivities;
+        break;
+      case 'selectedWritingActivities':
+        allActivities = writingActivities;
+        break;
+      case 'selectedCommunicationActivities':
+        allActivities = communicationActivities;
+        break;
+      case 'selectedSocialActivities':
+        allActivities = socialActivities;
+        break;
+      case 'selectedMotorActivities':
+        allActivities = motorActivities;
+        break;
+      case 'selectedAcademicActivities':
+        allActivities = academicActivities;
+        break;
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      [category]: allActivities,
+    }));
+  };
+
+  // Clear all activities for a category
+  const handleClearAll = (
+    category:
+      | 'selectedSensoryActivities'
+      | 'selectedWritingActivities'
+      | 'selectedCommunicationActivities'
+      | 'selectedSocialActivities'
+      | 'selectedMotorActivities'
+      | 'selectedAcademicActivities'
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      [category]: [],
+    }));
+  };
+
+  // Check if all activities are selected for a category
+  const isAllSelected = (
+    category:
+      | 'selectedSensoryActivities'
+      | 'selectedWritingActivities'
+      | 'selectedCommunicationActivities'
+      | 'selectedSocialActivities'
+      | 'selectedMotorActivities'
+      | 'selectedAcademicActivities'
+  ) => {
+    let allActivities: string[] = [];
+
+    switch (category) {
+      case 'selectedSensoryActivities':
+        allActivities = sensoryActivities;
+        break;
+      case 'selectedWritingActivities':
+        allActivities = writingActivities;
+        break;
+      case 'selectedCommunicationActivities':
+        allActivities = communicationActivities;
+        break;
+      case 'selectedSocialActivities':
+        allActivities = socialActivities;
+        break;
+      case 'selectedMotorActivities':
+        allActivities = motorActivities;
+        break;
+      case 'selectedAcademicActivities':
+        allActivities = academicActivities;
+        break;
+    }
+
+    return formData[category].length === allActivities.length;
+  };
+
   const nextStep = () => {
     if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
@@ -862,9 +953,41 @@ export default function CreateStudentForm({
   const renderDataSheetActivities = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Data Sheet Activity Categories
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Data Sheet Activity Categories
+          </h3>
+          <div className="flex space-x-2">
+            <button
+              type="button"
+              onClick={() => {
+                handleSelectAll('selectedSensoryActivities');
+                handleSelectAll('selectedWritingActivities');
+                handleSelectAll('selectedCommunicationActivities');
+                handleSelectAll('selectedSocialActivities');
+                handleSelectAll('selectedMotorActivities');
+                handleSelectAll('selectedAcademicActivities');
+              }}
+              className="text-sm px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+            >
+              Select All Categories
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                handleClearAll('selectedSensoryActivities');
+                handleClearAll('selectedWritingActivities');
+                handleClearAll('selectedCommunicationActivities');
+                handleClearAll('selectedSocialActivities');
+                handleClearAll('selectedMotorActivities');
+                handleClearAll('selectedAcademicActivities');
+              }}
+              className="text-sm px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+            >
+              Clear All Categories
+            </button>
+          </div>
+        </div>
         <p className="text-sm text-gray-600 mb-6">
           Select activities for each category that will be tracked in your
           student's data sheets.
@@ -873,9 +996,27 @@ export default function CreateStudentForm({
 
       {/* Sensory Activities */}
       <div>
-        <h4 className="text-md font-medium text-gray-900 mb-3">
-          Sensory Activities
-        </h4>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-md font-medium text-gray-900">
+            Sensory Activities
+          </h4>
+          <div className="flex space-x-2">
+            <button
+              type="button"
+              onClick={() => handleSelectAll('selectedSensoryActivities')}
+              className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+            >
+              Select All
+            </button>
+            <button
+              type="button"
+              onClick={() => handleClearAll('selectedSensoryActivities')}
+              className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {sensoryActivities.map(activity => (
             <label
@@ -898,9 +1039,27 @@ export default function CreateStudentForm({
 
       {/* Writing Activities */}
       <div>
-        <h4 className="text-md font-medium text-gray-900 mb-3">
-          Writing Activities
-        </h4>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-md font-medium text-gray-900">
+            Writing Activities
+          </h4>
+          <div className="flex space-x-2">
+            <button
+              type="button"
+              onClick={() => handleSelectAll('selectedWritingActivities')}
+              className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+            >
+              Select All
+            </button>
+            <button
+              type="button"
+              onClick={() => handleClearAll('selectedWritingActivities')}
+              className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {writingActivities.map(activity => (
             <label
@@ -923,9 +1082,27 @@ export default function CreateStudentForm({
 
       {/* Communication Activities */}
       <div>
-        <h4 className="text-md font-medium text-gray-900 mb-3">
-          Communication Activities
-        </h4>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-md font-medium text-gray-900">
+            Communication Activities
+          </h4>
+          <div className="flex space-x-2">
+            <button
+              type="button"
+              onClick={() => handleSelectAll('selectedCommunicationActivities')}
+              className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+            >
+              Select All
+            </button>
+            <button
+              type="button"
+              onClick={() => handleClearAll('selectedCommunicationActivities')}
+              className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {communicationActivities.map(activity => (
             <label
@@ -953,9 +1130,27 @@ export default function CreateStudentForm({
 
       {/* Social Activities */}
       <div>
-        <h4 className="text-md font-medium text-gray-900 mb-3">
-          Social Activities
-        </h4>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-md font-medium text-gray-900">
+            Social Activities
+          </h4>
+          <div className="flex space-x-2">
+            <button
+              type="button"
+              onClick={() => handleSelectAll('selectedSocialActivities')}
+              className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+            >
+              Select All
+            </button>
+            <button
+              type="button"
+              onClick={() => handleClearAll('selectedSocialActivities')}
+              className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {socialActivities.map(activity => (
             <label
@@ -978,9 +1173,27 @@ export default function CreateStudentForm({
 
       {/* Motor Activities */}
       <div>
-        <h4 className="text-md font-medium text-gray-900 mb-3">
-          Motor Activities
-        </h4>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-md font-medium text-gray-900">
+            Motor Activities
+          </h4>
+          <div className="flex space-x-2">
+            <button
+              type="button"
+              onClick={() => handleSelectAll('selectedMotorActivities')}
+              className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+            >
+              Select All
+            </button>
+            <button
+              type="button"
+              onClick={() => handleClearAll('selectedMotorActivities')}
+              className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {motorActivities.map(activity => (
             <label
@@ -1003,9 +1216,27 @@ export default function CreateStudentForm({
 
       {/* Academic Activities */}
       <div>
-        <h4 className="text-md font-medium text-gray-900 mb-3">
-          Academic Activities
-        </h4>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-md font-medium text-gray-900">
+            Academic Activities
+          </h4>
+          <div className="flex space-x-2">
+            <button
+              type="button"
+              onClick={() => handleSelectAll('selectedAcademicActivities')}
+              className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+            >
+              Select All
+            </button>
+            <button
+              type="button"
+              onClick={() => handleClearAll('selectedAcademicActivities')}
+              className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {academicActivities.map(activity => (
             <label
