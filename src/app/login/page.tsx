@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthContext } from '@/lib/authContext';
 
 export default function LoginPage() {
@@ -9,8 +9,26 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const router = useRouter();
-  const { login } = useAuthContext();
+  const searchParams = useSearchParams();
+  const { login, getAllUsers } = useAuthContext();
+
+  useEffect(() => {
+    // Check if setup was completed
+    const message = searchParams.get('message');
+    if (message === 'setup-complete') {
+      setSuccessMessage(
+        'Admin account created successfully! You can now login.'
+      );
+    }
+
+    // Check if any users exist, if not redirect to setup
+    const users = getAllUsers();
+    if (users.length === 0) {
+      router.push('/setup');
+    }
+  }, [searchParams, getAllUsers, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,44 +56,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoLogin = async (role: 'parent' | 'admin' | 'teacher') => {
-    setIsLoading(true);
-    setError('');
-
-    try {
-      let demoEmail = '';
-      let demoPassword = '';
-
-      if (role === 'parent') {
-        demoEmail = 'parent@example.com';
-        demoPassword = 'parent123';
-      } else if (role === 'admin') {
-        demoEmail = 'admin@example.com';
-        demoPassword = 'admin123';
-      } else if (role === 'teacher') {
-        demoEmail = 'teacher@example.com';
-        demoPassword = 'teacher123';
-      }
-
-      const result = await login(demoEmail, demoPassword);
-      if (result.success) {
-        if (role === 'admin') {
-          router.push('/admin/dashboard');
-        } else if (role === 'teacher') {
-          router.push('/teacher/dashboard');
-        } else {
-          router.push('/parent/dashboard');
-        }
-      } else {
-        setError(result.error || 'Demo login failed');
-      }
-    } catch (err) {
-      setError('An unexpected error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
@@ -85,6 +65,12 @@ export default function LoginPage() {
           </h1>
           <p className="text-gray-600">Sign in to your account</p>
         </div>
+
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <p className="text-green-700 text-sm">{successMessage}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -264,30 +250,6 @@ export default function LoginPage() {
                 </div>
               </div>
             </div>
-          </div>
-
-          <div className="mt-6 space-y-3">
-            <button
-              onClick={() => handleDemoLogin('parent')}
-              disabled={isLoading}
-              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Demo Parent Login
-            </button>
-            <button
-              onClick={() => handleDemoLogin('teacher')}
-              disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Demo Teacher Login
-            </button>
-            <button
-              onClick={() => handleDemoLogin('admin')}
-              disabled={isLoading}
-              className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Demo Admin Login
-            </button>
           </div>
         </div>
 

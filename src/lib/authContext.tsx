@@ -58,114 +58,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [allUsers, setAllUsers] = useState<User[]>([]);
 
-  // Initialize with demo users
+  // Initialize with empty users array - no demo users
   useEffect(() => {
     const initializeUsers = () => {
-      const demoUsers: User[] = [
-        {
-          id: 'parent-1',
-          name: 'Jane Parent',
-          role: 'parent',
-          email: 'parent@example.com',
-          password: 'parent123',
-          preferences: {
-            notifications: {
-              email: true,
-              push: true,
-              sms: true,
-              inApp: true,
-              frequency: 'immediate',
-            },
-            dashboard: {
-              layout: 'compact',
-              theme: 'light',
-              widgets: ['sessions', 'progress', 'notifications'],
-            },
-            privacy: {
-              dataSharing: true,
-              analytics: true,
-              aiTraining: false,
-            },
-            accessibility: {
-              fontSize: 'medium',
-              highContrast: false,
-              reducedMotion: false,
-              screenReader: false,
-            },
-          },
-          createdAt: new Date('2024-01-15'),
-          lastActive: new Date(),
-        },
-        {
-          id: 'admin-1',
-          name: 'Admin User',
-          role: 'admin',
-          email: 'admin@example.com',
-          password: 'admin123',
-          preferences: {
-            notifications: {
-              email: true,
-              push: true,
-              sms: false,
-              inApp: true,
-              frequency: 'daily',
-            },
-            dashboard: {
-              layout: 'detailed',
-              theme: 'light',
-              widgets: ['analytics', 'users', 'system'],
-            },
-            privacy: {
-              dataSharing: true,
-              analytics: true,
-              aiTraining: true,
-            },
-            accessibility: {
-              fontSize: 'medium',
-              highContrast: false,
-              reducedMotion: false,
-              screenReader: false,
-            },
-          },
-          createdAt: new Date('2024-01-01'),
-          lastActive: new Date(),
-        },
-        {
-          id: 'teacher-1',
-          name: 'Sarah Teacher',
-          role: 'teacher',
-          email: 'teacher@example.com',
-          password: 'teacher123',
-          preferences: {
-            notifications: {
-              email: true,
-              push: true,
-              sms: false,
-              inApp: true,
-              frequency: 'immediate',
-            },
-            dashboard: {
-              layout: 'compact',
-              theme: 'light',
-              widgets: ['students', 'lessons', 'progress'],
-            },
-            privacy: {
-              dataSharing: true,
-              analytics: true,
-              aiTraining: false,
-            },
-            accessibility: {
-              fontSize: 'medium',
-              highContrast: false,
-              reducedMotion: false,
-              screenReader: false,
-            },
-          },
-          createdAt: new Date('2024-01-10'),
-          lastActive: new Date(),
-        },
-      ];
-
       // Load existing users from localStorage
       const storedUsers = localStorage.getItem('allUsers');
       if (storedUsers) {
@@ -181,11 +76,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
           // eslint-disable-next-line no-console
           console.error('Error parsing stored users:', error);
-          setAllUsers(demoUsers);
+          setAllUsers([]);
         }
       } else {
-        setAllUsers(demoUsers);
-        localStorage.setItem('allUsers', JSON.stringify(demoUsers));
+        setAllUsers([]);
       }
     };
 
