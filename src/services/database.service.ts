@@ -1,3 +1,95 @@
+import { supabase, getSupabaseAdmin, type Database } from '@/lib/supabase';
+
+type Tables = Database['public']['Tables'];
+
+// Simple in-memory cache for read-mostly data (per server instance)
+const memoryCache = new Map<string, { value: unknown; expiresAt: number }>();
+
+function getCache<T>(key: string): T | null {
+  const item = memoryCache.get(key);
+  if (!item) {
+    return null;
+  }
+  if (Date.now() > item.expiresAt) {
+    memoryCache.delete(key);
+    return null;
+  }
+  return item.value as T;
+}
+
+function setCache<T>(key: string, value: T, ttlMs: number) {
+  memoryCache.set(key, { value, expiresAt: Date.now() + ttlMs });
+}
+
+export const databaseService = {
+  // Safe client-side reads using anon key
+  async getUserProfile(userId: string) {
+    const cacheKey = `user:${userId}`;
+    const cached = getCache<Tables['users']['Row']>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    if (error) {
+      throw error;
+    }
+    if (data) {
+      setCache(cacheKey, data, 30_000);
+    }
+    return data;
+  },
+
+  async listUpcomingSessions(
+    userId: string,
+    role: 'parent' | 'teacher' | 'admin'
+  ) {
+    const cacheKey = `sessions:${role}:${userId}`;
+    const cached = getCache<Tables['sessions']['Row'][]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+    const column =
+      role === 'parent'
+        ? 'parent_id'
+        : role === 'teacher'
+          ? 'teacher_id'
+          : 'teacher_id';
+    const { data, error } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq(column, userId)
+      .gte('scheduled_start', new Date().toISOString())
+      .order('scheduled_start', { ascending: true })
+      .limit(20);
+    if (error) {
+      throw error;
+    }
+    if (data) {
+      setCache(cacheKey, data, 15_000);
+    }
+    return data;
+  },
+
+  // Server-only admin writes using service role
+  async upsertUserProfile(user: Tables['users']['Insert']) {
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin
+      .from('users')
+      .upsert(user)
+      .select('*')
+      .single();
+    if (error) {
+      throw error;
+    }
+    memoryCache.delete(`user:${data.id}`);
+    return data;
+  },
+};
+
 import { createClient } from '@supabase/supabase-js';
 import { StudentProfile, TeacherProfile } from '@/types';
 import { TeacherQRService } from './teacher-qr.service';

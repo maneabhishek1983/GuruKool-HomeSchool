@@ -20,15 +20,20 @@ export const supabase = (() => {
 })();
 
 // Create admin client for server-side operations (singleton)
-export const supabaseAdmin = (() => {
+// Server-only admin client factory; never initialize on the client
+export function getSupabaseAdmin() {
+  if (typeof window !== 'undefined') {
+    throw new Error('getSupabaseAdmin() must be called on the server only');
+  }
   if (!supabaseAdminInstance) {
-    supabaseAdminInstance = createClient(
-      supabaseUrl,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || 'your-service-role-key'
-    );
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) {
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY not set');
+    }
+    supabaseAdminInstance = createClient(supabaseUrl, serviceKey);
   }
   return supabaseAdminInstance;
-})();
+}
 
 // Database types
 export interface Database {

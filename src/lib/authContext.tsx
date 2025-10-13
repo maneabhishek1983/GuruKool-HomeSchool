@@ -39,6 +39,7 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
+  isAuthenticated: boolean;
   login: (
     email: string,
     password: string
@@ -201,6 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        isAuthenticated: !!user,
         login,
         logout,
         isLoading,

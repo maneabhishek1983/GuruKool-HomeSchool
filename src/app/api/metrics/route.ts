@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/api-security';
 
+export const runtime = 'nodejs';
+
 export const GET = withRateLimit({ keyPrefix: 'api:metrics', max: 60 })(
   async function GET(request: NextRequest) {
     try {
