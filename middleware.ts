@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { csrfProtectionMiddleware } from '@/middleware/csrf';
 import { applyRateLimit } from '@/middleware/rate-limit';
+import { checkRedisLimit } from '@/lib/rate-limit-redis';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -33,11 +34,19 @@ export async function middleware(request: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
-  // Apply rate limiting for API routes (early exit on 429)
+  // Apply rate limiting for API routes (prefer Redis limiter)
   if (pathname.startsWith('/api/')) {
+    const redisLimited = await checkRedisLimit(request, {
+      windowSec: 60,
+      max: 120,
+      prefix: 'api',
+    });
+    if (redisLimited) {
+      redisLimited.headers.set('X-Request-ID', requestId);
+      return redisLimited;
+    }
     const rateLimitResponse = applyRateLimit(request);
     if (rateLimitResponse.status !== 200) {
-      // Copy request ID to rate limit response
       rateLimitResponse.headers.set('X-Request-ID', requestId);
       return rateLimitResponse;
     }

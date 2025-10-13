@@ -317,4 +317,271 @@ The AI-Enhanced Homeschooling Platform is a comprehensive learning management sy
    - Add advanced analytics and reporting
    - Implement mobile responsiveness improvements
 
+## Production Requirements (Added 2025-10-13)
+
+### Security Requirements
+
+#### Row Level Security (RLS)
+
+- **User Story**: As a system administrator, I want complete RLS policies so that parent data is properly isolated.
+- **Acceptance Criteria**:
+  - All tables have complete RLS policies (SELECT, INSERT, UPDATE, DELETE)
+  - Parent data isolation verified with automated tests
+  - Admin override policies for platform management
+  - Service role policies for backend operations
+  - UUID comparison (not string casting) for performance
+  - Auth session table has proper policies (currently has zero)
+
+#### Distributed Rate Limiting
+
+- **User Story**: As a system, I need distributed rate limiting so that protection works across serverless instances.
+- **Acceptance Criteria**:
+  - Redis-based rate limiting (Upstash recommended)
+  - Works across multiple Vercel serverless instances
+  - Survives cold starts and maintains state
+  - Per-IP and per-user rate limits
+  - Configurable limits per endpoint
+  - IP ban persistence
+
+#### Input Validation
+
+- **User Story**: As a developer, I want all API inputs validated so that data integrity is maintained.
+- **Acceptance Criteria**:
+  - Zod schemas for all API route request bodies
+  - Email validation using standard library
+  - Type-safe request parsing
+  - Validation error responses with details
+  - Sanitization of user input
+  - No implicit `any` types in handlers
+
+#### Error Boundaries
+
+- **User Story**: As a user, I want graceful error handling so that I have a good experience when errors occur.
+- **Acceptance Criteria**:
+  - `src/app/error.tsx` for route error handling
+  - `src/app/not-found.tsx` for 404 pages
+  - `src/app/global-error.tsx` for uncaught errors in root layout
+  - Error boundaries on critical routes (parent, teacher, admin dashboards)
+  - Error tracking integration (Sentry)
+
+#### API Security
+
+- **User Story**: As a system administrator, I want secure API endpoints so that only authorized users can access data.
+- **Acceptance Criteria**:
+  - Authentication middleware for protected routes
+  - Role-based access control (RBAC) enforcement
+  - Service key separation (client vs server)
+  - Demo credentials endpoint disabled in production
+  - CSP violation reporting configured
+  - CSRF protection on state-changing operations
+
+### Observability Requirements
+
+#### Error Tracking
+
+- **User Story**: As a developer, I want error tracking so that I can identify and fix issues quickly.
+- **Acceptance Criteria**:
+  - Sentry integration for frontend errors
+  - Sentry integration for backend errors
+  - Source maps enabled for production
+  - User context attached to errors
+  - Release tracking configured
+  - Performance monitoring enabled
+
+#### Structured Logging
+
+- **User Story**: As an operations engineer, I want structured logs so that I can debug issues efficiently.
+- **Acceptance Criteria**:
+  - Pino logger with structured output
+  - Request correlation IDs on all requests
+  - PII redaction (email, passwords, tokens)
+  - Log levels configurable by environment
+  - Request/response logging on API routes
+  - Integration with log aggregation service
+
+#### Metrics & Monitoring
+
+- **User Story**: As a system administrator, I want real metrics so that I can monitor system health.
+- **Acceptance Criteria**:
+  - Real metrics endpoint (no mock data)
+  - Prometheus-compatible format
+  - Request counts by method and status
+  - Response time histograms
+  - Database connection pool metrics
+  - Vercel Analytics integration
+
+#### Health Checks
+
+- **User Story**: As a monitoring system, I need health checks so that I can detect service failures.
+- **Acceptance Criteria**:
+  - `/api/health` endpoint with Supabase connectivity check
+  - Database connection verification
+  - Redis connection verification (when implemented)
+  - Response time under 500ms
+  - Returns proper HTTP status codes (200/503)
+
+### Code Quality Requirements
+
+#### TypeScript Compliance
+
+- **User Story**: As a developer, I want type safety so that I can catch errors at compile time.
+- **Acceptance Criteria**:
+  - Zero TypeScript errors in production build
+  - Strict mode enabled with additional checks
+  - `exactOptionalPropertyTypes` compliance
+  - No `any` types except where explicitly necessary
+  - `ignoreBuildErrors` removed from next.config.mjs
+  - Type-check passes in CI pipeline
+
+#### Linting Standards
+
+- **User Story**: As a team, we want consistent code style so that the codebase is maintainable.
+- **Acceptance Criteria**:
+  - ESLint passes with acceptable warnings (<10)
+  - `eslint.ignoreDuringBuilds` removed from next.config.mjs
+  - Prettier formatting enforced
+  - Pre-commit hooks for formatting
+  - No console.log in production code (use logger)
+
+#### Test Coverage
+
+- **User Story**: As a developer, I want test coverage so that I can refactor with confidence.
+- **Acceptance Criteria**:
+  - 80% coverage on services layer
+  - 80% coverage on API routes
+  - Unit tests for all business logic
+  - Integration tests for critical workflows
+  - E2E tests for auth and dashboard flows
+  - RLS policy tests for data isolation
+
+### Infrastructure Requirements
+
+#### Database & Backups
+
+- **User Story**: As a system administrator, I need reliable backups so that data can be recovered.
+- **Acceptance Criteria**:
+  - Supabase Pro plan with PITR enabled
+  - Recovery Point Objective (RPO): 5 minutes
+  - Recovery Time Objective (RTO): 1 hour
+  - Quarterly restore drills in staging
+  - Backup verification process documented
+  - Disaster recovery runbook created
+
+#### Migration Management
+
+- **User Story**: As a developer, I need migration discipline so that schema changes are versioned.
+- **Acceptance Criteria**:
+  - All schema changes in `supabase/migrations/`
+  - No ad-hoc console edits in production
+  - Migration numbering sequential and unique
+  - Migrations tested in staging before production
+  - Rollback procedures documented
+  - Migration CI checks
+
+#### Environment Configuration
+
+- **User Story**: As a DevOps engineer, I need proper environment separation so that secrets are secure.
+- **Acceptance Criteria**:
+  - Vercel environment groups (Development, Preview, Production)
+  - Service role key server-side only (never client)
+  - Environment variables documented in VERCEL_ENV_VARS.txt
+  - `server-only` package for sensitive utilities
+  - Secrets rotation procedure documented
+
+#### CI/CD Pipeline
+
+- **User Story**: As a team, we need CI/CD so that quality is maintained automatically.
+- **Acceptance Criteria**:
+  - GitHub Actions workflow configured
+  - Type-check, lint, test, build steps
+  - Quality gates block failing PRs
+  - Preview deployments for all branches
+  - Production deployment requires approval
+  - E2E tests gate production deployments
+
+### Performance Requirements
+
+#### Rendering Strategy
+
+- **User Story**: As a developer, I want optimized rendering so that costs are controlled and performance is good.
+- **Acceptance Criteria**:
+  - Static pages use `force-static` export
+  - ISR with revalidate for semi-static content
+  - SSR only for personalized/auth-required pages
+  - Data caching with `next: { revalidate }` configured
+  - Edge runtime for lightweight endpoints
+  - Server components by default
+
+#### Bundle Optimization
+
+- **User Story**: As a user, I want fast page loads so that the app feels responsive.
+- **Acceptance Criteria**:
+  - Bundle analysis run regularly
+  - Code splitting on large routes
+  - Dynamic imports for heavy components
+  - Image optimization enabled
+  - TTFB (Time to First Byte) < 600ms
+  - LCP (Largest Contentful Paint) < 2.5s
+  - CLS (Cumulative Layout Shift) < 0.1
+
+### Compliance Requirements
+
+#### Data Protection
+
+- **Acceptance Criteria**:
+  - GDPR compliance for European users
+  - COPPA compliance for children's data
+  - FERPA compliance for educational records
+  - Privacy policy published and accessible
+  - Terms of service published
+  - Cookie consent for non-essential cookies
+
+## Current Implementation Status (Updated 2025-10-13)
+
+### ✅ Implemented
+
+- Next.js 14 with App Router and TypeScript
+- Supabase database integration with migrations
+- Teacher QR authentication system
+- Student and teacher profile management
+- Academic standards service (UK, US, India)
+- Data sheets schema
+- Progress tracking components
+- AI agent system architecture
+- CSRF protection middleware
+- Rate limiting middleware (in-memory - needs Redis upgrade)
+- Security headers configured
+
+### 🔴 Critical Gaps (Production Blockers)
+
+- RLS policies incomplete (auth_sessions has zero policies)
+- In-memory rate limiting (needs Redis)
+- 185 TypeScript errors
+- No error boundaries (error.tsx, not-found.tsx)
+- No input validation with Zod
+- Mock metrics endpoint
+- No Sentry integration
+- Service key exposed in database.service.ts
+
+### 🟡 High Priority Gaps
+
+- No CI/CD pipeline
+- No structured logging
+- Test coverage < 80%
+- No Supabase PITR configured
+- Missing API routes for CRUD operations
+- No authentication middleware
+
+### 📊 Production Readiness Score: 45/100
+
+**Breakdown:**
+
+- Security: 40% (RLS incomplete, rate limiting not distributed)
+- Observability: 20% (no Sentry, no structured logging, mock metrics)
+- Code Quality: 30% (185 TS errors, ignoreBuildErrors enabled)
+- Infrastructure: 50% (database working, no backups, no CI/CD)
+- Performance: 60% (good architecture, needs optimization)
+
+**Estimated Time to Production-Ready:** 4-6 weeks
+
 This requirements document provides a comprehensive framework for developing the AI-Enhanced Homeschooling Platform with a focus on parent and administrator access while maintaining effective teacher management through the platform.

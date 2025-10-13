@@ -1,536 +1,1008 @@
 # AI-Enhanced Homeschooling Platform - Implementation Tasks
 
-## Project Overview
-
-This document outlines the implementation tasks for the AI-Enhanced Homeschooling Platform, focusing on parent and administrator access with managed teacher roles. The platform provides intelligent automation, secure authentication, and personalized learning insights.
-
-## Current Implementation Status
-
-### ✅ Completed Tasks
-
-- Basic Next.js 14 application setup with App Router
-- TypeScript configuration and type definitions
-- Tailwind CSS styling and responsive design
-- Authentication context and user management
-- Role-based access control (parent/admin/teacher)
-- Login page with demo accounts and teacher login
-- Parent dashboard with logout functionality
-- Admin dashboard with logout functionality
-- Teacher dashboard with logout functionality
-- Landing page with role-based access information
-- Teacher management model (no direct login)
-- Basic error handling and validation
-- Responsive design for mobile and desktop
-
-### 🔄 In Progress
-
-- QR code authentication system
-- AI agent integration
-- Real-time communication features
-- Advanced progress tracking
-
-### 📋 Pending Tasks
-
-- Database integration and data persistence
-- Country-based syllabus system (UK, US, India with proper grade/class naming)
-- Student profile creation with country-specific academic standards
-- Teacher login system and dashboard
-- Real parent/teacher account creation (beyond demo accounts)
-- Data Sheets generation and monitoring system
-- Advanced AI insights and recommendations
-- Teacher assignment and communication system
-- Session scheduling and management
-- File upload and content management
-- Advanced analytics and reporting
-
-## Implementation Tasks
-
-### 1. Authentication & Security
-
-#### Task 1.1: QR Code Authentication System
-
-- **Priority**: High
-- **Status**: In Progress
-- **Description**: Implement QR code-based authentication for parents and administrators
-- **Acceptance Criteria**:
-  - QR code generation with embedded session tokens
-  - Real-time authentication status updates
-  - Fallback to traditional email/password login
-  - 5-minute expiration for security
-  - Only parents and administrators have direct access
-- **Dependencies**: WebSocket implementation, QR code library
-- **Estimated Time**: 3-4 days
-
-#### Task 1.2: Role-Based Access Control Enhancement
-
-- **Priority**: High
-- **Status**: In Progress
-- **Description**: Implement comprehensive role-based access control including teacher login
-- **Acceptance Criteria**:
-  - Parent role: Student management and progress tracking
-  - Admin role: Full system access and user management
-  - Teacher role: Direct login access with assigned student management
-  - Automatic redirection based on user role
-  - Clear access denial messages
-- **Dependencies**: Authentication system
-- **Estimated Time**: 2-3 days
-
-#### Task 1.4: Teacher Authentication System
-
-- **Priority**: High
-- **Status**: Pending
-- **Description**: Implement teacher login system with dashboard access
-- **Acceptance Criteria**:
-  - Teacher login functionality with credentials
-  - Teacher dashboard with assigned student access
-  - Teacher-specific navigation and features
-  - Integration with parent/admin teacher management
-- **Dependencies**: Authentication system, teacher management
-- **Estimated Time**: 2-3 days
-
-#### Task 1.3: Session Management & Logout
-
-- **Priority**: High
-- **Status**: Completed
-- **Description**: Implement secure session management with logout functionality
-- **Acceptance Criteria**:
-  - Secure session handling with JWT tokens
-  - Automatic session timeout
-  - Logout functionality on all dashboards
-  - Session cleanup and security
-- **Dependencies**: Authentication system
-- **Estimated Time**: 1 day
-
-### 2. User Interface & Experience
-
-#### Task 2.1: Parent Dashboard Enhancement
-
-- **Priority**: High
-- **Status**: In Progress
-- **Description**: Create comprehensive parent dashboard with student management and country-based syllabus
-- **Acceptance Criteria**:
-  - Student profile creation with country selection (UK, US, India)
-  - Country-specific grade/class system implementation
-  - Progress tracking and visualization
-  - Teacher assignment interface
-  - Real account creation functionality (beyond demo)
-  - AI insights display
-  - Communication center
-  - Settings and preferences
-- **Dependencies**: Authentication system, UI components, syllabus system
-- **Estimated Time**: 4-5 days
-
-#### Task 2.4: Country-Based Syllabus System
-
-- **Priority**: High
-- **Status**: Pending
-- **Description**: Implement country-specific academic standards and grade systems
-- **Acceptance Criteria**:
-  - UK system: Reception, Year 1, Year 2, etc.
-  - US system: Kindergarten, Grade 1, Grade 2, etc.
-  - India system: Class 1, Class 2, etc.
-  - Dynamic grade selection based on country
-  - Age-appropriate grade suggestions
-  - Academic standards integration per country
-- **Dependencies**: Student profile system, database
-- **Estimated Time**: 3-4 days
-
-#### Task 2.2: Admin Dashboard Enhancement
-
-- **Priority**: High
-- **Status**: Completed
-- **Description**: Create comprehensive admin dashboard with system management
-- **Acceptance Criteria**:
-  - User management interface
-  - System analytics and monitoring
-  - Platform configuration
-  - Security monitoring
-  - Content management
-  - Demo user information
-- **Dependencies**: Authentication system, UI components
-- **Estimated Time**: 2-3 days
-
-#### Task 2.3: Teacher Management Interface
-
-- **Priority**: High
-- **Status**: Pending
-- **Description**: Create interfaces for managing teachers and enable real account creation
-- **Acceptance Criteria**:
-  - Teacher profile creation and management
-  - Real teacher account creation with credentials
-  - Assignment to students
-  - Communication channels
-  - Progress reporting interface
-  - Performance tracking
-  - Integration with teacher login system
-- **Dependencies**: Parent/Admin dashboards, teacher authentication
-- **Estimated Time**: 4-5 days
-
-#### Task 2.5: Real Account Creation System
-
-- **Priority**: High
-- **Status**: Pending
-- **Description**: Implement actual account creation beyond demo accounts
-- **Acceptance Criteria**:
-  - Parent account registration and verification
-  - Teacher account creation by parents/admins
-  - Student profile creation with real data persistence
-  - Email verification and password reset
-  - Account management and settings
-  - Migration from demo to real accounts
-- **Dependencies**: Database integration, email service
-- **Estimated Time**: 3-4 days
-
-### 3. AI Agent Integration
-
-#### Task 3.1: AI Agent Framework Setup
-
-- **Priority**: Medium
-- **Status**: Pending
-- **Description**: Set up AI agent framework for intelligent automation
-- **Acceptance Criteria**:
-  - AI agent orchestration system
-  - Agent registration and management
-  - Context sharing between agents
-  - Error handling and fallbacks
-- **Dependencies**: Backend API, OpenAI integration
-- **Estimated Time**: 4-5 days
-
-#### Task 3.2: Learning Insights Agent
-
-- **Priority**: Medium
-- **Status**: Pending
-- **Description**: Implement AI agent for learning pattern analysis and insights
-- **Acceptance Criteria**:
-  - Learning pattern analysis
-  - Progress prediction
-  - Personalized recommendations
-  - Automated report generation
-- **Dependencies**: AI agent framework, data collection
-- **Estimated Time**: 3-4 days
-
-#### Task 3.3: Task Automation Agent
-
-- **Priority**: Medium
-- **Status**: Pending
-- **Description**: Implement AI agent for automated task management
-- **Acceptance Criteria**:
-  - Session scheduling automation
-  - Notification management
-  - Conflict resolution
-  - Resource recommendations
-- **Dependencies**: AI agent framework, scheduling system
-- **Estimated Time**: 3-4 days
-
-### 4. Data Management & Persistence
-
-#### Task 4.1: Database Schema Design
-
-- **Priority**: High
-- **Status**: Pending
-- **Description**: Design and implement database schema for the platform
-- **Acceptance Criteria**:
-  - User management tables
-  - Student and teacher profiles
-  - Session and progress tracking
-  - Communication and messaging
-  - Analytics and reporting data
-- **Dependencies**: Database setup
-- **Estimated Time**: 2-3 days
-
-#### Task 4.2: Data Models Implementation
-
-- **Priority**: High
-- **Status**: Pending
-- **Description**: Implement data models and database integration
-- **Acceptance Criteria**:
-  - User data models
-  - Student profile models
-  - Teacher management models
-  - Session and progress models
-  - Communication models
-- **Dependencies**: Database schema
-- **Estimated Time**: 2-3 days
-
-#### Task 4.3: Data Migration & Seeding
-
-- **Priority**: Medium
-- **Status**: Pending
-- **Description**: Implement data migration and seeding for development
-- **Acceptance Criteria**:
-  - Database migration scripts
-  - Seed data for development
-  - Demo user data
-  - Sample content and resources
-- **Dependencies**: Database schema, data models
-- **Estimated Time**: 1-2 days
-
-### 5. Communication & Real-time Features
-
-#### Task 5.1: Real-time Communication System
-
-- **Priority**: Medium
-- **Status**: Pending
-- **Description**: Implement real-time communication between parents, teachers, and administrators
-- **Acceptance Criteria**:
-  - WebSocket-based messaging
-  - Real-time notifications
-  - Message history and persistence
-  - File sharing capabilities
-- **Dependencies**: WebSocket server, database
-- **Estimated Time**: 4-5 days
-
-#### Task 5.2: Notification System
-
-- **Priority**: Medium
-- **Status**: Pending
-- **Description**: Implement intelligent notification system
-- **Acceptance Criteria**:
-  - Multi-channel notifications (email, push, in-app)
-  - Notification preferences
-  - Intelligent notification timing
-  - Notification history and management
-- **Dependencies**: Communication system, email service
-- **Estimated Time**: 3-4 days
-
-### 6. Progress Tracking & Analytics
-
-#### Task 6.1: Progress Tracking System
-
-- **Priority**: High
-- **Status**: Pending
-- **Description**: Implement comprehensive progress tracking for students
-- **Acceptance Criteria**:
-  - Learning milestone tracking
-  - Progress visualization
-  - Performance metrics
-  - Goal setting and achievement
-- **Dependencies**: Data models, UI components
-- **Estimated Time**: 4-5 days
-
-#### Task 6.3: Data Sheets Generation and Monitoring
-
-- **Priority**: High
-- **Status**: Pending
-- **Description**: Implement data sheets system for tracking student activities and progress
-- **Acceptance Criteria**:
-  - Activity tracking for: Sensory, Writing, Communication, Social, and Academics
-  - Progress monitoring with prompts and challenges
-  - Daily and scheduled activity management
-  - Data sheet generation and export functionality
-  - Visual progress indicators and trends
-  - Teacher and parent collaboration on data sheets
-  - Customizable activity templates
-- **Dependencies**: Progress tracking system, database, UI components
-- **Estimated Time**: 5-6 days
-
-#### Task 6.2: Analytics Dashboard
-
-- **Priority**: Medium
-- **Status**: Pending
-- **Description**: Create analytics dashboard for insights and reporting
-- **Acceptance Criteria**:
-  - Learning analytics visualization
-  - Performance trends
-  - Comparative analysis
-  - Export capabilities
-- **Dependencies**: Progress tracking, charting library
-- **Estimated Time**: 3-4 days
-
-### 7. Content Management
-
-#### Task 7.1: File Upload System
-
-- **Priority**: Medium
-- **Status**: Pending
-- **Description**: Implement file upload and management system
-- **Acceptance Criteria**:
-  - Secure file upload
-  - File type validation
-  - Storage management
-  - File sharing and access control
-- **Dependencies**: Storage service, security implementation
-- **Estimated Time**: 3-4 days
-
-#### Task 7.2: Content Library
-
-- **Priority**: Low
-- **Status**: Pending
-- **Description**: Create educational content library
-- **Acceptance Criteria**:
-  - Educational resource management
-  - Content categorization
-  - Search and filtering
-  - Content recommendations
-- **Dependencies**: File upload system, database
-- **Estimated Time**: 4-5 days
-
-### 8. Testing & Quality Assurance
-
-#### Task 8.1: Unit Testing
-
-- **Priority**: High
-- **Status**: Pending
-- **Description**: Implement comprehensive unit tests
-- **Acceptance Criteria**:
-  - Component testing
-  - Utility function testing
-  - API endpoint testing
-  - Authentication testing
-- **Dependencies**: Testing framework setup
-- **Estimated Time**: 3-4 days
-
-#### Task 8.2: Integration Testing
-
-- **Priority**: Medium
-- **Status**: Pending
-- **Description**: Implement integration tests for key workflows
-- **Acceptance Criteria**:
-  - End-to-end authentication flow
-  - Dashboard functionality testing
-  - Data persistence testing
-  - Real-time communication testing
-- **Dependencies**: Unit testing, test environment
-- **Estimated Time**: 2-3 days
-
-#### Task 8.3: Performance Testing
-
-- **Priority**: Low
-- **Status**: Pending
-- **Description**: Implement performance testing and optimization
-- **Acceptance Criteria**:
-  - Load testing
-  - Performance benchmarking
-  - Optimization recommendations
-  - Monitoring setup
-- **Dependencies**: Production-like environment
-- **Estimated Time**: 2-3 days
-
-## Key Design Decisions
-
-### Role-Based Access Model
-
-- **Decision**: Only parents and administrators have direct login access
-- **Rationale**: Simplifies security model and reduces attack surface
-- **Implementation**: Teachers are managed entities without login credentials
-
-### Authentication Strategy
-
-- **Decision**: Email/password with QR code enhancement
-- **Rationale**: Balances security with user convenience
-- **Implementation**: Fallback to traditional login for accessibility
-
-### Teacher Management
-
-- **Decision**: Teachers work through parent/admin interfaces
-- **Rationale**: Maintains control while enabling teacher functionality
-- **Implementation**: Teacher profiles managed by parents and administrators
-
-### Dashboard Design
-
-- **Decision**: Role-specific dashboards with focused functionality
-- **Rationale**: Reduces complexity and improves user experience
-- **Implementation**: Separate interfaces for parents and administrators
+**Last Updated:** 2025-10-13
+**Production Readiness:** 45/100 (4-6 weeks to launch-ready)
+
+---
+
+## Executive Summary
+
+This document tracks implementation tasks for the GuruKool HomeSchool platform based on current backend analysis. The platform has a solid foundation with Next.js 14, Supabase, and core features implemented, but requires **critical security and infrastructure hardening** before production deployment.
+
+### Current Sprint Focus: Production Hardening Phase 1 (P0 Tasks)
+
+**Goal:** Address all critical production blockers (2-3 weeks)
+**Status:** 1 of 9 tasks complete (11%)
+
+---
+
+## Implementation Status Overview
+
+### ✅ Completed (Since Project Start)
+
+#### Core Infrastructure
+
+- [x] Next.js 14 App Router setup with TypeScript
+- [x] Supabase database integration
+- [x] Database migrations system (`supabase/migrations/`)
+- [x] Environment variable configuration
+- [x] Tailwind CSS + Mantine UI integration
+- [x] Path aliases configuration
+- [x] Jest + Playwright testing setup
+- [x] Storybook for component development
+
+#### Authentication & Security
+
+- [x] Supabase Auth integration
+- [x] Role-based access control (parent/teacher/admin)
+- [x] Teacher QR authentication system
+- [x] Student-specific QR codes for teacher sessions
+- [x] CSRF protection middleware
+- [x] Rate limiting middleware (in-memory - **needs Redis upgrade**)
+- [x] Security headers configuration
+- [x] Demo credentials endpoint secured (production-disabled)
+
+#### Database Schema & Services
+
+- [x] Users table with role management
+- [x] Students table with academic standards
+- [x] Teachers table with qualifications
+- [x] Sessions table with location tracking
+- [x] Teacher QR codes table
+- [x] Teacher sessions table
+- [x] AI insights table
+- [x] Learning analytics table
+- [x] Data sheets system schema
+- [x] Progress tracking schema
+- [x] Conversations and messages tables
+- [x] `DatabaseService` with CRUD operations
+- [x] `QRAuthService` implementation
+- [x] `TeacherQRService` implementation
+- [x] Academic standards service (UK, US, India)
+
+#### AI Agent System
+
+- [x] `BaseAgent` abstract class
+- [x] Agent orchestrator with priority execution
+- [x] Agent registry system
+- [x] Auth verification agent
+- [x] Analytics agent
+- [x] Task automation agent
+- [x] Communication agent
+- [x] Security analysis agent
+
+#### User Interface
+
+- [x] Landing page
+- [x] Login page with demo accounts
+- [x] Parent dashboard with 6 feature cards
+- [x] Teacher dashboard with session management
+- [x] Admin dashboard with system management
+- [x] Responsive design (mobile/tablet/desktop)
+- [x] Design system with tokens and themes
+- [x] Logout functionality on all dashboards
+
+#### API Routes
+
+- [x] `/api/health` - Health check endpoint
+- [x] `/api/metrics` - Metrics endpoint (**currently mock data**)
+- [x] `/api/credentials` - Demo credentials (production-disabled)
+- [x] `/api/contact-admin` - Contact form
+- [x] `/api/test` - Test endpoint
+
+---
+
+## 🔴 Phase 1: Critical Production Blockers (P0) - 2-3 Weeks
+
+**Status:** 1/9 complete (11%)
+**Goal:** Fix all security and infrastructure gaps that block production deployment
+
+### Task 1.1: Complete RLS Policies ⏳
+
+**Priority:** 🔴 **P0 - CRITICAL**
+**Status:** ⏳ **In Progress**
+**Owner:** Backend
+**Effort:** Medium (2-3 days)
+**Blocker:** Authentication will fail in production
+
+**Current State:**
+
+- RLS enabled on 13 tables
+- `auth_sessions` table has ZERO policies (critical)
+- `sessions` table missing INSERT/DELETE policies
+- 21 policies use inefficient `::text` casting
+
+**Acceptance Criteria:**
+
+- [ ] Add policies to `auth_sessions` (SELECT, UPDATE, INSERT, DELETE)
+- [ ] Add INSERT and DELETE policies to `sessions` table
+- [ ] Add INSERT policies to `ai_insights` and `learning_analytics`
+- [ ] Add admin override policies to all tables
+- [ ] Fix UUID string casting (`::text`) to native UUID comparison
+- [ ] Write automated RLS tests
+- [ ] Verify parent data isolation
+
+**Implementation:**
+
+```sql
+-- Apply SQL from RLS_AUDIT_REPORT.md
+-- Create migration: 006_fix_rls_policies.sql
+-- Test in staging before production
+```
+
+**Related Documents:** [RLS_AUDIT_REPORT.md](../../../RLS_AUDIT_REPORT.md)
+
+---
+
+### Task 1.2: Replace In-Memory Rate Limiting with Redis ⏳
+
+**Priority:** 🔴 **P0 - CRITICAL**
+**Status:** ⏳ **Not Started**
+**Owner:** Backend
+**Effort:** Medium (2-3 days)
+**Blocker:** Rate limiting doesn't work across multiple serverless instances
+
+**Current State:**
+
+- Rate limiting uses `Map<string, {...}>` in memory
+- Data loss on cold starts
+- No shared state between Vercel instances
+
+**Acceptance Criteria:**
+
+- [ ] Create Upstash Redis account
+- [ ] Setup Redis database (free tier sufficient)
+- [ ] Install `@upstash/redis` package
+- [ ] Implement Redis-based rate limiting in `src/lib/rate-limit-redis.ts`
+- [ ] Update `src/lib/api-security.ts` to use Redis
+- [ ] Update `src/middleware/rate-limit.ts` middleware
+- [ ] Add environment variables (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN)
+- [ ] Test locally with rate limit script
+- [ ] Deploy to Vercel and verify in production
+
+**Implementation:**
+
+```bash
+# Follow guide: UPSTASH_REDIS_SETUP.md
+npm install @upstash/redis
+# Add environment variables to Vercel
+# Deploy and test
+```
+
+**Related Documents:** [UPSTASH_REDIS_SETUP.md](../../../UPSTASH_REDIS_SETUP.md)
+
+---
+
+### Task 1.3: Add Zod Validation to All API Routes ⏳
+
+**Priority:** 🔴 **P0 - CRITICAL**
+**Status:** ⏳ **Not Started**
+**Owner:** Backend
+**Effort:** Medium (2-3 days)
+**Blocker:** No input validation = data integrity and security risk
+
+**Current State:**
+
+- API routes accept user input without schema validation
+- Direct destructuring from request body
+- Implicit `any` types in handlers
+
+**Acceptance Criteria:**
+
+- [ ] Create `src/lib/validators/api-schemas.ts`
+- [ ] Define Zod schemas for all API route request bodies
+- [ ] Add validation to `/api/contact-admin`
+- [ ] Add validation to `/api/credentials`
+- [ ] Add validation to future API routes (students, teachers, sessions)
+- [ ] Return typed error responses (400) on validation failure
+- [ ] Remove all implicit `any` types
+
+**Implementation:**
+
+```typescript
+// Create src/lib/validators/api-schemas.ts
+import { z } from 'zod';
+
+export const contactAdminSchema = z.object({
+  name: z.string().min(1).max(100),
+  email: z.string().email(),
+  phone: z.string().optional(),
+  organization: z.string().optional(),
+  message: z.string().min(10).max(5000),
+  requestType: z.enum(['demo', 'support', 'sales', 'other']).optional(),
+});
+
+export const studentSchema = z.object({
+  name: z.string().min(1).max(200),
+  dateOfBirth: z.string().datetime(),
+  country: z.enum(['UK', 'US', 'India']),
+  gradeLevel: z.string(),
+  // ... more fields
+});
+
+export const teacherSchema = z.object({
+  name: z.string().min(1).max(200),
+  email: z.string().email(),
+  qualifications: z.string(),
+  specializations: z.array(z.string()),
+  // ... more fields
+});
+```
+
+**Related Documents:** [BACKEND_GAP_ANALYSIS.md](../../../BACKEND_GAP_ANALYSIS.md) (Section 2.2)
+
+---
+
+### Task 1.4: Create Error Boundaries ⏳
+
+**Priority:** 🔴 **P0 - CRITICAL**
+**Status:** ⏳ **Not Started**
+**Owner:** Frontend
+**Effort:** Low (1 day)
+**Blocker:** Poor UX when errors occur
+
+**Current State:**
+
+- No `error.tsx` in app directory
+- No `not-found.tsx` for 404 pages
+- No `global-error.tsx` for uncaught errors
+
+**Acceptance Criteria:**
+
+- [ ] Create `src/app/error.tsx` with error tracking
+- [ ] Create `src/app/not-found.tsx` for 404 pages
+- [ ] Create `src/app/global-error.tsx` for root layout errors
+- [ ] Add error boundaries to critical routes (parent, teacher, admin)
+- [ ] Integrate with Sentry (when available)
+- [ ] Test error recovery flows
+
+**Implementation:**
+
+```typescript
+// src/app/error.tsx
+'use client';
+
+import { useEffect } from 'react';
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    // Log to Sentry when available
+    console.error('Application error:', error);
+  }, [error]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-4">Something went wrong</h2>
+        <button onClick={reset} className="btn-primary">
+          Try again
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+**Related Documents:** [BACKEND_GAP_ANALYSIS.md](../../../BACKEND_GAP_ANALYSIS.md) (Section 4.1)
+
+---
+
+### Task 1.5: Fix Service Key Usage in database.service.ts ⏳
+
+**Priority:** 🔴 **P0 - CRITICAL SECURITY**
+**Status:** ⏳ **Not Started**
+**Owner:** Backend
+**Effort:** Low (1 day)
+**Blocker:** Service key potentially exposed to client
+
+**Current State:**
+
+- `database.service.ts` uses anon key for all operations
+- `createTeacher()` calls `auth.signUp` which requires service key
+- Mixed client usage creates security confusion
+
+**Acceptance Criteria:**
+
+- [ ] Update `database.service.ts` to import `getSupabaseAdmin()`
+- [ ] Replace `createTeacher()` auth operations with admin client
+- [ ] Add `server-only` package import
+- [ ] Document which operations require service key vs anon key
+- [ ] Ensure server-side only execution
+
+**Implementation:**
+
+```typescript
+// At top of database.service.ts
+import 'server-only';
+import { getSupabaseAdmin } from '@/lib/supabase';
+
+// In createTeacher method
+static async createTeacher(teacherData: any, parentId: string): Promise<TeacherProfile | null> {
+  try {
+    const admin = getSupabaseAdmin(); // Server-only
+    const { data: userData, error: userError } = await admin.auth.admin.createUser({
+      email: teacherData.email,
+      password: this.generatePassword(),
+      user_metadata: {
+        name: teacherData.name,
+        role: 'teacher',
+      },
+    });
+    // ... rest
+  }
+}
+```
+
+**Related Documents:** [BACKEND_GAP_ANALYSIS.md](../../../BACKEND_GAP_ANALYSIS.md) (Section 1.2)
+
+---
+
+### Task 1.6: Replace Mock Metrics with Real Data ⏳
+
+**Priority:** 🔴 **P0 - CRITICAL**
+**Status:** ⏳ **Not Started**
+**Owner:** Backend
+**Effort:** Medium (2-3 days)
+**Blocker:** Cannot monitor production without real metrics
+
+**Current State:**
+
+- `/api/metrics` returns fake data using `Math.random()`
+- Misleading Prometheus/monitoring data
+- Violates "no mock data" project rule
+
+**Acceptance Criteria:**
+
+- [ ] Implement real metrics collection library
+- [ ] Track HTTP requests by method and status
+- [ ] Track response times as histograms
+- [ ] Track database connection pool metrics
+- [ ] Use Redis for counter storage or Vercel Analytics
+- [ ] Return Prometheus-compatible format
+- [ ] Test with monitoring system (Grafana/Datadog)
+
+**Implementation Options:**
+
+- **Option A:** Vercel Analytics API (native integration)
+- **Option B:** Redis counters with Upstash
+- **Option C:** Edge config for lightweight metrics
+- **Recommended:** Vercel Analytics + custom events
+
+**Related Documents:** [BACKEND_GAP_ANALYSIS.md](../../../BACKEND_GAP_ANALYSIS.md) (Section 2.1)
+
+---
+
+### Task 1.7: Implement Authentication Middleware ⏳
+
+**Priority:** 🔴 **P0 - CRITICAL SECURITY**
+**Status:** ⏳ **Not Started**
+**Owner:** Backend
+**Effort:** Medium (2-3 days)
+**Blocker:** No centralized auth enforcement
+
+**Current State:**
+
+- Individual routes check auth manually
+- No consistent session validation
+- No RBAC enforcement
+
+**Acceptance Criteria:**
+
+- [ ] Create `src/middleware/auth.ts`
+- [ ] Implement `requireAuth(allowedRoles?: string[])` function
+- [ ] Update `middleware.ts` to protect routes
+- [ ] Add session attachment to request object
+- [ ] Test with all user roles (parent, teacher, admin)
+- [ ] Verify 401 responses for unauth users
+- [ ] Verify 403 responses for unauthorized roles
+
+**Implementation:**
+
+```typescript
+// src/middleware/auth.ts
+import { getSession } from '@/lib/session';
+import { NextRequest, NextResponse } from 'next/server';
+
+export function requireAuth(allowedRoles?: string[]) {
+  return async function (request: NextRequest) {
+    const session = await getSession(request);
+
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (allowedRoles && !allowedRoles.includes(session.user.role)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Attach session to request for downstream use
+    (request as any).session = session;
+    return NextResponse.next();
+  };
+}
+```
+
+**Related Documents:** [BACKEND_GAP_ANALYSIS.md](../../../BACKEND_GAP_ANALYSIS.md) (Section 3.3)
+
+---
+
+### Task 1.8: Fix TypeScript Errors (Remove ignoreBuildErrors) ⏳
+
+**Priority:** 🔴 **P0 - CRITICAL CODE QUALITY**
+**Status:** ⏳ **In Progress** (errors identified)
+**Owner:** Team
+**Effort:** High (1-2 weeks)
+**Blocker:** Type safety compromised, tech debt accumulation
+
+**Current State:**
+
+- 185 TypeScript errors surfaced
+- `ignoreBuildErrors: true` in next.config.mjs
+- `ignoreDuringBuilds: true` for ESLint
+- Errors spread across tests, agents, components, API routes
+
+**Error Breakdown:**
+
+- Tests: ~80 errors (type mismatches in test mocks)
+- Agent System: ~60 errors (`exactOptionalPropertyTypes` strictness)
+- Components: ~30 errors (missing props, type mismatches)
+- API Routes: ~5 errors (implicit any types)
+- Services: ~10 errors (undefined checks)
+
+**Acceptance Criteria:**
+
+- [ ] Fix all API route TypeScript errors (highest priority)
+- [ ] Add undefined guards to agent system
+- [ ] Update test mocks to match strict types
+- [ ] Fix component prop mismatches
+- [ ] Remove `ignoreBuildErrors` from next.config.mjs
+- [ ] Remove `eslint.ignoreDuringBuilds` from next.config.mjs
+- [ ] Ensure `npm run type-check` passes with 0 errors
+- [ ] Add type-check to CI pipeline
+
+**Implementation:**
+
+```bash
+# 1. Fix blocking errors in phases
+npm run type-check 2>&1 | tee type-errors.log
+
+# 2. Focus areas (in priority order):
+#    a. API routes (5 errors)
+#    b. Database service (10 errors)
+#    c. Agent system (60 errors)
+#    d. Components (30 errors)
+#    e. Tests (80 errors)
+
+# 3. Remove ignore flags
+# Edit next.config.mjs:
+#   ignoreBuildErrors: false
+#   ignoreDuringBuilds: false
+
+# 4. Verify build passes
+npm run build
+```
+
+**Related Documents:**
+
+- [type-check-errors.log](../../../type-check-errors.log)
+- [BACKEND_GAP_ANALYSIS.md](../../../BACKEND_GAP_ANALYSIS.md) (Section 5.1)
+- [IMMEDIATE_ACTIONS_COMPLETE.md](../../../IMMEDIATE_ACTIONS_COMPLETE.md)
+
+---
+
+### Task 1.9: Demo Credentials Endpoint (Already Secured) ✅
+
+**Priority:** 🔴 **P0 - CRITICAL SECURITY**
+**Status:** ✅ **DONE**
+**Owner:** Backend
+**Effort:** Low (1 day)
+**Completion Date:** 2025-10-13
+
+**Completed Actions:**
+
+- [x] Added production check to disable endpoint
+- [x] Added environment variable support
+- [x] Added type safety with `Record<string, ...>`
+- [x] Added access logging with IP/timestamp
+- [x] Added warning messages for dev-only usage
+- [x] Returns 404 in production (not 403)
+- [x] Staging override with `ENABLE_DEMO_CREDENTIALS=true`
+
+**Related Documents:** [IMMEDIATE_ACTIONS_COMPLETE.md](../../../IMMEDIATE_ACTIONS_COMPLETE.md) (Section 4)
+
+---
+
+## 🟡 Phase 2: High Priority (P1) - 2-3 Weeks
+
+**Status:** 0/12 complete (0%)
+**Goal:** Make platform production-ready with observability and quality
+
+### Task 2.1: Setup Sentry for Error Tracking ⏳
+
+**Priority:** 🟡 **P1 - HIGH**
+**Status:** ⏳ **Not Started**
+**Owner:** DevOps
+**Effort:** Medium (2-3 days)
+
+**Acceptance Criteria:**
+
+- [ ] Create Sentry account (Team plan: $26/month)
+- [ ] Run `npx @sentry/wizard@latest -i nextjs`
+- [ ] Configure `sentry.client.config.ts`
+- [ ] Configure `sentry.server.config.ts`
+- [ ] Enable source maps for production
+- [ ] Add user context to error reports
+- [ ] Configure release tracking
+- [ ] Test error capture (frontend and backend)
+- [ ] Add CSP violation reporting to Sentry
+- [ ] Configure performance monitoring
+
+---
+
+### Task 2.2: Implement Structured Logging with Pino ⏳
+
+**Priority:** 🟡 **P1 - HIGH**
+**Status:** ⏳ **Not Started**
+**Owner:** Backend
+**Effort:** Low (1-2 days)
+
+**Acceptance Criteria:**
+
+- [ ] Install `pino` package
+- [ ] Create `src/lib/logger.ts`
+- [ ] Configure log levels by environment
+- [ ] Add PII redaction (email, password, tokens)
+- [ ] Add request correlation IDs
+- [ ] Replace all `console.log` with logger
+- [ ] Add request/response logging on API routes
+- [ ] Test log aggregation (if using service)
+
+---
+
+### Task 2.3: Create CI/CD Pipeline ⏳
+
+**Priority:** 🟡 **P1 - HIGH**
+**Status:** ⏳ **Not Started**
+**Owner:** DevOps
+**Effort:** Medium (2-3 days)
+
+**Acceptance Criteria:**
+
+- [ ] Create `.github/workflows/ci.yml`
+- [ ] Add type-check step
+- [ ] Add lint step
+- [ ] Add unit tests step
+- [ ] Add build step
+- [ ] Add E2E tests step
+- [ ] Configure quality gates (block on failure)
+- [ ] Link preview deployments to staging Supabase
+- [ ] Require manual approval for production deployment
+
+---
+
+### Task 2.4: Implement Missing API Routes ⏳
+
+**Priority:** 🟡 **P1 - HIGH**
+**Status:** ⏳ **Not Started**
+**Owner:** Backend
+**Effort:** High (1-2 weeks)
+
+**Acceptance Criteria:**
+
+- [ ] Create `/api/students` CRUD routes
+- [ ] Create `/api/teachers` CRUD routes
+- [ ] Create `/api/sessions` CRUD routes
+- [ ] Create `/api/analytics` endpoints
+- [ ] Create `/api/qr/generate` endpoint
+- [ ] Create `/api/qr/verify` endpoint
+- [ ] Add authentication middleware to all protected routes
+- [ ] Add Zod validation to all routes
+- [ ] Write API route tests
+- [ ] Move client-side operations to API routes
+
+---
+
+### Task 2.5: Setup Supabase PITR Backups ⏳
+
+**Priority:** 🟡 **P1 - HIGH**
+**Status:** ⏳ **Not Started**
+**Owner:** DevOps
+**Effort:** Medium (2-3 days)
+
+**Acceptance Criteria:**
+
+- [ ] Upgrade to Supabase Pro plan ($25/month)
+- [ ] Enable Point-In-Time Recovery (PITR)
+- [ ] Document RPO (Recovery Point Objective): 5 minutes
+- [ ] Document RTO (Recovery Time Objective): 1 hour
+- [ ] Create `docs/disaster-recovery.md` runbook
+- [ ] Test backup restore in staging
+- [ ] Schedule quarterly restore drills
+
+---
+
+### Task 2.6: Migration Discipline & Numbering Fix ⏳
+
+**Priority:** 🟡 **P1 - HIGH**
+**Status:** ⏳ **Not Started**
+**Owner:** Backend
+**Effort:** Low (1-2 days)
+
+**Acceptance Criteria:**
+
+- [ ] Rename `003_teachers_table.sql` to `005_teachers_table.sql`
+- [ ] Create `supabase/config.toml`
+- [ ] Document migration workflow in `docs/migrations.md`
+- [ ] Test migrations in staging
+- [ ] Add migration checks to CI pipeline
+- [ ] Enforce "no console edits" policy
+
+---
+
+### Task 2.7: Optimize Rendering Strategy ⏳
+
+**Priority:** 🟡 **P1 - HIGH**
+**Status:** ⏳ **Not Started**
+**Owner:** Team
+**Effort:** Medium (2-3 days)
+
+**Acceptance Criteria:**
+
+- [ ] Audit all pages for rendering requirements
+- [ ] Mark static pages with `export const dynamic = 'force-static'`
+- [ ] Configure ISR with `revalidate` for semi-static pages
+- [ ] Keep SSR only for personalized/auth-required pages
+- [ ] Add data caching with `next: { revalidate }` option
+- [ ] Move lightweight endpoints to Edge Runtime
+- [ ] Measure TTFB, LCP, CLS improvements
+
+---
+
+### Task 2.8: Add CSP Violation Reporting ⏳
+
+**Priority:** 🟡 **P1 - HIGH**
+**Status:** ⏳ **Not Started**
+**Owner:** Backend
+**Effort:** Low (1 day)
+
+**Acceptance Criteria:**
+
+- [ ] Add Sentry CSP report-uri to next.config.mjs
+- [ ] Test CSP violation detection
+- [ ] Configure alerts for violations
+- [ ] Monitor for potential XSS attempts
+
+---
+
+### Task 2.9: Increase Test Coverage to 80% ⏳
+
+**Priority:** 🟡 **P1 - HIGH**
+**Status:** ⏳ **Not Started**
+**Owner:** Team
+**Effort:** High (1-2 weeks)
+
+**Current Coverage:**
+
+- API routes: 0% (0 test files)
+- Database service: 0% (no tests)
+- Middleware: 0% (no tests)
+- Agents: ~60% (4 test files)
+- Components: ~40% (2 test files)
+- Design system: ~70% (multiple test files)
+
+**Acceptance Criteria:**
+
+- [ ] Write API route tests for all endpoints
+- [ ] Write database service tests
+- [ ] Write middleware tests (CSRF, rate limiting, auth)
+- [ ] Write RLS policy tests
+- [ ] Expand E2E tests (auth flows, dashboards, QR flows)
+- [ ] Achieve 80% coverage on services layer
+- [ ] Achieve 80% coverage on API routes
+- [ ] Add coverage reporting to CI
+
+---
+
+### Task 2.10: Create Operational Runbooks ⏳
+
+**Priority:** 🟡 **P1 - HIGH**
+**Status:** ⏳ **Not Started**
+**Owner:** Team
+**Effort:** Medium (2-3 days)
+
+**Acceptance Criteria:**
+
+- [ ] Create `docs/incident-response.md`
+- [ ] Create `docs/rollback-procedure.md`
+- [ ] Create `docs/database-recovery.md`
+- [ ] Create `docs/monitoring-alerts.md`
+- [ ] Document escalation tree
+- [ ] Document common issues and resolutions
+- [ ] Test rollback procedures in staging
+
+---
+
+### Task 2.11: Health Check Enhancement ⏳
+
+**Priority:** 🟡 **P1 - HIGH**
+**Status:** ⏳ **Not Started**
+**Owner:** Backend
+**Effort:** Low (1 day)
+
+**Acceptance Criteria:**
+
+- [ ] Add Redis connectivity check to `/api/health`
+- [ ] Add response time measurement
+- [ ] Return proper status codes (200/503)
+- [ ] Add health check to monitoring system
+- [ ] Configure alerts for failing health checks
+
+---
+
+### Task 2.12: Setup Staging Environment ⏳
+
+**Priority:** 🟡 **P1 - HIGH**
+**Status:** ⏳ **Not Started**
+**Owner:** DevOps
+**Effort:** Medium (2-3 days)
+
+**Acceptance Criteria:**
+
+- [ ] Create staging Supabase project
+- [ ] Configure staging environment variables in Vercel
+- [ ] Link preview deployments to staging
+- [ ] Apply migrations to staging
+- [ ] Seed staging data
+- [ ] Test production-like scenarios in staging
+
+---
+
+## 🟢 Phase 3: Post-Launch Optimization (P2) - Ongoing
+
+**Status:** 0/4 complete (0%)
+**Goal:** Optimize performance, cost, and developer experience
+
+### Task 3.1: Bundle Analysis & Optimization ⏳
+
+**Priority:** 🟢 **P2 - MEDIUM**
+**Status:** ⏳ **Not Started**
+**Owner:** Frontend
+**Effort:** Low (1 day)
+
+**Acceptance Criteria:**
+
+- [ ] Install `@next/bundle-analyzer`
+- [ ] Run bundle analysis: `ANALYZE=true npm run build`
+- [ ] Identify large bundles
+- [ ] Implement code splitting on large routes
+- [ ] Add dynamic imports for heavy components
+- [ ] Measure bundle size reduction
+
+---
+
+### Task 3.2: API Documentation ⏳
+
+**Priority:** 🟢 **P2 - MEDIUM**
+**Status:** ⏳ **Not Started**
+**Owner:** Backend
+**Effort:** Medium (3-5 days)
+
+**Acceptance Criteria:**
+
+- [ ] Generate OpenAPI spec from Zod schemas
+- [ ] Install `swagger-ui-react` or Scalar
+- [ ] Create `/api/docs` endpoint
+- [ ] Document all API routes
+- [ ] Add examples and error codes
+- [ ] Test API documentation UI
+
+---
+
+### Task 3.3: RLS UUID Performance Optimization ⏳
+
+**Priority:** 🟢 **P2 - MEDIUM**
+**Status:** ⏳ **Not Started**
+**Owner:** Backend
+**Effort:** Medium (2-3 days)
+
+**Acceptance Criteria:**
+
+- [ ] Replace all `::text` UUID casting (21 policies)
+- [ ] Run query performance benchmarks before/after
+- [ ] Verify <10ms improvement
+- [ ] Update all affected tables
+- [ ] Test in staging
+- [ ] Apply to production
+
+---
+
+### Task 3.4: Feature Flags System ⏳
+
+**Priority:** 🟢 **P2 - MEDIUM**
+**Status:** ⏳ **Not Started**
+**Owner:** Backend
+**Effort:** Medium (3-5 days)
+
+**Acceptance Criteria:**
+
+- [ ] Implement feature flag library
+- [ ] Create admin UI for feature flags
+- [ ] Add flags for new features
+- [ ] Enable gradual rollout capability
+- [ ] Add A/B testing support
+
+---
 
 ## Timeline & Milestones
 
-### Phase 1: Core Authentication & UI (Completed)
+### Phase 1: Pre-Production Hardening (2-3 weeks)
 
-- ✅ Basic application setup
-- ✅ Authentication system
-- ✅ Role-based access control
-- ✅ Parent and admin dashboards
-- ✅ Logout functionality
+**Target Completion:** 2025-11-03
+**Status:** 11% complete (1/9 tasks)
 
-### Cont
+| Week   | Focus          | Tasks                                                  |
+| ------ | -------------- | ------------------------------------------------------ |
+| Week 1 | Security & RLS | 1.1 (RLS), 1.5 (Service Key), 1.9 (Credentials) ✅     |
+| Week 2 | Infrastructure | 1.2 (Redis), 1.3 (Validation), 1.4 (Error Boundaries)  |
+| Week 3 | Code Quality   | 1.6 (Metrics), 1.7 (Auth Middleware), 1.8 (TypeScript) |
 
-## Risk Assessment
+### Phase 2: Production Launch (2-3 weeks)
 
-### Technical Risks
+**Target Completion:** 2025-11-24
+**Status:** 0% complete (0/12 tasks)
 
-- **AI Integration Complexity**: Mitigation through phased implementation
-- **Real-time Communication**: Mitigation through WebSocket expertise
-- **Performance at Scale**: Mitigation through testing and optimization
+| Week   | Focus               | Tasks                                                       |
+| ------ | ------------------- | ----------------------------------------------------------- |
+| Week 4 | Observability       | 2.1 (Sentry), 2.2 (Logging), 2.8 (CSP Reporting)            |
+| Week 5 | API & Testing       | 2.4 (API Routes), 2.9 (Test Coverage), 2.11 (Health Checks) |
+| Week 6 | Infrastructure      | 2.3 (CI/CD), 2.5 (PITR), 2.6 (Migrations), 2.12 (Staging)   |
+| Week 7 | Optimization & Docs | 2.7 (Rendering), 2.10 (Runbooks)                            |
 
-### Security Risks
+### Phase 3: Post-Launch Optimization (Ongoing)
 
-- **Authentication Vulnerabilities**: Mitigation through role-based access control
-- **Data Privacy**: Mitigation through encryption and access controls
-- **Teacher Access Management**: Mitigation through managed access model
+**Target Start:** 2025-12-01
+**Status:** 0% complete (0/4 tasks)
 
-### Timeline Risks
+---
 
-- **Feature Scope Creep**: Mitigation through clear requirements and priorities
-- **Technical Debt**: Mitigation through regular refactoring and testing
-- **Resource Constraints**: Mitigation through phased delivery approach
+## Production Readiness Checklist
 
-## Current Issues and Implementation Gaps
+### Security ✅ = Complete, ⏳ = In Progress, ❌ = Not Started
 
-### Critical Issues Identified
+- ⏳ All RLS policies implemented and tested
+- ⏳ Service key usage properly separated from client code
+- ❌ All API routes have Zod validation
+- ❌ Authentication middleware enforces RBAC
+- ❌ Rate limiting uses Redis (distributed store)
+- ❌ CSP violations reported to Sentry
+- ✅ Demo credentials endpoint removed or secured
 
-1. **Parent Dashboard Missing Features**
-   - [ ] Student data sheet functionality not implemented
-   - [ ] Teacher timesheet observation feature missing
-   - [ ] Limited student profile management
-   - [ ] Progress tracking needs enhancement
+### Observability
 
-2. **Teacher Access Problems**
-   - [ ] Demo teacher login credentials not accessible
-   - [ ] Teacher dashboard functionality incomplete
-   - [ ] Teacher authentication system needs fixing
-   - [ ] Username/password retrieval system missing
+- ❌ Sentry configured for error tracking
+- ❌ Structured logging with request IDs implemented
+- ⏳ Health check verifies Supabase connectivity
+- ❌ Real metrics endpoint (no mock data)
+- ❌ Error boundaries implemented (error.tsx, not-found.tsx)
 
-3. **Authentication System Issues**
-   - [ ] QR code authentication not available
-   - [ ] Login credential retrieval system missing
-   - [ ] Authentication flow improvements needed
-   - [ ] Session management enhancements required
+### Data & Reliability
 
-4. **Admin Portal Deficiencies**
-   - [ ] Content management system not working
-   - [ ] User management features incomplete
-   - [ ] System administration tools missing
-   - [ ] Platform configuration options limited
+- ❌ Supabase PITR enabled and verified
+- ⏳ Migration discipline enforced (no console edits)
+- ❌ Backup/restore tested in staging
+- ❌ RPO/RTO documented
 
-5. **Communication System Gaps**
-   - [ ] Contact administrator email not functional
-   - [ ] Email query system not implemented
-   - [ ] Real-time messaging features missing
-   - [ ] Notification system incomplete
+### Code Quality
 
-6. **Data Management Issues**
-   - [ ] Student data sheets not implemented
-   - [ ] Teacher timesheet tracking missing
-   - [ ] Progress monitoring system incomplete
-   - [ ] Analytics and reporting limited
+- ⏳ `tsc --noEmit` passes with 0 errors (185 errors identified)
+- ❌ `npm run lint` passes with acceptable warnings
+- ❌ `ignoreBuildErrors` and `ignoreDuringBuilds` removed
+- ❌ Test coverage ≥ 80% on services and API routes
 
-### Immediate Action Items
+### CI/CD
 
-#### High Priority Fixes
+- ❌ GitHub Actions pipeline runs on all PRs
+- ❌ Quality gates block merging (type-check, lint, tests)
+- ❌ Preview deployments linked to staging Supabase
+- ❌ Production deployment requires manual approval
 
-- [ ] Fix teacher login system and provide accessible credentials
-- [ ] Implement QR code authentication functionality
-- [ ] Develop student data sheet management system
-- [ ] Create teacher timesheet tracking and observation
-- [ ] Fix admin portal content management features
-- [ ] Implement contact administrator email functionality
+### Operations
 
-#### Medium Priority Enhancements
+- ❌ Incident response runbook documented
+- ❌ Rollback procedure documented and tested
+- ❌ On-call rotation established
+- ❌ Monitoring dashboards configured
 
-- [ ] Enhance parent dashboard with missing features
-- [ ] Improve teacher dashboard functionality
-- [ ] Develop real-time communication system
-- [ ] Implement comprehensive user management
-- [ ] Add advanced analytics and reporting
-- [ ] Create mobile-responsive design improvements
+---
 
-#### Technical Debt and Improvements
+## Cost Estimates
 
-- [ ] Improve error handling across all components
-- [ ] Enhance security measures and validation
-- [ ] Optimize performance and loading times
-- [ ] Add comprehensive testing coverage
-- [ ] Implement proper logging and monitoring
-- [ ] Create detailed documentation and user guides
+### Monthly Costs (Production)
 
-This implementation plan provides a structured approach to building the AI-Enhanced Homeschooling Platform with a focus on parent and administrator access while maintaining effective teacher management through the platform.
+| Service       | Purpose         | Tier           | Monthly Cost     |
+| ------------- | --------------- | -------------- | ---------------- |
+| Supabase      | Database + Auth | Pro            | $25              |
+| Upstash Redis | Rate limiting   | Free/Pay-as-go | $0-20            |
+| Sentry        | Error tracking  | Team           | $26              |
+| Vercel        | Hosting         | Pro            | $20              |
+| **Total**     |                 |                | **$71-91/month** |
+
+### Development Time Investment
+
+| Phase               | Duration      | FTE        | Total Effort   |
+| ------------------- | ------------- | ---------- | -------------- |
+| Phase 1 (P0)        | 2-3 weeks     | 2 devs     | 4-6 weeks      |
+| Phase 2 (P1)        | 2-3 weeks     | 2 devs     | 4-6 weeks      |
+| **Total to Launch** | **4-6 weeks** | **2 devs** | **8-12 weeks** |
+
+---
+
+## Risk Management
+
+### High-Impact Risks
+
+1. **RLS Policy Gaps** (🔴 Critical)
+   - **Risk:** Authentication failure, data leakage
+   - **Mitigation:** Phase 1, Task 1.1 (in progress)
+   - **Fallback:** Manual RLS enforcement via service layer
+
+2. **In-Memory Rate Limiting** (🔴 Critical)
+   - **Risk:** DDoS vulnerability, inconsistent rate limiting
+   - **Mitigation:** Phase 1, Task 1.2
+   - **Fallback:** Vercel's built-in protection (limited)
+
+3. **TypeScript Errors** (🔴 Critical)
+   - **Risk:** Runtime errors, poor developer experience
+   - **Mitigation:** Phase 1, Task 1.8 (in progress)
+   - **Fallback:** Leave ignore flags (not recommended)
+
+4. **No Observability** (🟡 High)
+   - **Risk:** Cannot debug production issues
+   - **Mitigation:** Phase 2, Tasks 2.1, 2.2
+   - **Fallback:** Vercel logs (limited retention)
+
+---
+
+## Success Metrics
+
+### Development Velocity
+
+- Phase 1 completion: Target 2-3 weeks
+- Type-check passing: Target 100% by Week 3
+- Test coverage: Target 80% by Week 6
+
+### Production Metrics (Post-Launch)
+
+- **Uptime:** 99.9% target
+- **TTFB:** < 600ms target
+- **LCP:** < 2.5s target
+- **Error Rate:** < 0.5% target
+- **Response Time (p95):** < 1000ms target
+
+### User Satisfaction
+
+- Dashboard load time: < 3s target
+- QR code scan success rate: > 95% target
+- Auth failure rate: < 1% target
+
+---
+
+## Change Log
+
+| Date       | Version | Changes                                            |
+| ---------- | ------- | -------------------------------------------------- |
+| 2025-10-13 | 2.0     | Complete overhaul based on backend gap analysis    |
+| 2025-08-17 | 1.1     | Added data sheets and country-based syllabus tasks |
+| 2025-08-15 | 1.0     | Initial task breakdown with phases                 |
+
+---
+
+**Next Review:** Weekly during Phase 1, bi-weekly post-Phase 1
+**Document Owner:** Development Team
+**Last Updated By:** Backend Gap Analysis Audit

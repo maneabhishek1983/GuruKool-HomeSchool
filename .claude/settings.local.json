@@ -28,7 +28,8 @@
       "Bash(npm run test:security:*)",
       "Bash(npm run test:*)",
       "Bash(node:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
