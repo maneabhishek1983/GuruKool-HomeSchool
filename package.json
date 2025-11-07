@@ -30,7 +30,10 @@
     "validate:tasks": "node scripts/validate-tasks.js",
     "validate:task": "node scripts/validate-single-task.js",
     "check:status": "node scripts/check-implementation-status.js",
-    "generate:plan": "node scripts/implementation-plan.js"
+    "generate:plan": "node scripts/implementation-plan.js",
+    "verify:supabase": "node scripts/verify-supabase-connection.js",
+    "verify:rls": "node scripts/verify-rls-policies.js",
+    "track:progress": "node scripts/track-progress.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",

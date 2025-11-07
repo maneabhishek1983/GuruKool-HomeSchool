@@ -45,3 +45,34 @@ storybook-static
 ridhwan.docx
 Shaik Ridhwan tragets 15 aug .docx
 *.docx
+
+# Archive directories
+/archive/
+/docs/archive/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# IDE files
+.vscode/settings.json
+.idea/
+*.sublime-*
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Build artifacts
+dist/
+build/
+out/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.eslintcache

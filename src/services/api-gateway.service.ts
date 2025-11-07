@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { SecurityService } from './security.service';
 import { LoggingService } from './logging.service';
 
@@ -24,17 +24,12 @@ export interface RateLimitConfig {
 }
 
 export class APIGatewayService {
-  private supabase: any;
   private securityService: SecurityService;
   private loggingService: LoggingService;
   private rateLimitStore: Map<string, { count: number; resetTime: number }>;
   private rateLimitConfig: RateLimitConfig;
 
   constructor() {
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
     this.securityService = new SecurityService();
     this.loggingService = new LoggingService();
     this.rateLimitStore = new Map();
@@ -135,8 +130,8 @@ export class APIGatewayService {
     try {
       // Verify JWT token
       const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error } = await this.supabase.auth.getUser(token);
-      
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+
       if (error || !user) {
         return { authenticated: false };
       }

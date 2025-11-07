@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { SecurityService } from './security.service';
 import { LoggingService } from './logging.service';
 
@@ -34,16 +34,11 @@ export interface WebhookDelivery {
 }
 
 export class WebhookService {
-  private supabase: any;
   private securityService: SecurityService;
   private loggingService: LoggingService;
   private retryDelays: number[] = [1000, 5000, 15000, 60000, 300000]; // 1s, 5s, 15s, 1m, 5m
 
   constructor() {
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
     this.securityService = new SecurityService();
     this.loggingService = new LoggingService();
   }
@@ -86,7 +81,7 @@ export class WebhookService {
       };
 
       // Store in database
-      const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('webhook_endpoints')
         .insert(endpoint)
         .select()
@@ -121,7 +116,7 @@ export class WebhookService {
   async sendEvent(event: string, data: any): Promise<void> {
     try {
       // Get all active endpoints for this event
-      const { data: endpoints, error } = await this.supabase
+      const { data: endpoints, error } = await supabase
         .from('webhook_endpoints')
         .select('*')
         .eq('isActive', true)
@@ -185,7 +180,7 @@ export class WebhookService {
       };
 
       // Store delivery record
-      await this.supabase
+      await supabase
         .from('webhook_deliveries')
         .insert(delivery);
 
@@ -311,13 +306,13 @@ export class WebhookService {
   private async retryDelivery(deliveryId: string): Promise<void> {
     try {
       // Get delivery and endpoint details
-      const { data: delivery } = await this.supabase
+      const { data: delivery } = await supabase
         .from('webhook_deliveries')
         .select('*')
         .eq('id', deliveryId)
         .single();
 
-      const { data: endpoint } = await this.supabase
+      const { data: endpoint } = await supabase
         .from('webhook_endpoints')
         .select('*')
         .eq('id', delivery.endpointId)
@@ -341,7 +336,7 @@ export class WebhookService {
     deliveryId: string,
     updates: Partial<WebhookDelivery>
   ): Promise<void> {
-    await this.supabase
+    await supabase
       .from('webhook_deliveries')
       .update(updates)
       .eq('id', deliveryId);
@@ -355,7 +350,7 @@ export class WebhookService {
     limit: number = 50,
     offset: number = 0
   ): Promise<WebhookDelivery[]> {
-    let query = this.supabase
+    let query = supabase
       .from('webhook_deliveries')
       .select('*')
       .order('createdAt', { ascending: false })
@@ -378,7 +373,7 @@ export class WebhookService {
    * Get webhook endpoint statistics
    */
   async getEndpointStats(endpointId: string): Promise<any> {
-    const { data: deliveries, error } = await this.supabase
+    const { data: deliveries, error } = await supabase
       .from('webhook_deliveries')
       .select('status, attempts, createdAt')
       .eq('endpointId', endpointId);
@@ -402,7 +397,7 @@ export class WebhookService {
    * Deactivate a webhook endpoint
    */
   async deactivateEndpoint(endpointId: string): Promise<void> {
-    const { error } = await this.supabase
+    const { error } = await supabase
       .from('webhook_endpoints')
       .update({ isActive: false, updatedAt: new Date().toISOString() })
       .eq('id', endpointId);
@@ -421,13 +416,13 @@ export class WebhookService {
    */
   async deleteEndpoint(endpointId: string): Promise<void> {
     // Delete associated deliveries first
-    await this.supabase
+    await supabase
       .from('webhook_deliveries')
       .delete()
       .eq('endpointId', endpointId);
 
     // Delete endpoint
-    const { error } = await this.supabase
+    const { error } = await supabase
       .from('webhook_endpoints')
       .delete()
       .eq('id', endpointId);

@@ -13,6 +13,7 @@ GuruKool HomeSchool is a Next.js 14 application for managing homeschooling with 
 - `npm run dev` - Start development server on http://localhost:3000
 - `npm run build` - Build production bundle
 - `npm start` - Start production server
+- `ANALYZE=true npm run build` - Build with bundle analyzer
 
 ### Code Quality
 
@@ -25,20 +26,31 @@ GuruKool HomeSchool is a Next.js 14 application for managing homeschooling with 
 ### Testing
 
 - `npm test` - Run Jest unit tests
+- `npm test -- <test-file-pattern>` - Run specific test file(s) (e.g., `npm test -- session`)
 - `npm run test:watch` - Run tests in watch mode
 - `npm run test:coverage` - Generate test coverage report
 - `npm run test:e2e` - Run Playwright E2E tests
 - `npm run test:e2e:ui` - Run E2E tests with UI
 - `npm run test:e2e:debug` - Debug E2E tests
 - `npm run test:all` - Run all tests (unit + E2E)
-- `npm run test:comprehensive` - Run comprehensive testing suite
+- `npm run test:comprehensive` - Run comprehensive testing suite (all test types)
+- `npm run test:performance` - Run performance benchmarks
 - `npm run test:security` - Run security penetration tests
-- `npm run test:full-suite` - Run all test suites
+- `npm run test:security-verification` - Verify security implementation
+- `npm run test:full-suite` - Run all test suites in sequence
+
+### Database & Supabase
+
+- `npm run verify:supabase` - Verify Supabase connection and schema
+- `npm run verify:rls` - Verify Row Level Security policies
+- Database migrations must be applied manually in Supabase Dashboard (see `supabase/migrations/`)
 
 ### Utilities
 
 - `npm run storybook` - Start Storybook on port 6006
 - `npm run build-storybook` - Build Storybook for production
+- `npm run validate:tasks` - Validate implementation tasks
+- `npm run check:status` - Check implementation status
 
 ## Architecture
 
@@ -57,48 +69,53 @@ GuruKool HomeSchool is a Next.js 14 application for managing homeschooling with 
 
 ```
 src/
-├── app/                    # Next.js App Router pages
+├── app/                    # Next.js App Router pages and API routes
 │   ├── parent/            # Parent dashboard and features
 │   ├── teacher/           # Teacher dashboard and sessions
 │   ├── admin/             # Admin portal
-│   ├── api/               # API routes (health, metrics, credentials)
+│   ├── api/               # API routes
+│   │   ├── students/      # Student CRUD endpoints
+│   │   ├── teachers/      # Teacher CRUD endpoints
+│   │   ├── sessions/      # Session CRUD endpoints
+│   │   ├── contact-admin/ # Contact form endpoint
+│   │   ├── health/        # Health check endpoint
+│   │   └── metrics/       # Prometheus metrics endpoint
 │   └── *-demo/            # Feature demo pages
 ├── components/            # React components
-│   ├── auth/             # QR auth, fallback auth, AI auth flow
+│   ├── auth/             # Authentication components (QR, fallback)
 │   ├── parent/           # Parent-specific components
 │   ├── teacher/          # Teacher-specific components
 │   ├── analytics/        # Analytics dashboards
-│   └── sessions/         # Session management
+│   └── sessions/         # Session management components
 ├── agents/               # AI agent system
-│   ├── core/            # Base agent infrastructure
-│   ├── base.agent.ts    # Abstract base agent class
-│   ├── orchestrator.ts  # Agent orchestration
-│   └── registry.ts      # Agent registry
+│   ├── base.agent.ts    # Abstract base agent class with health checks
+│   ├── orchestrator.ts  # Agent orchestration with priority execution
+│   └── registry.ts      # Agent registry and discovery
 ├── services/            # Business logic and external integrations
-│   ├── database.service.ts      # Supabase CRUD operations
+│   ├── database.service.ts      # Supabase CRUD with parent isolation
 │   ├── qr-auth.service.ts       # QR code authentication
 │   ├── teacher-qr.service.ts    # Teacher QR code management
 │   ├── ai-insights.service.ts   # AI-powered insights
 │   ├── analytics.service.ts     # Analytics processing
 │   ├── session.service.ts       # Session management
-│   └── sync-manager.service.ts  # Offline sync
-├── design-system/       # Custom design system
-│   ├── components/      # Reusable UI components
-│   ├── tokens/          # Design tokens (colors, typography, spacing)
-│   ├── themes/          # Theme configuration
-│   └── animations/      # Animation presets
-├── lib/                 # Core libraries and contexts
-│   ├── supabase.ts     # Supabase client configuration
+│   ├── sync-manager.service.ts  # Offline sync
+│   └── logging.service.ts       # Structured logging
+├── lib/                 # Core libraries and utilities
+│   ├── supabase.ts     # Supabase client configuration (client/server)
+│   ├── validation.ts   # Zod validation schemas for all API inputs
+│   ├── api-security.ts # Rate limiting and CSRF protection wrappers
 │   ├── authContext.tsx # Authentication context
 │   └── syncContext.tsx # Sync context
-├── store/              # State management
-│   └── session.store.ts # Session state (Zustand)
+├── store/              # State management (Zustand)
+│   └── session.store.ts # Session state singleton with caching
+├── design-system/      # Custom design system
+│   ├── components/     # Reusable UI components
+│   ├── tokens/         # Design tokens (colors, typography, spacing)
+│   ├── themes/         # Theme configuration
+│   └── animations/     # Animation presets (Framer Motion)
 ├── types/              # TypeScript type definitions
 │   └── index.ts        # Centralized type exports
-└── middleware/         # Next.js middleware
-    ├── csrf.ts         # CSRF protection
-    ├── rate-limit.ts   # Rate limiting
-    └── security-headers.ts # Security headers
+└── middleware/         # Next.js middleware (currently unused - see lib/api-security.ts)
 ```
 
 ### AI Agent System
@@ -138,9 +155,17 @@ Key tables in Supabase:
 - `ai_insights` - AI-generated insights and recommendations
 - `learning_analytics` - Progress metrics and patterns
 
-### Data Persistence
+### Data Persistence & Caching
 
 - **Database Service** (`database.service.ts`): Handles CRUD for students and teachers with proper parent isolation
+  - Uses in-memory cache for read-heavy data (30s TTL for users, 15s for sessions)
+  - Cache invalidation on writes (upsert, update)
+  - Exposes both client-safe methods (anon key) and server-only methods (service role)
+- **Session Store** (`session.store.ts`): Zustand singleton with:
+  - Multiple indexes (by student, teacher, parent)
+  - AI insights cache and learning patterns cache
+  - Sample data initialization for development
+  - `clearAll()` and `resetToSampleData()` for testing
 - **Teacher Assignment**: Students can be assigned to multiple teachers; QR codes auto-generated on assignment
 - **Profile Management**: Separate creation flows for students (parent dashboard) and teachers (parent-created)
 
@@ -157,6 +182,8 @@ Key tables in Supabase:
 - All database operations and authentication flow through Supabase
 - Row Level Security (RLS) must be enforced on all tables
 - Use `supabase/migrations/` for version-controlled schema changes
+  - Existing migrations: initial schema, data sheets, timesheet, teachers, QR codes, RLS policies
+  - All migrations are numbered sequentially (001, 002, 003, etc.)
 
 ### Environment Configuration
 
@@ -178,10 +205,24 @@ Required environment variables (see `.env.example`):
 
 - `JWT_SECRET` - JWT signing secret
 
+#### Redis & Rate Limiting
+
+- `UPSTASH_REDIS_REST_URL` - Upstash Redis URL for distributed rate limiting
+- `UPSTASH_REDIS_REST_TOKEN` - Upstash Redis authentication token
+
 #### Other
 
 - `NEXT_PUBLIC_WS_URL` - WebSocket URL for real-time features
 - `MCP_*_ENDPOINT` - MCP server endpoints (education, security, communication)
+- `SENTRY_DSN` - Sentry error tracking DSN (optional)
+- `SENTRY_AUTH_TOKEN` - Sentry authentication token (optional)
+
+#### Development/Staging Only
+
+- `DEMO_PARENT_PASSWORD` - Demo parent account password
+- `DEMO_ADMIN_PASSWORD` - Demo admin account password
+- `DEMO_TEACHER_PASSWORD` - Demo teacher account password
+- `ENABLE_DEMO_CREDENTIALS` - Enable/disable demo credentials (set to `false` in production)
 
 ### Environment Strategy
 
@@ -198,15 +239,18 @@ Required environment variables (see `.env.example`):
 4. Run `npm run type-check` and `npm run lint` in CI before deploy
 5. Playwright E2E tests gate production deployments
 
-## TypeScript Configuration
+## TypeScript & Build Configuration
+
+### TypeScript (tsconfig.json)
 
 - **Strict mode enabled** with additional safety checks:
-  - `noUncheckedIndexedAccess: true`
-  - `exactOptionalPropertyTypes: true`
-  - `noImplicitReturns: true`
-  - `noFallthroughCasesInSwitch: true`
+  - `noUncheckedIndexedAccess: true` - Arrays/objects require explicit undefined checks
+  - `exactOptionalPropertyTypes: true` - `foo?: string` only allows `string | undefined`, not `null`
+  - `noImplicitReturns: true` - All code paths must return a value
+  - `noFallthroughCasesInSwitch: true` - Switch cases must break/return
+  - `noUncheckedSideEffectImports: true` - Side-effect imports must be validated
 
-- **Path aliases** configured (`tsconfig.json`):
+- **Path aliases** configured (also mirrored in `next.config.mjs` webpack config):
   - `@/*` → `src/*`
   - `@/components/*` → `src/components/*`
   - `@/lib/*` → `src/lib/*`
@@ -215,6 +259,17 @@ Required environment variables (see `.env.example`):
   - `@/agents/*` → `src/agents/*`
   - `@/services/*` → `src/services/*`
   - `@/design-system/*` → `src/design-system/*`
+
+### Next.js Configuration (next.config.mjs)
+
+- **Webpack Configuration**:
+  - Custom alias resolution for `@/` path
+  - Fallbacks for Node.js modules: `fs: false, net: false, tls: false`
+- **Build Behavior**:
+  - `eslint.ignoreDuringBuilds: true` in local dev, `false` in CI
+  - `typescript.ignoreBuildErrors: true` in local dev, `false` in CI
+  - This allows faster local iteration but enforces quality in CI/CD
+- **Security Headers**: Applied globally via `headers()` async function (see Security section)
 
 ## Code Patterns
 
@@ -245,14 +300,50 @@ When creating new agents:
 5. Use `createInsight()` and `log()` helper methods
 6. Register in `src/agents/registry.ts`
 
+### API Route Development
+
+When creating API routes in `src/app/api/`:
+
+1. **Authentication Pattern**: Extract Bearer token → Create Supabase client → Call `getUser()`
+   ```typescript
+   const authHeader = request.headers.get('authorization');
+   const supabase = createClient(url, key, {
+     global: { headers: { Authorization: authHeader } }
+   });
+   const { data: { user }, error } = await supabase.auth.getUser();
+   ```
+
+2. **Validation**: Use Zod schemas from `@/lib/validation`
+   ```typescript
+   const validation = studentCreateSchema.safeParse(body);
+   if (!validation.success) {
+     return NextResponse.json(
+       createValidationErrorResponse(validation.error),
+       { status: 400 }
+     );
+   }
+   ```
+
+3. **Rate Limiting**: Wrap handlers with `withRateLimit` from `@/lib/api-security`
+   ```typescript
+   export const POST = withRateLimit({
+     keyPrefix: 'api:students:create',
+     max: 20,
+   })(async (request: NextRequest) => { /* ... */ });
+   ```
+
+4. **Parent Isolation**: Always pass `user.id` to `DatabaseService` methods or use RLS with Supabase queries
+
 ### Database Operations
 
-Always use `DatabaseService` static methods for database operations:
+Use `DatabaseService` static methods for CRUD operations:
 
 - `getStudents(parentId)` / `createStudent(data, parentId)`
 - `getTeachers(parentId)` / `createTeacher(data, parentId)`
+- `updateStudent(id, data, parentId)` / `updateTeacher(id, data, parentId)`
 - `assignTeacherToStudent(teacherId, studentId, parentId)`
-- Automatically creates QR codes on assignment
+
+All methods enforce parent isolation. QR codes are automatically generated on teacher assignment.
 
 ### Offline Support
 
@@ -284,19 +375,48 @@ Use design system components instead of raw Tailwind classes when possible.
 - **Unit Tests**: Jest + Testing Library for components and services
 - **E2E Tests**: Playwright for full user journeys
 - **Storybook**: Component development and visual testing
-- **Security Tests**: Penetration testing suite
+- **Security Tests**: Penetration testing suite in `scripts/` directory
+- **Performance Tests**: Performance benchmarking suite
+- **Regression Tests**: Automated regression testing
 - **Coverage**: Aim for >80% on business logic
+
+### Test Utility Scripts
+
+The `scripts/` directory contains utility scripts:
+
+- `verify-supabase-connection.js` - Verify Supabase connectivity and schema (no external dependencies)
+- `verify-rls-policies.js` - Verify Row Level Security policies
+- `comprehensive-testing.js` - Run comprehensive test suite
+- `performance-testing.js` - Run performance benchmarks
+- `security-verification.js` - Verify security implementation
+
+These scripts use manual `.env` file parsing (no `dotenv` dependency required).
 
 ## Security & Production Hardening
 
 ### Current Security Measures
 
-- CSRF protection middleware active (`src/middleware/csrf.ts`)
-- Rate limiting on API routes (`src/middleware/rate-limit.ts`)
-- Security headers configured (`src/middleware/security-headers.ts`)
-- QR codes expire after 5 minutes
-- Teacher sessions require verification
-- API key management (never commit `.env`)
+- **Rate Limiting**: Implemented via `withRateLimit()` wrapper in `src/lib/api-security.ts`
+  - In-memory store per route (consider Redis for production)
+  - Configurable window, max requests, and key prefix
+  - Returns 429 with Retry-After header
+- **CSRF Protection**: Implemented via `withCSRFProtection()` wrapper in `src/lib/api-security.ts`
+  - Token validation for state-changing methods (POST/PUT/DELETE/PATCH)
+  - Currently not used in API routes (authentication via Bearer token instead)
+- **Input Validation**: Zod schemas in `src/lib/validation.ts` for all API inputs
+  - Comprehensive validation for students, teachers, sessions, auth
+  - Type-safe with TypeScript inference
+  - Formatted error responses via `createValidationErrorResponse()`
+- **Content Security Policy**: Configured in `next.config.mjs`
+  - Environment-aware CSP (stricter in production)
+  - Restricts script sources, connect sources, and frame sources
+  - Blocks object embeds and enforces HTTPS upgrades
+- **Security Headers**: Set via `next.config.mjs` headers()
+  - X-Frame-Options, X-Content-Type-Options, HSTS, Referrer-Policy, Permissions-Policy
+- **QR Codes**: 5-minute expiration, student-specific
+- **Authentication**: Supabase auth with Bearer tokens, parent isolation via RLS
+- **API Key Management**: Never commit `.env`, use separate keys for dev/prod
+- `poweredByHeader: false` to hide Next.js signature
 
 ### Production Hardening Checklist
 
@@ -325,10 +445,12 @@ Use design system components instead of raw Tailwind classes when possible.
 
 #### Input Validation & Abuse Protection
 
-- [ ] Add Zod schemas to all `src/app/api/*` route handlers
-- [ ] Implement per-IP and per-user rate limits on critical endpoints
+- [x] Add Zod schemas to all `src/app/api/*` route handlers (completed for students, teachers, sessions, contact)
+- [x] Implement per-IP rate limits on API endpoints (in-memory store)
+- [ ] Migrate rate limiting to Redis (Upstash) for distributed/production use
+- [ ] Add per-user rate limits (requires user ID tracking)
 - [ ] Add CAPTCHA (hCaptcha) for signup/contact flows
-- [ ] Return typed error responses (no stack traces to client)
+- [x] Return typed error responses (no stack traces to client)
 
 #### Dependencies & Audit
 
@@ -389,8 +511,62 @@ Use design system components instead of raw Tailwind classes when possible.
 
 ## Important Notes
 
-- **No Mock Data**: Never generate dummy/mock data in production code
+- **No Mock Data**: Never generate dummy/mock data in production code (per project requirements)
 - **Chomsky LLM**: Keep `chomsky--0.17.9/` directory for production deployments
-- **Environment Separation**: Local dev uses OpenAI; production uses Chomsky + OKTA + APIM
-- **Git Commits**: Auto-generated commits include Claude Code attribution
-- **PGVector**: Reference `@PG_RAG.ipynb` notebook for vector embedding examples (other project, but relevant)
+- **Environment Separation**: Local dev uses OpenAI API key; production uses Chomsky + OKTA + APIM
+- **Database Migrations**: Apply via Supabase Dashboard only - no CLI or programmatic migrations
+  - See `supabase/migrations/` for SQL files (001-006)
+  - Migrations must be applied in sequence
+  - See `QUICK_START_MIGRATIONS.md` for step-by-step guide
+- **API Documentation**: Complete API reference in `API_DOCUMENTATION.md` with cURL examples
+- **Testing Status**: QA report in `QA_TEST_REPORT.md` shows current test coverage and gaps
+
+## Key Architectural Decisions & Gotchas
+
+### Authentication Flow
+
+- API routes use **Bearer token authentication** (not session cookies)
+- Extract token from `Authorization` header → Create Supabase client with token → Call `getUser()`
+- Do NOT use `withCSRFProtection()` on API routes (Bearer tokens are already CSRF-safe)
+- RLS policies in Supabase enforce parent isolation at the database level
+
+### Rate Limiting
+
+- Current implementation uses **in-memory Map** (loses state on server restart)
+- Each route has its own bucket: `keyPrefix:route:ip:timeBucket`
+- **Limitation**: Does not work across multiple Vercel serverless instances
+- **TODO**: Migrate to Redis (Upstash) for distributed rate limiting in production
+
+### Validation Approach
+
+- All validation uses **Zod schemas** from `@/lib/validation.ts`
+- Never validate manually with `if` statements
+- Use `safeParse()` (returns result object) not `parse()` (throws error)
+- Format errors with `createValidationErrorResponse()` for consistent API responses
+
+### Session Store Singleton
+
+- `EnhancedSessionStore.getInstance()` returns singleton
+- **Important for tests**: Always call `clearAll()` in `beforeEach` to prevent test pollution
+- Sample data is loaded on first instantiation (for development only)
+
+### Environment Variables
+
+- Verification scripts in `scripts/` use **manual .env parsing** (no `dotenv` dependency)
+- This avoids adding `dotenv` to production dependencies
+- Scripts read `.env` file using `fs.readFileSync()` and parse key=value pairs manually
+
+### Supabase Client Configuration
+
+- `src/lib/supabase.ts` exports both:
+  - `supabase` - Client-side with anon key (safe for browser, protected by RLS)
+  - `getSupabaseAdmin()` - Server-side with service role key (bypasses RLS, server-only)
+- Never import service role key in client components
+- Use `@supabase/ssr` for server-side auth in middleware/SSR pages
+
+### Middleware Files (src/middleware/)
+
+- `csrf.ts`, `rate-limit.ts`, `security-headers.ts` are **NOT Next.js middleware**
+- They are utility modules, not `middleware.ts` file
+- Actual implementation: `withRateLimit()` and `withCSRFProtection()` wrappers in `src/lib/api-security.ts`
+- Security headers are set via `next.config.mjs` headers() function

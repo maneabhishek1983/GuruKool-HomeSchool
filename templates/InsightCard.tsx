@@ -38,7 +38,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <div className="flex items-start justify-between mb-4">
           <div>
-            <Text size="lg" weight={500} mb={4}>
+            <Text size="lg" fw={500} mb={4}>
               {title}
             </Text>
             <Badge color={getTypeColor()} variant="light" mb={8}>
@@ -53,7 +53,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({
 
         {data && (
           <div className="mb-4 p-3 bg-gray-50 rounded">
-            <Text size="xs" weight={500} mb={2}>Data:</Text>
+            <Text size="xs" fw={500} mb={2}>Data:</Text>
             <pre className="text-xs text-gray-600">
               {JSON.stringify(data, null, 2)}
             </pre>

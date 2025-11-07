@@ -1,45 +1,6 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthContext } from '@/lib/authContext';
-
-interface AuthGuardProps {
-  children: React.ReactNode;
-  requiredRole?: 'teacher' | 'parent' | 'admin';
-  fallback?: React.ReactNode;
-}
-
-export function AuthGuard({
-  children,
-  requiredRole,
-  fallback,
-}: AuthGuardProps) {
-  const { user, isAuthenticated, isLoading } = useAuthContext();
-  const router = useRouter();
-
-  if (isLoading) {
-    return fallback || null;
-  }
-
-  if (!isAuthenticated) {
-    router.replace('/login');
-    return fallback || null;
-  }
-
-  if (requiredRole && user?.role !== requiredRole) {
-    router.replace('/');
-    return fallback || null;
-  }
-
-  return <>{children}</>;
-}
-
-export default AuthGuard;
-
-('use client');
-
-import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useAuthContext } from '@/lib/authContext';

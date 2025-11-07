@@ -29,7 +29,22 @@
       "Bash(npm run test:*)",
       "Bash(node:*)",
       "Bash(tee:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(test:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd //c:*)",
+      "Bash(powershell:*)",
+      "Bash(cat:*)",
+      "Bash(npm run verify:supabase:*)",
+      "Bash(npm run verify:rls:*)",
+      "Bash(supabase:*)",
+      "Bash(npx tsc:*)",
+      "Bash(python:*)",
+      "Bash(tasklist)",
+      "Bash(if exist .next rmdir /s /q .next)",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

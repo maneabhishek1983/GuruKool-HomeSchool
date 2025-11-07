@@ -10,18 +10,56 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Netflix-inspired color palette
+        netflix: {
+          red: '#e50914',
+          'red-dark': '#b81d13',
+          'red-light': '#ff6b6b',
+          black: '#000000',
+          'dark-gray': '#141414',
+          'medium-gray': '#333333',
+          'light-gray': '#666666',
+          'text-gray': '#b3b3b3',
+          white: '#ffffff',
+        },
+        // Amazon-inspired color palette
+        amazon: {
+          orange: '#ff9900',
+          'orange-dark': '#e68a00',
+          'orange-light': '#ffb84d',
+          blue: '#232f3e',
+          'blue-light': '#37475a',
+          white: '#ffffff',
+          'light-gray': '#f8f9fa',
+          'medium-gray': '#d5d9d9',
+          'text-gray': '#565959',
+          'text-light': '#a7a7a7',
+        },
+        // Kids-friendly color palette
+        kids: {
+          pink: '#ff6b9d',
+          'pink-light': '#ff8fb3',
+          turquoise: '#4ecdc4',
+          'turquoise-light': '#6dd5d0',
+          purple: '#fef7ff',
+          white: '#ffffff',
+          'text-dark': '#2d3748',
+          'text-medium': '#4a5568',
+          'text-light': '#a0aec0',
+          border: '#e2e8f0',
+        },
         primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
-          950: '#082f49',
+          50: '#fef2f2',
+          100: '#fee2e2',
+          200: '#fecaca',
+          300: '#fca5a5',
+          400: '#f87171',
+          500: '#e50914', // Netflix red
+          600: '#dc2626',
+          700: '#b91c1c',
+          800: '#991b1b',
+          900: '#7f1d1d',
+          950: '#450a0a',
         },
         secondary: {
           50: '#fdf4ff',
@@ -129,6 +167,16 @@ const config: Config = {
       },
       backgroundImage: {
         'stripes': 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.1) 10px, rgba(255,255,255,.1) 20px)',
+        'netflix-gradient': 'linear-gradient(135deg, #e50914 0%, #b81d13 50%, #000000 100%)',
+        'netflix-hero': 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%)',
+        'netflix-card': 'linear-gradient(145deg, #141414 0%, #1a1a1a 100%)',
+        'netflix-overlay': 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 100%)',
+        'amazon-gradient': 'linear-gradient(135deg, #ff9900 0%, #ffb84d 50%, #ffffff 100%)',
+        'amazon-hero': 'linear-gradient(180deg, rgba(255,153,0,0.1) 0%, rgba(255,153,0,0.05) 100%)',
+        'amazon-card': 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+        'kids-gradient': 'linear-gradient(135deg, #ff6b9d 0%, #4ecdc4 50%, #fef7ff 100%)',
+        'kids-hero': 'linear-gradient(180deg, rgba(255,107,157,0.1) 0%, rgba(78,205,196,0.1) 100%)',
+        'kids-card': 'linear-gradient(145deg, #ffffff 0%, #fef7ff 100%)',
       },
       keyframes: {
         fadeIn: {

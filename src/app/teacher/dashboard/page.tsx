@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuthContext } from '@/lib/authContext';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { NetflixBackground, NetflixButton, NetflixCard } from '@/components/NetflixBackground';
 import { DataSheetsManager } from '@/components/teacher/DataSheetsManager';
 import { TimesheetManager } from '@/components/teacher/TimesheetManager';
 
@@ -57,17 +58,25 @@ export default function TeacherDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Teacher Dashboard
-              </h1>
-              <p className="text-gray-600 mt-1">Welcome back, {user.name}</p>
-            </div>
+    <NetflixBackground variant="dashboard">
+      <div className="container mx-auto px-4 py-8">
+        <motion.div 
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <h1 className="text-4xl font-bold mb-4">
+            Teacher Dashboard
+          </h1>
+          <p className="text-xl max-w-2xl mx-auto">
+            Welcome back, {user.name}
+          </p>
+        </motion.div>
+
+        {/* Header with Navigation */}
+        <div className="bg-white rounded-lg shadow-sm border mb-8">
+          <div className="px-6 py-4">
             <div className="flex items-center space-x-4">
               {/* Navigation Tabs */}
               <div className="flex space-x-2">
@@ -562,6 +571,6 @@ export default function TeacherDashboard() {
           <TimesheetManager teacherId={user?.id || 'teacher-1'} />
         )}
       </div>
-    </div>
+    </NetflixBackground>
   );
 }

@@ -1,0 +1,811 @@
+
+> gurukool-homeschool@0.1.0 type-check
+> tsc --noEmit
+
+src/agents/__tests__/analytics.agent.test.ts(145,51): error TS2379: Argument of type '{ eventType: string; historicalData: { sessions: { id: string; scheduledStart: Date; subject: string; studentId?: string; teacherId?: string; parentId?: string; scheduledEnd?: Date; actualStart?: Date; ... 13 more ...; version?: number; }[]; analytics: never[]; interactions: never[]; }; ... 23 more ...; metadata?: R...' is not assignable to parameter of type 'AgentContext' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  The types of 'historicalData.sessions' are incompatible between these types.
+    Type '{ id: string; scheduledStart: Date; subject: string; studentId?: string; teacherId?: string; parentId?: string; scheduledEnd?: Date; actualStart?: Date; actualEnd?: Date; location?: string | Location; ... 11 more ...; version?: number; }[]' is not assignable to type 'Session[]'.
+      Type '{ id: string; scheduledStart: Date; subject: string; studentId?: string; teacherId?: string; parentId?: string; scheduledEnd?: Date; actualStart?: Date; actualEnd?: Date; location?: Location | string; ... 11 more ...; version?: number; }' is not assignable to type 'Session' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+        Property 'studentId' is optional in type '{ id: string; scheduledStart: Date; subject: string; studentId?: string; teacherId?: string; parentId?: string; scheduledEnd?: Date; actualStart?: Date; actualEnd?: Date; location?: string | Location; ... 11 more ...; version?: number; }' but required in type 'Session'.
+src/agents/__tests__/analytics.agent.test.ts(303,51): error TS2379: Argument of type '{ eventType: string; sessionData: { id: string; scheduledStart: Date; studentId?: string; teacherId?: string; parentId?: string; subject?: string; scheduledEnd?: Date; actualStart?: Date; ... 13 more ...; version?: number; }[]; ... 23 more ...; metadata?: Record<string, any>; }' is not assignable to parameter of type 'AgentContext' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'sessionData' are incompatible.
+    Type '{ id: string; scheduledStart: Date; studentId?: string; teacherId?: string; parentId?: string; subject?: string; scheduledEnd?: Date; actualStart?: Date; actualEnd?: Date; location?: string | Location; ... 11 more ...; version?: number; }[]' is not assignable to type 'Session[]'.
+      Type '{ id: string; scheduledStart: Date; studentId?: string; teacherId?: string; parentId?: string; subject?: string; scheduledEnd?: Date; actualStart?: Date; actualEnd?: Date; location?: Location | string; ... 11 more ...; version?: number; }' is not assignable to type 'Session' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+        Property 'studentId' is optional in type '{ id: string; scheduledStart: Date; studentId?: string; teacherId?: string; parentId?: string; subject?: string; scheduledEnd?: Date; actualStart?: Date; actualEnd?: Date; location?: string | Location; ... 11 more ...; version?: number; }' but required in type 'Session'.
+src/agents/__tests__/analytics.agent.test.ts(428,51): error TS2379: Argument of type '{ eventType: string; historicalData: { sessions: { id: string; scheduledStart: Date; studentId?: string; teacherId?: string; parentId?: string; subject?: string; scheduledEnd?: Date; actualStart?: Date; ... 13 more ...; version?: number; }[]; analytics: never[]; interactions: never[]; }; ... 23 more ...; metadata?: ...' is not assignable to parameter of type 'AgentContext' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  The types of 'historicalData.sessions' are incompatible between these types.
+    Type '{ id: string; scheduledStart: Date; studentId?: string; teacherId?: string; parentId?: string; subject?: string; scheduledEnd?: Date; actualStart?: Date; actualEnd?: Date; location?: string | Location; ... 11 more ...; version?: number; }[]' is not assignable to type 'Session[]'.
+      Type '{ id: string; scheduledStart: Date; studentId?: string; teacherId?: string; parentId?: string; subject?: string; scheduledEnd?: Date; actualStart?: Date; actualEnd?: Date; location?: Location | string; ... 11 more ...; version?: number; }' is not assignable to type 'Session' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+        Property 'studentId' is optional in type '{ id: string; scheduledStart: Date; studentId?: string; teacherId?: string; parentId?: string; subject?: string; scheduledEnd?: Date; actualStart?: Date; actualEnd?: Date; location?: string | Location; ... 11 more ...; version?: number; }' but required in type 'Session'.
+src/agents/__tests__/analytics.agent.test.ts(439,23): error TS18048: 'insight' is possibly 'undefined'.
+src/agents/__tests__/analytics.agent.test.ts(440,16): error TS18048: 'insight' is possibly 'undefined'.
+src/agents/__tests__/analytics.agent.test.ts(441,16): error TS18048: 'insight' is possibly 'undefined'.
+src/agents/__tests__/base.agent.test.ts(15,17): error TS2339: Property 'shouldFail' does not exist on type 'AgentContext'.
+src/agents/__tests__/base.agent.test.ts(26,21): error TS2339: Property 'skipExecution' does not exist on type 'AgentContext'.
+src/agents/__tests__/base.agent.test.ts(145,56): error TS2353: Object literal may only specify known properties, and 'skipExecution' does not exist in type 'AgentContext'.
+src/agents/__tests__/registry.test.ts(34,16): error TS2673: Constructor of class 'AgentRegistry' is private and only accessible within the class declaration.
+src/agents/__tests__/registry.test.ts(168,49): error TS2304: Cannot find name 'mockContext'.
+src/agents/__tests__/registry.test.ts(177,49): error TS2304: Cannot find name 'mockContext'.
+src/agents/__tests__/registry.test.ts(186,49): error TS2304: Cannot find name 'mockContext'.
+src/agents/__tests__/registry.test.ts(195,49): error TS2304: Cannot find name 'mockContext'.
+src/agents/__tests__/registry.test.ts(205,49): error TS2304: Cannot find name 'mockContext'.
+src/agents/__tests__/task-automation.agent.test.ts(361,13): error TS2375: Type '{ id: string; scheduledStart: Date; scheduledEnd: Date; location: string | Location | undefined; studentId: string; teacherId: string; parentId: string; subject: string; ... 13 more ...; version?: number; }' is not assignable to type 'Session' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'location' are incompatible.
+    Type 'string | Location | undefined' is not assignable to type 'string | Location'.
+      Type 'undefined' is not assignable to type 'string | Location'.
+src/agents/analytics.agent.ts(1596,9): error TS18048: 'timeGroups.morning' is possibly 'undefined'.
+src/agents/analytics.agent.ts(1598,9): error TS18048: 'timeGroups.afternoon' is possibly 'undefined'.
+src/agents/analytics.agent.ts(1600,9): error TS18048: 'timeGroups.evening' is possibly 'undefined'.
+src/agents/base.agent.ts(259,5): error TS2375: Type '{ success: true; data: any; insights: AIInsight[] | undefined; actions: any[] | undefined; }' is not assignable to type 'AgentResult' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'insights' are incompatible.
+    Type 'AIInsight[] | undefined' is not assignable to type 'AIInsight[]'.
+      Type 'undefined' is not assignable to type 'AIInsight[]'.
+src/agents/communication.agent.ts(1012,70): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'Error | undefined'.
+  Type 'string' is not assignable to type 'Error'.
+src/agents/communication.agent.ts(1075,5): error TS2375: Type '{ success: boolean; error: string | undefined; }' is not assignable to type '{ success: boolean; error?: string; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'error' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/agents/communication.agent.ts(1090,5): error TS2375: Type '{ success: boolean; error: string | undefined; }' is not assignable to type '{ success: boolean; error?: string; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'error' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/agents/communication.agent.ts(1105,5): error TS2375: Type '{ success: boolean; error: string | undefined; }' is not assignable to type '{ success: boolean; error?: string; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'error' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/agents/communication.agent.ts(1127,10): error TS2345: Argument of type '"high" | "medium" | "low" | "critical"' is not assignable to parameter of type '"high" | "medium" | "low" | undefined'.
+  Type '"critical"' is not assignable to type '"high" | "medium" | "low" | undefined'.
+src/agents/core/__tests__/AgentInterfaces.test.ts(232,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentInterfaces.test.ts(233,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentInterfaces.test.ts(234,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentInterfaces.test.ts(235,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentInterfaces.test.ts(263,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentInterfaces.test.ts(264,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentInterfaces.test.ts(265,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentInterfaces.test.ts(266,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentOrchestrator.test.ts(237,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentOrchestrator.test.ts(238,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentOrchestrator.test.ts(239,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentOrchestrator.test.ts(254,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentOrchestrator.test.ts(255,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentOrchestrator.test.ts(256,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentOrchestrator.test.ts(347,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentOrchestrator.test.ts(348,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentOrchestrator.test.ts(356,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentOrchestrator.test.ts(357,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentOrchestrator.test.ts(364,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/AgentOrchestrator.test.ts(365,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/BaseAIAgent.test.ts(305,14): error TS18048: 'insight' is possibly 'undefined'.
+src/agents/core/__tests__/BaseAIAgent.test.ts(306,14): error TS18048: 'insight' is possibly 'undefined'.
+src/agents/core/__tests__/BaseAIAgent.test.ts(307,14): error TS18048: 'insight' is possibly 'undefined'.
+src/agents/core/__tests__/BaseAIAgent.test.ts(308,14): error TS18048: 'insight' is possibly 'undefined'.
+src/agents/core/__tests__/BaseAIAgent.test.ts(309,14): error TS18048: 'insight' is possibly 'undefined'.
+src/agents/core/__tests__/BaseAIAgent.test.ts(310,14): error TS18048: 'insight' is possibly 'undefined'.
+src/agents/core/__tests__/BaseAIAgent.test.ts(335,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/BaseAIAgent.test.ts(336,14): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/integration.test.ts(124,12): error TS2532: Object is possibly 'undefined'.
+src/agents/core/__tests__/integration.test.ts(125,12): error TS2532: Object is possibly 'undefined'.
+src/agents/core/BaseAIAgent.ts(199,5): error TS2375: Type '{ success: true; data: any; insights: AIInsight[] | undefined; actions: any[] | undefined; metadata: { agentId: string; agentName: string; timestamp: number; }; }' is not assignable to type 'AgentResult' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'insights' are incompatible.
+    Type 'AIInsight[] | undefined' is not assignable to type 'AIInsight[]'.
+      Type 'undefined' is not assignable to type 'AIInsight[]'.
+src/agents/core/BaseAIAgent.ts(238,96): error TS2559: Type '{ agentId: string; agentName: string; }' has no properties in common with type '{ userId?: string; sessionId?: string; }'.
+src/agents/core/BaseAIAgent.ts(241,53): error TS2559: Type '{ agentId: string; agentName: string; }' has no properties in common with type '{ userId?: string; sessionId?: string; }'.
+src/agents/core/BaseAIAgent.ts(244,53): error TS2559: Type '{ agentId: string; agentName: string; }' has no properties in common with type '{ userId?: string; sessionId?: string; }'.
+src/agents/task-automation.agent.ts(1385,34): error TS18048: 'session1' is possibly 'undefined'.
+src/agents/task-automation.agent.ts(1385,49): error TS18048: 'session2' is possibly 'undefined'.
+src/agents/task-automation.agent.ts(1388,38): error TS18048: 'session1' is possibly 'undefined'.
+src/agents/task-automation.agent.ts(1388,57): error TS18048: 'session2' is possibly 'undefined'.
+src/agents/task-automation.agent.ts(1389,24): error TS18048: 'session1' is possibly 'undefined'.
+src/agents/task-automation.agent.ts(1389,37): error TS18048: 'session2' is possibly 'undefined'.
+src/agents/task-automation.agent.ts(1390,60): error TS2345: Argument of type 'Session | undefined' is not assignable to parameter of type 'Session'.
+  Type 'undefined' is not assignable to type 'Session'.
+src/agents/task-automation.agent.ts(1400,11): error TS7034: Variable 'conflicts' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/agents/task-automation.agent.ts(1428,12): error TS7005: Variable 'conflicts' implicitly has an 'any[]' type.
+src/agents/task-automation.agent.ts(1432,11): error TS7034: Variable 'conflicts' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/agents/task-automation.agent.ts(1437,30): error TS18048: 'session.location' is possibly 'undefined'.
+src/agents/task-automation.agent.ts(1437,47): error TS2339: Property 'coordinates' does not exist on type 'string | Location'.
+  Property 'coordinates' does not exist on type 'string'.
+src/agents/task-automation.agent.ts(1437,71): error TS18048: 'session.location' is possibly 'undefined'.
+src/agents/task-automation.agent.ts(1437,88): error TS2339: Property 'coordinates' does not exist on type 'string | Location'.
+  Property 'coordinates' does not exist on type 'string'.
+src/agents/task-automation.agent.ts(1453,40): error TS18048: 'session1' is possibly 'undefined'.
+src/agents/task-automation.agent.ts(1453,55): error TS18048: 'session2' is possibly 'undefined'.
+src/agents/task-automation.agent.ts(1457,26): error TS18048: 'session1' is possibly 'undefined'.
+src/agents/task-automation.agent.ts(1457,39): error TS18048: 'session2' is possibly 'undefined'.
+src/agents/task-automation.agent.ts(1458,25): error TS18048: 'session1' is possibly 'undefined'.
+src/agents/task-automation.agent.ts(1458,25): error TS18048: 'session1.location' is possibly 'undefined'.
+src/agents/task-automation.agent.ts(1458,43): error TS2339: Property 'address' does not exist on type 'string | Location'.
+  Property 'address' does not exist on type 'string'.
+src/agents/task-automation.agent.ts(1465,12): error TS7005: Variable 'conflicts' implicitly has an 'any[]' type.
+src/agents/task-automation.agent.ts(1469,11): error TS7034: Variable 'resolutions' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/agents/task-automation.agent.ts(1520,12): error TS7005: Variable 'resolutions' implicitly has an 'any[]' type.
+src/agents/task-automation.agent.ts(1525,27): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'Date | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'Date | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/agents/task-automation.agent.ts(1527,27): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'Date | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'Date | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/app/design-system-demo/page.tsx(68,9): error TS2412: Type 'Variant | undefined' is not assignable to type 'Variants | undefined' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+src/app/design-system-demo/page.tsx(74,25): error TS2412: Type 'Variant | undefined' is not assignable to type 'Variants | undefined' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+src/app/design-system-demo/page.tsx(122,25): error TS2412: Type 'Variant | undefined' is not assignable to type 'Variants | undefined' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+src/app/design-system-demo/page.tsx(165,25): error TS2412: Type 'Variant | undefined' is not assignable to type 'Variants | undefined' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+src/app/design-system-demo/page.tsx(220,25): error TS2412: Type 'Variant | undefined' is not assignable to type 'Variants | undefined' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+src/app/design-system-demo/page.tsx(279,54): error TS2322: Type '"success"' is not assignable to type '"current" | "primary" | "secondary"'.
+src/app/design-system-demo/page.tsx(289,25): error TS2412: Type 'Variant | undefined' is not assignable to type 'Variants | undefined' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+src/app/design-system-demo/page.tsx(334,25): error TS2412: Type 'Variant | undefined' is not assignable to type 'Variants | undefined' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+src/app/design-system-demo/page.tsx(384,25): error TS2412: Type 'Variant | undefined' is not assignable to type 'Variants | undefined' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+src/app/test-login/page.tsx(17,7): error TS2345: Argument of type '{ id: string; name: string; role: string; email: string; preferences: { notifications: { email: boolean; push: boolean; sms: boolean; inApp: boolean; frequency: string; }; dashboard: { layout: string; theme: string; widgets: string[]; }; privacy: { ...; }; accessibility: { ...; }; }; createdAt: Date; lastActive: Dat...' is not assignable to parameter of type 'string'.
+src/components/__tests__/AnalyticsDashboard.test.tsx(49,13): error TS2741: Property 'userRole' is missing in type '{ userId: string; role: "teacher"; }' but required in type 'AnalyticsDashboardProps'.
+src/components/__tests__/AnalyticsDashboard.test.tsx(54,13): error TS2741: Property 'userRole' is missing in type '{ userId: string; role: "teacher"; }' but required in type 'AnalyticsDashboardProps'.
+src/components/__tests__/AnalyticsDashboard.test.tsx(61,13): error TS2741: Property 'userRole' is missing in type '{ userId: string; role: "teacher"; }' but required in type 'AnalyticsDashboardProps'.
+src/components/__tests__/AnalyticsDashboard.test.tsx(68,50): error TS2322: Type '{ role: string; userId: string; }' is not assignable to type 'IntrinsicAttributes & AnalyticsDashboardProps'.
+  Property 'role' does not exist on type 'IntrinsicAttributes & AnalyticsDashboardProps'.
+src/components/__tests__/AnalyticsDashboard.test.tsx(75,50): error TS2322: Type '{ role: string; userId: string; }' is not assignable to type 'IntrinsicAttributes & AnalyticsDashboardProps'.
+  Property 'role' does not exist on type 'IntrinsicAttributes & AnalyticsDashboardProps'.
+src/components/__tests__/AnalyticsDashboard.test.tsx(82,13): error TS2741: Property 'userRole' is missing in type '{ userId: string; role: "teacher"; }' but required in type 'AnalyticsDashboardProps'.
+src/components/__tests__/AnalyticsDashboard.test.tsx(89,13): error TS2741: Property 'userRole' is missing in type '{ userId: string; role: "teacher"; }' but required in type 'AnalyticsDashboardProps'.
+src/components/__tests__/AnalyticsDashboard.test.tsx(102,13): error TS2741: Property 'userRole' is missing in type '{ userId: string; role: "teacher"; }' but required in type 'AnalyticsDashboardProps'.
+src/components/__tests__/AnalyticsDashboard.test.tsx(109,13): error TS2741: Property 'userRole' is missing in type '{ userId: string; role: "teacher"; }' but required in type 'AnalyticsDashboardProps'.
+src/components/__tests__/AnalyticsDashboard.test.tsx(114,13): error TS2741: Property 'userRole' is missing in type '{ userId: string; role: "teacher"; }' but required in type 'AnalyticsDashboardProps'.
+src/components/__tests__/AnalyticsDashboard.test.tsx(119,13): error TS2741: Property 'userRole' is missing in type '{ userId: string; role: "teacher"; }' but required in type 'AnalyticsDashboardProps'.
+src/components/analytics/AnalyticsDashboard.tsx(131,13): error TS2532: Object is possibly 'undefined'.
+src/components/analytics/AnalyticsDashboard.tsx(132,31): error TS2532: Object is possibly 'undefined'.
+src/components/analytics/AnalyticsDashboard.tsx(132,52): error TS2339: Property 'value' does not exist on type 'PromiseSettledResult<any>'.
+  Property 'value' does not exist on type 'PromiseRejectedResult'.
+src/components/analytics/AnalyticsDashboard.tsx(138,13): error TS2532: Object is possibly 'undefined'.
+src/components/analytics/AnalyticsDashboard.tsx(139,33): error TS2532: Object is possibly 'undefined'.
+src/components/analytics/AnalyticsDashboard.tsx(139,54): error TS2339: Property 'value' does not exist on type 'PromiseSettledResult<any>'.
+  Property 'value' does not exist on type 'PromiseRejectedResult'.
+src/components/analytics/AnalyticsDashboard.tsx(144,11): error TS2532: Object is possibly 'undefined'.
+src/components/analytics/AnalyticsDashboard.tsx(145,29): error TS2532: Object is possibly 'undefined'.
+src/components/analytics/AnalyticsDashboard.tsx(145,50): error TS2339: Property 'value' does not exist on type 'PromiseSettledResult<any>'.
+  Property 'value' does not exist on type 'PromiseRejectedResult'.
+src/components/analytics/AnalyticsDashboard.tsx(149,11): error TS2532: Object is possibly 'undefined'.
+src/components/analytics/AnalyticsDashboard.tsx(150,33): error TS2532: Object is possibly 'undefined'.
+src/components/analytics/AnalyticsDashboard.tsx(150,54): error TS2339: Property 'value' does not exist on type 'PromiseSettledResult<any>'.
+  Property 'value' does not exist on type 'PromiseRejectedResult'.
+src/components/auth/FallbackAuth.tsx(37,9): error TS2554: Expected 2 arguments, but got 1.
+src/components/auth/FallbackAuth.tsx(71,9): error TS2554: Expected 2 arguments, but got 1.
+src/components/auth/FallbackAuth.tsx(105,9): error TS2554: Expected 2 arguments, but got 1.
+src/components/auth/QRAuthIntegration.tsx(16,11): error TS2339: Property 'verifyQRToken' does not exist on type 'AuthContextType'.
+src/components/auth/QRAuthProvider.tsx(6,10): error TS2724: '"@/services/qr-auth.service"' has no exported member named 'QRAuthService'. Did you mean 'qrAuthService'?
+src/components/auth/QRAuthProvider.tsx(116,13): error TS2554: Expected 2 arguments, but got 1.
+src/components/auth/QRScanner.tsx(20,29): error TS2448: Block-scoped variable 'startScan' used before its declaration.
+src/components/auth/QRScanner.tsx(20,29): error TS2454: Variable 'startScan' is used before being assigned.
+src/components/AuthGuard.tsx(3,8): error TS2300: Duplicate identifier 'React'.
+src/components/AuthGuard.tsx(5,10): error TS2300: Duplicate identifier 'useAuthContext'.
+src/components/AuthGuard.tsx(13,17): error TS2323: Cannot redeclare exported variable 'AuthGuard'.
+src/components/AuthGuard.tsx(13,17): error TS2393: Duplicate function implementation.
+src/components/AuthGuard.tsx(42,8): error TS2300: Duplicate identifier 'React'.
+src/components/AuthGuard.tsx(45,10): error TS2300: Duplicate identifier 'useAuthContext'.
+src/components/AuthGuard.tsx(54,17): error TS2323: Cannot redeclare exported variable 'AuthGuard'.
+src/components/AuthGuard.tsx(54,17): error TS2393: Duplicate function implementation.
+src/components/AuthGuard.tsx(59,45): error TS2339: Property 'authMethod' does not exist on type 'AuthContextType'.
+src/components/billing/BillingDashboard.tsx(331,24): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: Props): YAxis', gave the following error.
+    Type '{ formatter: (value: any) => string; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<YAxis> & Pick<Readonly<Props>, never> & InexactPartial<...> & InexactPartial<...>'.
+      Property 'formatter' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<YAxis> & Pick<Readonly<Props>, never> & InexactPartial<...> & InexactPartial<...>'. Did you mean 'format'?
+  Overload 2 of 2, '(props: Props, context: any): YAxis', gave the following error.
+    Type '{ formatter: (value: any) => string; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<YAxis> & Pick<Readonly<Props>, never> & InexactPartial<...> & InexactPartial<...>'.
+      Property 'formatter' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<YAxis> & Pick<Readonly<Props>, never> & InexactPartial<...> & InexactPartial<...>'. Did you mean 'format'?
+src/components/billing/BillingDashboard.tsx(331,36): error TS7006: Parameter 'value' implicitly has an 'any' type.
+src/components/billing/BillingDashboard.tsx(383,24): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: Props): YAxis', gave the following error.
+    Type '{ formatter: (value: any) => string; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<YAxis> & Pick<Readonly<Props>, never> & InexactPartial<...> & InexactPartial<...>'.
+      Property 'formatter' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<YAxis> & Pick<Readonly<Props>, never> & InexactPartial<...> & InexactPartial<...>'. Did you mean 'format'?
+  Overload 2 of 2, '(props: Props, context: any): YAxis', gave the following error.
+    Type '{ formatter: (value: any) => string; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<YAxis> & Pick<Readonly<Props>, never> & InexactPartial<...> & InexactPartial<...>'.
+      Property 'formatter' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<YAxis> & Pick<Readonly<Props>, never> & InexactPartial<...> & InexactPartial<...>'. Did you mean 'format'?
+src/components/billing/BillingDashboard.tsx(383,36): error TS7006: Parameter 'value' implicitly has an 'any' type.
+src/components/notifications/OfflineNotificationQueue.tsx(11,10): error TS2724: '"@/services/websocket.service"' has no exported member named 'webSocketService'. Did you mean 'WebSocketService'?
+src/components/notifications/OfflineNotificationQueue.tsx(85,78): error TS2345: Argument of type '"high" | "medium" | "low" | "critical"' is not assignable to parameter of type '"high" | "medium" | "low" | undefined'.
+  Type '"critical"' is not assignable to type '"high" | "medium" | "low" | undefined'.
+src/components/notifications/OfflineNotificationQueue.tsx(172,76): error TS2345: Argument of type '"high" | "medium" | "low" | "critical"' is not assignable to parameter of type '"high" | "medium" | "low" | undefined'.
+  Type '"critical"' is not assignable to type '"high" | "medium" | "low" | undefined'.
+src/components/notifications/OfflineNotificationQueue.tsx(183,76): error TS2345: Argument of type '"high" | "medium" | "low" | "critical"' is not assignable to parameter of type '"high" | "medium" | "low" | undefined'.
+  Type '"critical"' is not assignable to type '"high" | "medium" | "low" | undefined'.
+src/components/notifications/OfflineNotificationQueue.tsx(219,72): error TS2345: Argument of type '"high" | "medium" | "low" | "critical"' is not assignable to parameter of type '"high" | "medium" | "low" | undefined'.
+  Type '"critical"' is not assignable to type '"high" | "medium" | "low" | undefined'.
+src/components/parent/AIPriorityFeed.tsx(5,28): error TS2305: Module '"@/types"' has no exported member 'SessionRecord'.
+src/components/parent/AIPriorityFeed.tsx(72,18): error TS2379: Argument of type '{ id: string; type: "urgent" | "important" | "informational"; title: string; description: string; action: string | undefined; timestamp: Date; category: "scheduling" | "academic" | "communication" | "behavioral"; priority: number; }' is not assignable to parameter of type 'PriorityItem' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'action' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/components/parent/AIPriorityFeed.tsx(137,7): error TS2345: Argument of type '{ id: string; title: string; description: string; severity: "high" | "medium" | "low"; suggestedActions: string[]; }' is not assignable to parameter of type 'AIRecommendation'.
+  Property 'confidence' is missing in type '{ id: string; title: string; description: string; severity: "high" | "medium" | "low"; suggestedActions: string[]; }' but required in type 'AIRecommendation'.
+src/components/parent/CreateStudentForm.tsx(298,19): error TS2532: Object is possibly 'undefined'.
+src/components/parent/CreateStudentForm.tsx(298,34): error TS2339: Property 'find' does not exist on type 'string | string[] | Subject[] | SocializationOption[] | PhysicalEducationOption[] | ExtracurricularOption[] | CommunityInvolvementOption[]'.
+  Property 'find' does not exist on type 'string'.
+src/components/parent/CreateStudentForm.tsx(1016,17): error TS2774: This condition will always return true since this function is always defined. Did you mean to call it instead?
+src/components/parent/DataSheetsViewer.tsx(40,26): error TS2345: Argument of type 'DataSheet | undefined' is not assignable to parameter of type 'SetStateAction<DataSheet | null>'.
+  Type 'undefined' is not assignable to type 'SetStateAction<DataSheet | null>'.
+src/components/parent/InteractiveProgressCharts.tsx(5,10): error TS2305: Module '"@/types"' has no exported member 'SessionRecord'.
+src/components/parent/SmartNotificationSystem.tsx(5,10): error TS2305: Module '"@/types"' has no exported member 'SessionRecord'.
+src/components/parent/TeacherCreationForm.tsx(173,16): error TS7053: Element implicitly has an 'any' type because expression of type '"subjects" | "qualifications" | "specializations" | "days" | "timeSlots"' can't be used to index type 'TeacherFormData'.
+  Property 'days' does not exist on type 'TeacherFormData'.
+src/components/parent/TeacherCreationForm.tsx(174,11): error TS7053: Element implicitly has an 'any' type because expression of type '"subjects" | "qualifications" | "specializations" | "days" | "timeSlots"' can't be used to index type 'TeacherFormData'.
+  Property 'days' does not exist on type 'TeacherFormData'.
+src/components/parent/TeacherCreationForm.tsx(174,30): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/components/parent/TeacherCreationForm.tsx(175,15): error TS7053: Element implicitly has an 'any' type because expression of type '"subjects" | "qualifications" | "specializations" | "days" | "timeSlots"' can't be used to index type 'TeacherFormData'.
+  Property 'days' does not exist on type 'TeacherFormData'.
+src/components/parent/TeacherLocationTracker.tsx(5,10): error TS2305: Module '"@/types"' has no exported member 'SessionRecord'.
+src/components/sessions/OfflineSessionManager.tsx(14,10): error TS2305: Module '"@/types"' has no exported member 'SessionRecord'.
+src/components/sessions/OfflineSessionManager.tsx(45,28): error TS2339: Property 'teacherId' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(47,28): error TS2339: Property 'parentId' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(49,28): error TS2339: Property 'studentId' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(69,9): error TS2353: Object literal may only specify known properties, and 'id' does not exist in type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(112,54): error TS2339: Property 'id' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(138,17): error TS2339: Property 'id' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(153,44): error TS2339: Property 'id' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(160,17): error TS2339: Property 'teacherId' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(161,17): error TS2339: Property 'studentId' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(163,29): error TS2339: Property 'parentId' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(164,26): error TS2339: Property 'notes' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(189,86): error TS2379: Argument of type '{ notes: string | undefined; }' is not assignable to parameter of type '{ endLocation?: GPSCoordinates; notes?: string; manualDurationOverride?: number; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'notes' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/components/sessions/OfflineSessionManager.tsx(296,55): error TS2339: Property 'id' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(300,30): error TS2339: Property 'id' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(314,34): error TS2339: Property 'subject' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(317,33): error TS2339: Property 'status' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(318,33): error TS2339: Property 'status' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(319,33): error TS2339: Property 'status' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(322,34): error TS2339: Property 'status' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(330,32): error TS2339: Property 'scheduledStart' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(331,32): error TS2339: Property 'scheduledStart' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(334,30): error TS2339: Property 'location' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(336,37): error TS2339: Property 'location' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(355,56): error TS2339: Property 'status' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(357,66): error TS2339: Property 'id' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(364,56): error TS2339: Property 'status' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(366,65): error TS2339: Property 'id' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(385,26): error TS2339: Property 'notes' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(387,30): error TS2339: Property 'notes' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(392,26): error TS2339: Property 'aiInsights' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(397,30): error TS2339: Property 'aiInsights' does not exist on type 'LocalSession'.
+src/components/sessions/OfflineSessionManager.tsx(397,58): error TS7006: Parameter 'insight' implicitly has an 'any' type.
+src/components/sessions/OfflineSessionManager.tsx(397,67): error TS7006: Parameter 'index' implicitly has an 'any' type.
+src/components/teacher/__tests__/TeacherDashboard.test.tsx(359,21): error TS2345: Argument of type 'HTMLElement | undefined' is not assignable to parameter of type 'Element | Node | Document | Window'.
+  Type 'undefined' is not assignable to type 'Element | Node | Document | Window'.
+src/components/teacher/AILessonPlanSuggestions.tsx(5,28): error TS2305: Module '"@/types"' has no exported member 'SessionRecord'.
+src/components/teacher/AILessonPlanSuggestions.tsx(173,108): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/components/teacher/DataSheetsManager.tsx(110,9): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/components/teacher/DragDropScheduleManager.tsx(6,16): error TS2305: Module '"@/types"' has no exported member 'SessionRecord'.
+src/components/teacher/LocationAwareSessionManager.tsx(6,16): error TS2305: Module '"@/types"' has no exported member 'SessionRecord'.
+src/components/teacher/LocationAwareSessionManager.tsx(531,25): error TS2322: Type 'boolean | 0 | null' is not assignable to type 'boolean | undefined'.
+  Type 'null' is not assignable to type 'boolean | undefined'.
+src/components/teacher/TeacherDashboard.tsx(6,16): error TS2305: Module '"@/types"' has no exported member 'SessionRecord'.
+src/components/teacher/TeacherDashboard.tsx(7,10): error TS2614: Module '"./AILessonPlanSuggestions"' has no exported member 'AILessonPlanSuggestions'. Did you mean to use 'import AILessonPlanSuggestions from "./AILessonPlanSuggestions"' instead?
+src/components/teacher/TeacherDashboard.tsx(94,16): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+src/components/teacher/TeacherDashboard.tsx(94,16): error TS2872: This kind of expression is always truthy.
+src/components/teacher/TeacherDashboard.tsx(572,57): error TS7006: Parameter 'insight' implicitly has an 'any' type.
+src/components/teacher/TimesheetManager.tsx(48,13): error TS2739: Type '{ latitude: number; longitude: number; }' is missing the following properties from type 'GPSCoordinates': accuracy, timestamp
+src/components/teacher/TimesheetManager.tsx(49,13): error TS2739: Type '{ latitude: number; longitude: number; }' is missing the following properties from type 'GPSCoordinates': accuracy, timestamp
+src/components/teacher/TimesheetManager.tsx(77,13): error TS2739: Type '{ latitude: number; longitude: number; }' is missing the following properties from type 'GPSCoordinates': accuracy, timestamp
+src/components/teacher/TimesheetManager.tsx(78,13): error TS2739: Type '{ latitude: number; longitude: number; }' is missing the following properties from type 'GPSCoordinates': accuracy, timestamp
+src/components/teacher/VoiceToTextNotes.tsx(6,16): error TS2305: Module '"@/types"' has no exported member 'SessionRecord'.
+src/components/testing/QRCodeTester.tsx(436,34): error TS2345: Argument of type '{ name: string; description: string; test: () => Promise<string>; } | undefined' is not assignable to parameter of type '{ name: string; description: string; test: () => Promise<string>; }'.
+  Type 'undefined' is not assignable to type '{ name: string; description: string; test: () => Promise<string>; }'.
+src/design-system/animations/presets.ts(119,5): error TS2353: Object literal may only specify known properties, and 'animate' does not exist in type 'Variant'.
+src/design-system/animations/presets.ts(127,5): error TS2353: Object literal may only specify known properties, and 'initial' does not exist in type 'Variant'.
+src/design-system/animations/variants.ts(117,5): error TS2353: Object literal may only specify known properties, and 'animate' does not exist in type 'Variant'.
+src/design-system/animations/variants.ts(125,5): error TS2353: Object literal may only specify known properties, and 'initial' does not exist in type 'Variant'.
+src/design-system/components/base/Button.tsx(77,7): error TS2412: Type '{ scale: number; boxShadow: string; transition: { duration: number; ease: string; }; } | undefined' is not assignable to type 'VariantLabels | TargetAndTransition | undefined' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+src/design-system/components/base/Button.tsx(78,7): error TS2412: Type '{ scale: number; transition: { duration: number; ease: string; }; } | undefined' is not assignable to type 'VariantLabels | TargetAndTransition | undefined' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+src/design-system/components/base/Card.tsx(56,6): error TS2375: Type '{ children: ReactNode; defaultChecked?: boolean | undefined; defaultValue?: string | number | readonly string[] | undefined; suppressContentEditableWarning?: boolean | undefined; ... 331 more ...; className: string; }' is not assignable to type 'Omit<HTMLMotionProps<"div">, "ref">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'style' are incompatible.
+    Type 'CSSProperties | MotionStyle | undefined' is not assignable to type 'MotionStyle'.
+      Type 'undefined' is not assignable to type 'MotionStyle'.
+src/design-system/components/base/Container.tsx(31,6): error TS2375: Type '{ children: ReactNode; defaultChecked?: boolean | undefined; defaultValue?: string | number | readonly string[] | undefined; suppressContentEditableWarning?: boolean | undefined; ... 331 more ...; className: string; }' is not assignable to type 'Omit<HTMLMotionProps<"div">, "ref">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'style' are incompatible.
+    Type 'CSSProperties | MotionStyle | undefined' is not assignable to type 'MotionStyle'.
+      Type 'undefined' is not assignable to type 'MotionStyle'.
+src/design-system/components/base/Container.tsx(68,6): error TS2375: Type '{ children: Element; size?: "sm" | "lg" | "xl" | "2xl" | "md" | "full"; centered?: boolean; defaultChecked?: boolean | undefined; defaultValue?: string | number | readonly string[] | undefined; ... 332 more ...; className: string; }' is not assignable to type 'Omit<HTMLMotionProps<"section">, "ref">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'style' are incompatible.
+    Type 'CSSProperties | MotionStyle | undefined' is not assignable to type 'MotionStyle'.
+      Type 'undefined' is not assignable to type 'MotionStyle'.
+src/design-system/components/feedback/Skeleton.tsx(77,7): error TS2322: Type 'CSSProperties | { width: string | undefined; height: string | undefined; } | undefined' is not assignable to type 'MotionStyle'.
+  Type 'undefined' is not assignable to type 'MotionStyle'.
+src/design-system/components/forms/__tests__/index.test.tsx(313,38): error TS2322: Type 'Mock<Promise<unknown>, [], any>' is not assignable to type '(data: { name: string; email: string; subject: string; datetime: string; files: any[]; }) => void | Promise<void>'.
+  Type 'Promise<unknown>' is not assignable to type 'void | Promise<void>'.
+    Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+      Type 'unknown' is not assignable to type 'void'.
+src/design-system/components/forms/__tests__/SmartForm.test.tsx(104,38): error TS2322: Type 'Mock<Promise<unknown>, [], any>' is not assignable to type '(data: { name: string; email: string; age: number; }) => void | Promise<void>'.
+  Type 'Promise<unknown>' is not assignable to type 'void | Promise<void>'.
+    Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+      Type 'unknown' is not assignable to type 'void'.
+src/design-system/components/forms/AutoCompleteInput.tsx(99,33): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/design-system/components/forms/FileUpload.tsx(55,38): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/design-system/components/forms/SmartForm.tsx(21,27): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(schema: Zod3Type<T, T>, schemaOptions?: ParseParams | undefined, resolverOptions?: NonRawResolverOptions | undefined): Resolver<...>', gave the following error.
+    Argument of type 'ZodType<T, ZodTypeDef, T>' is not assignable to parameter of type 'Zod3Type<T, T>'.
+      Types of property '_def' are incompatible.
+        Property 'typeName' is missing in type 'ZodTypeDef' but required in type '{ typeName: string; }'.
+  Overload 2 of 4, '(schema: $ZodType<unknown, FieldValues, $ZodTypeInternals<unknown, FieldValues>>, schemaOptions?: ParseContext<$ZodIssue> | undefined, resolverOptions?: NonRawResolverOptions | undefined): Resolver<...>', gave the following error.
+    Argument of type 'ZodType<T, ZodTypeDef, T>' is not assignable to parameter of type '$ZodType<unknown, FieldValues, $ZodTypeInternals<unknown, FieldValues>>'.
+      Property '_zod' is missing in type 'ZodType<T, ZodTypeDef, T>' but required in type '$ZodType<unknown, FieldValues, $ZodTypeInternals<unknown, FieldValues>>'.
+src/design-system/components/forms/SmartForm.tsx(22,5): error TS2412: Type 'Partial<T> | undefined' is not assignable to type 'AsyncDefaultValues<T> | DefaultValues<T> | undefined' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+src/design-system/components/forms/SmartForm.tsx(49,6): error TS2322: Type '{ children: Element; watch: UseFormWatch<T>; getValues: UseFormGetValues<T>; getFieldState: UseFormGetFieldState<T>; ... 12 more ...; subscribe: UseFormSubscribe<...>; } | { ...; }' is not assignable to type 'IntrinsicAttributes & { children: ReactNode | ReactNode[]; } & UseFormReturn<T, any, T>'.
+  Type '{ children: Element; watch: UseFormWatch<T>; getValues: UseFormGetValues<T>; getFieldState: UseFormGetFieldState<T>; ... 12 more ...; subscribe: UseFormSubscribe<...>; }' is not assignable to type 'UseFormReturn<T, any, T>'.
+    Types of property 'handleSubmit' are incompatible.
+      Type 'UseFormHandleSubmit<T, TFieldValues>' is not assignable to type 'UseFormHandleSubmit<T, T>'.
+        Types of parameters 'onValid' and 'onValid' are incompatible.
+          Types of parameters 'data' and 'data' are incompatible.
+            Type 'TFieldValues' is not assignable to type 'T'.
+              'TFieldValues' is assignable to the constraint of type 'T', but 'T' could be instantiated with a different subtype of constraint 'FieldValues'.
+src/design-system/components/forms/SmartForm.tsx(51,32): error TS2345: Argument of type '(data: T) => Promise<void>' is not assignable to parameter of type 'SubmitHandler<TFieldValues> & SubmitHandler<T>'.
+  Type '(data: T) => Promise<void>' is not assignable to type 'SubmitHandler<TFieldValues>'.
+    Types of parameters 'data' and 'data' are incompatible.
+      Type 'TFieldValues' is not assignable to type 'T'.
+        'TFieldValues' is assignable to the constraint of type 'T', but 'T' could be instantiated with a different subtype of constraint 'FieldValues'.
+src/design-system/components/interactive/AnalyticsDashboard.tsx(140,15): error TS2322: Type '{ fill: string | undefined; strokeWidth: number; r: number; }' is not assignable to type 'ActiveDotType'.
+  Type '{ fill: string | undefined; strokeWidth: number; r: number; }' is not assignable to type 'Partial<ActiveDotProps>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'fill' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+src/design-system/components/interactive/AnalyticsDashboard.tsx(141,15): error TS2322: Type '{ r: number; stroke: string | undefined; strokeWidth: number; }' is not assignable to type 'ActiveDotType'.
+  Type '{ r: number; stroke: string | undefined; strokeWidth: number; }' is not assignable to type 'Partial<ActiveDotProps>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'stroke' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+src/design-system/components/interactive/AnalyticsDashboard.tsx(232,6): error TS2375: Type '{ children: Element; initial: string; animate: string; variants: { readonly initial: { readonly opacity: 0; readonly y: 20; }; readonly animate: { readonly opacity: 1; readonly y: 0; }; readonly exit: { ...; }; readonly transition: { ...; }; }; whileHover: { ...; } | undefined; className: string; }' is not assignable to type 'Omit<HTMLMotionProps<"div">, "ref">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'whileHover' are incompatible.
+    Type '{ y: number; } | undefined' is not assignable to type 'VariantLabels | TargetAndTransition'.
+      Type 'undefined' is not assignable to type 'VariantLabels | TargetAndTransition'.
+src/design-system/components/interactive/AnalyticsDashboard.tsx(248,15): error TS2322: Type 'Element | null' is not assignable to type 'ReactElement<any, string | JSXElementConstructor<any>>'.
+  Type 'null' is not assignable to type 'ReactElement<any, string | JSXElementConstructor<any>>'.
+src/design-system/components/interactive/GestureCard.tsx(97,30): error TS2345: Argument of type 'SwipeAction | undefined' is not assignable to parameter of type 'SwipeAction'.
+  Type 'undefined' is not assignable to type 'SwipeAction'.
+src/design-system/components/interactive/GestureCard.tsx(98,9): error TS18048: 'action' is possibly 'undefined'.
+src/design-system/components/interactive/GestureCard.tsx(159,9): error TS2322: Type 'CSSProperties | { x: MotionValue<number>; opacity: MotionValue<number>; scale: MotionValue<number>; } | undefined' is not assignable to type 'MotionStyle'.
+  Type 'undefined' is not assignable to type 'MotionStyle'.
+src/design-system/components/interactive/GestureCard.tsx(163,9): error TS2322: Type 'DragEventHandler<HTMLDivElement> | undefined' is not assignable to type '(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => void'.
+  Type 'undefined' is not assignable to type '(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => void'.
+src/design-system/components/interactive/GestureCard.tsx(164,9): error TS2322: Type 'DragEventHandler<HTMLDivElement> | ((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => void) | undefined' is not assignable to type '(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => void'.
+  Type 'undefined' is not assignable to type '(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => void'.
+src/design-system/components/interactive/GestureCard.tsx(165,9): error TS2322: Type 'DragEventHandler<HTMLDivElement> | ((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => void) | undefined' is not assignable to type '(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => void'.
+  Type 'undefined' is not assignable to type '(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => void'.
+src/design-system/components/interactive/NotificationCenter.tsx(401,28): error TS2375: Type '{ key: string; notification: Notification; onDismiss: ((notificationId: string) => void) | undefined; onClick: ((notification: Notification) => void) | undefined; showTimestamp: boolean; }' is not assignable to type '{ notification: Notification; onDismiss?: (id: string) => void; onClick?: (notification: Notification) => void; showTimestamp?: boolean; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'onDismiss' are incompatible.
+    Type '((notificationId: string) => void) | undefined' is not assignable to type '(id: string) => void'.
+      Type 'undefined' is not assignable to type '(id: string) => void'.
+src/design-system/components/interactive/NotificationCenter.tsx(439,3): error TS2322: Type '{ id: string; title: string; message: string; type: "error" | "success" | "info" | "warning" | "ai-insight" | undefined; priority: "high" | "medium" | "low" | "urgent" | undefined; timestamp: Date; ... 4 more ...; actions: ({ ...; } | { ...; })[] | undefined; }[]' is not assignable to type 'Notification[]'.
+  Type '{ id: string; title: string; message: string; type: "error" | "success" | "info" | "warning" | "ai-insight" | undefined; priority: "high" | "medium" | "low" | "urgent" | undefined; timestamp: Date; ... 4 more ...; actions: ({ ...; } | { ...; })[] | undefined; }' is not assignable to type 'Notification' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'type' are incompatible.
+      Type '"error" | "success" | "info" | "warning" | "ai-insight" | undefined' is not assignable to type '"error" | "success" | "info" | "warning" | "ai-insight"'.
+        Type 'undefined' is not assignable to type '"error" | "success" | "info" | "warning" | "ai-insight"'.
+src/design-system/components/interactive/ProgressTracker.tsx(186,10): error TS2375: Type '{ className: string; style: { background: string; mask: string; }; initial: { rotate: number; }; animate: { rotate: number; } | undefined; }' is not assignable to type 'Omit<HTMLMotionProps<"div">, "ref">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'animate' are incompatible.
+    Type '{ rotate: number; } | undefined' is not assignable to type 'boolean | VariantLabels | TargetAndTransition | LegacyAnimationControls'.
+      Type 'undefined' is not assignable to type 'boolean | VariantLabels | TargetAndTransition | LegacyAnimationControls'.
+src/design-system/components/interactive/ProgressTracker.tsx(228,12): error TS2375: Type '{ children: Element[]; key: string; initial: { opacity: number; x: number; } | undefined; animate: { opacity: number; x: number; } | undefined; transition: { delay: number; } | undefined; className: string; }' is not assignable to type 'Omit<HTMLMotionProps<"div">, "ref">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'initial' are incompatible.
+    Type '{ opacity: number; x: number; } | undefined' is not assignable to type 'boolean | VariantLabels | TargetAndTransition'.
+      Type 'undefined' is not assignable to type 'boolean | VariantLabels | TargetAndTransition'.
+src/design-system/components/interactive/ProgressTracker.tsx(236,14): error TS2375: Type '{ children: Element; className: string; whileHover: { scale: number; } | undefined; whileTap: { scale: number; } | undefined; onClick: () => void | undefined; }' is not assignable to type 'Omit<HTMLMotionProps<"div">, "ref">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'whileTap' are incompatible.
+    Type '{ scale: number; } | undefined' is not assignable to type 'VariantLabels | TargetAndTransition'.
+      Type 'undefined' is not assignable to type 'VariantLabels | TargetAndTransition'.
+src/design-system/components/interactive/ProgressTracker.tsx(311,12): error TS2375: Type '{ progress: number; animated: boolean | undefined; color: string | undefined; gradient: boolean | undefined; showPercentage: boolean | undefined; }' is not assignable to type '{ progress: number; animated?: boolean; color?: string; gradient?: boolean; showPercentage?: boolean; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'animated' are incompatible.
+    Type 'boolean | undefined' is not assignable to type 'boolean'.
+      Type 'undefined' is not assignable to type 'boolean'.
+src/design-system/components/interactive/ProgressTracker.tsx(323,14): error TS2375: Type '{ progress: number; animated: boolean | undefined; color: string | undefined; showPercentage: boolean | undefined; }' is not assignable to type '{ progress: number; size?: number; strokeWidth?: number; animated?: boolean; color?: string; showPercentage?: boolean; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'animated' are incompatible.
+    Type 'boolean | undefined' is not assignable to type 'boolean'.
+      Type 'undefined' is not assignable to type 'boolean'.
+src/design-system/components/interactive/ProgressTracker.tsx(335,14): error TS2375: Type '{ progress: number; animated: boolean | undefined; color: string | undefined; showPercentage: boolean | undefined; }' is not assignable to type '{ progress: number; size?: number; animated?: boolean; color?: string; showPercentage?: boolean; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'animated' are incompatible.
+    Type 'boolean | undefined' is not assignable to type 'boolean'.
+      Type 'undefined' is not assignable to type 'boolean'.
+src/design-system/components/interactive/ProgressTracker.tsx(346,12): error TS2375: Type '{ steps: ProgressStep[]; onStepClick: (step: ProgressStep) => void; animated: boolean | undefined; }' is not assignable to type '{ steps: ProgressStep[]; onStepClick?: (step: ProgressStep) => void; animated?: boolean; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'animated' are incompatible.
+    Type 'boolean | undefined' is not assignable to type 'boolean'.
+      Type 'undefined' is not assignable to type 'boolean'.
+src/design-system/components/interactive/ProgressTracker.tsx(359,6): error TS2375: Type '{ children: Element; initial: string; animate: string; variants: { readonly initial: { readonly opacity: 0; readonly y: 20; }; readonly animate: { readonly opacity: 1; readonly y: 0; }; readonly exit: { ...; }; readonly transition: { ...; }; }; whileHover: { ...; } | undefined; }' is not assignable to type 'Omit<HTMLMotionProps<"div">, "ref">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'whileHover' are incompatible.
+    Type '{ y: number; } | undefined' is not assignable to type 'VariantLabels | TargetAndTransition'.
+      Type 'undefined' is not assignable to type 'VariantLabels | TargetAndTransition'.
+src/design-system/components/interactive/ProgressTracker.tsx(437,12): error TS2375: Type '{ data: ProgressData; interactive: boolean; onStepClick: ((progressId: string, step: ProgressStep) => void) | undefined; }' is not assignable to type '{ data: ProgressData; interactive?: boolean; onStepClick?: (progressId: string, step: ProgressStep) => void; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'onStepClick' are incompatible.
+    Type '((progressId: string, step: ProgressStep) => void) | undefined' is not assignable to type '(progressId: string, step: ProgressStep) => void'.
+      Type 'undefined' is not assignable to type '(progressId: string, step: ProgressStep) => void'.
+src/design-system/components/interactive/ProgressTracker.tsx(453,3): error TS2322: Type '{ title: string; steps: ProgressStep[]; overallProgress: number; type: "linear" | "milestone" | "circular" | "radial" | undefined; animated: true; showPercentage: true; color: string | undefined; gradient: boolean; }[]' is not assignable to type 'ProgressData[]'.
+  Type '{ title: string; steps: ProgressStep[]; overallProgress: number; type: "linear" | "milestone" | "circular" | "radial" | undefined; animated: true; showPercentage: true; color: string | undefined; gradient: boolean; }' is not assignable to type 'ProgressData' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'type' are incompatible.
+      Type '"linear" | "milestone" | "circular" | "radial" | undefined' is not assignable to type '"linear" | "milestone" | "circular" | "radial"'.
+        Type 'undefined' is not assignable to type '"linear" | "milestone" | "circular" | "radial"'.
+src/design-system/components/layout/Flex.tsx(68,6): error TS2375: Type '{ children: ReactNode; defaultChecked?: boolean | undefined; defaultValue?: string | number | readonly string[] | undefined; suppressContentEditableWarning?: boolean | undefined; ... 331 more ...; className: string; }' is not assignable to type 'Omit<HTMLMotionProps<"div">, "ref">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'style' are incompatible.
+    Type 'CSSProperties | MotionStyle | undefined' is not assignable to type 'MotionStyle'.
+      Type 'undefined' is not assignable to type 'MotionStyle'.
+src/design-system/components/layout/Flex.tsx(128,6): error TS2375: Type '{ children: ReactNode; defaultChecked?: boolean | undefined; defaultValue?: string | number | readonly string[] | undefined; suppressContentEditableWarning?: boolean | undefined; ... 331 more ...; className: string; }' is not assignable to type 'Omit<HTMLMotionProps<"div">, "ref">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'style' are incompatible.
+    Type 'CSSProperties | MotionStyle | undefined' is not assignable to type 'MotionStyle'.
+      Type 'undefined' is not assignable to type 'MotionStyle'.
+src/design-system/components/layout/Grid.tsx(56,6): error TS2375: Type '{ children: ReactNode; defaultChecked?: boolean | undefined; defaultValue?: string | number | readonly string[] | undefined; suppressContentEditableWarning?: boolean | undefined; ... 331 more ...; className: string; }' is not assignable to type 'Omit<HTMLMotionProps<"div">, "ref">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'style' are incompatible.
+    Type 'CSSProperties | MotionStyle | undefined' is not assignable to type 'MotionStyle'.
+      Type 'undefined' is not assignable to type 'MotionStyle'.
+src/design-system/components/layout/Grid.tsx(131,6): error TS2375: Type '{ children: ReactNode; defaultChecked?: boolean | undefined; defaultValue?: string | number | readonly string[] | undefined; suppressContentEditableWarning?: boolean | undefined; ... 331 more ...; className: string; }' is not assignable to type 'Omit<HTMLMotionProps<"div">, "ref">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'style' are incompatible.
+    Type 'CSSProperties | MotionStyle | undefined' is not assignable to type 'MotionStyle'.
+      Type 'undefined' is not assignable to type 'MotionStyle'.
+src/design-system/components/layout/Stack.tsx(54,6): error TS2375: Type '{ children: ReactNode; defaultChecked?: boolean | undefined; defaultValue?: string | number | readonly string[] | undefined; suppressContentEditableWarning?: boolean | undefined; ... 331 more ...; className: string; }' is not assignable to type 'Omit<HTMLMotionProps<"div">, "ref">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'style' are incompatible.
+    Type 'CSSProperties | MotionStyle | undefined' is not assignable to type 'MotionStyle'.
+      Type 'undefined' is not assignable to type 'MotionStyle'.
+src/lib/api-security.ts(32,12): error TS2532: Object is possibly 'undefined'.
+src/lib/logger.ts(1,18): error TS2307: Cannot find module 'pino' or its corresponding type declarations.
+src/lib/rate-limit-redis.ts(40,9): error TS2532: Object is possibly 'undefined'.
+src/lib/rate-limit-redis.ts(106,5): error TS2532: Object is possibly 'undefined'.
+src/lib/supabase-server.ts(7,31): error TS2307: Cannot find module '@/types/supabase' or its corresponding type declarations.
+src/lib/supabase-ssr.ts(16,5): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(supabaseUrl: string, supabaseKey: string, options: SupabaseClientOptions<"public"> & { cookieOptions?: CookieOptionsWithName; cookies: CookieMethodsServerDeprecated; cookieEncoding?: "raw" | "base64url"; }): SupabaseClient<...>', gave the following error.
+    Type '{ get: (name: string) => { name: string; value: string; } | undefined; set: (name: string, value: string, options: { path?: string; maxAge?: number; }) => void; remove: (name: string, options: { path?: string; }) => void; }' is not assignable to type 'CookieMethodsServerDeprecated'.
+      The types returned by 'get(...)' are incompatible between these types.
+        Type '{ name: string; value: string; } | undefined' is not assignable to type 'string | Promise<string | null | undefined> | null | undefined'.
+          Type '{ name: string; value: string; }' is not assignable to type 'string | Promise<string | null | undefined> | null | undefined'.
+  Overload 2 of 2, '(supabaseUrl: string, supabaseKey: string, options: SupabaseClientOptions<"public"> & { cookieOptions?: CookieOptionsWithName; cookies: CookieMethodsServer; cookieEncoding?: "raw" | "base64url"; }): SupabaseClient<...>', gave the following error.
+    Property 'getAll' is missing in type '{ get: (name: string) => { name: string; value: string; } | undefined; set: (name: string, value: string, options: { path?: string; maxAge?: number; }) => void; remove: (name: string, options: { path?: string; }) => void; }' but required in type 'CookieMethodsServer'.
+src/middleware/csrf.ts(33,29): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+src/middleware/rate-limit.ts(94,12): error TS2532: Object is possibly 'undefined'.
+src/services/__tests__/analytics.service.test.ts(34,24): error TS2673: Constructor of class 'AnalyticsService' is private and only accessible within the class declaration.
+src/services/__tests__/analytics.service.test.ts(73,45): error TS2339: Property 'getSessionMetrics' does not exist on type 'AnalyticsService'.
+src/services/__tests__/analytics.service.test.ts(87,45): error TS2339: Property 'getSessionMetrics' does not exist on type 'AnalyticsService'.
+src/services/__tests__/analytics.service.test.ts(132,45): error TS2339: Property 'generateReport' does not exist on type 'AnalyticsService'.
+src/services/__tests__/analytics.service.test.ts(145,45): error TS2339: Property 'generateReport' does not exist on type 'AnalyticsService'.
+src/services/__tests__/analytics.service.test.ts(161,45): error TS2339: Property 'exportData' does not exist on type 'AnalyticsService'.
+src/services/__tests__/analytics.service.test.ts(172,45): error TS2339: Property 'exportData' does not exist on type 'AnalyticsService'.
+src/services/__tests__/analytics.service.test.ts(180,37): error TS2339: Property 'exportData' does not exist on type 'AnalyticsService'.
+src/services/__tests__/analytics.service.test.ts(195,45): error TS2339: Property 'getTrends' does not exist on type 'AnalyticsService'.
+src/services/__tests__/analytics.service.test.ts(212,45): error TS2339: Property 'getTrends' does not exist on type 'AnalyticsService'.
+src/services/academic-standards.service.ts(1286,5): error TS2741: Property 'category' is missing in type '{ id: string; name: string; description: string; frequency: "daily"; duration: string; ageGroups: string[]; skills: string[]; equipment: string[]; benefits: string[]; requirements: string[]; cost: "low"; location: "home"; }' but required in type 'PhysicalEducationOption'.
+src/services/academic-standards.service.ts(1320,5): error TS2741: Property 'category' is missing in type '{ id: string; name: string; description: string; frequency: "weekly"; duration: string; ageGroups: string[]; skills: string[]; equipment: string[]; benefits: string[]; requirements: string[]; cost: "medium"; location: "local"; }' but required in type 'PhysicalEducationOption'.
+src/services/academic-standards.service.ts(1349,5): error TS2741: Property 'category' is missing in type '{ id: string; name: string; description: string; frequency: "weekly"; duration: string; ageGroups: string[]; skills: string[]; equipment: string[]; benefits: string[]; requirements: string[]; cost: "low"; location: "outdoor"; }' but required in type 'PhysicalEducationOption'.
+src/services/academic-standards.service.ts(1378,5): error TS2741: Property 'category' is missing in type '{ id: string; name: string; description: string; frequency: "weekly"; duration: string; ageGroups: string[]; skills: string[]; equipment: string[]; benefits: string[]; requirements: string[]; cost: "medium"; location: "local"; }' but required in type 'PhysicalEducationOption'.
+src/services/academic-standards.service.ts(1484,7): error TS2322: Type '"hybrid"' is not assignable to type '"online" | "local" | "home"'.
+src/services/academic-standards.service.ts(1653,23): error TS18048: 'min' is possibly 'undefined'.
+src/services/academic-standards.service.ts(1653,37): error TS18048: 'max' is possibly 'undefined'.
+src/services/ai-insights.service.ts(9,10): error TS2305: Module '"@/types"' has no exported member 'SessionRecord'.
+src/services/ai-insights.service.ts(446,50): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/services/ai-insights.service.ts(571,51): error TS7006: Parameter 'session' implicitly has an 'any' type.
+src/services/ai-insights.service.ts(613,45): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+src/services/ai-insights.service.ts(613,50): error TS7006: Parameter 'd' implicitly has an 'any' type.
+src/services/ai-insights.service.ts(726,11): error TS18048: 'mostCommonDay' is possibly 'undefined'.
+src/services/ai-insights.service.ts(730,69): error TS18048: 'mostCommonDay' is possibly 'undefined'.
+src/services/ai-insights.service.ts(731,22): error TS18048: 'mostCommonDay' is possibly 'undefined'.
+src/services/ai-insights.service.ts(734,25): error TS18048: 'mostCommonDay' is possibly 'undefined'.
+src/services/analytics.service.ts(8,10): error TS2305: Module '"@/types"' has no exported member 'SessionRecord'.
+src/services/analytics.service.ts(659,5): error TS2322: Type '{ day: string | undefined; count: number; }[]' is not assignable to type '{ day: string; count: number; }[]'.
+  Type '{ day: string | undefined; count: number; }' is not assignable to type '{ day: string; count: number; }'.
+    Types of property 'day' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+src/services/api-gateway.service.ts(33,28): error TS2673: Constructor of class 'SecurityService' is private and only accessible within the class declaration.
+src/services/api-gateway.service.ts(34,27): error TS2673: Constructor of class 'LoggingService' is private and only accessible within the class declaration.
+src/services/api-gateway.service.ts(53,46): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/services/api-gateway.service.ts(65,46): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/services/billing-dashboard.service.ts(138,13): error TS2375: Type '{ id: string; teacherId: string; studentId: string | undefined; parentId: string | undefined; startDate: Date; endDate: Date; totalHours: number; totalAmount: number; currency: string; ... 6 more ...; updatedAt: Date; }' is not assignable to type 'BillingPeriod' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'studentId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/services/billing-dashboard.service.ts(373,13): error TS2375: Type '{ id: string; billingPeriodId: string; amount: number; currency: string; paymentMethod: "other" | "cash" | "check" | "bank_transfer" | "credit_card" | "paypal"; transactionId: string | undefined; receivedDate: Date; processedBy: string; notes: string | undefined; createdAt: Date; }' is not assignable to type 'PaymentRecord' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'transactionId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/services/data-sheets.service.ts(344,26): error TS7006: Parameter 'activity' implicitly has an 'any' type.
+src/services/database.service.ts(415,7): error TS2322: Type '"UK" | "US" | "INDIA"' is not assignable to type 'Country'.
+  Type '"INDIA"' is not assignable to type 'Country'. Did you mean '"India"'?
+src/services/database.service.ts(442,5): error TS2375: Type '{ id: string; name: string; email: string; phone: string | undefined; subjects: string[]; experience: number; qualifications: string[]; specializations: string[]; hourlyRate: number; availability: any; ... 4 more ...; updatedAt: Date; }' is not assignable to type 'TeacherProfile' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'phone' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/services/database.service.ts(555,9): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/services/database.service.ts(619,23): error TS7006: Parameter 'student' implicitly has an 'any' type.
+src/services/logging.service.ts(69,11): error TS2375: Type '{ timestamp: string; level: LogLevel; context: LogContext; message: string; data: any; error: Error | undefined; userId: string | undefined; sessionId: string | undefined; }' is not assignable to type 'LogEntry' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'error' are incompatible.
+    Type 'Error | undefined' is not assignable to type 'Error'.
+      Type 'undefined' is not assignable to type 'Error'.
+src/services/network-manager.service.ts(405,76): error TS18046: 'action' is of type 'unknown'.
+src/services/offline-storage.service.ts(7,10): error TS2305: Module '"@/types"' has no exported member 'SessionRecord'.
+src/services/offline-storage.service.ts(116,68): error TS2345: Argument of type 'DOMException | null' is not assignable to parameter of type 'Error | undefined'.
+  Type 'null' is not assignable to type 'Error | undefined'.
+src/services/offline-storage.service.ts(180,71): error TS2345: Argument of type 'DOMException | null' is not assignable to parameter of type 'Error | undefined'.
+  Type 'null' is not assignable to type 'Error | undefined'.
+src/services/offline-storage.service.ts(213,71): error TS2345: Argument of type 'DOMException | null' is not assignable to parameter of type 'Error | undefined'.
+  Type 'null' is not assignable to type 'Error | undefined'.
+src/services/offline-storage.service.ts(256,75): error TS2345: Argument of type 'DOMException | null' is not assignable to parameter of type 'Error | undefined'.
+  Type 'null' is not assignable to type 'Error | undefined'.
+src/services/offline-storage.service.ts(312,74): error TS2345: Argument of type 'DOMException | null' is not assignable to parameter of type 'Error | undefined'.
+  Type 'null' is not assignable to type 'Error | undefined'.
+src/services/offline-storage.service.ts(318,88): error TS2345: Argument of type 'DOMException | null' is not assignable to parameter of type 'Error | undefined'.
+  Type 'null' is not assignable to type 'Error | undefined'.
+src/services/offline-storage.service.ts(347,74): error TS2345: Argument of type 'DOMException | null' is not assignable to parameter of type 'Error | undefined'.
+  Type 'null' is not assignable to type 'Error | undefined'.
+src/services/offline-storage.service.ts(423,75): error TS2345: Argument of type 'DOMException | null' is not assignable to parameter of type 'Error | undefined'.
+  Type 'null' is not assignable to type 'Error | undefined'.
+src/services/offline-storage.service.ts(429,76): error TS2345: Argument of type 'DOMException | null' is not assignable to parameter of type 'Error | undefined'.
+  Type 'null' is not assignable to type 'Error | undefined'.
+src/services/offline-storage.service.ts(467,65): error TS2345: Argument of type 'DOMException | null' is not assignable to parameter of type 'Error | undefined'.
+  Type 'null' is not assignable to type 'Error | undefined'.
+src/services/security.service.ts(215,39): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/services/security.service.ts(221,37): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(arrayBuffer: WithImplicitCoercion<ArrayBufferLike>, byteOffset?: number | undefined, length?: number | undefined): Buffer<ArrayBufferLike>', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'WithImplicitCoercion<ArrayBufferLike>'.
+      Type 'undefined' is not assignable to type 'WithImplicitCoercion<ArrayBufferLike>'.
+  Overload 2 of 4, '(string: WithImplicitCoercion<string>, encoding?: BufferEncoding | undefined): Buffer<ArrayBuffer>', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'WithImplicitCoercion<string>'.
+      Type 'undefined' is not assignable to type 'WithImplicitCoercion<string>'.
+src/services/security.service.ts(256,13): error TS2375: Type '{ id: string; userId: string; userRole: "teacher" | "student" | "parent" | "admin"; action: string; resource: string; resourceId: string | undefined; ipAddress: string; userAgent: string; ... 5 more ...; sessionId: string; }' is not assignable to type 'AuditLogEntry' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'resourceId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/services/security.service.ts(277,19): error TS2345: Argument of type '"security"' is not assignable to parameter of type 'LogContext'.
+src/services/security.service.ts(390,35): error TS2345: Argument of type '"login_lockout"' is not assignable to parameter of type '"login_attempt" | "failed_login" | "suspicious_activity" | "rate_limit_exceeded" | "potential_attack" | "data_access" | "permission_denied"'.
+src/services/security.service.ts(490,9): error TS2375: Type '{ allowed: boolean; reason: string | undefined; }' is not assignable to type '{ allowed: boolean; reason?: string; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'reason' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/services/security.service.ts(698,19): error TS2345: Argument of type '"security"' is not assignable to parameter of type 'LogContext'.
+src/services/security.service.ts(712,11): error TS2375: Type '{ id: string; type: "login_attempt" | "failed_login" | "suspicious_activity" | "rate_limit_exceeded" | "potential_attack" | "data_access" | "permission_denied"; severity: "high" | "medium" | "low" | "critical"; ... 6 more ...; resolved: false; }' is not assignable to type 'SecurityEvent' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'userId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/services/speech-to-text.service.ts(32,24): error TS2304: Cannot find name 'SpeechRecognition'.
+src/services/speech-to-text.service.ts(72,38): error TS2339: Property 'SpeechRecognition' does not exist on type 'Window & typeof globalThis'.
+src/services/speech-to-text.service.ts(72,66): error TS2339: Property 'webkitSpeechRecognition' does not exist on type 'Window & typeof globalThis'.
+src/services/speech-to-text.service.ts(91,34): error TS7006: Parameter 'event' implicitly has an 'any' type.
+src/services/speech-to-text.service.ts(107,33): error TS7006: Parameter 'event' implicitly has an 'any' type.
+src/services/speech-to-text.service.ts(176,9): error TS2322: Type '{ sampleRate: number | undefined; channelCount: number | undefined; echoCancellation: true; noiseSuppression: true; }' is not assignable to type 'boolean | MediaTrackConstraints | undefined'.
+  Type '{ sampleRate: number | undefined; channelCount: number | undefined; echoCancellation: true; noiseSuppression: true; }' is not assignable to type 'MediaTrackConstraints' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'channelCount' are incompatible.
+      Type 'number | undefined' is not assignable to type 'ConstrainULong'.
+        Type 'undefined' is not assignable to type 'ConstrainULong'.
+src/services/speech-to-text.service.ts(253,22): error TS2339: Property 'SpeechRecognition' does not exist on type 'Window & typeof globalThis'.
+src/services/speech-to-text.service.ts(253,50): error TS2339: Property 'webkitSpeechRecognition' does not exist on type 'Window & typeof globalThis'.
+src/services/syllabus.service.ts(99,7): error TS2322: Type 'unknown[]' is not assignable to type 'string[]'.
+  Type 'unknown' is not assignable to type 'string'.
+src/services/syllabus.service.ts(99,36): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/services/syllabus.service.ts(135,9): error TS2532: Object is possibly 'undefined'.
+src/services/syllabus.service.ts(192,11): error TS2532: Object is possibly 'undefined'.
+src/services/syllabus.service.ts(358,9): error TS18048: 'nextGrade' is possibly 'undefined'.
+src/services/syllabus.service.ts(380,9): error TS18048: 'previousGrade' is possibly 'undefined'.
+src/services/syllabus.service.ts(446,29): error TS2345: Argument of type 'Grade | undefined' is not assignable to parameter of type 'Grade'.
+  Type 'undefined' is not assignable to type 'Grade'.
+src/services/syllabus.service.ts(454,29): error TS2345: Argument of type 'Grade | undefined' is not assignable to parameter of type 'Grade'.
+  Type 'undefined' is not assignable to type 'Grade'.
+src/services/sync-manager.service.ts(9,10): error TS2305: Module '"@/types"' has no exported member 'SessionRecord'.
+src/services/sync-manager.service.ts(241,42): error TS2339: Property 'createSession' does not exist on type '{ getUserProfile(userId: string): Promise<any>; listUpcomingSessions(userId: string, role: "teacher" | "parent" | "admin"): Promise<any>; upsertUserProfile(user: { ...; }): Promise<...>; }'.
+src/services/sync-manager.service.ts(244,42): error TS2339: Property 'createUser' does not exist on type '{ getUserProfile(userId: string): Promise<any>; listUpcomingSessions(userId: string, role: "teacher" | "parent" | "admin"): Promise<any>; upsertUserProfile(user: { ...; }): Promise<...>; }'.
+src/services/sync-manager.service.ts(284,46): error TS2339: Property 'getSessionById' does not exist on type '{ getUserProfile(userId: string): Promise<any>; listUpcomingSessions(userId: string, role: "teacher" | "parent" | "admin"): Promise<any>; upsertUserProfile(user: { ...; }): Promise<...>; }'.
+src/services/sync-manager.service.ts(287,46): error TS2339: Property 'getUserById' does not exist on type '{ getUserProfile(userId: string): Promise<any>; listUpcomingSessions(userId: string, role: "teacher" | "parent" | "admin"): Promise<any>; upsertUserProfile(user: { ...; }): Promise<...>; }'.
+src/services/sync-manager.service.ts(310,42): error TS2339: Property 'updateSession' does not exist on type '{ getUserProfile(userId: string): Promise<any>; listUpcomingSessions(userId: string, role: "teacher" | "parent" | "admin"): Promise<any>; upsertUserProfile(user: { ...; }): Promise<...>; }'.
+src/services/sync-manager.service.ts(313,42): error TS2339: Property 'updateUser' does not exist on type '{ getUserProfile(userId: string): Promise<any>; listUpcomingSessions(userId: string, role: "teacher" | "parent" | "admin"): Promise<any>; upsertUserProfile(user: { ...; }): Promise<...>; }'.
+src/services/sync-manager.service.ts(347,42): error TS2339: Property 'deleteSession' does not exist on type '{ getUserProfile(userId: string): Promise<any>; listUpcomingSessions(userId: string, role: "teacher" | "parent" | "admin"): Promise<any>; upsertUserProfile(user: { ...; }): Promise<...>; }'.
+src/services/sync-manager.service.ts(350,42): error TS2339: Property 'deleteUser' does not exist on type '{ getUserProfile(userId: string): Promise<any>; listUpcomingSessions(userId: string, role: "teacher" | "parent" | "admin"): Promise<any>; upsertUserProfile(user: { ...; }): Promise<...>; }'.
+src/services/sync-manager.service.ts(447,9): error TS2322: Type '"server_wins" | "client_wins" | "merge"' is not assignable to type '"server_wins" | "client_wins" | "merged" | "manual_required"'.
+  Type '"merge"' is not assignable to type '"server_wins" | "client_wins" | "merged" | "manual_required"'. Did you mean '"merged"'?
+src/services/sync-manager.service.ts(474,41): error TS7006: Parameter 'insight' implicitly has an 'any' type.
+src/services/sync-manager.service.ts(475,39): error TS7006: Parameter 'existing' implicitly has an 'any' type.
+src/services/sync-manager.service.ts(511,31): error TS2339: Property 'updateSession' does not exist on type '{ getUserProfile(userId: string): Promise<any>; listUpcomingSessions(userId: string, role: "teacher" | "parent" | "admin"): Promise<any>; upsertUserProfile(user: { ...; }): Promise<...>; }'.
+src/services/sync-manager.service.ts(514,31): error TS2339: Property 'updateUser' does not exist on type '{ getUserProfile(userId: string): Promise<any>; listUpcomingSessions(userId: string, role: "teacher" | "parent" | "admin"): Promise<any>; upsertUserProfile(user: { ...; }): Promise<...>; }'.
+src/services/sync-manager.service.ts(528,73): error TS2353: Object literal may only specify known properties, and 'retryCount' does not exist in type 'Error'.
+src/services/sync-manager.service.ts(614,43): error TS2322: Type 'string' is not assignable to type '"session" | "user" | "insight" | "timesheet"'.
+src/services/sync-manager.service.ts(622,7): error TS2322: Type 'string' is not assignable to type '"session" | "user" | "insight" | "timesheet"'.
+src/services/timesheet-automation.service.ts(8,10): error TS2724: '"./websocket.service"' has no exported member named 'webSocketService'. Did you mean 'WebSocketService'?
+src/services/timesheet-automation.service.ts(170,13): error TS2375: Type '{ id: string; sessionId: string; teacherId: string; studentId: string; parentId: string | undefined; startTime: Date; location: { start: GPSCoordinates; verifications: LocationVerification[]; }; ... 7 more ...; updatedAt: Date; }' is not assignable to type 'TimesheetEntry' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'parentId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/services/timesheet-automation.service.ts(288,11): error TS2322: Type 'GPSCoordinates | null' is not assignable to type 'GPSCoordinates'.
+  Type 'null' is not assignable to type 'GPSCoordinates'.
+src/services/timesheet-automation.service.ts(425,65): error TS2345: Argument of type 'GeolocationPositionError' is not assignable to parameter of type 'Error'.
+  Property 'name' is missing in type 'GeolocationPositionError' but required in type 'Error'.
+src/services/timesheet-automation.service.ts(447,7): error TS2375: Type '{ isValid: boolean; distance: number; accuracy: number; confidenceScore: number; errorMessage: string | undefined; }' is not assignable to type 'LocationVerification' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'errorMessage' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/services/timesheet-automation.service.ts(478,5): error TS2375: Type '{ isValid: boolean; distance: number; accuracy: number; confidenceScore: number; errorMessage: string | undefined; }' is not assignable to type 'LocationVerification' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'errorMessage' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/services/user-journey-testing.service.ts(52,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(58,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(64,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(71,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(77,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(83,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(110,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(116,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(122,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(128,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(135,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(141,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(147,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(173,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(180,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(187,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(193,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(219,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(226,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(232,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(239,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(245,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(270,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(276,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(282,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(288,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(294,9): error TS2741: Property 'status' is missing in type '{ id: string; description: string; action: string; expectedResult: string; }' but required in type 'TestStep'.
+src/services/user-journey-testing.service.ts(347,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(348,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(349,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(352,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(353,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(354,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(361,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(362,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(363,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(365,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(366,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(368,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(373,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(374,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(375,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(377,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(378,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(380,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(388,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(389,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(390,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(392,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(393,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(395,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(418,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(419,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(420,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(422,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(423,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(425,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(451,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(452,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(453,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(456,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(457,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(458,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(479,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(480,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(481,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(482,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(496,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(497,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(498,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(500,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(501,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(503,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(506,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(507,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(508,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(510,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(511,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(512,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(514,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(515,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(516,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(542,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(543,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(544,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(546,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(547,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(549,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(554,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(555,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(556,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(558,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(559,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(561,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(566,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(567,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(568,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(570,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(571,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(573,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(594,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(595,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(596,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(602,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(603,9): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(605,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(629,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(630,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(631,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(634,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(635,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(636,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(643,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(644,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(645,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(646,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(649,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(650,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(651,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(654,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(655,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(656,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(680,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(681,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(682,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(684,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(685,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(686,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(688,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(689,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(690,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(692,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(693,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(694,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(696,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(697,7): error TS2532: Object is possibly 'undefined'.
+src/services/user-journey-testing.service.ts(698,7): error TS2532: Object is possibly 'undefined'.
+src/services/webhook.service.ts(42,28): error TS2673: Constructor of class 'SecurityService' is private and only accessible within the class declaration.
+src/services/webhook.service.ts(43,27): error TS2673: Constructor of class 'LoggingService' is private and only accessible within the class declaration.
+src/services/webhook.service.ts(142,46): error TS7006: Parameter 'endpoint' implicitly has an 'any' type.
+src/services/webhook.service.ts(289,45): error TS18048: 'delay' is possibly 'undefined'.
+src/services/webhook.service.ts(387,36): error TS7006: Parameter 'd' implicitly has an 'any' type.
+src/services/webhook.service.ts(388,33): error TS7006: Parameter 'd' implicitly has an 'any' type.
+src/services/webhook.service.ts(389,34): error TS7006: Parameter 'd' implicitly has an 'any' type.
+src/services/webhook.service.ts(390,43): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+src/services/webhook.service.ts(390,48): error TS7006: Parameter 'd' implicitly has an 'any' type.
+src/services/websocket.service.ts(165,50): error TS2345: Argument of type 'Event' is not assignable to parameter of type 'Error'.
+  Type 'Event' is missing the following properties from type 'Error': name, message
+src/services/websocket.service.ts(798,10): error TS2345: Argument of type '"high" | "medium" | "low" | "critical"' is not assignable to parameter of type '"high" | "medium" | "low" | undefined'.
+  Type '"critical"' is not assignable to type '"high" | "medium" | "low" | undefined'.
+src/services/websocket.service.ts(815,12): error TS2345: Argument of type '"high" | "medium" | "low" | "critical"' is not assignable to parameter of type '"high" | "medium" | "low" | undefined'.
+  Type '"critical"' is not assignable to type '"high" | "medium" | "low" | undefined'.
+src/services/websocket.service.ts(833,19): error TS2339: Property 'priority' does not exist on type '{}'.
+src/store/__tests__/session.store.test.ts(171,14): error TS2532: Object is possibly 'undefined'.
+src/store/__tests__/session.store.test.ts(257,14): error TS2532: Object is possibly 'undefined'.
+src/store/__tests__/session.store.test.ts(291,14): error TS2532: Object is possibly 'undefined'.
+src/store/__tests__/session.store.test.ts(291,65): error TS2532: Object is possibly 'undefined'.
+src/store/__tests__/session.store.test.ts(305,14): error TS2532: Object is possibly 'undefined'.
+src/store/__tests__/session.store.test.ts(306,14): error TS2532: Object is possibly 'undefined'.
+src/store/__tests__/session.store.test.ts(307,14): error TS2532: Object is possibly 'undefined'.
+src/store/__tests__/session.store.test.ts(330,14): error TS2532: Object is possibly 'undefined'.
+src/store/__tests__/session.store.test.ts(331,14): error TS2532: Object is possibly 'undefined'.
+src/store/__tests__/session.store.test.ts(332,14): error TS2532: Object is possibly 'undefined'.
+src/store/session.store.ts(71,25): error TS2532: Object is possibly 'undefined'.
+src/store/session.store.ts(72,23): error TS2532: Object is possibly 'undefined'.
+src/store/session.store.ts(335,5): error TS2322: Type '{ id: string; title: string; description: string; severity: "high" | "medium" | "low"; suggestedActions: string[]; category: string; confidence: number; generatedAt: Date; studentId: string | undefined; sessionId: string; }[]' is not assignable to type 'AIRecommendation[]'.
+  Type '{ id: string; title: string; description: string; severity: "high" | "medium" | "low"; suggestedActions: string[]; category: string; confidence: number; generatedAt: Date; studentId: string | undefined; sessionId: string; }' is not assignable to type 'AIRecommendation' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'studentId' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+src/store/session.store.ts(416,9): error TS2322: Type 'string' is not assignable to type 'Location'.
+src/store/session.store.ts(429,9): error TS2322: Type 'string' is not assignable to type 'Location'.
+src/store/session.store.ts(442,9): error TS2322: Type 'string' is not assignable to type 'Location'.
+src/store/session.store.ts(455,9): error TS2322: Type 'string' is not assignable to type 'Location'.
+src/store/session.store.ts(468,9): error TS2322: Type 'string' is not assignable to type 'Location'.
+src/store/session.store.ts(504,52): error TS18048: 'timeSlot' is possibly 'undefined'.
+src/store/session.store.ts(504,68): error TS18048: 'timeSlot' is possibly 'undefined'.
+src/store/session.store.ts(519,52): error TS18048: 'timeSlot' is possibly 'undefined'.
+src/store/session.store.ts(519,68): error TS18048: 'timeSlot' is possibly 'undefined'.
+src/store/session.store.ts(536,22): error TS2532: Object is possibly 'undefined'.

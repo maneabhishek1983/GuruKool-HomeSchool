@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 import { emailService } from '@/services/email.service';
 import {
   contactAdminSchema,
-  formatZodErrors,
-} from '@/lib/validators/api-schemas';
+  createValidationErrorResponse,
+} from '@/lib/validation';
 import { withRateLimit } from '@/lib/api-security';
 
 export const POST = withRateLimit({
@@ -23,11 +22,7 @@ export const POST = withRateLimit({
 
     if (!validation.success) {
       return NextResponse.json(
-        {
-          error: 'Validation failed',
-          code: 'VALIDATION_ERROR',
-          details: formatZodErrors(validation.error),
-        },
+        createValidationErrorResponse(validation.error),
         { status: 400 }
       );
     }

@@ -85,6 +85,8 @@ describe('EnhancedSessionStore', () => {
     // Reset the singleton instance to ensure clean state
     (EnhancedSessionStore as any).instance = null;
     sessionStore = EnhancedSessionStore.getInstance();
+    // Clear all data including sample data
+    sessionStore.clearAll();
     
     mockUser = {
       id: 'user-1',

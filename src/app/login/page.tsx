@@ -57,18 +57,18 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+    <div className="min-h-screen bg-netflix-black flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-netflix-dark-gray rounded-lg shadow-2xl p-8 border border-netflix-medium-gray">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-white mb-2">
             Welcome Back
           </h1>
-          <p className="text-gray-600">Sign in to your account</p>
+          <p className="text-netflix-text-gray">Sign in to your account</p>
         </div>
 
         {successMessage && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-            <p className="text-green-700 text-sm">{successMessage}</p>
+          <div className="bg-netflix-red/10 border border-netflix-red/30 rounded-lg p-4 mb-6">
+            <p className="text-netflix-red text-sm">{successMessage}</p>
           </div>
         )}
 
@@ -76,7 +76,7 @@ function LoginForm() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-white mb-2"
             >
               Email Address
             </label>
@@ -85,7 +85,7 @@ function LoginForm() {
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 bg-netflix-medium-gray border border-netflix-light-gray rounded-lg text-white placeholder-netflix-text-gray focus:outline-none focus:ring-2 focus:ring-netflix-red focus:border-transparent"
               placeholder="Enter your email"
               required
             />
@@ -94,7 +94,7 @@ function LoginForm() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-white mb-2"
             >
               Password
             </label>
@@ -103,14 +103,14 @@ function LoginForm() {
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 bg-netflix-medium-gray border border-netflix-light-gray rounded-lg text-white placeholder-netflix-text-gray focus:outline-none focus:ring-2 focus:ring-netflix-red focus:border-transparent"
               placeholder="Enter your password"
               required
             />
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="bg-netflix-red/10 border border-netflix-red/30 text-netflix-red px-4 py-3 rounded-lg">
               {error}
             </div>
           )}
@@ -118,20 +118,20 @@ function LoginForm() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full bg-netflix-red text-white py-3 px-4 rounded-lg hover:bg-netflix-red-dark focus:outline-none focus:ring-2 focus:ring-netflix-red focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
           >
             {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
         {/* What Happens Next Info */}
-        <div className="mt-8 bg-blue-50 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-blue-900 mb-2">
+        <div className="mt-8 bg-netflix-medium-gray rounded-lg p-4 border border-netflix-light-gray">
+          <h3 className="text-sm font-medium text-white mb-2">
             What happens after login?
           </h3>
-          <div className="text-xs text-blue-800 space-y-2">
+          <div className="text-xs text-netflix-text-gray space-y-2">
             <div className="flex items-start">
-              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
+              <div className="w-1.5 h-1.5 bg-netflix-red rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
               <p>
                 <strong>Parent:</strong> Access dashboard to manage students,
                 track progress, assign teachers, create student profiles with
@@ -139,7 +139,7 @@ function LoginForm() {
               </p>
             </div>
             <div className="flex items-start">
-              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
+              <div className="w-1.5 h-1.5 bg-netflix-red rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
               <p>
                 <strong>Teacher:</strong> Access dashboard to manage assigned
                 students, create lesson plans, track progress, and provide
@@ -147,7 +147,7 @@ function LoginForm() {
               </p>
             </div>
             <div className="flex items-start">
-              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
+              <div className="w-1.5 h-1.5 bg-netflix-red rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
               <p>
                 <strong>New Users:</strong> Contact your administrator to get
                 access credentials for the platform

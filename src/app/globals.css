@@ -9,7 +9,23 @@ body,
 }
 
 body {
-  background-color: #f9fafb;
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Theme-specific body styles */
+.theme-netflix body {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.theme-amazon body {
+  background-color: #ffffff;
+  color: #232f3e;
+}
+
+.theme-kids body {
+  background-color: #fef7ff;
+  color: #2d3748;
 }
 
 /* Accessibility Styles */
@@ -104,4 +120,123 @@ textarea:focus:not(:focus-visible),
   height: auto;
   clip: auto;
   overflow: visible;
+}
+
+/* Netflix-inspired custom styles */
+.netflix-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.netflix-scrollbar::-webkit-scrollbar-track {
+  background: #141414;
+  border-radius: 4px;
+}
+
+.netflix-scrollbar::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: 4px;
+}
+
+.netflix-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #666666;
+}
+
+/* Netflix-style text gradients */
+.netflix-text-gradient {
+  background: linear-gradient(135deg, #e50914 0%, #ff6b6b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Netflix-style glassmorphism */
+.netflix-glass {
+  background: rgba(20, 20, 20, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Netflix-style hover effects */
+.netflix-hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.netflix-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(229, 9, 20, 0.3);
+}
+
+/* Netflix-style loading animation */
+@keyframes netflix-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.netflix-pulse {
+  animation: netflix-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Netflix-style shimmer effect */
+@keyframes netflix-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.netflix-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.netflix-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  animation: netflix-shimmer 2s infinite;
+}
+
+/* Amazon theme styles */
+.amazon-hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.amazon-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(255, 153, 0, 0.2);
+}
+
+.amazon-text-gradient {
+  background: linear-gradient(135deg, #ff9900 0%, #ffb84d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Kids theme styles */
+.kids-hover-bounce {
+  transition: transform 0.3s ease;
+}
+
+.kids-hover-bounce:hover {
+  transform: scale(1.05) rotate(2deg);
+}
+
+.kids-text-gradient {
+  background: linear-gradient(135deg, #ff6b9d 0%, #4ecdc4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.kids-pulse {
+  animation: kids-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes kids-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }

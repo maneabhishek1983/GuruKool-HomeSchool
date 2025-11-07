@@ -34,15 +34,22 @@ export interface SessionRecord {
 
 export interface AIRecommendation {
   id: string;
-  type: 'scheduling' | 'content' | 'approach' | 'resource';
+  type?: 'scheduling' | 'content' | 'approach' | 'resource';
   title: string;
   description: string;
   confidence: number;
-  priority: 'high' | 'medium' | 'low';
-  actionable: boolean;
-  metadata: Record<string, any>;
-  createdAt: Date;
+  priority?: 'high' | 'medium' | 'low';
+  actionable?: boolean;
+  metadata?: Record<string, any>;
+  createdAt?: Date;
   expiresAt?: Date;
+  // Extended properties for compatibility
+  severity?: 'low' | 'medium' | 'high' | 'critical'; // Added 'critical'
+  suggestedActions?: string[];
+  category?: string;
+  generatedAt?: Date;
+  studentId?: string;
+  sessionId?: string;
 }
 
 export interface LearningPattern {

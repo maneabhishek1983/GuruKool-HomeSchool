@@ -787,6 +787,26 @@ export class EnhancedSessionStore {
   private generateId(): string {
     return Date.now() + '-' + Math.random().toString(36).substr(2, 9);
   }
+
+  /**
+   * Clear all data from the store (for testing purposes)
+   */
+  public clearAll(): void {
+    this.sessions.clear();
+    this.sessionsByStudent.clear();
+    this.sessionsByTeacher.clear();
+    this.sessionsByParent.clear();
+    this.aiInsightsCache.clear();
+    this.learningPatternsCache.clear();
+  }
+
+  /**
+   * Reset store to initial state with sample data (for testing)
+   */
+  public resetToSampleData(): void {
+    this.clearAll();
+    this.initializeSampleData();
+  }
 }
 
 // Export singleton instance

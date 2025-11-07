@@ -5,20 +5,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /** @type {import('next').NextConfig} */
-const withBundleAnalyzer = (config) => {
-  if (process.env.ANALYZE === 'true') {
-    try {
-      // Dynamically require to avoid dependency in prod
-      const { default: withAnalyzer } = await import('@next/bundle-analyzer');
-      return withAnalyzer({ enabled: true })(config);
-    } catch {
-      return config;
-    }
-  }
-  return config;
-};
-
-const nextConfig = withBundleAnalyzer({
+const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   // Add webpack configuration to handle missing modules and path aliases
@@ -36,11 +23,11 @@ const nextConfig = withBundleAnalyzer({
     return config;
   },
   eslint: {
-    ignoreDuringBuilds: process.env.CI ? false : true,
+    ignoreDuringBuilds: false,
     dirs: ['src'],
   },
   typescript: {
-    ignoreBuildErrors: process.env.CI ? false : true,
+    ignoreBuildErrors: false,
   },
 
   async headers() {
@@ -98,7 +85,7 @@ const nextConfig = withBundleAnalyzer({
       },
     ];
   },
-});
+};
 
 export default nextConfig;
 

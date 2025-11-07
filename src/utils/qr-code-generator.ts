@@ -111,8 +111,8 @@ export class QRCodeGenerator {
 
       const enc1 = char1 >> 2;
       const enc2 = ((char1 & 3) << 4) | (char2 >> 4);
-      const enc3 = ((char2 & 15) << 2) | (char3 >> 6);
-      const enc4 = char3 & 63;
+      let enc3 = ((char2 & 15) << 2) | (char3 >> 6);
+      let enc4 = char3 & 63;
 
       if (isNaN(char2)) {
         enc3 = enc4 = 64;
@@ -152,7 +152,7 @@ export class QRCodeGenerator {
     // Decode the base64 data to check the actual content
     try {
       const base64Data = qrCodeUrl.split(',')[1];
-      const svgContent = atob(base64Data);
+      const svgContent = base64Data ? atob(base64Data) : '';
 
       // Check if the SVG contains the expected data
       if (!svgContent.includes(email) || !svgContent.includes(password)) {
