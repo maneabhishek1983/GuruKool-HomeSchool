@@ -4,16 +4,27 @@ import React, { useState, useEffect } from 'react';
 import { useAuthContext } from '@/lib/authContext';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { NetflixBackground, NetflixButton, NetflixCard } from '@/components/NetflixBackground';
+import {
+  NetflixBackground,
+  NetflixButton,
+  NetflixCard,
+} from '@/components/NetflixBackground';
 import { DataSheetsManager } from '@/components/teacher/DataSheetsManager';
 import { TimesheetManager } from '@/components/teacher/TimesheetManager';
+import TeacherCheckInOut from '@/components/teacher/TeacherCheckInOut';
+import MonthlyTimesheetReport from '@/components/teacher/MonthlyTimesheetReport';
 
 export default function TeacherDashboard() {
   const { user, logout } = useAuthContext();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'data-sheets' | 'students' | 'sessions'
-  >('overview');
+    | 'checkin'
+    | 'timesheet'
+    | 'overview'
+    | 'data-sheets'
+    | 'students'
+    | 'sessions'
+  >('checkin');
   const [dashboardStats, setDashboardStats] = useState({
     assignedStudents: 0,
     activeLessons: 0,
@@ -60,18 +71,14 @@ export default function TeacherDashboard() {
   return (
     <NetflixBackground variant="dashboard">
       <div className="container mx-auto px-4 py-8">
-        <motion.div 
+        <motion.div
           className="text-center mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-4xl font-bold mb-4">
-            Teacher Dashboard
-          </h1>
-          <p className="text-xl max-w-2xl mx-auto">
-            Welcome back, {user.name}
-          </p>
+          <h1 className="text-4xl font-bold mb-4">Teacher Dashboard</h1>
+          <p className="text-xl max-w-2xl mx-auto">Welcome back, {user.name}</p>
         </motion.div>
 
         {/* Header with Navigation */}
@@ -81,21 +88,22 @@ export default function TeacherDashboard() {
               {/* Navigation Tabs */}
               <div className="flex space-x-2">
                 {[
-                  { id: 'overview', label: 'Overview' },
-                  { id: 'data-sheets', label: 'Data Sheets' },
-                  { id: 'students', label: 'Students' },
-                  { id: 'sessions', label: 'Sessions' },
+                  { id: 'checkin', label: 'Check-In/Out', icon: '📍' },
+                  { id: 'timesheet', label: 'Timesheet Report', icon: '📊' },
+                  { id: 'overview', label: 'Overview', icon: '📈' },
+                  { id: 'sessions', label: 'Sessions', icon: '📅' },
                 ].map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center space-x-1 ${
                       activeTab === tab.id
                         ? 'bg-blue-100 text-blue-700'
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
-                    {tab.label}
+                    <span>{tab.icon}</span>
+                    <span>{tab.label}</span>
                   </button>
                 ))}
               </div>
@@ -149,6 +157,31 @@ export default function TeacherDashboard() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Check-In/Out Tab - PRIORITY FEATURE FOR PRODUCTION */}
+        {activeTab === 'checkin' && (
+          <TeacherCheckInOut
+            teacherId={user?.id || ''}
+            onCheckInSuccess={entry => {
+              console.log('Checked in:', entry);
+              // Refresh stats
+              loadDashboardStats();
+            }}
+            onCheckOutSuccess={entry => {
+              console.log('Checked out:', entry);
+              // Refresh stats
+              loadDashboardStats();
+            }}
+          />
+        )}
+
+        {/* Timesheet Report Tab - PRIORITY FEATURE FOR PRODUCTION */}
+        {activeTab === 'timesheet' && (
+          <MonthlyTimesheetReport
+            teacherId={user?.id || ''}
+            teacherName={user?.name || ''}
+          />
+        )}
+
         {activeTab === 'overview' && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

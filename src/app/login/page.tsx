@@ -7,12 +7,17 @@ import { useAuthContext } from '@/lib/authContext';
 function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState<'parent' | 'teacher' | 'admin' | 'student'>(
+    'parent'
+  );
+  const [isSignupMode, setIsSignupMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, getAllUsers } = useAuthContext();
+  const { login, signup } = useAuthContext();
 
   useEffect(() => {
     // Check if setup was completed
@@ -22,32 +27,52 @@ function LoginForm() {
         'Admin account created successfully! You can now login.'
       );
     }
-
-    // Check if any users exist, if not redirect to admin portal
-    const users = getAllUsers();
-    if (users.length === 0) {
-      router.push('/admin-portal');
-    }
-  }, [searchParams, getAllUsers, router]);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setSuccessMessage('');
 
     try {
-      const result = await login(email, password);
-      if (result.success) {
-        // Redirect based on role
-        if (result.user?.role === 'admin') {
-          router.push('/admin/dashboard');
-        } else if (result.user?.role === 'teacher') {
-          router.push('/teacher/dashboard');
+      if (isSignupMode) {
+        // Sign up new user
+        const result = await signup(email, password, name, role);
+        if (result.success) {
+          setSuccessMessage('Account created successfully! Redirecting...');
+          setTimeout(() => {
+            // Redirect based on role
+            if (result.user?.role === 'admin') {
+              router.push('/admin/dashboard');
+            } else if (result.user?.role === 'teacher') {
+              router.push('/teacher/dashboard');
+            } else if (result.user?.role === 'student') {
+              router.push('/student/dashboard');
+            } else {
+              router.push('/parent/dashboard');
+            }
+          }, 1500);
         } else {
-          router.push('/parent/dashboard');
+          setError(result.error || 'Signup failed');
         }
       } else {
-        setError(result.error || 'Login failed');
+        // Login existing user
+        const result = await login(email, password);
+        if (result.success) {
+          // Redirect based on role
+          if (result.user?.role === 'admin') {
+            router.push('/admin/dashboard');
+          } else if (result.user?.role === 'teacher') {
+            router.push('/teacher/dashboard');
+          } else if (result.user?.role === 'student') {
+            router.push('/student/dashboard');
+          } else {
+            router.push('/parent/dashboard');
+          }
+        } else {
+          setError(result.error || 'Login failed');
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred');
@@ -61,18 +86,65 @@ function LoginForm() {
       <div className="max-w-md w-full bg-netflix-dark-gray rounded-lg shadow-2xl p-8 border border-netflix-medium-gray">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">
-            Welcome Back
+            {isSignupMode ? 'Create Account' : 'Welcome Back'}
           </h1>
-          <p className="text-netflix-text-gray">Sign in to your account</p>
+          <p className="text-netflix-text-gray">
+            {isSignupMode
+              ? 'Sign up for a new account'
+              : 'Sign in to your account'}
+          </p>
         </div>
 
         {successMessage && (
-          <div className="bg-netflix-red/10 border border-netflix-red/30 rounded-lg p-4 mb-6">
-            <p className="text-netflix-red text-sm">{successMessage}</p>
+          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-6">
+            <p className="text-green-500 text-sm">{successMessage}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {isSignupMode && (
+            <>
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-white mb-2"
+                >
+                  Full Name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className="w-full px-3 py-2 bg-netflix-medium-gray border border-netflix-light-gray rounded-lg text-white placeholder-netflix-text-gray focus:outline-none focus:ring-2 focus:ring-netflix-red focus:border-transparent"
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="role"
+                  className="block text-sm font-medium text-white mb-2"
+                >
+                  Account Type
+                </label>
+                <select
+                  id="role"
+                  value={role}
+                  onChange={e => setRole(e.target.value as any)}
+                  className="w-full px-3 py-2 bg-netflix-medium-gray border border-netflix-light-gray rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-netflix-red focus:border-transparent"
+                  required
+                >
+                  <option value="parent">Parent</option>
+                  <option value="teacher">Teacher</option>
+                  <option value="student">Student</option>
+                  <option value="admin">Administrator</option>
+                </select>
+              </div>
+            </>
+          )}
+
           <div>
             <label
               htmlFor="email"
@@ -104,8 +176,13 @@ function LoginForm() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               className="w-full px-3 py-2 bg-netflix-medium-gray border border-netflix-light-gray rounded-lg text-white placeholder-netflix-text-gray focus:outline-none focus:ring-2 focus:ring-netflix-red focus:border-transparent"
-              placeholder="Enter your password"
+              placeholder={
+                isSignupMode
+                  ? 'Create a password (min 6 characters)'
+                  : 'Enter your password'
+              }
               required
+              minLength={isSignupMode ? 6 : undefined}
             />
           </div>
 
@@ -120,53 +197,64 @@ function LoginForm() {
             disabled={isLoading}
             className="w-full bg-netflix-red text-white py-3 px-4 rounded-lg hover:bg-netflix-red-dark focus:outline-none focus:ring-2 focus:ring-netflix-red focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
           >
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading
+              ? isSignupMode
+                ? 'Creating Account...'
+                : 'Signing in...'
+              : isSignupMode
+                ? 'Create Account'
+                : 'Sign In'}
           </button>
         </form>
 
-        {/* What Happens Next Info */}
-        <div className="mt-8 bg-netflix-medium-gray rounded-lg p-4 border border-netflix-light-gray">
-          <h3 className="text-sm font-medium text-white mb-2">
-            What happens after login?
-          </h3>
-          <div className="text-xs text-netflix-text-gray space-y-2">
-            <div className="flex items-start">
-              <div className="w-1.5 h-1.5 bg-netflix-red rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
-              <p>
-                <strong>Parent:</strong> Access dashboard to manage students,
-                track progress, assign teachers, create student profiles with
-                country-specific academic standards
-              </p>
-            </div>
-            <div className="flex items-start">
-              <div className="w-1.5 h-1.5 bg-netflix-red rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
-              <p>
-                <strong>Teacher:</strong> Access dashboard to manage assigned
-                students, create lesson plans, track progress, and provide
-                feedback
-              </p>
-            </div>
-            <div className="flex items-start">
-              <div className="w-1.5 h-1.5 bg-netflix-red rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
-              <p>
-                <strong>New Users:</strong> Contact your administrator to get
-                access credentials for the platform
-              </p>
-            </div>
-          </div>
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => {
+              setIsSignupMode(!isSignupMode);
+              setError('');
+              setSuccessMessage('');
+            }}
+            className="text-netflix-red hover:text-netflix-red-dark text-sm font-medium"
+          >
+            {isSignupMode
+              ? 'Already have an account? Sign in'
+              : "Don't have an account? Sign up"}
+          </button>
         </div>
 
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-600">
-            Don&apos;t have an account?{' '}
-            <a
-              href="/contact-admin"
-              className="text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Contact administrator
-            </a>
-          </p>
-        </div>
+        {/* What Happens Next Info */}
+        {!isSignupMode && (
+          <div className="mt-8 bg-netflix-medium-gray rounded-lg p-4 border border-netflix-light-gray">
+            <h3 className="text-sm font-medium text-white mb-2">
+              What happens after login?
+            </h3>
+            <div className="text-xs text-netflix-text-gray space-y-2">
+              <div className="flex items-start">
+                <div className="w-1.5 h-1.5 bg-netflix-red rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
+                <p>
+                  <strong>Parent:</strong> Access dashboard to manage students,
+                  track progress, assign teachers, create student profiles with
+                  country-specific academic standards
+                </p>
+              </div>
+              <div className="flex items-start">
+                <div className="w-1.5 h-1.5 bg-netflix-red rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
+                <p>
+                  <strong>Teacher:</strong> Access dashboard to manage assigned
+                  students, create lesson plans, track progress, and provide
+                  feedback
+                </p>
+              </div>
+              <div className="flex items-start">
+                <div className="w-1.5 h-1.5 bg-netflix-red rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
+                <p>
+                  <strong>Student:</strong> View assignments, track your
+                  progress, and access learning materials
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

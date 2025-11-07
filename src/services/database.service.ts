@@ -307,8 +307,10 @@ export class DatabaseService {
         throw userError;
       }
 
+      const teacherUserId = userData.user!.id;
+
       const dbTeacher = {
-        user_id: userData.user!.id,
+        user_id: teacherUserId,
         parent_id: parentId,
         name: teacherData.name,
         email: teacherData.email,
@@ -317,7 +319,7 @@ export class DatabaseService {
         experience_years: parseInt(teacherData.experience) || 0,
         qualifications: teacherData.qualifications,
         specializations: teacherData.specializations,
-        hourly_rate: parseFloat(teacherData.hourlyRate) || 0,
+        hourly_rate: parseFloat(teacherData.hourlyRate) || 0, // Keep for backward compatibility
         availability: teacherData.availability,
         location: teacherData.location,
         bio: teacherData.bio,
@@ -332,6 +334,34 @@ export class DatabaseService {
 
       if (error) {
         throw error;
+      }
+
+      // If rates are provided, insert them into teacher_rates table
+      if (
+        teacherData.rates &&
+        Array.isArray(teacherData.rates) &&
+        teacherData.rates.length > 0
+      ) {
+        const ratesToInsert = teacherData.rates.map((rate: any) => ({
+          teacher_id: teacherUserId,
+          subject: rate.subject,
+          rate_type: rate.rate_type || 'hourly',
+          rate_amount: rate.rate_amount,
+          currency: rate.currency || 'USD',
+          effective_date:
+            rate.effective_date || new Date().toISOString().split('T')[0],
+          notes: rate.notes,
+          is_active: true,
+        }));
+
+        const { error: ratesError } = await supabase
+          .from('teacher_rates')
+          .insert(ratesToInsert);
+
+        if (ratesError) {
+          console.error('Error creating teacher rates:', ratesError);
+          // Don't fail the entire operation, just log the error
+        }
       }
 
       return this.mapDatabaseTeacherToProfile(data);

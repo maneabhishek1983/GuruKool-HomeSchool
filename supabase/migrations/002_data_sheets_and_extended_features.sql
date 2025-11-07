@@ -431,34 +431,37 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create function to get student progress summary
-CREATE OR REPLACE FUNCTION get_student_progress_summary(student_id_param UUID, days_back INTEGER DEFAULT 30)
-RETURNS TABLE(
-    activity_type activity_type,
-    total_activities BIGINT,
-    completed_activities BIGINT,
-    average_rating DECIMAL,
-    progress_trend VARCHAR
+CREATE OR REPLACE FUNCTION get_student_progress_summary(
+  student_id_param uuid,
+  days_back integer DEFAULT 30
+)
+RETURNS TABLE (
+  activity_type text,
+  total_activities bigint,
+  completed_activities bigint,
+  average_rating numeric,
+  progress_trend text
 ) AS $$
 BEGIN
-    RETURN QUERY
-    SELECT 
-        dsa.activity_type,
-        COUNT(*) as total_activities,
-        COUNT(*) FILTER (WHERE dsa.status = 'completed') as completed_activities,
-        ROUND(AVG(dsa.rating) FILTER (WHERE dsa.rating IS NOT NULL), 2) as average_rating,
-        CASE 
-            WHEN AVG(dsa.rating) FILTER (WHERE dsa.rating IS NOT NULL AND dsa.created_at >= NOW() - INTERVAL '14 days') > 
-                 AVG(dsa.rating) FILTER (WHERE dsa.rating IS NOT NULL AND dsa.created_at < NOW() - INTERVAL '14 days') 
-            THEN 'improving'
-            WHEN AVG(dsa.rating) FILTER (WHERE dsa.rating IS NOT NULL AND dsa.created_at >= NOW() - INTERVAL '14 days') < 
-                 AVG(dsa.rating) FILTER (WHERE dsa.rating IS NOT NULL AND dsa.created_at < NOW() - INTERVAL '14 days')
-            THEN 'declining'
-            ELSE 'stable'
-        END as progress_trend
-    FROM data_sheet_activities dsa
-    JOIN data_sheets ds ON dsa.data_sheet_id = ds.id
-    WHERE ds.student_id = student_id_param 
-    AND dsa.created_at >= NOW() - INTERVAL format('%s days', days_back)
-    GROUP BY dsa.activity_type;
+  RETURN QUERY
+  SELECT
+    dsa.activity_type::text,
+    COUNT(*) as total_activities,
+    COUNT(*) FILTER (WHERE dsa.status = 'completed') as completed_activities,
+    ROUND(AVG(dsa.rating) FILTER (WHERE dsa.rating IS NOT NULL), 2) as average_rating,
+    CASE
+      WHEN (AVG(dsa.rating) FILTER (WHERE dsa.rating IS NOT NULL AND dsa.created_at >= NOW() - INTERVAL '14 days')) >
+           (AVG(dsa.rating) FILTER (WHERE dsa.rating IS NOT NULL AND dsa.created_at < NOW() - INTERVAL '14 days'))
+      THEN 'improving'
+      WHEN (AVG(dsa.rating) FILTER (WHERE dsa.rating IS NOT NULL AND dsa.created_at >= NOW() - INTERVAL '14 days')) <
+           (AVG(dsa.rating) FILTER (WHERE dsa.rating IS NOT NULL AND dsa.created_at < NOW() - INTERVAL '14 days'))
+      THEN 'declining'
+      ELSE 'stable'
+    END as progress_trend
+  FROM data_sheet_activities dsa
+  JOIN data_sheets ds ON dsa.data_sheet_id = ds.id
+  WHERE ds.student_id = student_id_param
+    AND dsa.created_at >= NOW() - (days_back || ' days')::INTERVAL
+  GROUP BY dsa.activity_type;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql STABLE;

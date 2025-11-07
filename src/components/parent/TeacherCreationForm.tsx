@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { TeacherProfile } from '@/types';
+import TeacherRateManagement, { TeacherRate } from './TeacherRateManagement';
 
 interface TeacherFormData {
   name: string;
@@ -13,6 +14,7 @@ interface TeacherFormData {
   qualifications: string[];
   specializations: string[];
   hourlyRate: string;
+  rates: TeacherRate[];
   availability: {
     days: string[];
     timeSlots: string[];
@@ -107,6 +109,7 @@ export default function TeacherCreationForm({
     qualifications: [],
     specializations: [],
     hourlyRate: '',
+    rates: [],
     availability: {
       days: [],
       timeSlots: [],
@@ -140,8 +143,16 @@ export default function TeacherCreationForm({
       newErrors.experience = 'Experience is required';
     }
 
-    if (!formData.hourlyRate) {
-      newErrors.hourlyRate = 'Hourly rate is required';
+    if (!formData.rates.length) {
+      newErrors.rates = 'At least one rate is required';
+    } else {
+      // Validate each rate
+      const invalidRates = formData.rates.filter(
+        r => !r.subject || !r.rate_amount || r.rate_amount <= 0
+      );
+      if (invalidRates.length > 0) {
+        newErrors.rates = 'All rates must have a subject and valid amount';
+      }
     }
 
     if (!formData.location.address.trim()) {
@@ -300,29 +311,20 @@ export default function TeacherCreationForm({
               )}
             </div>
 
-            <div>
-              <label
-                htmlFor="hourlyRate"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Hourly Rate ($) *
-              </label>
-              <input
-                type="number"
-                id="hourlyRate"
-                min="0"
-                step="0.01"
-                value={formData.hourlyRate}
-                onChange={e =>
-                  setFormData(prev => ({ ...prev, hourlyRate: e.target.value }))
-                }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.hourlyRate ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Hourly rate in USD"
+            {/* Subject-Specific Rates Section */}
+            <div className="col-span-2">
+              <TeacherRateManagement
+                subjects={formData.subjects}
+                rates={formData.rates}
+                onChange={rates => setFormData(prev => ({ ...prev, rates }))}
               />
-              {errors.hourlyRate && (
-                <p className="text-red-500 text-xs mt-1">{errors.hourlyRate}</p>
+              {errors.rates && (
+                <p className="text-red-500 text-xs mt-1">{errors.rates}</p>
+              )}
+              {formData.subjects.length === 0 && (
+                <p className="text-amber-600 text-sm mt-2">
+                  Please select subjects above before adding rates.
+                </p>
               )}
             </div>
 

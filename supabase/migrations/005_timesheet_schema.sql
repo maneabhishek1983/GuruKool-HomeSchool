@@ -1,13 +1,27 @@
 -- Timesheet and Session Management Schema
 -- This migration adds the missing tables for timesheet tracking, sessions, and billing
 
--- Create additional custom types
-CREATE TYPE session_status AS ENUM ('scheduled', 'active', 'completed', 'cancelled', 'paused');
-CREATE TYPE billing_status AS ENUM ('pending', 'billed', 'paid', 'disputed');
-CREATE TYPE payment_method AS ENUM ('credit_card', 'bank_transfer', 'paypal', 'cash');
+-- Create additional custom types (with IF NOT EXISTS check)
+DO $$ BEGIN
+    CREATE TYPE session_status AS ENUM ('scheduled', 'active', 'completed', 'cancelled', 'paused');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE billing_status AS ENUM ('pending', 'billed', 'paid', 'disputed');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE payment_method AS ENUM ('credit_card', 'bank_transfer', 'paypal', 'cash');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Timesheets table
-CREATE TABLE timesheets (
+CREATE TABLE IF NOT EXISTS timesheets (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     session_id UUID NOT NULL,
     teacher_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -34,7 +48,7 @@ CREATE TABLE timesheets (
 );
 
 -- Sessions table
-CREATE TABLE sessions (
+CREATE TABLE IF NOT EXISTS sessions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     teacher_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
@@ -56,7 +70,7 @@ CREATE TABLE sessions (
 );
 
 -- Billing table
-CREATE TABLE billing (
+CREATE TABLE IF NOT EXISTS billing (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     timesheet_id UUID NOT NULL REFERENCES timesheets(id) ON DELETE CASCADE,
     teacher_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -235,12 +249,6 @@ BEGIN
     RETURN billing_id;
 END;
 $$ LANGUAGE plpgsql;
-
--- Insert sample data for demonstration
-INSERT INTO teacher_rates (teacher_id, subject, rate_amount, currency) VALUES
-('teacher-1', 'Mathematics', 25.00, 'USD'),
-('teacher-1', 'Science', 25.00, 'USD'),
-('teacher-1', 'English', 22.00, 'USD');
 
 -- Add comments for documentation
 COMMENT ON TABLE timesheets IS 'Tracks teacher work sessions with GPS verification and billing';

@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /**
  * Reusable Zod validation schemas for API routes
- * 
+ *
  * This file contains all validation schemas used across the application.
  * Using Zod provides:
  * - Type-safe request validation
@@ -111,11 +111,7 @@ export const countrySchema = z.enum(['UK', 'US', 'INDIA']);
 /**
  * Grade system enum
  */
-export const gradeSystemSchema = z.enum([
-  'uk_year',
-  'us_grade',
-  'india_class',
-]);
+export const gradeSystemSchema = z.enum(['uk_year', 'us_grade', 'india_class']);
 
 /**
  * Create student request
@@ -163,6 +159,18 @@ export const verificationStatusSchema = z.enum([
 ]);
 
 /**
+ * Teacher rate schema (subject-specific rates)
+ */
+export const teacherRateSchema = z.object({
+  subject: z.string().min(1, 'Subject is required'),
+  rate_type: z.enum(['hourly', 'fixed', 'session']).default('hourly'),
+  rate_amount: z.number().min(0, 'Rate must be positive'),
+  currency: z.string().length(3).default('USD'),
+  effective_date: z.string().datetime().optional(),
+  notes: z.string().max(500).optional(),
+});
+
+/**
  * Create teacher request
  */
 export const createTeacherSchema = z.object({
@@ -173,7 +181,8 @@ export const createTeacherSchema = z.object({
   experience_years: z.number().int().min(0).max(50),
   qualifications: z.array(z.string()).min(1),
   specializations: z.array(z.string()).default([]),
-  hourly_rate: z.number().min(0),
+  hourly_rate: z.number().min(0).optional(), // Deprecated - kept for backward compatibility
+  rates: z.array(teacherRateSchema).min(1, 'At least one rate is required'),
   availability: z.record(z.unknown()),
   location: z.record(z.unknown()),
   bio: z.string().max(2000).optional(),
@@ -286,7 +295,11 @@ export const contactAdminSchema = z.object({
   name: z.string().min(1, 'Name is required').max(255).trim(),
   email: emailSchema,
   subject: z.string().min(1, 'Subject is required').max(500).trim(),
-  message: z.string().min(10, 'Message must be at least 10 characters').max(5000).trim(),
+  message: z
+    .string()
+    .min(10, 'Message must be at least 10 characters')
+    .max(5000)
+    .trim(),
   category: z
     .enum(['support', 'billing', 'feature-request', 'bug-report', 'other'])
     .default('support'),
@@ -336,7 +349,7 @@ export const passwordResetConfirmSchema = z.object({
 /**
  * Validate request body against a schema
  * Returns parsed data or throws validation error
- * 
+ *
  * @example
  * ```typescript
  * const body = await validateRequestBody(request, createUserSchema);
@@ -359,7 +372,7 @@ export async function validateRequestBody<T extends z.ZodType>(
 
 /**
  * Validate query parameters against a schema
- * 
+ *
  * @example
  * ```typescript
  * const params = validateQueryParams(request, paginationSchema);
@@ -400,7 +413,7 @@ export class ValidationError extends Error {
     return {
       error: this.message,
       code: 'VALIDATION_ERROR',
-      details: this.errors.map((err) => ({
+      details: this.errors.map(err => ({
         path: err.path.join('.'),
         message: err.message,
         code: err.code,
@@ -429,7 +442,7 @@ export function sanitizeObject(obj: Record<string, any>): Record<string, any> {
       sanitized[key] = sanitizeString(value);
     } else if (typeof value === 'object' && value !== null) {
       sanitized[key] = Array.isArray(value)
-        ? value.map((item) =>
+        ? value.map(item =>
             typeof item === 'object' ? sanitizeObject(item) : item
           )
         : sanitizeObject(value);
@@ -440,3 +453,9 @@ export function sanitizeObject(obj: Record<string, any>): Record<string, any> {
 
   return sanitized;
 }
+
+// ============================================================================
+// Export Aliases (for backward compatibility)
+// ============================================================================
+export const teacherCreateSchema = createTeacherSchema;
+export const studentCreateSchema = createStudentSchema;

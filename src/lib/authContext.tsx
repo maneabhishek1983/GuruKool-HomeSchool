@@ -1,13 +1,14 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from './supabase';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export interface User {
   id: string;
   name: string;
-  role: 'parent' | 'admin' | 'teacher';
+  role: 'parent' | 'admin' | 'teacher' | 'student';
   email: string;
-  password?: string; // Add password for new users
   preferences: {
     notifications: {
       email: boolean;
@@ -40,12 +41,19 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
+  authMethod?: 'qr' | 'traditional';
   login: (
     email: string,
     password: string
   ) => Promise<{ success: boolean; user?: User; error?: string }>;
-  logout: () => void;
-  isLoading: boolean;
+  logout: () => Promise<void>;
+  signup: (
+    email: string,
+    password: string,
+    name: string,
+    role: User['role']
+  ) => Promise<{ success: boolean; user?: User; error?: string }>;
   createUser: (
     userData: Omit<User, 'id' | 'createdAt' | 'lastActive'>
   ) => Promise<{ success: boolean; user?: User; error?: string }>;
@@ -54,100 +62,198 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Default preferences
+const defaultPreferences: User['preferences'] = {
+  notifications: {
+    email: true,
+    push: true,
+    sms: false,
+    inApp: true,
+    frequency: 'immediate',
+  },
+  dashboard: {
+    layout: 'detailed',
+    theme: 'light',
+    widgets: [],
+  },
+  privacy: {
+    dataSharing: false,
+    analytics: true,
+    aiTraining: false,
+  },
+  accessibility: {
+    fontSize: 'medium',
+    highContrast: false,
+    reducedMotion: false,
+    screenReader: false,
+  },
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [authMethod, setAuthMethod] = useState<'qr' | 'traditional'>(
+    'traditional'
+  );
 
-  // Initialize with empty users array - no demo users
-  useEffect(() => {
-    const initializeUsers = () => {
-      // Load existing users from localStorage
-      const storedUsers = localStorage.getItem('allUsers');
-      if (storedUsers) {
-        try {
-          const parsedUsers = JSON.parse(storedUsers);
-          // Convert date strings back to Date objects
-          const usersWithDates = parsedUsers.map((u: any) => ({
-            ...u,
-            createdAt: new Date(u.createdAt),
-            lastActive: new Date(u.lastActive),
-          }));
-          setAllUsers(usersWithDates);
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error('Error parsing stored users:', error);
-          setAllUsers([]);
-        }
-      } else {
-        setAllUsers([]);
-      }
-    };
-
-    initializeUsers();
-  }, []);
-
-  useEffect(() => {
-    // Check for stored user data on mount
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        // Convert date strings back to Date objects
-        parsedUser.createdAt = new Date(parsedUser.createdAt);
-        parsedUser.lastActive = new Date(parsedUser.lastActive);
-        setUser(parsedUser);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('user');
-      }
-    }
-    setIsLoading(false);
-  }, []);
-
-  const createUser = async (
-    userData: Omit<User, 'id' | 'createdAt' | 'lastActive'>
-  ): Promise<{ success: boolean; user?: User; error?: string }> => {
+  // Fetch user profile from Supabase
+  const fetchUserProfile = async (
+    supabaseUser: SupabaseUser
+  ): Promise<User | null> => {
     try {
-      // Check if user already exists
-      const existingUser = allUsers.find(u => u.email === userData.email);
-      if (existingUser) {
-        return {
-          success: false,
-          error: 'User with this email already exists.',
-        };
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', supabaseUser.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
       }
 
-      // Create new user
-      const newUser: User = {
-        ...userData,
-        id: `user-${Date.now()}`,
-        createdAt: new Date(),
-        lastActive: new Date(),
-      };
+      if (!data) {
+        return null;
+      }
 
-      // Add to users list
-      const updatedUsers = [...allUsers, newUser];
-      setAllUsers(updatedUsers);
-      localStorage.setItem('allUsers', JSON.stringify(updatedUsers));
-
-      // eslint-disable-next-line no-console
-      console.log('User created successfully:', newUser);
-
-      return { success: true, user: newUser };
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error creating user:', error);
       return {
-        success: false,
-        error: 'Failed to create user. Please try again.',
+        id: data.id,
+        name: data.name,
+        role: data.role as User['role'],
+        email: data.email,
+        preferences: data.preferences || defaultPreferences,
+        createdAt: new Date(data.created_at),
+        lastActive: new Date(data.last_active || data.created_at),
       };
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
     }
   };
 
-  const getAllUsers = (): User[] => {
-    return allUsers;
+  // Initialize auth state
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        // Get current session
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error('Error getting session:', error);
+          setIsLoading(false);
+          return;
+        }
+
+        if (session?.user) {
+          const userProfile = await fetchUserProfile(session.user);
+          if (userProfile) {
+            setUser(userProfile);
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const userProfile = await fetchUserProfile(session.user);
+        if (userProfile) {
+          setUser(userProfile);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const signup = async (
+    email: string,
+    password: string,
+    name: string,
+    role: User['role']
+  ): Promise<{ success: boolean; user?: User; error?: string }> => {
+    try {
+      // Sign up with Supabase Auth
+      const { data: authData, error: signUpError } = await supabase.auth.signUp(
+        {
+          email,
+          password,
+        }
+      );
+
+      if (signUpError) {
+        return {
+          success: false,
+          error: signUpError.message,
+        };
+      }
+
+      if (!authData.user) {
+        return {
+          success: false,
+          error: 'Failed to create user account.',
+        };
+      }
+
+      // Create user profile in database
+      const { data: profileData, error: profileError } = await supabase
+        .from('users')
+        .insert([
+          {
+            id: authData.user.id,
+            email,
+            name,
+            role,
+            preferences: defaultPreferences,
+            created_at: new Date().toISOString(),
+            last_active: new Date().toISOString(),
+          },
+        ])
+        .select()
+        .single();
+
+      if (profileError) {
+        console.error('Error creating user profile:', profileError);
+        return {
+          success: false,
+          error: 'Failed to create user profile.',
+        };
+      }
+
+      const newUser: User = {
+        id: profileData.id,
+        name: profileData.name,
+        role: profileData.role as User['role'],
+        email: profileData.email,
+        preferences: profileData.preferences || defaultPreferences,
+        createdAt: new Date(profileData.created_at),
+        lastActive: new Date(profileData.last_active),
+      };
+
+      setUser(newUser);
+      return { success: true, user: newUser };
+    } catch (error) {
+      console.error('Signup error:', error);
+      return {
+        success: false,
+        error: 'An error occurred during signup. Please try again.',
+      };
+    }
   };
 
   const login = async (
@@ -155,36 +261,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string
   ): Promise<{ success: boolean; user?: User; error?: string }> => {
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Sign in with Supabase Auth
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      // Find user in allUsers array
-      const foundUser = allUsers.find(
-        u => u.email === email && u.password === password
-      );
-
-      if (foundUser) {
-        // Update last active
-        const updatedUser = { ...foundUser, lastActive: new Date() };
-        setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-
-        // Update in allUsers array
-        const updatedUsers = allUsers.map(u =>
-          u.id === foundUser.id ? updatedUser : u
-        );
-        setAllUsers(updatedUsers);
-        localStorage.setItem('allUsers', JSON.stringify(updatedUsers));
-
-        return { success: true, user: updatedUser };
-      } else {
+      if (error) {
         return {
           success: false,
-          error: 'Invalid email or password. Please try again.',
+          error: error.message,
         };
       }
+
+      if (!data.user) {
+        return {
+          success: false,
+          error: 'Login failed. Please try again.',
+        };
+      }
+
+      // Fetch user profile
+      const userProfile = await fetchUserProfile(data.user);
+      if (!userProfile) {
+        return {
+          success: false,
+          error: 'User profile not found.',
+        };
+      }
+
+      // Update last active
+      await supabase
+        .from('users')
+        .update({ last_active: new Date().toISOString() })
+        .eq('id', data.user.id);
+
+      setUser(userProfile);
+      setAuthMethod('traditional');
+      return { success: true, user: userProfile };
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Login error:', error);
       return {
         success: false,
@@ -193,9 +308,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setAuthMethod('traditional');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  const createUser = async (
+    userData: Omit<User, 'id' | 'createdAt' | 'lastActive'>
+  ): Promise<{ success: boolean; user?: User; error?: string }> => {
+    // For backward compatibility - redirect to signup
+    return signup(
+      userData.email,
+      'temporary-password-123', // User should change this
+      userData.name,
+      userData.role
+    );
+  };
+
+  const getAllUsers = (): User[] => {
+    // This function is deprecated - use Supabase queries instead
+    console.warn('getAllUsers() is deprecated. Use Supabase queries instead.');
+    return [];
   };
 
   return (
@@ -203,9 +341,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         isAuthenticated: !!user,
+        isLoading,
+        authMethod,
         login,
         logout,
-        isLoading,
+        signup,
         createUser,
         getAllUsers,
       }}
