@@ -1,9 +1,9 @@
 import { ReactNode } from 'react';
 import { FieldValues, UseFormReturn, FieldPath } from 'react-hook-form';
-import { ZodSchema } from 'zod';
+import { z } from 'zod';
 
 export interface SmartFormProps<T extends FieldValues = FieldValues> {
-  schema: ZodSchema<T>;
+  schema: z.ZodType<T>;
   onSubmit: (data: T) => Promise<void> | void;
   children: ReactNode;
   defaultValues?: Partial<T>;

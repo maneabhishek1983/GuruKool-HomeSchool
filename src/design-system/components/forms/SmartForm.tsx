@@ -17,15 +17,20 @@ export function SmartForm<T extends FieldValues = FieldValues>({
   className,
   form: externalForm,
 }: SmartFormProps<T>) {
-  const internalForm = useForm<T>({
-    resolver: zodResolver(schema),
-    defaultValues,
+  const formConfig: any = {
+    resolver: zodResolver(schema as any),
+    ...(defaultValues ? { defaultValues } : {}),
     mode: realTimeValidation ? 'onChange' : 'onSubmit',
     reValidateMode: 'onChange',
-  });
+  };
+
+  const internalForm = useForm<T>(formConfig);
 
   const form = externalForm || internalForm;
-  const { handleSubmit, formState: { errors, isSubmitting, isValid } } = form;
+  const {
+    handleSubmit,
+    formState: { errors, isSubmitting, isValid },
+  } = form;
 
   // AI-assisted form enhancement
   useEffect(() => {
@@ -46,9 +51,9 @@ export function SmartForm<T extends FieldValues = FieldValues>({
   };
 
   return (
-    <FormProvider {...form}>
+    <FormProvider {...(form as any)}>
       <motion.form
-        onSubmit={handleSubmit(handleFormSubmit)}
+        onSubmit={handleSubmit(handleFormSubmit as any)}
         className={clsx(
           'space-y-6 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm',
           'border border-gray-200 dark:border-gray-700',
@@ -59,7 +64,7 @@ export function SmartForm<T extends FieldValues = FieldValues>({
         transition={{ duration: 0.3 }}
       >
         {children}
-        
+
         <AnimatePresence>
           {Object.keys(errors).length > 0 && (
             <motion.div
@@ -98,7 +103,7 @@ export function SmartForm<T extends FieldValues = FieldValues>({
           >
             Reset
           </motion.button>
-          
+
           <motion.button
             type="submit"
             disabled={isSubmitting || (!isValid && realTimeValidation)}
