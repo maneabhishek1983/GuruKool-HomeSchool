@@ -1199,10 +1199,11 @@ export class CommunicationAgent implements AIAgent {
     if (success) {
       return { success: true };
     }
-    return {
+    const result: { success: boolean; error?: string } = {
       success: false,
-      error: 'Email delivery service unavailable',
     };
+    result.error = 'Email delivery service unavailable';
+    return result;
   }
 
   /**
@@ -1219,10 +1220,11 @@ export class CommunicationAgent implements AIAgent {
     if (success) {
       return { success: true };
     }
-    return {
+    const result: { success: boolean; error?: string } = {
       success: false,
-      error: 'SMS gateway error',
     };
+    result.error = 'SMS gateway error';
+    return result;
   }
 
   /**
@@ -1239,10 +1241,11 @@ export class CommunicationAgent implements AIAgent {
     if (success) {
       return { success: true };
     }
-    return {
+    const result: { success: boolean; error?: string } = {
       success: false,
-      error: 'Push service unavailable',
     };
+    result.error = 'Push service unavailable';
+    return result;
   }
 
   /**
@@ -1253,6 +1256,10 @@ export class CommunicationAgent implements AIAgent {
   ): Promise<{ success: boolean; error?: string }> {
     // Store in offline storage for in-app display
     try {
+      // Map priority: critical -> high for storage (storage doesn't support critical)
+      const storagePriority: 'high' | 'medium' | 'low' =
+        message.priority === 'critical' ? 'high' : message.priority;
+
       await offlineStorageManager.store(
         'notifications',
         {
@@ -1266,7 +1273,7 @@ export class CommunicationAgent implements AIAgent {
           createdAt: message.createdAt,
           read: false,
         },
-        message.priority
+        storagePriority
       );
 
       return { success: true };
