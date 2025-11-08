@@ -62,9 +62,10 @@ export function BackgroundImageSettings({
   onSettingsChange,
   className = '',
 }: BackgroundImageSettingsProps) {
-  const [settings, setSettings] = useState<BackgroundImageSettings>(
-    defaultSettings[theme] ?? defaultSettings.netflix
-  );
+  const [settings, setSettings] = useState<BackgroundImageSettings>(() => {
+    const themeSettings = defaultSettings[theme];
+    return themeSettings ?? defaultSettings.netflix;
+  });
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSettingChange = (
@@ -77,7 +78,8 @@ export function BackgroundImageSettings({
   };
 
   const resetToDefault = () => {
-    const defaultSetting = defaultSettings[theme] ?? defaultSettings.netflix;
+    const themeSettings = defaultSettings[theme];
+    const defaultSetting = themeSettings ?? defaultSettings.netflix;
     setSettings(defaultSetting);
     onSettingsChange(defaultSetting);
   };
