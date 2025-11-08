@@ -32,7 +32,8 @@ export abstract class BaseAgent implements AIAgent {
         lastExecution: this.lastExecution,
         executionCount: this.executionCount,
         errorCount: this.errorCount,
-        errorRate: this.executionCount > 0 ? this.errorCount / this.executionCount : 0,
+        errorRate:
+          this.executionCount > 0 ? this.errorCount / this.executionCount : 0,
         averageExecutionTime: this.averageExecutionTime,
       };
 
@@ -51,9 +52,11 @@ export abstract class BaseAgent implements AIAgent {
   /**
    * Execute with performance tracking and error handling
    */
-  public async executeWithTracking(context: AgentContext): Promise<AgentResult> {
+  public async executeWithTracking(
+    context: AgentContext
+  ): Promise<AgentResult> {
     const startTime = Date.now();
-    
+
     try {
       // Handle health check requests
       if (context.healthCheck) {
@@ -71,17 +74,17 @@ export abstract class BaseAgent implements AIAgent {
 
       // Execute the agent
       const result = await this.execute(context);
-      
+
       // Update metrics on success
       this.updateMetrics(startTime, true);
       this.lastExecution = new Date();
-      
+
       return result;
     } catch (error) {
       // Update metrics on error
       this.updateMetrics(startTime, false);
       this.isHealthy = false;
-      
+
       return {
         success: false,
         error: `Agent execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -92,7 +95,10 @@ export abstract class BaseAgent implements AIAgent {
   /**
    * Validate agent context
    */
-  protected validateContext(context: AgentContext): { isValid: boolean; error?: string } {
+  protected validateContext(context: AgentContext): {
+    isValid: boolean;
+    error?: string;
+  } {
     // Basic validation - can be overridden by subclasses
     if (!context) {
       return { isValid: false, error: 'Context is required' };
@@ -106,15 +112,16 @@ export abstract class BaseAgent implements AIAgent {
    */
   private updateMetrics(startTime: number, success: boolean): void {
     const executionTime = Date.now() - startTime;
-    
+
     this.executionCount++;
     if (!success) {
       this.errorCount++;
     }
 
     // Update average execution time
-    this.averageExecutionTime = 
-      (this.averageExecutionTime * (this.executionCount - 1) + executionTime) / this.executionCount;
+    this.averageExecutionTime =
+      (this.averageExecutionTime * (this.executionCount - 1) + executionTime) /
+      this.executionCount;
   }
 
   /**
@@ -141,7 +148,11 @@ export abstract class BaseAgent implements AIAgent {
   /**
    * Log agent activity
    */
-  protected log(level: 'info' | 'warn' | 'error', message: string, data?: any): void {
+  protected log(
+    level: 'info' | 'warn' | 'error',
+    message: string,
+    data?: any
+  ): void {
     const logEntry = {
       timestamp: new Date().toISOString(),
       agent: this.name,
@@ -181,7 +192,8 @@ export abstract class BaseAgent implements AIAgent {
       isHealthy: this.isHealthy,
       executionCount: this.executionCount,
       errorCount: this.errorCount,
-      errorRate: this.executionCount > 0 ? this.errorCount / this.executionCount : 0,
+      errorRate:
+        this.executionCount > 0 ? this.errorCount / this.executionCount : 0,
       averageExecutionTime: this.averageExecutionTime,
       lastExecution: this.lastExecution,
     };
@@ -230,7 +242,10 @@ export abstract class BaseAgent implements AIAgent {
   /**
    * Post-execution hook - called after execute()
    */
-  protected async afterExecute(context: AgentContext, result: AgentResult): Promise<void> {
+  protected async afterExecute(
+    context: AgentContext,
+    result: AgentResult
+  ): Promise<void> {
     // Override in subclasses if needed
   }
 
@@ -238,10 +253,14 @@ export abstract class BaseAgent implements AIAgent {
    * Handle agent errors gracefully
    */
   protected handleError(error: unknown, context: AgentContext): AgentResult {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
-    this.log('error', 'Agent execution failed', { error: errorMessage, context });
-    
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
+
+    this.log('error', 'Agent execution failed', {
+      error: errorMessage,
+      context,
+    });
+
     return {
       success: false,
       error: `${this.name} execution failed: ${errorMessage}`,
@@ -256,12 +275,20 @@ export abstract class BaseAgent implements AIAgent {
     insights?: AIInsight[],
     actions?: any[]
   ): AgentResult {
-    return {
+    const result: AgentResult = {
       success: true,
       data,
-      insights,
-      actions,
     };
+
+    if (insights) {
+      result.insights = insights;
+    }
+
+    if (actions) {
+      result.actions = actions;
+    }
+
+    return result;
   }
 
   /**

@@ -347,6 +347,20 @@ export const passwordResetConfirmSchema = z.object({
 // ============================================================================
 
 /**
+ * Create a formatted validation error response
+ * Converts Zod errors to a user-friendly format
+ */
+export function createValidationErrorResponse(error: z.ZodError) {
+  return {
+    error: 'Validation failed',
+    details: error.errors.map(err => ({
+      field: err.path.join('.'),
+      message: err.message,
+    })),
+  };
+}
+
+/**
  * Validate request body against a schema
  * Returns parsed data or throws validation error
  *
