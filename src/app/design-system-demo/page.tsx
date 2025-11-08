@@ -65,7 +65,7 @@ function DemoContent() {
 
       {/* Components Grid */}
       <motion.div
-        variants={staggerVariants.container}
+        variants={staggerVariants}
         initial="initial"
         animate="animate"
         className="space-y-12"

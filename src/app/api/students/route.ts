@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createStudentSchema, updateStudentSchema, paginationSchema, validateQueryParams } from '@/lib/validation';
+import {
+  createStudentSchema,
+  updateStudentSchema,
+  paginationSchema,
+  validateQueryParams,
+} from '@/lib/validation';
 import { DatabaseService } from '@/services/database.service';
 import { withRedisRateLimit } from '@/lib/rate-limit-redis';
 import { withAuth, requireParentOrAdmin } from '@/lib/auth-middleware';
+import { StudentProfile, Country } from '@/types';
 
 /**
  * GET /api/students
  * Fetch all students for authenticated parent
- * 
+ *
  * Auth: Requires parent or admin role
  * Rate Limit: 100 requests per 15 minutes
  */
@@ -52,7 +58,7 @@ export const GET = withRedisRateLimit({
 /**
  * POST /api/students
  * Create a new student for authenticated parent
- * 
+ *
  * Auth: Requires parent or admin role
  * Rate Limit: 20 requests per 15 minutes
  */
@@ -67,8 +73,15 @@ export const POST = withRedisRateLimit({
       const body = await request.json();
       const validatedData = createStudentSchema.parse(body);
 
+      // Transform country from 'INDIA' to 'India' to match StudentProfile type
+      const countryValue = validatedData.country as 'UK' | 'US' | 'INDIA';
+      const studentData: Partial<StudentProfile> = {
+        ...validatedData,
+        country: (countryValue === 'INDIA' ? 'India' : countryValue) as Country,
+      };
+
       // Create student
-      const student = await DatabaseService.createStudent(validatedData, user.id);
+      const student = await DatabaseService.createStudent(studentData, user.id);
 
       if (!student) {
         return NextResponse.json(

@@ -47,7 +47,8 @@
       "Bash(timeout:*)",
       "Bash(git fetch:*)",
       "Bash(npx eslint:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git rev-parse:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

@@ -3,6 +3,7 @@ import { updateTeacherSchema } from '@/lib/validation';
 import { DatabaseService } from '@/services/database.service';
 import { withRateLimit } from '@/lib/api-security';
 import { createClient } from '@supabase/supabase-js';
+import { TeacherProfile } from '@/types';
 
 /**
  * GET /api/teachers/[id]
@@ -153,12 +154,14 @@ export const PUT = withRateLimit({
       );
     }
 
-    // Update teacher
-    const updatedTeacher = await DatabaseService.updateTeacher(
-      id,
-      validation.data,
-      user.id
-    );
+    // Update teacher - filter out undefined values for exactOptionalPropertyTypes
+    const updates: Partial<TeacherProfile> = {};
+    Object.entries(validation.data).forEach(([key, value]) => {
+      if (value !== undefined) {
+        (updates as any)[key] = value;
+      }
+    });
+    const updatedTeacher = await DatabaseService.updateTeacher(id, updates);
 
     if (!updatedTeacher) {
       return NextResponse.json(
