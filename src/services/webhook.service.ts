@@ -39,8 +39,8 @@ export class WebhookService {
   private retryDelays: number[] = [1000, 5000, 15000, 60000, 300000]; // 1s, 5s, 15s, 1m, 5m
 
   constructor() {
-    this.securityService = new SecurityService();
-    this.loggingService = new LoggingService();
+    this.securityService = SecurityService.getInstance();
+    this.loggingService = LoggingService.getInstance();
   }
 
   /**
@@ -77,7 +77,7 @@ export class WebhookService {
         isActive: true,
         retryCount: 3,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       // Store in database
@@ -95,7 +95,7 @@ export class WebhookService {
         endpointId,
         url,
         events,
-        userId
+        userId,
       });
 
       return data;
@@ -104,7 +104,7 @@ export class WebhookService {
         url,
         events,
         userId,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -135,11 +135,11 @@ export class WebhookService {
         event,
         data,
         timestamp: new Date().toISOString(),
-        id: this.securityService.generateUUID()
+        id: this.securityService.generateUUID(),
       };
 
       // Send to each endpoint
-      const deliveryPromises = endpoints.map(endpoint =>
+      const deliveryPromises = endpoints.map((endpoint: WebhookEndpoint) =>
         this.deliverWebhook(endpoint, payload)
       );
 
@@ -148,13 +148,12 @@ export class WebhookService {
       await this.loggingService.logInfo('Webhook Event Sent', {
         event,
         endpointCount: endpoints.length,
-        payloadId: payload.id
+        payloadId: payload.id,
       });
-
     } catch (error) {
       await this.loggingService.logError('Webhook Event Send Failed', {
         event,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -176,22 +175,19 @@ export class WebhookService {
         status: 'pending',
         attempts: 0,
         lastAttempt: new Date().toISOString(),
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       // Store delivery record
-      await supabase
-        .from('webhook_deliveries')
-        .insert(delivery);
+      await supabase.from('webhook_deliveries').insert(delivery);
 
       // Attempt delivery
       await this.attemptDelivery(delivery, endpoint);
-
     } catch (error) {
       await this.loggingService.logError('Webhook Delivery Failed', {
         endpointId: endpoint.id,
         payloadId: payload.id,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -210,7 +206,7 @@ export class WebhookService {
         'User-Agent': 'Gurukool-Webhook/1.0',
         'X-Webhook-Event': delivery.payload.event,
         'X-Webhook-ID': delivery.payload.id,
-        'X-Webhook-Timestamp': delivery.payload.timestamp
+        'X-Webhook-Timestamp': delivery.payload.timestamp,
       };
 
       // Add signature if secret is available
@@ -227,7 +223,7 @@ export class WebhookService {
         method: 'POST',
         headers,
         body: JSON.stringify(delivery.payload),
-        signal: AbortSignal.timeout(30000) // 30 second timeout
+        signal: AbortSignal.timeout(30000), // 30 second timeout
       });
 
       // Update delivery status
@@ -240,38 +236,40 @@ export class WebhookService {
         attempts: newAttempts,
         lastAttempt: new Date().toISOString(),
         responseCode: response.status,
-        responseBody: await response.text()
+        responseBody: await response.text(),
       });
 
       if (isSuccess) {
         await this.loggingService.logInfo('Webhook Delivered Successfully', {
           deliveryId: delivery.id,
           endpointId: endpoint.id,
-          responseCode: response.status
+          responseCode: response.status,
         });
       } else {
         // Schedule retry if attempts remaining
         if (newAttempts < endpoint.retryCount) {
           await this.scheduleRetry(delivery.id, newAttempts);
         } else {
-          await this.loggingService.logError('Webhook Delivery Failed - Max Retries', {
-            deliveryId: delivery.id,
-            endpointId: endpoint.id,
-            attempts: newAttempts,
-            responseCode: response.status
-          });
+          await this.loggingService.logError(
+            'Webhook Delivery Failed - Max Retries',
+            {
+              deliveryId: delivery.id,
+              endpointId: endpoint.id,
+              attempts: newAttempts,
+              responseCode: response.status,
+            }
+          );
         }
       }
-
     } catch (error) {
       // Handle network errors
       const newAttempts = delivery.attempts + 1;
-      
+
       await this.updateDeliveryStatus(delivery.id, {
         status: 'failed',
         attempts: newAttempts,
         lastAttempt: new Date().toISOString(),
-        responseBody: error instanceof Error ? error.message : 'Network error'
+        responseBody: error instanceof Error ? error.message : 'Network error',
       });
 
       // Schedule retry if attempts remaining
@@ -284,13 +282,18 @@ export class WebhookService {
   /**
    * Schedule a retry for failed webhook delivery
    */
-  private async scheduleRetry(deliveryId: string, attempt: number): Promise<void> {
-    const delay = this.retryDelays[Math.min(attempt - 1, this.retryDelays.length - 1)];
+  private async scheduleRetry(
+    deliveryId: string,
+    attempt: number
+  ): Promise<void> {
+    const delay =
+      this.retryDelays[Math.min(attempt - 1, this.retryDelays.length - 1)] ??
+      1000;
     const nextRetry = new Date(Date.now() + delay).toISOString();
 
     await this.updateDeliveryStatus(deliveryId, {
       nextRetry,
-      status: 'pending'
+      status: 'pending',
     });
 
     // In a real implementation, you'd use a job queue (like Bull/BullMQ)
@@ -324,7 +327,7 @@ export class WebhookService {
     } catch (error) {
       await this.loggingService.logError('Webhook Retry Failed', {
         deliveryId,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -372,7 +375,13 @@ export class WebhookService {
   /**
    * Get webhook endpoint statistics
    */
-  async getEndpointStats(endpointId: string): Promise<any> {
+  async getEndpointStats(endpointId: string): Promise<{
+    total: number;
+    delivered: number;
+    failed: number;
+    pending: number;
+    averageAttempts: number;
+  }> {
     const { data: deliveries, error } = await supabase
       .from('webhook_deliveries')
       .select('status, attempts, createdAt')
@@ -382,12 +391,27 @@ export class WebhookService {
       throw new Error(`Failed to fetch endpoint stats: ${error.message}`);
     }
 
+    type DeliveryRecord = { status: string; attempts: number };
+    const typedDeliveries = (deliveries || []) as DeliveryRecord[];
+
     const stats = {
-      total: deliveries.length,
-      delivered: deliveries.filter(d => d.status === 'delivered').length,
-      failed: deliveries.filter(d => d.status === 'failed').length,
-      pending: deliveries.filter(d => d.status === 'pending').length,
-      averageAttempts: deliveries.reduce((sum, d) => sum + d.attempts, 0) / deliveries.length
+      total: typedDeliveries.length,
+      delivered: typedDeliveries.filter(
+        (d: DeliveryRecord) => d.status === 'delivered'
+      ).length,
+      failed: typedDeliveries.filter(
+        (d: DeliveryRecord) => d.status === 'failed'
+      ).length,
+      pending: typedDeliveries.filter(
+        (d: DeliveryRecord) => d.status === 'pending'
+      ).length,
+      averageAttempts:
+        typedDeliveries.length > 0
+          ? typedDeliveries.reduce(
+              (sum: number, d: DeliveryRecord) => sum + d.attempts,
+              0
+            ) / typedDeliveries.length
+          : 0,
     };
 
     return stats;
@@ -407,7 +431,7 @@ export class WebhookService {
     }
 
     await this.loggingService.logInfo('Webhook Endpoint Deactivated', {
-      endpointId
+      endpointId,
     });
   }
 
@@ -432,7 +456,7 @@ export class WebhookService {
     }
 
     await this.loggingService.logInfo('Webhook Endpoint Deleted', {
-      endpointId
+      endpointId,
     });
   }
 
@@ -460,7 +484,7 @@ export class WebhookService {
       'user.updated',
       'analytics.generated',
       'payment.processed',
-      'notification.sent'
+      'notification.sent',
     ];
 
     return events.every(event => validEvents.includes(event));

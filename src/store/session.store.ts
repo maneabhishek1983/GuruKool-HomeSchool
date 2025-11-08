@@ -513,7 +513,14 @@ export class EnhancedSessionStore {
         status: 'completed',
         location: stringToLocation('Study Room'),
         notes: 'Great understanding of photosynthesis',
+        attachments: [],
+        aiInsights: [],
+        aiRecommendations: [],
+        learningPatterns: [],
         sessionAnalytics: this.initializeSessionAnalytics(),
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        updatedAt: now,
+        version: 1,
       },
       {
         id: 'session-3',
@@ -528,7 +535,14 @@ export class EnhancedSessionStore {
         status: 'completed',
         location: stringToLocation('Library'),
         notes: 'Improved reading comprehension',
+        attachments: [],
+        aiInsights: [],
+        aiRecommendations: [],
+        learningPatterns: [],
         sessionAnalytics: this.initializeSessionAnalytics(),
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        updatedAt: now,
+        version: 1,
       },
       {
         id: 'session-4',
@@ -543,7 +557,14 @@ export class EnhancedSessionStore {
         status: 'completed',
         location: stringToLocation('Kitchen Table'),
         notes: 'Working on fractions',
+        attachments: [],
+        aiInsights: [],
+        aiRecommendations: [],
+        learningPatterns: [],
         sessionAnalytics: this.initializeSessionAnalytics(),
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        updatedAt: now,
+        version: 1,
       },
       {
         id: 'session-5',
@@ -558,7 +579,14 @@ export class EnhancedSessionStore {
         status: 'scheduled',
         location: stringToLocation('Living Room'),
         notes: 'Advanced algebra concepts',
+        attachments: [],
+        aiInsights: [],
+        aiRecommendations: [],
+        learningPatterns: [],
         sessionAnalytics: this.initializeSessionAnalytics(),
+        createdAt: now,
+        updatedAt: now,
+        version: 1,
       },
     ];
 
@@ -597,7 +625,7 @@ export class EnhancedSessionStore {
   private async detectSchedulingConflicts(
     request: SchedulingRequest
   ): Promise<any[]> {
-    const conflicts = [];
+    const conflicts: any[] = [];
     const timeSlot = request.preferredTimes[0];
 
     if (!timeSlot) {
@@ -650,7 +678,7 @@ export class EnhancedSessionStore {
     conflicts: any[]
   ): Promise<any[]> {
     // AI-powered alternative scheduling logic
-    const alternatives = [];
+    const alternatives: any[] = [];
     const baseTimeSlot = request.preferredTimes[0];
 
     if (!baseTimeSlot) {
