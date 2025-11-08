@@ -48,7 +48,7 @@ export function Skeleton({
 
   if (variant === 'text' && lines > 1) {
     return (
-      <div className="space-y-2" {...props}>
+      <div className="space-y-2" {...(props as any)}>
         {Array.from({ length: lines }).map((_, index) => (
           <motion.div
             key={index}
@@ -57,7 +57,13 @@ export function Skeleton({
               getVariantClasses(),
               index === lines - 1 && 'w-3/4' // Last line is shorter
             )}
-            style={index === lines - 1 ? { ...style, width: '75%' } : style}
+            {...(index === lines - 1
+              ? width || height
+                ? { style: { ...style, width: '75%' } }
+                : {}
+              : width || height
+                ? { style }
+                : {})}
             initial={{ opacity: 0.6 }}
             animate={{ opacity: [0.6, 1, 0.6] }}
             transition={{
@@ -74,32 +80,35 @@ export function Skeleton({
   return (
     <motion.div
       className={cn(baseClasses, getVariantClasses())}
-      style={style}
+      {...(width || height ? { style } : {})}
       initial={{ opacity: 0.6 }}
       animate={animated ? { opacity: [0.6, 1, 0.6] } : {}}
-      transition={animated ? {
-        duration: 1.5,
-        repeat: Infinity,
-      } : {}}
-      {...props}
+      transition={
+        animated
+          ? {
+              duration: 1.5,
+              repeat: Infinity,
+            }
+          : {}
+      }
+      {...(props as any)}
     />
   );
 }
 
 // Preset skeleton components
-export function SkeletonText({ lines = 3, ...props }: Omit<SkeletonProps, 'variant'>) {
+export function SkeletonText({
+  lines = 3,
+  ...props
+}: Omit<SkeletonProps, 'variant'>) {
   return <Skeleton variant="text" lines={lines} {...props} />;
 }
 
-export function SkeletonAvatar({ size = 40, ...props }: Omit<SkeletonProps, 'variant'> & { size?: number }) {
-  return (
-    <Skeleton
-      variant="circular"
-      width={size}
-      height={size}
-      {...props}
-    />
-  );
+export function SkeletonAvatar({
+  size = 40,
+  ...props
+}: Omit<SkeletonProps, 'variant'> & { size?: number }) {
+  return <Skeleton variant="circular" width={size} height={size} {...props} />;
 }
 
 export function SkeletonCard({ ...props }: Omit<SkeletonProps, 'variant'>) {
