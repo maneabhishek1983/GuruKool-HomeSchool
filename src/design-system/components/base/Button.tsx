@@ -86,7 +86,7 @@ export function Button({
           }
         : {})}
       {...(motionProps || {})}
-      {...props}
+      {...(props as any)}
     >
       {loading && (
         <motion.div
