@@ -1196,9 +1196,12 @@ export class CommunicationAgent implements AIAgent {
     await new Promise(resolve => setTimeout(resolve, deliveryDelay));
 
     const success = Math.random() > 0.05; // 95% success rate
+    if (success) {
+      return { success: true };
+    }
     return {
-      success,
-      error: success ? undefined : 'Email delivery service unavailable',
+      success: false,
+      error: 'Email delivery service unavailable',
     };
   }
 
@@ -1213,9 +1216,12 @@ export class CommunicationAgent implements AIAgent {
     await new Promise(resolve => setTimeout(resolve, deliveryDelay));
 
     const success = Math.random() > 0.03; // 97% success rate
+    if (success) {
+      return { success: true };
+    }
     return {
-      success,
-      error: success ? undefined : 'SMS gateway error',
+      success: false,
+      error: 'SMS gateway error',
     };
   }
 
@@ -1230,9 +1236,12 @@ export class CommunicationAgent implements AIAgent {
     await new Promise(resolve => setTimeout(resolve, deliveryDelay));
 
     const success = Math.random() > 0.02; // 98% success rate
+    if (success) {
+      return { success: true };
+    }
     return {
-      success,
-      error: success ? undefined : 'Push service unavailable',
+      success: false,
+      error: 'Push service unavailable',
     };
   }
 
