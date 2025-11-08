@@ -75,8 +75,8 @@ export function Flex({
         flexGaps[gap],
         className
       )}
-      {...motionProps}
-      {...props}
+      {...(motionProps || {})}
+      {...(props as any)}
     >
       {children}
     </motion.div>
@@ -104,31 +104,50 @@ export function FlexItem({
   ...props
 }: FlexItemProps) {
   const flexClasses = [];
-  
-  if (flex === 'none') flexClasses.push('flex-none');
-  else if (flex === 'auto') flexClasses.push('flex-auto');
-  else if (flex === 'initial') flexClasses.push('flex-initial');
-  else if (flex === '1') flexClasses.push('flex-1');
-  else if (typeof flex === 'number') flexClasses.push(`flex-[${flex}]`);
-  
-  if (grow === true) flexClasses.push('flex-grow');
-  else if (typeof grow === 'number') flexClasses.push(`flex-grow-[${grow}]`);
-  
-  if (shrink === true) flexClasses.push('flex-shrink');
-  else if (typeof shrink === 'number') flexClasses.push(`flex-shrink-[${shrink}]`);
-  
-  if (basis === 'auto') flexClasses.push('basis-auto');
-  else if (basis === 'full') flexClasses.push('basis-full');
-  else if (basis === 'px') flexClasses.push('basis-px');
-  else if (basis) flexClasses.push(`basis-[${basis}]`);
-  
-  if (order) flexClasses.push(`order-${order}`);
+
+  if (flex === 'none') {
+    flexClasses.push('flex-none');
+  } else if (flex === 'auto') {
+    flexClasses.push('flex-auto');
+  } else if (flex === 'initial') {
+    flexClasses.push('flex-initial');
+  } else if (flex === '1') {
+    flexClasses.push('flex-1');
+  } else if (typeof flex === 'number') {
+    flexClasses.push(`flex-[${flex}]`);
+  }
+
+  if (grow === true) {
+    flexClasses.push('flex-grow');
+  } else if (typeof grow === 'number') {
+    flexClasses.push(`flex-grow-[${grow}]`);
+  }
+
+  if (shrink === true) {
+    flexClasses.push('flex-shrink');
+  } else if (typeof shrink === 'number') {
+    flexClasses.push(`flex-shrink-[${shrink}]`);
+  }
+
+  if (basis === 'auto') {
+    flexClasses.push('basis-auto');
+  } else if (basis === 'full') {
+    flexClasses.push('basis-full');
+  } else if (basis === 'px') {
+    flexClasses.push('basis-px');
+  } else if (basis) {
+    flexClasses.push(`basis-[${basis}]`);
+  }
+
+  if (order) {
+    flexClasses.push(`order-${order}`);
+  }
 
   return (
     <motion.div
       className={cn(...flexClasses, className)}
-      {...motionProps}
-      {...props}
+      {...(motionProps || {})}
+      {...(props as any)}
     >
       {children}
     </motion.div>

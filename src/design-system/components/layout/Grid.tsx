@@ -45,12 +45,14 @@ export function Grid({
   motionProps,
   ...props
 }: GridProps) {
-  const responsiveClasses = responsive ? [
-    responsive.sm && `sm:grid-cols-${responsive.sm}`,
-    responsive.md && `md:grid-cols-${responsive.md}`,
-    responsive.lg && `lg:grid-cols-${responsive.lg}`,
-    responsive.xl && `xl:grid-cols-${responsive.xl}`,
-  ].filter(Boolean) : [];
+  const responsiveClasses = responsive
+    ? [
+        responsive.sm && `sm:grid-cols-${responsive.sm}`,
+        responsive.md && `md:grid-cols-${responsive.md}`,
+        responsive.lg && `lg:grid-cols-${responsive.lg}`,
+        responsive.xl && `xl:grid-cols-${responsive.xl}`,
+      ].filter(Boolean)
+    : [];
 
   return (
     <motion.div
@@ -61,8 +63,8 @@ export function Grid({
         ...responsiveClasses,
         className
       )}
-      {...motionProps}
-      {...props}
+      {...(motionProps || {})}
+      {...(props as any)}
     >
       {children}
     </motion.div>
@@ -135,8 +137,8 @@ export function GridItem({
         end && gridEnds[end],
         className
       )}
-      {...motionProps}
-      {...props}
+      {...(motionProps || {})}
+      {...(props as any)}
     >
       {children}
     </motion.div>

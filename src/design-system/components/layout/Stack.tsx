@@ -61,8 +61,8 @@ export function Stack({
         wrap && 'flex-wrap',
         className
       )}
-      {...motionProps}
-      {...props}
+      {...(motionProps || {})}
+      {...(props as any)}
     >
       {children}
     </motion.div>

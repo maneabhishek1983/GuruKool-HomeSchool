@@ -44,12 +44,18 @@ export function GestureCard({
   ...props
 }: GestureCardProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
-  
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(
+    null
+  );
+
   const x = useMotionValue(0);
-  const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0.5, 0.8, 1, 0.8, 0.5]);
+  const opacity = useTransform(
+    x,
+    [-200, -100, 0, 100, 200],
+    [0.5, 0.8, 1, 0.8, 0.5]
+  );
   const scale = useTransform(x, [-200, 0, 200], [0.95, 1, 0.95]);
-  
+
   // Transform for action visibility
   const leftActionOpacity = useTransform(x, [0, swipeThreshold], [0, 1]);
   const rightActionOpacity = useTransform(x, [-swipeThreshold, 0], [1, 0]);
@@ -65,9 +71,12 @@ export function GestureCard({
     triggerHapticFeedback();
   };
 
-  const handleDrag = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const handleDrag = (
+    event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
     const currentX = info.offset.x;
-    
+
     if (Math.abs(currentX) > swipeThreshold / 2) {
       const direction = currentX > 0 ? 'right' : 'left';
       if (swipeDirection !== direction) {
@@ -79,33 +88,41 @@ export function GestureCard({
     }
   };
 
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const handleDragEnd = (
+    event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
     setIsDragging(false);
     setSwipeDirection(null);
-    
+
     const currentX = info.offset.x;
     const velocity = info.velocity.x;
-    
+
     // Determine if swipe threshold was met
     if (Math.abs(currentX) > swipeThreshold || Math.abs(velocity) > 500) {
       const direction = currentX > 0 ? 'right' : 'left';
-      const actions = direction === 'right' ? swipeActions?.right : swipeActions?.left;
-      
+      const actions =
+        direction === 'right' ? swipeActions?.right : swipeActions?.left;
+
       if (actions && actions.length > 0) {
         const action = actions[0]; // Use first action for now
-        triggerHapticFeedback();
-        onSwipe?.(direction, action);
-        action.action();
+        if (action) {
+          triggerHapticFeedback();
+          onSwipe?.(direction, action);
+          action.action();
+        }
       }
     }
-    
+
     // Reset position
     x.set(0);
   };
 
   const renderActions = (actions: SwipeAction[], side: 'left' | 'right') => {
-    if (!actions || actions.length === 0) return null;
-    
+    if (!actions || actions.length === 0) {
+      return null;
+    }
+
     return (
       <motion.div
         className={cn(
@@ -113,10 +130,12 @@ export function GestureCard({
           'w-20 z-10',
           side === 'left' ? 'left-0' : 'right-0'
         )}
-        style={{ opacity: side === 'left' ? leftActionOpacity : rightActionOpacity }}
+        style={{
+          opacity: side === 'left' ? leftActionOpacity : rightActionOpacity,
+        }}
       >
         <div className="flex flex-col gap-1">
-          {actions.slice(0, 2).map((action) => (
+          {actions.slice(0, 2).map(action => (
             <motion.button
               key={action.id}
               className={cn(
@@ -127,7 +146,7 @@ export function GestureCard({
               )}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 action.action();
               }}
@@ -144,10 +163,10 @@ export function GestureCard({
     <div className="relative overflow-hidden">
       {/* Left actions */}
       {swipeActions?.left && renderActions(swipeActions.left, 'left')}
-      
+
       {/* Right actions */}
       {swipeActions?.right && renderActions(swipeActions.right, 'right')}
-      
+
       {/* Main card */}
       <motion.div
         className={cn(
@@ -156,16 +175,16 @@ export function GestureCard({
           dragEnabled && 'cursor-grab',
           className
         )}
-        style={{ x, opacity, scale }}
+        style={{ x, opacity, scale } as any}
         drag={dragEnabled ? 'x' : false}
         dragConstraints={{ left: -200, right: 200 }}
         dragElastic={0.2}
-        onDragStart={handleDragStart}
-        onDrag={handleDrag}
-        onDragEnd={handleDragEnd}
-        whileHover={!isDragging ? { y: -2 } : undefined}
+        {...(handleDragStart ? { onDragStart: handleDragStart } : {})}
+        {...(handleDrag ? { onDrag: handleDrag } : {})}
+        {...(handleDragEnd ? { onDragEnd: handleDragEnd } : {})}
+        {...(!isDragging ? { whileHover: { y: -2 } } : {})}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        {...props}
+        {...(props as any)}
       >
         <Card
           variant="elevated"
@@ -173,8 +192,10 @@ export function GestureCard({
           className={cn(
             'transition-shadow duration-200',
             isDragging && 'shadow-xl',
-            swipeDirection === 'left' && 'shadow-red-200 dark:shadow-red-900/20',
-            swipeDirection === 'right' && 'shadow-green-200 dark:shadow-green-900/20'
+            swipeDirection === 'left' &&
+              'shadow-red-200 dark:shadow-red-900/20',
+            swipeDirection === 'right' &&
+              'shadow-green-200 dark:shadow-green-900/20'
           )}
         >
           {children}
