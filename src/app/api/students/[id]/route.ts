@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { studentUpdateSchema } from '@/lib/validation';
+import { updateStudentSchema } from '@/lib/validation';
 import { DatabaseService } from '@/services/database.service';
 import { withRateLimit } from '@/lib/api-security';
 import { createClient } from '@supabase/supabase-js';
@@ -36,7 +36,10 @@ export const GET = withRateLimit({
     });
 
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Invalid authentication', code: 'AUTH_INVALID' },
@@ -46,7 +49,7 @@ export const GET = withRateLimit({
 
     // Fetch all students for this parent
     const students = await DatabaseService.getStudents(user.id);
-    const student = students.find((s) => s.id === id);
+    const student = students.find(s => s.id === id);
 
     if (!student) {
       return NextResponse.json(
@@ -100,7 +103,10 @@ export const PUT = withRateLimit({
     });
 
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Invalid authentication', code: 'AUTH_INVALID' },
@@ -110,7 +116,7 @@ export const PUT = withRateLimit({
 
     // Parse and validate request body
     const body = await request.json();
-    const validation = studentUpdateSchema.safeParse(body);
+    const validation = updateStudentSchema.safeParse(body);
 
     if (!validation.success) {
       return NextResponse.json(
@@ -183,7 +189,10 @@ export const DELETE = withRateLimit({
     });
 
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Invalid authentication', code: 'AUTH_INVALID' },

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sessionCreateSchema, paginationSchema, dateRangeSchema } from '@/lib/validation';
+import { createSessionSchema, paginationSchema } from '@/lib/validation';
 import { withRateLimit } from '@/lib/api-security';
 import { createClient } from '@supabase/supabase-js';
 
@@ -33,7 +33,10 @@ export const GET = withRateLimit({
     });
 
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Invalid authentication', code: 'AUTH_INVALID' },
@@ -55,7 +58,10 @@ export const GET = withRateLimit({
     const paginationResult = paginationSchema.safeParse({ page, limit });
     if (!paginationResult.success) {
       return NextResponse.json(
-        { error: 'Invalid pagination parameters', details: paginationResult.error.errors },
+        {
+          error: 'Invalid pagination parameters',
+          details: paginationResult.error.errors,
+        },
         { status: 400 }
       );
     }
@@ -89,8 +95,11 @@ export const GET = withRateLimit({
 
     // Execute query with pagination
     const start = (page - 1) * limit;
-    const { data: sessions, error, count } = await query
-      .range(start, start + limit - 1);
+    const {
+      data: sessions,
+      error,
+      count,
+    } = await query.range(start, start + limit - 1);
 
     if (error) {
       console.error('Supabase error:', error);
@@ -149,7 +158,10 @@ export const POST = withRateLimit({
     });
 
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Invalid authentication', code: 'AUTH_INVALID' },
@@ -159,7 +171,7 @@ export const POST = withRateLimit({
 
     // Parse and validate request body
     const body = await request.json();
-    const validation = sessionCreateSchema.safeParse(body);
+    const validation = createSessionSchema.safeParse(body);
 
     if (!validation.success) {
       return NextResponse.json(

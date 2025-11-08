@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { teacherUpdateSchema } from '@/lib/validation';
+import { updateTeacherSchema } from '@/lib/validation';
 import { DatabaseService } from '@/services/database.service';
 import { withRateLimit } from '@/lib/api-security';
 import { createClient } from '@supabase/supabase-js';
@@ -36,7 +36,10 @@ export const GET = withRateLimit({
     });
 
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Invalid authentication', code: 'AUTH_INVALID' },
@@ -46,7 +49,7 @@ export const GET = withRateLimit({
 
     // Fetch all teachers for this parent
     const teachers = await DatabaseService.getTeachers(user.id);
-    const teacher = teachers.find((t) => t.id === id);
+    const teacher = teachers.find(t => t.id === id);
 
     if (!teacher) {
       return NextResponse.json(
@@ -100,7 +103,10 @@ export const PUT = withRateLimit({
     });
 
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Invalid authentication', code: 'AUTH_INVALID' },
@@ -110,7 +116,7 @@ export const PUT = withRateLimit({
 
     // Parse and validate request body
     const body = await request.json();
-    const validation = teacherUpdateSchema.safeParse(body);
+    const validation = updateTeacherSchema.safeParse(body);
 
     if (!validation.success) {
       return NextResponse.json(

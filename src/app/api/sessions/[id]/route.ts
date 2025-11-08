@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sessionUpdateSchema } from '@/lib/validation';
+import { updateSessionSchema } from '@/lib/validation';
 import { withRateLimit } from '@/lib/api-security';
 import { createClient } from '@supabase/supabase-js';
 
@@ -35,7 +35,10 @@ export const GET = withRateLimit({
     });
 
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Invalid authentication', code: 'AUTH_INVALID' },
@@ -103,7 +106,10 @@ export const PUT = withRateLimit({
     });
 
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Invalid authentication', code: 'AUTH_INVALID' },
@@ -113,7 +119,7 @@ export const PUT = withRateLimit({
 
     // Parse and validate request body
     const body = await request.json();
-    const validation = sessionUpdateSchema.safeParse(body);
+    const validation = updateSessionSchema.safeParse(body);
 
     if (!validation.success) {
       return NextResponse.json(
@@ -191,7 +197,10 @@ export const DELETE = withRateLimit({
     });
 
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Invalid authentication', code: 'AUTH_INVALID' },
