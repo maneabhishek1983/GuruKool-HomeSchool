@@ -92,8 +92,27 @@ export default function TeacherLocationTracker({
             scheduledStart: new Date(),
             scheduledEnd: new Date(Date.now() + 60 * 60 * 1000),
             status: 'in-progress',
-            location: 'Home',
+            location: {
+              address: 'Home',
+              coordinates: {
+                latitude: 0,
+                longitude: 0,
+              },
+              verified: false,
+            },
             notes: 'Active session',
+            attachments: [],
+            aiInsights: [],
+            aiRecommendations: [],
+            learningPatterns: [],
+            sessionAnalytics: {
+              engagementScore: 0,
+              completionRate: 0,
+              averageResponseTime: 0,
+            },
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            version: 1,
           };
           setSession(mockSession);
           setSessionStatus({ status: mockSession.status, duration: 0 });
