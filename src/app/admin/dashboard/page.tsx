@@ -35,7 +35,9 @@ export default function AdminDashboard() {
     role: 'parent' as const,
   });
   const [createdUser, setCreatedUser] = useState<User | null>(null);
-  const [createdUserPassword, setCreatedUserPassword] = useState<string | null>(null);
+  const [createdUserPassword, setCreatedUserPassword] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     if (!user) {
@@ -130,11 +132,10 @@ export default function AdminDashboard() {
         console.log('Generated QR code:', qrCode ? 'Success' : 'Failed');
 
         // Create user with proper preferences structure
-        const userData = {
+        const userData: Omit<User, 'id' | 'createdAt' | 'lastActive'> = {
           name: newUser.name,
           email: newUser.email,
           role: newUser.role,
-          password,
           preferences: {
             notifications: {
               email: true,
@@ -612,9 +613,7 @@ export default function AdminDashboard() {
                     </p>
                     <button
                       onClick={() =>
-                        navigator.clipboard.writeText(
-                          createdUserPassword || ''
-                        )
+                        navigator.clipboard.writeText(createdUserPassword || '')
                       }
                       className="text-blue-600 hover:text-blue-800"
                       title="Copy password"

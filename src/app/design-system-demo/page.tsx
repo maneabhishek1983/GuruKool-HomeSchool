@@ -71,7 +71,13 @@ function DemoContent() {
         className="space-y-12"
       >
         {/* Buttons Section */}
-        <motion.section variants={staggerVariants.item}>
+        <motion.section
+          variants={
+            staggerVariants.item
+              ? ({ item: staggerVariants.item } as any)
+              : undefined
+          }
+        >
           <Card padding="lg">
             <CardHeader>
               <CardTitle>Buttons</CardTitle>
@@ -119,7 +125,13 @@ function DemoContent() {
         </motion.section>
 
         {/* Typography Section */}
-        <motion.section variants={staggerVariants.item}>
+        <motion.section
+          variants={
+            staggerVariants.item
+              ? ({ item: staggerVariants.item } as any)
+              : undefined
+          }
+        >
           <Card padding="lg">
             <CardHeader>
               <CardTitle>Typography</CardTitle>
@@ -162,7 +174,13 @@ function DemoContent() {
         </motion.section>
 
         {/* Layout Components */}
-        <motion.section variants={staggerVariants.item}>
+        <motion.section
+          variants={
+            staggerVariants.item
+              ? ({ item: staggerVariants.item } as any)
+              : undefined
+          }
+        >
           <Card padding="lg">
             <CardHeader>
               <CardTitle>Layout Components</CardTitle>
@@ -217,7 +235,13 @@ function DemoContent() {
         </motion.section>
 
         {/* Progress & Loading */}
-        <motion.section variants={staggerVariants.item}>
+        <motion.section
+          variants={
+            staggerVariants.item
+              ? ({ item: staggerVariants.item } as any)
+              : undefined
+          }
+        >
           <Card padding="lg">
             <CardHeader>
               <CardTitle>Progress & Loading</CardTitle>
@@ -286,7 +310,13 @@ function DemoContent() {
         </motion.section>
 
         {/* Skeleton Loading */}
-        <motion.section variants={staggerVariants.item}>
+        <motion.section
+          variants={
+            staggerVariants.item
+              ? ({ item: staggerVariants.item } as any)
+              : undefined
+          }
+        >
           <Card padding="lg">
             <CardHeader>
               <CardTitle>Skeleton Loading</CardTitle>
@@ -331,7 +361,13 @@ function DemoContent() {
         </motion.section>
 
         {/* Interactive Cards */}
-        <motion.section variants={staggerVariants.item}>
+        <motion.section
+          variants={
+            staggerVariants.item
+              ? ({ item: staggerVariants.item } as any)
+              : undefined
+          }
+        >
           <Card padding="lg">
             <CardHeader>
               <CardTitle>Interactive Cards</CardTitle>
@@ -381,7 +417,13 @@ function DemoContent() {
         </motion.section>
 
         {/* Animation Showcase */}
-        <motion.section variants={staggerVariants.item}>
+        <motion.section
+          variants={
+            staggerVariants.item
+              ? ({ item: staggerVariants.item } as any)
+              : undefined
+          }
+        >
           <Card padding="lg">
             <CardHeader>
               <CardTitle>Animation Showcase</CardTitle>
