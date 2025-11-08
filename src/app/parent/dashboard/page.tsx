@@ -4,7 +4,8 @@ import { useAuthContext } from '@/lib/authContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { NetflixDashboard, NetflixButton, NetflixCard } from '@/components/NetflixDashboard';
+import { NetflixDashboard } from '@/components/NetflixDashboard';
+import { NetflixButton, NetflixCard } from '@/components/NetflixBackground';
 import CreateStudentForm from '@/components/parent/CreateStudentForm';
 import StudentProfileCard from '@/components/parent/StudentProfileCard';
 import { DataSheetsViewer } from '@/components/parent/DataSheetsViewer';
@@ -327,7 +328,7 @@ export default function ParentDashboard() {
         >
           Add Student
         </NetflixButton>
-        
+
         <NetflixButton
           onClick={() => setShowCreateTeacherModal(true)}
           size="lg"
@@ -335,7 +336,7 @@ export default function ParentDashboard() {
         >
           Add Teacher
         </NetflixButton>
-        
+
         <NetflixButton
           onClick={() => setShowDataSheetsModal(true)}
           size="lg"
@@ -388,161 +389,318 @@ export default function ParentDashboard() {
       )}
 
       {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <NetflixCard className="p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-primary-500 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Students</p>
-                <p className="text-2xl font-bold text-gray-900">{students.length}</p>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <NetflixCard className="p-6">
+          <div className="flex items-center">
+            <div className="w-12 h-12 bg-primary-500 rounded-lg flex items-center justify-center">
+              <svg
+                className="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
             </div>
-          </NetflixCard>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">
+                Total Students
+              </p>
+              <p className="text-2xl font-bold text-gray-900">
+                {students.length}
+              </p>
+            </div>
+          </div>
+        </NetflixCard>
 
-          <NetflixCard className="p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Average Progress</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {students.length > 0
-                    ? Math.round(
-                        students.reduce((acc, student) => acc + 85, 0) /
-                          students.length
-                      )
-                    : 0}%
-                </p>
-              </div>
+        <NetflixCard className="p-6">
+          <div className="flex items-center">
+            <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+              <svg
+                className="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
             </div>
-          </NetflixCard>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">
+                Average Progress
+              </p>
+              <p className="text-2xl font-bold text-gray-900">
+                {students.length > 0
+                  ? Math.round(
+                      students.reduce((acc, student) => acc + 85, 0) /
+                        students.length
+                    )
+                  : 0}
+                %
+              </p>
+            </div>
+          </div>
+        </NetflixCard>
 
-          <NetflixCard className="p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Assigned Teachers</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {teachers.filter(t => t.status === 'assigned').length}
-                </p>
-              </div>
+        <NetflixCard className="p-6">
+          <div className="flex items-center">
+            <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
+              <svg
+                className="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
+              </svg>
             </div>
-          </NetflixCard>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">
+                Assigned Teachers
+              </p>
+              <p className="text-2xl font-bold text-gray-900">
+                {teachers.filter(t => t.status === 'assigned').length}
+              </p>
+            </div>
+          </div>
+        </NetflixCard>
 
-          <NetflixCard className="p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">This Month</p>
-                <p className="text-2xl font-bold text-gray-900">24h</p>
-                <p className="text-xs text-gray-500">Total hours</p>
-              </div>
+        <NetflixCard className="p-6">
+          <div className="flex items-center">
+            <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
+              <svg
+                className="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
             </div>
-          </NetflixCard>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">This Month</p>
+              <p className="text-2xl font-bold text-gray-900">24h</p>
+              <p className="text-xs text-gray-500">Total hours</p>
+            </div>
+          </div>
+        </NetflixCard>
+      </div>
+
+      {/* Data Management Section */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+          Data Management
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <button
+            onClick={handleClearAllData}
+            className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+            <span>Clear All Data</span>
+          </button>
+          <button
+            onClick={handleClearStudents}
+            className="bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 transition-colors flex items-center space-x-2"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+            <span>Clear Students</span>
+          </button>
+          <button
+            onClick={handleClearTeachers}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+            <span>Clear Teachers</span>
+          </button>
         </div>
+        <div className="mt-6 text-center text-sm text-gray-600">
+          <p>
+            Student data: {students.length > 0 ? 'Persisted' : 'Not persisted'}
+          </p>
+          <p>
+            Teacher data: {teachers.length > 0 ? 'Persisted' : 'Not persisted'}
+          </p>
+        </div>
+      </div>
 
-        {/* Data Management Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-            Data Management
+      {/* Student Management Section */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold text-gray-900">
+            Student Profiles
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button
-              onClick={handleClearAllData}
-              className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowCreateStudentModal(true)}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
-              <span>Clear All Data</span>
-            </button>
-            <button
-              onClick={handleClearStudents}
-              className="bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 transition-colors flex items-center space-x-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
-              <span>Clear Students</span>
-            </button>
-            <button
-              onClick={handleClearTeachers}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
-              <span>Clear Teachers</span>
-            </button>
-          </div>
-          <div className="mt-6 text-center text-sm text-gray-600">
-            <p>
-              Student data:{' '}
-              {students.length > 0 ? 'Persisted' : 'Not persisted'}
-            </p>
-            <p>
-              Teacher data:{' '}
-              {teachers.length > 0 ? 'Persisted' : 'Not persisted'}
-            </p>
-          </div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
+            </svg>
+            <span>Add Student</span>
+          </motion.button>
         </div>
 
-        {/* Student Management Section */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              Student Profiles
-            </h2>
+        {students.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-white rounded-lg shadow-sm border p-12 text-center"
+          >
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-8 h-8 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No Students Yet
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Create your first student profile to get started with
+              homeschooling.
+            </p>
+            <button
+              onClick={() => setShowCreateStudentModal(true)}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Create First Student
+            </button>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {students.map((student, index) => (
+              <motion.div
+                key={student.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <StudentProfileCard
+                  student={student}
+                  onEdit={() => handleEditStudent(student)}
+                  onDelete={() => handleDeleteStudent(student.id)}
+                  onViewDataSheets={() => {
+                    setSelectedStudent(student);
+                    setShowDataSheetsModal(true);
+                  }}
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Teacher Management Section */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold text-gray-900">
+            Teacher Management
+          </h2>
+          <div className="flex space-x-3">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setShowCreateStudentModal(true)}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              onClick={() => setShowAssignmentModal(true)}
+              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <span>Manage Assignments</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowCreateTeacherModal(true)}
+              className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
             >
               <svg
                 className="w-5 h-5"
@@ -557,363 +715,248 @@ export default function ParentDashboard() {
                   d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                 />
               </svg>
-              <span>Add Student</span>
+              <span>Add Teacher</span>
             </motion.button>
           </div>
-
-          {students.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="bg-white rounded-lg shadow-sm border p-12 text-center"
-            >
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No Students Yet
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Create your first student profile to get started with
-                homeschooling.
-              </p>
-              <button
-                onClick={() => setShowCreateStudentModal(true)}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Create First Student
-              </button>
-            </motion.div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {students.map((student, index) => (
-                <motion.div
-                  key={student.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <StudentProfileCard
-                    student={student}
-                    onEdit={() => handleEditStudent(student)}
-                    onDelete={() => handleDeleteStudent(student.id)}
-                    onViewDataSheets={() => {
-                      setSelectedStudent(student);
-                      setShowDataSheetsModal(true);
-                    }}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* Teacher Management Section */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              Teacher Management
-            </h2>
-            <div className="flex space-x-3">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowAssignmentModal(true)}
-                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+        {teachers.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-white rounded-lg shadow-sm border p-12 text-center"
+          >
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-8 h-8 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                <span>Manage Assignments</span>
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowCreateTeacherModal(true)}
-                className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-                <span>Add Teacher</span>
-              </motion.button>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
+              </svg>
             </div>
-          </div>
-
-          {teachers.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="bg-white rounded-lg shadow-sm border p-12 text-center"
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No Teachers Yet
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Create teacher profiles to assign to your students for specialized
+              instruction.
+            </p>
+            <button
+              onClick={() => setShowCreateTeacherModal(true)}
+              className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
             >
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-purple-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No Teachers Yet
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Create teacher profiles to assign to your students for
-                specialized instruction.
-              </p>
-              <button
-                onClick={() => setShowCreateTeacherModal(true)}
-                className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+              Create First Teacher
+            </button>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {teachers.map((teacher, index) => (
+              <motion.div
+                key={teacher.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="bg-white rounded-lg shadow-sm border p-6"
               >
-                Create First Teacher
-              </button>
-            </motion.div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {teachers.map((teacher, index) => (
-                <motion.div
-                  key={teacher.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="bg-white rounded-lg shadow-sm border p-6"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center">
-                      <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
-                        <svg
-                          className="w-6 h-6 text-purple-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">
-                          {teacher.name}
-                        </h3>
-                        <p className="text-sm text-gray-600">{teacher.email}</p>
-                      </div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                      <svg
+                        className="w-6 h-6 text-purple-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                        />
+                      </svg>
                     </div>
-                    <span
-                      className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        teacher.status === 'available'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}
-                    >
-                      {teacher.status}
-                    </span>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {teacher.name}
+                      </h3>
+                      <p className="text-sm text-gray-600">{teacher.email}</p>
+                    </div>
                   </div>
-                  <div className="space-y-2">
+                  <span
+                    className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      teacher.status === 'available'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-blue-100 text-blue-800'
+                    }`}
+                  >
+                    {teacher.status}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">
+                      Subjects:
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {teacher.subjects.join(', ')}
+                    </p>
+                  </div>
+                  {teacher.hourlyRate && (
                     <div>
                       <p className="text-sm font-medium text-gray-700">
-                        Subjects:
+                        Hourly Rate:
                       </p>
                       <p className="text-sm text-gray-600">
-                        {teacher.subjects.join(', ')}
-                      </p>
-                    </div>
-                    {teacher.hourlyRate && (
-                      <div>
-                        <p className="text-sm font-medium text-gray-700">
-                          Hourly Rate:
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          ${teacher.hourlyRate}/hour
-                        </p>
-                      </div>
-                    )}
-                    <div className="pt-2 space-y-2">
-                      <button
-                        onClick={() => handleViewTeacherQRCodes(teacher)}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium block"
-                      >
-                        View QR Codes
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTeacher(teacher.id)}
-                        className="text-red-600 hover:text-red-800 text-sm font-medium block"
-                      >
-                        Delete Teacher
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Teacher Timesheet Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          className="bg-white rounded-lg shadow-sm border"
-        >
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Teacher Timesheet & Progress
-            </h2>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Timesheet Summary */}
-              <div>
-                <h3 className="font-medium text-gray-900 mb-4">
-                  This Month&apos;s Hours
-                </h3>
-                <div className="space-y-3">
-                  {teachers.filter(t => t.status === 'assigned').length > 0 ? (
-                    teachers
-                      .filter(t => t.status === 'assigned')
-                      .map((teacher, index) => (
-                        <div
-                          key={teacher.id}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                        >
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {teacher.name}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {teacher.subjects.join(', ')}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium text-blue-600">
-                              {24 + index * 2}h
-                            </p>
-                            <p className="text-xs text-gray-500">This month</p>
-                          </div>
-                        </div>
-                      ))
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500">No assigned teachers</p>
-                      <p className="text-sm text-gray-400 mt-1">
-                        Teacher hours will appear here once teachers are
-                        assigned
+                        ${teacher.hourlyRate}/hour
                       </p>
                     </div>
                   )}
-                </div>
-              </div>
-
-              {/* Recent Sessions */}
-              <div>
-                <h3 className="font-medium text-gray-900 mb-4">
-                  Recent Sessions
-                </h3>
-                <div className="space-y-3">
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">No recent sessions</p>
-                    <p className="text-sm text-gray-400 mt-1">
-                      Sessions will appear here once teachers are assigned
-                    </p>
+                  <div className="pt-2 space-y-2">
+                    <button
+                      onClick={() => handleViewTeacherQRCodes(teacher)}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium block"
+                    >
+                      View QR Codes
+                    </button>
+                    <button
+                      onClick={() => handleDeleteTeacher(teacher.id)}
+                      className="text-red-600 hover:text-red-800 text-sm font-medium block"
+                    >
+                      Delete Teacher
+                    </button>
                   </div>
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            ))}
           </div>
-        </motion.div>
+        )}
+      </div>
 
-        {/* Academic Standards Info */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="bg-white rounded-lg shadow-sm border mt-8"
-        >
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Academic Standards Support
-            </h2>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <span className="text-2xl">🇬🇧</span>
-                </div>
-                <h3 className="font-medium text-gray-900 mb-2">
-                  UK Curriculum
-                </h3>
-                <p className="text-sm text-gray-600">
-                  National Curriculum for England with Reception through Year 11
-                </p>
+      {/* Teacher Timesheet Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.6 }}
+        className="bg-white rounded-lg shadow-sm border"
+      >
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Teacher Timesheet & Progress
+          </h2>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Timesheet Summary */}
+            <div>
+              <h3 className="font-medium text-gray-900 mb-4">
+                This Month&apos;s Hours
+              </h3>
+              <div className="space-y-3">
+                {teachers.filter(t => t.status === 'assigned').length > 0 ? (
+                  teachers
+                    .filter(t => t.status === 'assigned')
+                    .map((teacher, index) => (
+                      <div
+                        key={teacher.id}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {teacher.name}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {teacher.subjects.join(', ')}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-blue-600">
+                            {24 + index * 2}h
+                          </p>
+                          <p className="text-xs text-gray-500">This month</p>
+                        </div>
+                      </div>
+                    ))
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No assigned teachers</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Teacher hours will appear here once teachers are assigned
+                    </p>
+                  </div>
+                )}
               </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <span className="text-2xl">🇺🇸</span>
+            </div>
+
+            {/* Recent Sessions */}
+            <div>
+              <h3 className="font-medium text-gray-900 mb-4">
+                Recent Sessions
+              </h3>
+              <div className="space-y-3">
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No recent sessions</p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Sessions will appear here once teachers are assigned
+                  </p>
                 </div>
-                <h3 className="font-medium text-gray-900 mb-2">US Standards</h3>
-                <p className="text-sm text-gray-600">
-                  Common Core State Standards with Kindergarten through Grade 12
-                </p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <span className="text-2xl">🇮🇳</span>
-                </div>
-                <h3 className="font-medium text-gray-900 mb-2">
-                  India NEP 2020
-                </h3>
-                <p className="text-sm text-gray-600">
-                  National Education Policy with Foundation through Higher
-                  Secondary
-                </p>
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
+      </motion.div>
+
+      {/* Academic Standards Info */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="bg-white rounded-lg shadow-sm border mt-8"
+      >
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Academic Standards Support
+          </h2>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl">🇬🇧</span>
+              </div>
+              <h3 className="font-medium text-gray-900 mb-2">UK Curriculum</h3>
+              <p className="text-sm text-gray-600">
+                National Curriculum for England with Reception through Year 11
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl">🇺🇸</span>
+              </div>
+              <h3 className="font-medium text-gray-900 mb-2">US Standards</h3>
+              <p className="text-sm text-gray-600">
+                Common Core State Standards with Kindergarten through Grade 12
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl">🇮🇳</span>
+              </div>
+              <h3 className="font-medium text-gray-900 mb-2">India NEP 2020</h3>
+              <p className="text-sm text-gray-600">
+                National Education Policy with Foundation through Higher
+                Secondary
+              </p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Create Student Modal */}
       {showCreateStudentModal && (
