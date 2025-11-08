@@ -64,7 +64,10 @@ export function BackgroundImageSettings({
 }: BackgroundImageSettingsProps) {
   const [settings, setSettings] = useState<BackgroundImageSettings>(() => {
     const themeSettings = defaultSettings[theme];
-    return themeSettings ?? defaultSettings.netflix;
+    if (themeSettings) {
+      return themeSettings;
+    }
+    return defaultSettings.netflix;
   });
   const [isOpen, setIsOpen] = useState(false);
 
