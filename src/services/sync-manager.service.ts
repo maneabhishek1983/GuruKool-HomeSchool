@@ -4,7 +4,10 @@
  */
 
 import { logger } from './logging.service';
-import { offlineStorageManager, OfflineAction } from './offline-storage.service';
+import {
+  offlineStorageManager,
+  OfflineAction,
+} from './offline-storage.service';
 import { databaseService } from './database.service';
 import { SessionRecord, User, AIInsight } from '@/types';
 
@@ -47,21 +50,21 @@ export class SyncManager {
       conflictResolution: {
         session: {
           strategy: 'merge',
-          customMerger: this.mergeSessionData.bind(this)
+          customMerger: this.mergeSessionData.bind(this),
         },
         user: {
-          strategy: 'server_wins'
+          strategy: 'server_wins',
         },
         insight: {
-          strategy: 'client_wins'
+          strategy: 'client_wins',
         },
         timesheet: {
           strategy: 'merge',
-          customMerger: this.mergeTimesheetData.bind(this)
-        }
+          customMerger: this.mergeTimesheetData.bind(this),
+        },
       },
       autoSyncEnabled: true,
-      autoSyncInterval: 30000 // 30 seconds
+      autoSyncInterval: 30000, // 30 seconds
     };
   }
 
@@ -77,14 +80,14 @@ export class SyncManager {
    */
   public async initialize(): Promise<void> {
     await offlineStorageManager.initialize();
-    
+
     if (this.config.autoSyncEnabled) {
       this.startAutoSync();
     }
 
-    logger.info('app', 'SyncManager initialized', { 
+    logger.info('app', 'SyncManager initialized', {
       autoSync: this.config.autoSyncEnabled,
-      interval: this.config.autoSyncInterval 
+      interval: this.config.autoSyncInterval,
     });
   }
 
@@ -120,7 +123,11 @@ export class SyncManager {
   /**
    * Manual sync trigger
    */
-  public async sync(): Promise<{ completed: number; failed: number; conflicts: number }> {
+  public async sync(): Promise<{
+    completed: number;
+    failed: number;
+    conflicts: number;
+  }> {
     if (this.isSyncing) {
       logger.warn('app', 'Sync already in progress');
       return { completed: 0, failed: 0, conflicts: 0 };
@@ -136,7 +143,7 @@ export class SyncManager {
     try {
       // Get pending actions from offline storage
       const pendingActions = await offlineStorageManager.getPendingActions();
-      
+
       if (pendingActions.length === 0) {
         logger.debug('app', 'No pending actions to sync');
         return { completed: 0, failed: 0, conflicts: 0 };
@@ -160,7 +167,11 @@ export class SyncManager {
 
       logger.info('app', 'Sync completed', { completed, failed, conflicts });
     } catch (error) {
-      logger.error('app', 'Sync failed', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Sync failed',
+        error instanceof Error ? error : undefined
+      );
       failed++;
     } finally {
       this.isSyncing = false;
@@ -182,18 +193,26 @@ export class SyncManager {
 
         // Update action status based on result
         if (result.success) {
-          await offlineStorageManager.markSyncStatus('offlineActions', action.id, 'synced');
+          await offlineStorageManager.markSyncStatus(
+            'offlineActions',
+            action.id,
+            'synced'
+          );
         } else if (result.conflict) {
           await this.handleConflict(action, result);
         } else {
           await this.handleFailure(action, result);
         }
       } catch (error) {
-        logger.error('app', `Failed to process action ${action.id}`, error instanceof Error ? error : undefined);
+        logger.error(
+          'app',
+          `Failed to process action ${action.id}`,
+          error instanceof Error ? error : undefined
+        );
         results.push({
           success: false,
           action,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }
@@ -205,7 +224,11 @@ export class SyncManager {
    * Process individual offline action
    */
   private async processAction(action: OfflineAction): Promise<SyncResult> {
-    logger.debug('app', `Processing action ${action.type} for ${action.entity}`, { id: action.id });
+    logger.debug(
+      'app',
+      `Processing action ${action.type} for ${action.entity}`,
+      { id: action.id }
+    );
 
     try {
       switch (action.type) {
@@ -222,7 +245,7 @@ export class SyncManager {
       return {
         success: false,
         action,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -235,7 +258,7 @@ export class SyncManager {
 
     try {
       let result;
-      
+
       switch (entity) {
         case 'session':
           // TODO: Implement createSession method in databaseService
@@ -254,18 +277,26 @@ export class SyncManager {
 
       if (result) {
         // Update local storage with server-generated data (like IDs)
-        await offlineStorageManager.store(entity + 's', result, 'medium');
-        await offlineStorageManager.markSyncStatus(entity + 's', result.id, 'synced');
-        
+        await offlineStorageManager.store(
+          (entity + 's') as 'sessions' | 'users' | 'insights' | 'timesheets',
+          result,
+          'medium'
+        );
+        await offlineStorageManager.markSyncStatus(
+          (entity + 's') as 'sessions' | 'users' | 'insights' | 'timesheets',
+          String(result.id),
+          'synced'
+        );
+
         return { success: true, action };
       } else {
         return { success: false, action, error: 'Create operation failed' };
       }
     } catch (error) {
-      return { 
-        success: false, 
-        action, 
-        error: error instanceof Error ? error.message : 'Create failed' 
+      return {
+        success: false,
+        action,
+        error: error instanceof Error ? error.message : 'Create failed',
       };
     }
   }
@@ -279,7 +310,7 @@ export class SyncManager {
     try {
       // First, get the latest server version
       let serverData;
-      
+
       switch (entity) {
         case 'session':
           // Use available method - would need session ID from data
@@ -306,7 +337,7 @@ export class SyncManager {
 
       // No conflict, proceed with update
       let result: any;
-      
+
       switch (entity) {
         case 'session':
           // TODO: Implement updateSession method in databaseService
@@ -321,17 +352,21 @@ export class SyncManager {
 
       if (result) {
         await offlineStorageManager.store(entity + 's', result, 'medium');
-        await offlineStorageManager.markSyncStatus(entity + 's', result.id, 'synced');
-        
+        await offlineStorageManager.markSyncStatus(
+          entity + 's',
+          result.id,
+          'synced'
+        );
+
         return { success: true, action };
       } else {
         return { success: false, action, error: 'Update operation failed' };
       }
     } catch (error) {
-      return { 
-        success: false, 
-        action, 
-        error: error instanceof Error ? error.message : 'Update failed' 
+      return {
+        success: false,
+        action,
+        error: error instanceof Error ? error.message : 'Update failed',
       };
     }
   }
@@ -344,7 +379,7 @@ export class SyncManager {
 
     try {
       let result;
-      
+
       switch (entity) {
         case 'session':
           // TODO: Implement deleteSession method in databaseService
@@ -365,10 +400,10 @@ export class SyncManager {
         return { success: false, action, error: 'Delete operation failed' };
       }
     } catch (error) {
-      return { 
-        success: false, 
-        action, 
-        error: error instanceof Error ? error.message : 'Delete failed' 
+      return {
+        success: false,
+        action,
+        error: error instanceof Error ? error.message : 'Delete failed',
       };
     }
   }
@@ -376,12 +411,20 @@ export class SyncManager {
   /**
    * Detect if there's a conflict between server and local data
    */
-  private detectConflict(serverData: any, localData: any, pendingData: any): boolean {
-    if (!serverData || !localData) return false;
+  private detectConflict(
+    serverData: any,
+    localData: any,
+    pendingData: any
+  ): boolean {
+    if (!serverData || !localData) {
+      return false;
+    }
 
     // Simple timestamp-based conflict detection
     // In a real implementation, you'd use version numbers or more sophisticated comparison
-    const serverTimestamp = new Date(serverData.updatedAt || serverData.createdAt).getTime();
+    const serverTimestamp = new Date(
+      serverData.updatedAt || serverData.createdAt
+    ).getTime();
     const localTimestamp = new Date(localData.timestamp || 0).getTime();
 
     return serverTimestamp > localTimestamp;
@@ -390,20 +433,28 @@ export class SyncManager {
   /**
    * Resolve conflict using configured strategy
    */
-  private async resolveConflict(action: OfflineAction, serverData: any, clientData: any): Promise<SyncResult> {
+  private async resolveConflict(
+    action: OfflineAction,
+    serverData: any,
+    clientData: any
+  ): Promise<SyncResult> {
     const resolution = this.config.conflictResolution[action.entity];
-    
+
     if (!resolution) {
       return {
         success: false,
         action,
         conflict: true,
         error: 'No conflict resolution strategy defined',
-        resolution: 'manual_required'
+        resolution: 'manual_required',
       };
     }
 
-    logger.info('app', `Resolving conflict for ${action.entity} using ${resolution.strategy}`, { id: clientData.id });
+    logger.info(
+      'app',
+      `Resolving conflict for ${action.entity} using ${resolution.strategy}`,
+      { id: clientData.id }
+    );
 
     try {
       let resolvedData;
@@ -412,13 +463,13 @@ export class SyncManager {
         case 'server_wins':
           resolvedData = serverData;
           break;
-          
+
         case 'client_wins':
           resolvedData = clientData;
           // Update server with client data
           await this.updateServer(action.entity, clientData);
           break;
-          
+
         case 'merge':
           if (resolution.customMerger) {
             resolvedData = resolution.customMerger(serverData, clientData);
@@ -430,36 +481,60 @@ export class SyncManager {
             await this.updateServer(action.entity, resolvedData);
           }
           break;
-          
+
         case 'manual':
           return {
             success: false,
             action,
             conflict: true,
             resolution: 'manual_required',
-            error: 'Manual conflict resolution required'
+            error: 'Manual conflict resolution required',
           };
       }
 
       // Update local storage with resolved data
-      await offlineStorageManager.store(action.entity + 's', resolvedData, 'high');
-      await offlineStorageManager.markSyncStatus(action.entity + 's', resolvedData.id, 'synced');
+      await offlineStorageManager.store(
+        action.entity + 's',
+        resolvedData,
+        'high'
+      );
+      await offlineStorageManager.markSyncStatus(
+        action.entity + 's',
+        resolvedData.id,
+        'synced'
+      );
+
+      let finalResolution:
+        | 'server_wins'
+        | 'client_wins'
+        | 'merged'
+        | 'manual_required';
+      if (resolution.strategy === 'merge') {
+        finalResolution = 'merged';
+      } else if (
+        resolution.strategy === 'server_wins' ||
+        resolution.strategy === 'client_wins'
+      ) {
+        finalResolution = resolution.strategy;
+      } else {
+        // resolution.strategy === 'manual'
+        finalResolution = 'manual_required';
+      }
 
       return {
         success: true,
         action,
         conflict: true,
-        resolution: resolution.strategy === 'merge' ? 'merged' : 
-                    resolution.strategy === 'manual' ? 'manual_required' :
-                    resolution.strategy as 'server_wins' | 'client_wins'
+        resolution: finalResolution,
       };
     } catch (error) {
       return {
         success: false,
         action,
         conflict: true,
-        error: error instanceof Error ? error.message : 'Conflict resolution failed',
-        resolution: 'manual_required'
+        error:
+          error instanceof Error ? error.message : 'Conflict resolution failed',
+        resolution: 'manual_required',
       };
     }
   }
@@ -467,27 +542,43 @@ export class SyncManager {
   /**
    * Custom merger for session data
    */
-  private mergeSessionData(serverData: SessionRecord, clientData: SessionRecord): SessionRecord {
+  private mergeSessionData(
+    serverData: SessionRecord,
+    clientData: SessionRecord
+  ): SessionRecord {
     return {
       ...serverData,
       // Client wins for notes and status changes
-      notes: clientData.notes || serverData.notes,
+      ...(clientData.notes
+        ? { notes: clientData.notes }
+        : serverData.notes
+          ? { notes: serverData.notes }
+          : {}),
       status: clientData.status || serverData.status,
-      actualStart: clientData.actualStart || serverData.actualStart,
-      actualEnd: clientData.actualEnd || serverData.actualEnd,
+      ...(clientData.actualStart
+        ? { actualStart: clientData.actualStart }
+        : serverData.actualStart
+          ? { actualStart: serverData.actualStart }
+          : {}),
+      ...(clientData.actualEnd
+        ? { actualEnd: clientData.actualEnd }
+        : serverData.actualEnd
+          ? { actualEnd: serverData.actualEnd }
+          : {}),
       // Merge AI insights
       aiInsights: [
         ...serverData.aiInsights,
-        ...clientData.aiInsights.filter(insight => 
-          !serverData.aiInsights.some(existing => existing.id === insight.id)
-        )
+        ...clientData.aiInsights.filter(
+          insight =>
+            !serverData.aiInsights.some(existing => existing.id === insight.id)
+        ),
       ],
       // Server wins for core scheduling data
       scheduledStart: serverData.scheduledStart,
       scheduledEnd: serverData.scheduledEnd,
       location: serverData.location,
       // Update timestamp
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
   }
 
@@ -505,7 +596,7 @@ export class SyncManager {
       hourlyRate: serverData.hourlyRate,
       totalAmount: serverData.totalAmount,
       // Update timestamp
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
   }
 
@@ -529,14 +620,27 @@ export class SyncManager {
   /**
    * Handle sync failure
    */
-  private async handleFailure(action: OfflineAction, result: SyncResult): Promise<void> {
+  private async handleFailure(
+    action: OfflineAction,
+    result: SyncResult
+  ): Promise<void> {
     action.retryCount++;
 
     if (action.retryCount >= action.maxRetries) {
-      logger.error('app', `Action ${action.id} exceeded max retries`, new Error(`Retry count: ${action.retryCount}`));
-      await offlineStorageManager.markSyncStatus('offlineActions', action.id, 'failed');
+      logger.error(
+        'app',
+        `Action ${action.id} exceeded max retries`,
+        new Error(`Retry count: ${action.retryCount}`)
+      );
+      await offlineStorageManager.markSyncStatus(
+        'offlineActions',
+        action.id,
+        'failed'
+      );
     } else {
-      logger.warn('app', `Action ${action.id} failed, will retry`, { retryCount: action.retryCount });
+      logger.warn('app', `Action ${action.id} failed, will retry`, {
+        retryCount: action.retryCount,
+      });
       // Schedule retry
       setTimeout(() => {
         this.retryAction(action);
@@ -547,10 +651,17 @@ export class SyncManager {
   /**
    * Handle conflict that couldn't be resolved
    */
-  private async handleConflict(action: OfflineAction, result: SyncResult): Promise<void> {
+  private async handleConflict(
+    action: OfflineAction,
+    result: SyncResult
+  ): Promise<void> {
     logger.warn('app', `Unresolved conflict for action ${action.id}`, result);
-    await offlineStorageManager.markSyncStatus('offlineActions', action.id, 'conflict');
-    
+    await offlineStorageManager.markSyncStatus(
+      'offlineActions',
+      action.id,
+      'conflict'
+    );
+
     // In a real implementation, you might:
     // 1. Notify the user about the conflict
     // 2. Store conflict details for manual resolution
@@ -569,15 +680,27 @@ export class SyncManager {
 
     try {
       const result = await this.processAction(action);
-      
+
       if (result.success) {
-        await offlineStorageManager.markSyncStatus('offlineActions', action.id, 'synced');
+        await offlineStorageManager.markSyncStatus(
+          'offlineActions',
+          action.id,
+          'synced'
+        );
       } else {
         await this.handleFailure(action, result);
       }
     } catch (error) {
-      logger.error('app', `Retry failed for action ${action.id}`, error instanceof Error ? error : new Error(String(error)));
-      await this.handleFailure(action, { success: false, action, error: 'Retry failed' });
+      logger.error(
+        'app',
+        `Retry failed for action ${action.id}`,
+        error instanceof Error ? error : new Error(String(error))
+      );
+      await this.handleFailure(action, {
+        success: false,
+        action,
+        error: 'Retry failed',
+      });
     } finally {
       this.retryQueue.delete(action.id);
     }
@@ -593,12 +716,20 @@ export class SyncManager {
     conflictActions: number;
     storageStats: any;
   }> {
-    const [pendingActions, syncedActions, failedActions, conflictActions, storageStats] = await Promise.all([
+    const [
+      pendingActions,
+      syncedActions,
+      failedActions,
+      conflictActions,
+      storageStats,
+    ] = await Promise.all([
       offlineStorageManager.getAll('offlineActions', { syncStatus: 'pending' }),
       offlineStorageManager.getAll('offlineActions', { syncStatus: 'synced' }),
       offlineStorageManager.getAll('offlineActions', { syncStatus: 'failed' }),
-      offlineStorageManager.getAll('offlineActions', { syncStatus: 'conflict' }),
-      offlineStorageManager.getStorageStats()
+      offlineStorageManager.getAll('offlineActions', {
+        syncStatus: 'conflict',
+      }),
+      offlineStorageManager.getStorageStats(),
     ]);
 
     return {
@@ -606,34 +737,50 @@ export class SyncManager {
       syncedActions: syncedActions.length,
       failedActions: failedActions.length,
       conflictActions: conflictActions.length,
-      storageStats
+      storageStats,
     };
   }
 
   /**
    * Force sync specific entity
    */
-  public async forceSyncEntity(entity: string, id: string): Promise<SyncResult> {
-    const data = await offlineStorageManager.get(entity + 's', id);
-    
+  public async forceSyncEntity(
+    entity: string,
+    id: string
+  ): Promise<SyncResult> {
+    const data = await offlineStorageManager.get(
+      (entity + 's') as 'sessions' | 'users' | 'insights' | 'timesheets',
+      id
+    );
+
     if (!data) {
       return {
         success: false,
-        action: { id: '', type: 'update', entity, data: {}, timestamp: Date.now(), priority: 'high', retryCount: 0, maxRetries: 3, syncStatus: 'pending' },
-        error: 'Entity not found in offline storage'
+        action: {
+          id: '',
+          type: 'update',
+          entity: entity as 'session' | 'user' | 'insight' | 'timesheet',
+          data: {},
+          timestamp: Date.now(),
+          priority: 'high',
+          retryCount: 0,
+          maxRetries: 3,
+          syncStatus: 'pending',
+        },
+        error: 'Entity not found in offline storage',
       };
     }
 
     const action: OfflineAction = {
       id: `force_sync_${Date.now()}`,
       type: 'update',
-      entity,
+      entity: entity as 'session' | 'user' | 'insight' | 'timesheet',
       data,
       timestamp: Date.now(),
       priority: 'high',
       retryCount: 0,
       maxRetries: 3,
-      syncStatus: 'pending'
+      syncStatus: 'pending',
     };
 
     return await this.processAction(action);
