@@ -548,6 +548,3 @@ export type {
   TimeSlot,
   SchedulingConstraint,
 } from './session.types';
-
-// Also export as values for better compatibility
-export { type AIRecommendation, type SessionRecord } from './session.types';
