@@ -21,7 +21,10 @@ interface BackgroundImageSettings {
   enableAnimations: boolean;
 }
 
-const defaultSettings: Record<string, BackgroundImageSettings> = {
+const defaultSettings: Record<
+  'netflix' | 'amazon' | 'kids',
+  BackgroundImageSettings
+> = {
   netflix: {
     opacity: 0.2,
     blur: 0,
