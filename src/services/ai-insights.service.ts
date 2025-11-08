@@ -679,7 +679,7 @@ export class AIInsightsService {
     if (userData.sessions.length >= 5) {
       const lastFiveSessions = userData.sessions.slice(-5);
       const allCompleted = lastFiveSessions.every(
-        session => session.status === 'completed'
+        (session: any) => session.status === 'completed'
       );
 
       if (allCompleted) {
@@ -731,7 +731,8 @@ export class AIInsightsService {
           (s.actualEnd.getTime() - s.actualStart.getTime()) / (1000 * 60)
       );
       const avgDuration =
-        durations.reduce((sum, d) => sum + d, 0) / durations.length;
+        durations.reduce((sum: number, d: number) => sum + d, 0) /
+        durations.length;
       const optimalDuration = 60; // 60 minutes optimal
 
       if (Math.abs(avgDuration - optimalDuration) > 15) {
@@ -862,7 +863,7 @@ export class AIInsightsService {
         ([, a], [, b]) => b - a
       )[0];
 
-      if (mostCommonDay[1] >= 3) {
+      if (mostCommonDay && mostCommonDay[1] >= 3) {
         const dayNames = [
           'Sunday',
           'Monday',
@@ -872,15 +873,18 @@ export class AIInsightsService {
           'Friday',
           'Saturday',
         ];
-        patterns.push({
-          pattern: 'Preferred Day Pattern',
-          description: `You tend to schedule sessions on ${dayNames[mostCommonDay[0]]}s`,
-          frequency: mostCommonDay[1] / userData.sessions.length,
-          lastOccurrence:
-            userData.sessions[userData.sessions.length - 1].scheduledStart,
-          contextFactors: ['day_preference', 'scheduling'],
-          significance: mostCommonDay[1] >= 5 ? 'high' : 'medium',
-        });
+        const dayName = dayNames[mostCommonDay[0]];
+        if (dayName) {
+          patterns.push({
+            pattern: 'Preferred Day Pattern',
+            description: `You tend to schedule sessions on ${dayName}s`,
+            frequency: mostCommonDay[1] / userData.sessions.length,
+            lastOccurrence:
+              userData.sessions[userData.sessions.length - 1].scheduledStart,
+            contextFactors: ['day_preference', 'scheduling'],
+            significance: mostCommonDay[1] >= 5 ? 'high' : 'medium',
+          });
+        }
       }
     }
 
