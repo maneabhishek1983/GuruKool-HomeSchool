@@ -531,7 +531,10 @@ export const LocationAwareSessionManager: React.FC<
                         onClick={() => startSession(session.id)}
                         disabled={
                           !currentLocation ||
-                          (!isNearby && distance !== undefined && distance > 500)
+                          (!isNearby &&
+                            distance !== null &&
+                            distance !== undefined &&
+                            distance > 500)
                         }
                         className="px-3 py-1 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                       >
