@@ -22,9 +22,13 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
 } from 'recharts';
-import { billingDashboardService, BillingAnalytics, BillingPeriod } from '@/services/billing-dashboard.service';
+import {
+  billingDashboardService,
+  BillingAnalytics,
+  BillingPeriod,
+} from '@/services/billing-dashboard.service';
 
 interface BillingDashboardProps {
   teacherId: string;
@@ -33,13 +37,15 @@ interface BillingDashboardProps {
 
 export const BillingDashboard: React.FC<BillingDashboardProps> = ({
   teacherId,
-  className = ''
+  className = '',
 }) => {
   const [analytics, setAnalytics] = useState<BillingAnalytics | null>(null);
   const [recentBilling, setRecentBilling] = useState<BillingPeriod[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('month'); // 'week', 'month', 'quarter', 'year'
-  const [activeTab, setActiveTab] = useState<'overview' | 'revenue' | 'payments' | 'reports'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'revenue' | 'payments' | 'reports'
+  >('overview');
 
   // Color palette for charts
   const colors = {
@@ -48,10 +54,16 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
     accent: '#F59E0B',
     danger: '#EF4444',
     warning: '#F97316',
-    info: '#06B6D4'
+    info: '#06B6D4',
   };
 
-  const pieColors = [colors.primary, colors.secondary, colors.accent, colors.warning, colors.danger];
+  const pieColors = [
+    colors.primary,
+    colors.secondary,
+    colors.accent,
+    colors.warning,
+    colors.danger,
+  ];
 
   useEffect(() => {
     loadDashboardData();
@@ -63,7 +75,7 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
 
       // Calculate period dates
       const periodDates = getPeriodDates(selectedPeriod);
-      
+
       // Load analytics
       const analyticsData = await billingDashboardService.getBillingAnalytics(
         teacherId,
@@ -71,7 +83,6 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
       );
 
       setAnalytics(analyticsData);
-
     } catch (error) {
       console.error('Failed to load billing dashboard data:', error);
     } finally {
@@ -106,11 +117,17 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD',
     }).format(amount);
   };
 
-  const StatCard = ({ title, value, change, icon, color = 'primary' }: {
+  const StatCard = ({
+    title,
+    value,
+    change,
+    icon,
+    color = 'primary',
+  }: {
     title: string;
     value: string | number;
     change?: number;
@@ -130,7 +147,9 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
             {typeof value === 'number' ? formatCurrency(value) : value}
           </p>
           {change !== undefined && (
-            <p className={`text-sm mt-1 ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <p
+              className={`text-sm mt-1 ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}
+            >
               {change >= 0 ? '↗' : '↘'} {Math.abs(change).toFixed(1)}%
             </p>
           )}
@@ -148,7 +167,10 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
         <div className="animate-pulse">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-200 dark:bg-gray-700 rounded-lg h-24" />
+              <div
+                key={i}
+                className="bg-gray-200 dark:bg-gray-700 rounded-lg h-24"
+              />
             ))}
           </div>
           <div className="mt-6 bg-gray-200 dark:bg-gray-700 rounded-lg h-96" />
@@ -186,7 +208,7 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
 
         {/* Period Selector */}
         <div className="flex space-x-2">
-          {['week', 'month', 'quarter', 'year'].map((period) => (
+          {['week', 'month', 'quarter', 'year'].map(period => (
             <button
               key={period}
               onClick={() => setSelectedPeriod(period)}
@@ -209,7 +231,7 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
             { key: 'overview', label: 'Overview' },
             { key: 'revenue', label: 'Revenue' },
             { key: 'payments', label: 'Payments' },
-            { key: 'reports', label: 'Reports' }
+            { key: 'reports', label: 'Reports' },
           ].map(({ key, label }) => (
             <button
               key={key}
@@ -275,13 +297,17 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600 dark:text-gray-400">Pending</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Pending
+                  </span>
                   <span className="font-semibold text-yellow-600">
                     {formatCurrency(analytics.pendingAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600 dark:text-gray-400">Overdue</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Overdue
+                  </span>
                   <span className="font-semibold text-red-600">
                     {formatCurrency(analytics.overdueAmount)}
                   </span>
@@ -305,10 +331,15 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
                     nameKey="status"
                   >
                     {analytics.statusBreakdown.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={pieColors[index % pieColors.length]}
+                      />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => formatCurrency(value as number)} />
+                  <Tooltip
+                    formatter={value => formatCurrency(value as number)}
+                  />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -328,8 +359,8 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
               <AreaChart data={analytics.revenueByMonth}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis format={(value: any) => `$${value}`} />
-                <Tooltip formatter={(value) => formatCurrency(value as number)} />
+                <YAxis tickFormatter={(value: any) => `$${value}`} />
+                <Tooltip formatter={value => formatCurrency(value as number)} />
                 <Area
                   type="monotone"
                   dataKey="amount"
@@ -380,8 +411,8 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
               <BarChart data={analytics.revenueByStudent}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="studentName" />
-                <YAxis format={(value: any) => `$${value}`} />
-                <Tooltip formatter={(value) => formatCurrency(value as number)} />
+                <YAxis tickFormatter={(value: any) => `$${value}`} />
+                <Tooltip formatter={value => formatCurrency(value as number)} />
                 <Bar dataKey="amount" fill={colors.primary} />
               </BarChart>
             </ResponsiveContainer>
@@ -409,21 +440,31 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
                     nameKey="method"
                   >
                     {analytics.paymentMethodBreakdown.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={pieColors[index % pieColors.length]}
+                      />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => formatCurrency(value as number)} />
+                  <Tooltip
+                    formatter={value => formatCurrency(value as number)}
+                  />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
-              
+
               <div className="space-y-3">
                 {analytics.paymentMethodBreakdown.map((method, index) => (
-                  <div key={method.method} className="flex justify-between items-center">
+                  <div
+                    key={method.method}
+                    className="flex justify-between items-center"
+                  >
                     <div className="flex items-center space-x-2">
                       <div
                         className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: pieColors[index % pieColors.length] }}
+                        style={{
+                          backgroundColor: pieColors[index % pieColors.length],
+                        }}
                       />
                       <span className="text-gray-700 dark:text-gray-300 capitalize">
                         {method.method.replace('_', ' ')}
@@ -478,10 +519,18 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
               {[
                 { type: 'summary', title: 'Summary Report', icon: '📄' },
                 { type: 'detailed', title: 'Detailed Report', icon: '📊' },
-                { type: 'payment_history', title: 'Payment History', icon: '💳' },
+                {
+                  type: 'payment_history',
+                  title: 'Payment History',
+                  icon: '💳',
+                },
                 { type: 'tax_report', title: 'Tax Report', icon: '📋' },
-                { type: 'student_breakdown', title: 'Student Breakdown', icon: '👥' }
-              ].map((report) => (
+                {
+                  type: 'student_breakdown',
+                  title: 'Student Breakdown',
+                  icon: '👥',
+                },
+              ].map(report => (
                 <button
                   key={report.type}
                   className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
