@@ -107,8 +107,21 @@ export default function TeacherLocationTracker({
             learningPatterns: [],
             sessionAnalytics: {
               engagementScore: 0,
-              completionRate: 0,
-              averageResponseTime: 0,
+              progressScore: 0,
+              difficultyLevel: 0,
+              conceptsMastered: [],
+              conceptsStruggling: [],
+              timeDistribution: {
+                instruction: 0,
+                practice: 0,
+                assessment: 0,
+              },
+              interactionMetrics: {
+                questionsAsked: 0,
+                responsesGiven: 0,
+                participationRate: 0,
+              },
+              learningVelocity: 0,
             },
             createdAt: new Date(),
             updatedAt: new Date(),
