@@ -1288,6 +1288,7 @@ const homeschoolingOptions: HomeschoolingOptions = {
       name: 'Home Fitness Program',
       description:
         'Structured fitness activities that can be done at home with minimal equipment',
+      category: 'fitness',
       frequency: 'daily',
       duration: '30-60 minutes',
       ageGroups: ['5-18'],
@@ -1322,6 +1323,7 @@ const homeschoolingOptions: HomeschoolingOptions = {
       name: 'Local Sports Programs',
       description:
         'Participation in community sports programs, leagues, or classes',
+      category: 'sports',
       frequency: 'weekly',
       duration: '1-2 hours',
       ageGroups: ['5-18'],
@@ -1351,6 +1353,7 @@ const homeschoolingOptions: HomeschoolingOptions = {
       name: 'Outdoor Activities',
       description:
         'Regular outdoor activities like hiking, biking, swimming, or nature exploration',
+      category: 'outdoor',
       frequency: 'weekly',
       duration: '1-3 hours',
       ageGroups: ['3-18'],
@@ -1380,6 +1383,7 @@ const homeschoolingOptions: HomeschoolingOptions = {
       name: 'Dance Classes',
       description:
         'Structured dance instruction in various styles like ballet, jazz, hip-hop, or cultural dance',
+      category: 'dance',
       frequency: 'weekly',
       duration: '45-90 minutes',
       ageGroups: ['3-18'],
@@ -1481,7 +1485,7 @@ const homeschoolingOptions: HomeschoolingOptions = {
       ],
       requirements: ['Computer access', 'Software', 'Class fees'],
       cost: 'medium',
-      location: 'hybrid',
+      location: 'online',
     },
   ],
   communityInvolvement: [
@@ -1650,7 +1654,9 @@ class AcademicStandardsService {
     return options.filter(option =>
       option.ageGroups.some(ageGroup => {
         const [min, max] = ageGroup.split('-').map(Number);
-        return age >= min && age <= max;
+        const minVal = min ?? 0;
+        const maxVal = max ?? 100;
+        return age >= minVal && age <= maxVal;
       })
     );
   }
