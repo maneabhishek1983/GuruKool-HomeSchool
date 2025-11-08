@@ -5,9 +5,7 @@
 
 import { logger } from './logging.service';
 import { offlineStorageManager } from './offline-storage.service';
-import { WebSocketService } from './websocket.service';
-
-const webSocketService = WebSocketService.getInstance();
+import { realtimeService } from './supabase-realtime.service';
 
 export interface GPSCoordinates {
   latitude: number;
@@ -221,8 +219,8 @@ export class TimesheetAutomationService {
         this.setupSessionReminders(sessionId, autoConfig);
       }
 
-      // Notify via WebSocket
-      await webSocketService.sendRealtimeMessage({
+      // Notify via Supabase Realtime
+      await realtimeService.sendRealtimeMessage({
         type: 'session_update',
         from: teacherId,
         to: options.parentId || studentId,
@@ -356,8 +354,8 @@ export class TimesheetAutomationService {
       // Update in offline storage
       await offlineStorageManager.store('timesheets', completedEntry, 'high');
 
-      // Notify via WebSocket
-      await webSocketService.sendRealtimeMessage({
+      // Notify via Supabase Realtime
+      await realtimeService.sendRealtimeMessage({
         type: 'session_update',
         from: activeTimer.teacherId,
         to: activeTimer.parentId || activeTimer.studentId,

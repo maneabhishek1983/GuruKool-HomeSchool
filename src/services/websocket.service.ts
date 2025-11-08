@@ -1,6 +1,10 @@
 import { WS_EVENTS } from '@/constants';
 import { logger } from './logging.service';
 import { offlineStorageManager } from './offline-storage.service';
+import {
+  realtimeService,
+  SupabaseRealtimeService,
+} from './supabase-realtime.service';
 
 export interface WebSocketMessage {
   event: string;
@@ -353,23 +357,13 @@ export class WebSocketService {
     };
 
     try {
-      if (this.isConnected()) {
-        await this.sendWebSocketMessage(realtimeMessage);
-        realtimeMessage.deliveryStatus = 'sent';
-        logger.debug('app', `Real-time message sent`, {
-          id: realtimeMessage.id,
-        });
+      // Use Supabase Realtime instead of WebSocket
+      await realtimeService.sendRealtimeMessage(realtimeMessage);
+      realtimeMessage.deliveryStatus = 'sent';
 
-        // Set up acknowledgment timeout if required
-        if (realtimeMessage.requiresAck) {
-          this.setupAckTimeout(realtimeMessage);
-        }
-      } else {
-        this.queueMessage(realtimeMessage);
-        logger.debug('app', `Message queued for later delivery`, {
-          id: realtimeMessage.id,
-        });
-      }
+      logger.debug('app', `Real-time message sent via Supabase Realtime`, {
+        id: realtimeMessage.id,
+      });
 
       // Store message for offline access
       await this.storeMessage(realtimeMessage);
