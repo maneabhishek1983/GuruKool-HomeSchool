@@ -227,11 +227,11 @@ export abstract class BaseAIAgent implements AIAgent {
       },
     };
 
-    if (insights) {
+    if (insights !== undefined) {
       result.insights = insights;
     }
 
-    if (actions) {
+    if (actions !== undefined) {
       result.actions = actions;
     }
 
@@ -266,7 +266,9 @@ export abstract class BaseAIAgent implements AIAgent {
     data?: any
   ): void {
     const enhancedMessage = `[${this.name}] ${message}`;
-    const meta = { agentId: this.id, agentName: this.name };
+    // Note: logger meta only accepts userId and sessionId
+    // Agent metadata is included in the enhanced message
+    const meta = undefined;
 
     switch (level) {
       case 'error':
