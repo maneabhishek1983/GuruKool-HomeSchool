@@ -232,11 +232,11 @@ export const OfflineSessionManager: React.FC<OfflineSessionManagerProps> = ({
         // Update session status
         const updateData: Partial<LocalSession> = {
           status: 'completed',
-          actualEnd: completedEntry.endTime,
+          ...(completedEntry.endTime
+            ? { actualEnd: completedEntry.endTime }
+            : {}),
+          ...(notes !== undefined ? { notes } : {}),
         };
-        if (notes !== undefined) {
-          updateData.notes = notes;
-        }
         await updateOfflineSession(sessionId, updateData);
 
         // Update active timers
