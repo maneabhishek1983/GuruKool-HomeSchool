@@ -73,27 +73,19 @@ export function QRAuthProvider({
     console.log('🔄 Starting QR code generation...');
 
     try {
-      // Get device information
-      const deviceInfo = navigator.userAgent;
-      console.log('📱 Device info:', deviceInfo);
-
-      // Generate QR code with AI enhancement
+      // Generate QR code with placeholder user info (real email/role will be set after scan)
       console.log('🎯 Calling QR auth service...');
-      const result = await qrAuthService.generateQRToken(deviceInfo);
-      console.log('✅ QR service result:', result);
+      const tempEmail = `qr-login-${Date.now()}@temp.local`;
+      const qrToken = qrAuthService.generateQRToken(tempEmail, 'parent');
+      console.log('✅ QR token generated:', qrToken);
 
       setQRAuthState(prev => ({
         ...prev,
-        qrCode: result.qrCode,
+        qrCode: qrToken,
         authStatus: 'pending',
       }));
 
-      setSessionId(result.sessionId);
-
-      // Store AI insights if available
-      if (result.aiInsights) {
-        setAiInsights(prev => [...prev, result.aiInsights]);
-      }
+      setSessionId(`session-${Date.now()}`);
 
       // Connect to WebSocket for real-time updates (skip in development)
       let unsubscribe = () => {};
