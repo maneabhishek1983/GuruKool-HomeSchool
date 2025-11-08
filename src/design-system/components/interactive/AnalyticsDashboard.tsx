@@ -91,17 +91,17 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const ChartContainer = ({ 
-  chart, 
-  onChartClick, 
-  interactive = true 
-}: { 
-  chart: AnalyticsData; 
+const ChartContainer = ({
+  chart,
+  onChartClick,
+  interactive = true,
+}: {
+  chart: AnalyticsData;
   onChartClick?: (chartData: AnalyticsData, dataPoint?: ChartDataPoint) => void;
   interactive?: boolean;
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  
+
   const handleDataPointClick = (data: any) => {
     if (interactive && onChartClick) {
       onChartClick(chart, data);
@@ -118,27 +118,33 @@ const ChartContainer = ({
       case 'line':
         return (
           <LineChart {...commonProps}>
-            {chart.showGrid && <CartesianGrid strokeDasharray="3 3" opacity={0.3} />}
-            <XAxis 
-              dataKey="name" 
+            {chart.showGrid && (
+              <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+            )}
+            <XAxis
+              dataKey="name"
               axisLine={false}
               tickLine={false}
               className="text-xs"
             />
-            <YAxis 
-              axisLine={false}
-              tickLine={false}
-              className="text-xs"
-            />
+            <YAxis axisLine={false} tickLine={false} className="text-xs" />
             <Tooltip content={<CustomTooltip />} />
             {chart.showLegend && <Legend />}
             <Line
               type="monotone"
               dataKey="value"
-              stroke={chart.color || chartColors[0]}
+              stroke={chart.color || chartColors[0] || '#0ea5e9'}
               strokeWidth={3}
-              dot={{ fill: chart.color || chartColors[0], strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, stroke: chart.color || chartColors[0], strokeWidth: 2 }}
+              dot={{
+                fill: chart.color || chartColors[0] || '#0ea5e9',
+                strokeWidth: 2,
+                r: 4,
+              }}
+              activeDot={{
+                r: 6,
+                stroke: chart.color || chartColors[0] || '#0ea5e9',
+                strokeWidth: 2,
+              }}
               onClick={handleDataPointClick}
             />
           </LineChart>
@@ -147,23 +153,48 @@ const ChartContainer = ({
       case 'area':
         return (
           <AreaChart {...commonProps}>
-            {chart.showGrid && <CartesianGrid strokeDasharray="3 3" opacity={0.3} />}
-            <XAxis dataKey="name" axisLine={false} tickLine={false} className="text-xs" />
+            {chart.showGrid && (
+              <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+            )}
+            <XAxis
+              dataKey="name"
+              axisLine={false}
+              tickLine={false}
+              className="text-xs"
+            />
             <YAxis axisLine={false} tickLine={false} className="text-xs" />
             <Tooltip content={<CustomTooltip />} />
             {chart.showLegend && <Legend />}
             <defs>
-              <linearGradient id={`gradient-${chart.title}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={chart.color || chartColors[0]} stopOpacity={0.8}/>
-                <stop offset="95%" stopColor={chart.color || chartColors[0]} stopOpacity={0.1}/>
+              <linearGradient
+                id={`gradient-${chart.title}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="5%"
+                  stopColor={chart.color || chartColors[0] || '#0ea5e9'}
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor={chart.color || chartColors[0] || '#0ea5e9'}
+                  stopOpacity={0.1}
+                />
               </linearGradient>
             </defs>
             <Area
               type="monotone"
               dataKey="value"
-              stroke={chart.color || chartColors[0]}
+              stroke={chart.color || chartColors[0] || '#0ea5e9'}
               fillOpacity={1}
-              fill={chart.gradient ? `url(#gradient-${chart.title})` : chart.color || chartColors[0]}
+              fill={
+                chart.gradient
+                  ? `url(#gradient-${chart.title})`
+                  : chart.color || chartColors[0] || '#0ea5e9'
+              }
               onClick={handleDataPointClick}
             />
           </AreaChart>
@@ -172,14 +203,21 @@ const ChartContainer = ({
       case 'bar':
         return (
           <BarChart {...commonProps}>
-            {chart.showGrid && <CartesianGrid strokeDasharray="3 3" opacity={0.3} />}
-            <XAxis dataKey="name" axisLine={false} tickLine={false} className="text-xs" />
+            {chart.showGrid && (
+              <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+            )}
+            <XAxis
+              dataKey="name"
+              axisLine={false}
+              tickLine={false}
+              className="text-xs"
+            />
             <YAxis axisLine={false} tickLine={false} className="text-xs" />
             <Tooltip content={<CustomTooltip />} />
             {chart.showLegend && <Legend />}
             <Bar
               dataKey="value"
-              fill={chart.color || chartColors[0]}
+              fill={chart.color || chartColors[0] || '#0ea5e9'}
               radius={[4, 4, 0, 0]}
               onClick={handleDataPointClick}
             />
@@ -199,9 +237,9 @@ const ChartContainer = ({
               onClick={handleDataPointClick}
             >
               {chart.data.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={chartColors[index % chartColors.length]}
+                <Cell
+                  key={`cell-${index}`}
+                  fill={chartColors[index % chartColors.length] || '#0ea5e9'}
                 />
               ))}
             </Pie>
@@ -212,11 +250,17 @@ const ChartContainer = ({
 
       case 'radial':
         return (
-          <RadialBarChart cx="50%" cy="50%" innerRadius="10%" outerRadius="80%" data={chart.data}>
+          <RadialBarChart
+            cx="50%"
+            cy="50%"
+            innerRadius="10%"
+            outerRadius="80%"
+            data={chart.data}
+          >
             <RadialBar
               dataKey="value"
               cornerRadius={10}
-              fill={chart.color || chartColors[0]}
+              fill={chart.color || chartColors[0] || '#0ea5e9'}
               onClick={handleDataPointClick}
             />
             <Tooltip content={<CustomTooltip />} />
@@ -233,19 +277,17 @@ const ChartContainer = ({
       initial="initial"
       animate="animate"
       variants={animationPresets.fadeInUp}
-      whileHover={interactive ? { y: -2 } : undefined}
+      {...(interactive ? { whileHover: { y: -2 } } : {})}
       className="h-full"
     >
       <Card variant="elevated" className="h-full">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">
-            {chart.title}
-          </CardTitle>
+          <CardTitle className="text-lg font-semibold">{chart.title}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              {renderChart()}
+              {renderChart() || <div />}
             </ResponsiveContainer>
           </div>
         </CardContent>
@@ -254,12 +296,14 @@ const ChartContainer = ({
   );
 };
 
-const AIInsightsPanel = ({ 
-  insights 
-}: { 
-  insights: AnalyticsDashboardProps['aiInsights'] 
+const AIInsightsPanel = ({
+  insights,
+}: {
+  insights: AnalyticsDashboardProps['aiInsights'];
 }) => {
-  if (!insights) return null;
+  if (!insights) {
+    return null;
+  }
 
   return (
     <motion.div
@@ -285,7 +329,9 @@ const AIInsightsPanel = ({
                   transition={{ duration: 1, delay: 0.5 }}
                 />
               </div>
-              <span className="text-xs font-medium">{insights.confidence}%</span>
+              <span className="text-xs font-medium">
+                {insights.confidence}%
+              </span>
             </div>
           </div>
         </CardHeader>
@@ -332,7 +378,10 @@ export function AnalyticsDashboard({
     }
   }, [layout]);
 
-  const handleChartClick = (chartData: AnalyticsData, dataPoint?: ChartDataPoint) => {
+  const handleChartClick = (
+    chartData: AnalyticsData,
+    dataPoint?: ChartDataPoint
+  ) => {
     setSelectedChart(chartData.title);
     onChartClick?.(chartData, dataPoint);
   };
@@ -366,7 +415,8 @@ export function AnalyticsDashboard({
               }}
               className={cn(
                 layout === 'masonry' && 'break-inside-avoid mb-6',
-                selectedChart === chart.title && 'ring-2 ring-blue-500 ring-opacity-50 rounded-xl'
+                selectedChart === chart.title &&
+                  'ring-2 ring-blue-500 ring-opacity-50 rounded-xl'
               )}
             >
               <ChartContainer
@@ -383,9 +433,12 @@ export function AnalyticsDashboard({
 }
 
 // Sample data generator for testing
-export const generateSampleData = (type: AnalyticsData['type'], count: number = 7): ChartDataPoint[] => {
+export const generateSampleData = (
+  type: AnalyticsData['type'],
+  count: number = 7
+): ChartDataPoint[] => {
   const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  
+
   return Array.from({ length: count }, (_, i) => ({
     name: names[i] || `Item ${i + 1}`,
     value: Math.floor(Math.random() * 100) + 10,
