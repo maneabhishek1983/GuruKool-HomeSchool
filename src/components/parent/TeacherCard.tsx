@@ -129,7 +129,7 @@ export default function TeacherCard({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <p className="text-sm font-medium text-gray-700">Experience</p>
-          <p className="text-gray-900">{teacher.experienceYears} years</p>
+            <p className="text-gray-900">{teacher.experience} years</p>
         </div>
         <div>
           <p className="text-sm font-medium text-gray-700">Status</p>
