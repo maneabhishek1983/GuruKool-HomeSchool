@@ -11,7 +11,14 @@ export interface WebSocketMessage {
 
 export interface RealtimeMessage {
   id: string;
-  type: 'message' | 'notification' | 'session_update' | 'location_update' | 'typing' | 'read_receipt' | 'system';
+  type:
+    | 'message'
+    | 'notification'
+    | 'session_update'
+    | 'location_update'
+    | 'typing'
+    | 'read_receipt'
+    | 'system';
   from: string;
   to: string;
   content?: string;
@@ -65,23 +72,32 @@ export class WebSocketService {
   private heartbeatTimer: NodeJS.Timeout | null = null;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private messageHandlers = new Map<string, Set<(data: any) => void>>();
-  private connectionState: 'connecting' | 'connected' | 'disconnected' | 'error' = 'disconnected';
-  
+  private connectionState:
+    | 'connecting'
+    | 'connected'
+    | 'disconnected'
+    | 'error' = 'disconnected';
+
   // Enhanced messaging features
   private messageQueue: RealtimeMessage[] = [];
-  private pendingAcks: Map<string, { message: RealtimeMessage; timeout: NodeJS.Timeout }> = new Map();
+  private pendingAcks: Map<
+    string,
+    { message: RealtimeMessage; timeout: NodeJS.Timeout }
+  > = new Map();
   private typingTimers: Map<string, NodeJS.Timeout> = new Map();
   private messageListeners: Set<(message: RealtimeMessage) => void> = new Set();
-  private typingListeners: Set<(indicator: TypingIndicator) => void> = new Set();
+  private typingListeners: Set<(indicator: TypingIndicator) => void> =
+    new Set();
   private readReceiptListeners: Set<(receipt: ReadReceipt) => void> = new Set();
-  private connectionStatusListeners: Set<(status: ConnectionStatus) => void> = new Set();
-  
+  private connectionStatusListeners: Set<(status: ConnectionStatus) => void> =
+    new Set();
+
   private connectionStatus: ConnectionStatus = {
     isConnected: false,
     lastConnected: null,
     reconnectAttempts: 0,
     connectionQuality: 'disconnected',
-    latency: 0
+    latency: 0,
   };
 
   private currentUserId: string = 'anonymous';
@@ -123,7 +139,7 @@ export class WebSocketService {
 
       this.connectionState = 'connecting';
       this.connectionStatus.reconnectAttempts = this.reconnectAttempts;
-      
+
       try {
         const wsUrl = `${this.config.url}?userId=${encodeURIComponent(this.currentUserId)}&timestamp=${Date.now()}`;
         this.ws = new WebSocket(wsUrl);
@@ -136,7 +152,7 @@ export class WebSocketService {
             lastConnected: new Date(),
             reconnectAttempts: 0,
             connectionQuality: 'excellent',
-            latency: 0
+            latency: 0,
           };
           this.reconnectAttempts = 0;
           this.startHeartbeat();
@@ -145,26 +161,31 @@ export class WebSocketService {
           resolve();
         };
 
-        this.ws.onmessage = (event) => {
+        this.ws.onmessage = event => {
           this.handleMessage(event);
         };
 
-        this.ws.onclose = (event) => {
-          logger.info('app', 'WebSocket disconnected', { code: event.code, reason: event.reason });
+        this.ws.onclose = event => {
+          logger.info('app', 'WebSocket disconnected', {
+            code: event.code,
+            reason: event.reason,
+          });
           this.connectionState = 'disconnected';
           this.connectionStatus.isConnected = false;
           this.connectionStatus.connectionQuality = 'disconnected';
           this.stopHeartbeat();
           this.notifyConnectionStatusListeners();
-          if (event.code !== 1000) { // Not a normal closure
+          if (event.code !== 1000) {
+            // Not a normal closure
             this.handleReconnection();
           }
         };
 
-        this.ws.onerror = (error) => {
-          logger.error('app', 'WebSocket error', error);
+        this.ws.onerror = error => {
+          const err = new Error('WebSocket error');
+          logger.error('app', 'WebSocket error', err);
           this.connectionState = 'error';
-          reject(error);
+          reject(err);
         };
 
         // Connection timeout
@@ -173,10 +194,13 @@ export class WebSocketService {
             reject(new Error('WebSocket connection timeout'));
           }
         }, 10000);
-
       } catch (error) {
         this.connectionState = 'error';
-        logger.error('app', 'Failed to create WebSocket connection', error instanceof Error ? error : undefined);
+        logger.error(
+          'app',
+          'Failed to create WebSocket connection',
+          error instanceof Error ? error : undefined
+        );
         reject(error);
       }
     });
@@ -215,11 +239,14 @@ export class WebSocketService {
   /**
    * Subscribe to specific event type
    */
-  public subscribe(eventType: string, handler: (data: any) => void): () => void {
+  public subscribe(
+    eventType: string,
+    handler: (data: any) => void
+  ): () => void {
     if (!this.messageHandlers.has(eventType)) {
       this.messageHandlers.set(eventType, new Set());
     }
-    
+
     this.messageHandlers.get(eventType)!.add(handler);
 
     // Return unsubscribe function
@@ -237,8 +264,11 @@ export class WebSocketService {
   /**
    * Subscribe to QR authentication status updates
    */
-  public subscribeToQRAuth(sessionId: string, handler: (status: any) => void): () => void {
-    return this.subscribe(WS_EVENTS.QR_AUTH_STATUS, (data) => {
+  public subscribeToQRAuth(
+    sessionId: string,
+    handler: (status: any) => void
+  ): () => void {
+    return this.subscribe(WS_EVENTS.QR_AUTH_STATUS, data => {
       if (data.sessionId === sessionId) {
         handler(data);
       }
@@ -255,7 +285,9 @@ export class WebSocketService {
   /**
    * Subscribe to notifications
    */
-  public subscribeToNotifications(handler: (notification: any) => void): () => void {
+  public subscribeToNotifications(
+    handler: (notification: any) => void
+  ): () => void {
     return this.subscribe(WS_EVENTS.NOTIFICATION, handler);
   }
 
@@ -310,34 +342,44 @@ export class WebSocketService {
   /**
    * Send real-time message with delivery confirmation
    */
-  public async sendRealtimeMessage(message: Omit<RealtimeMessage, 'id' | 'timestamp' | 'deliveryStatus'>): Promise<string> {
+  public async sendRealtimeMessage(
+    message: Omit<RealtimeMessage, 'id' | 'timestamp' | 'deliveryStatus'>
+  ): Promise<string> {
     const realtimeMessage: RealtimeMessage = {
       ...message,
       id: this.generateMessageId(),
       timestamp: Date.now(),
-      deliveryStatus: 'pending'
+      deliveryStatus: 'pending',
     };
 
     try {
       if (this.isConnected()) {
         await this.sendWebSocketMessage(realtimeMessage);
         realtimeMessage.deliveryStatus = 'sent';
-        logger.debug('app', `Real-time message sent`, { id: realtimeMessage.id });
-        
+        logger.debug('app', `Real-time message sent`, {
+          id: realtimeMessage.id,
+        });
+
         // Set up acknowledgment timeout if required
         if (realtimeMessage.requiresAck) {
           this.setupAckTimeout(realtimeMessage);
         }
       } else {
         this.queueMessage(realtimeMessage);
-        logger.debug('app', `Message queued for later delivery`, { id: realtimeMessage.id });
+        logger.debug('app', `Message queued for later delivery`, {
+          id: realtimeMessage.id,
+        });
       }
 
       // Store message for offline access
       await this.storeMessage(realtimeMessage);
       return realtimeMessage.id;
     } catch (error) {
-      logger.error('app', `Failed to send real-time message ${realtimeMessage.id}`, error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        `Failed to send real-time message ${realtimeMessage.id}`,
+        error instanceof Error ? error : undefined
+      );
       realtimeMessage.deliveryStatus = 'pending';
       this.queueMessage(realtimeMessage);
       throw error;
@@ -352,7 +394,7 @@ export class WebSocketService {
       userId: this.currentUserId,
       chatId,
       isTyping,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     if (this.isConnected()) {
@@ -387,7 +429,7 @@ export class WebSocketService {
     const receipt: ReadReceipt = {
       messageId,
       userId: this.currentUserId,
-      readAt: Date.now()
+      readAt: Date.now(),
     };
 
     if (this.isConnected()) {
@@ -405,7 +447,9 @@ export class WebSocketService {
   /**
    * Subscribe to real-time messages
    */
-  public onRealtimeMessage(callback: (message: RealtimeMessage) => void): () => void {
+  public onRealtimeMessage(
+    callback: (message: RealtimeMessage) => void
+  ): () => void {
     this.messageListeners.add(callback);
     return () => this.messageListeners.delete(callback);
   }
@@ -413,7 +457,9 @@ export class WebSocketService {
   /**
    * Subscribe to typing indicators
    */
-  public onTypingIndicator(callback: (indicator: TypingIndicator) => void): () => void {
+  public onTypingIndicator(
+    callback: (indicator: TypingIndicator) => void
+  ): () => void {
     this.typingListeners.add(callback);
     return () => this.typingListeners.delete(callback);
   }
@@ -429,7 +475,9 @@ export class WebSocketService {
   /**
    * Subscribe to connection status changes
    */
-  public onConnectionStatusChange(callback: (status: ConnectionStatus) => void): () => void {
+  public onConnectionStatusChange(
+    callback: (status: ConnectionStatus) => void
+  ): () => void {
     this.connectionStatusListeners.add(callback);
     return () => this.connectionStatusListeners.delete(callback);
   }
@@ -464,8 +512,10 @@ export class WebSocketService {
       connectionState: this.connectionState,
       reconnectAttempts: this.reconnectAttempts,
       subscribedEvents: Array.from(this.messageHandlers.keys()),
-      totalSubscribers: Array.from(this.messageHandlers.values())
-        .reduce((total, handlers) => total + handlers.size, 0),
+      totalSubscribers: Array.from(this.messageHandlers.values()).reduce(
+        (total, handlers) => total + handlers.size,
+        0
+      ),
       messageQueueSize: this.messageQueue.length,
       pendingAcks: this.pendingAcks.size,
       connectionStatus: this.connectionStatus,
@@ -489,20 +539,26 @@ export class WebSocketService {
     failed: number;
     byPriority: Record<string, number>;
   } {
-    const byPriority = this.messageQueue.reduce((acc, msg) => {
-      acc[msg.priority] = (acc[msg.priority] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const byPriority = this.messageQueue.reduce(
+      (acc, msg) => {
+        acc[msg.priority] = (acc[msg.priority] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     return {
       total: this.messageQueue.length,
-      pending: this.messageQueue.filter(msg => msg.deliveryStatus === 'pending').length,
-      sent: this.messageQueue.filter(msg => msg.deliveryStatus === 'sent').length,
-      failed: this.messageQueue.filter(msg => 
-        msg.deliveryStatus === 'pending' && 
-        Date.now() - msg.timestamp > this.config.messageTimeout
+      pending: this.messageQueue.filter(msg => msg.deliveryStatus === 'pending')
+        .length,
+      sent: this.messageQueue.filter(msg => msg.deliveryStatus === 'sent')
+        .length,
+      failed: this.messageQueue.filter(
+        msg =>
+          msg.deliveryStatus === 'pending' &&
+          Date.now() - msg.timestamp > this.config.messageTimeout
       ).length,
-      byPriority
+      byPriority,
     };
   }
 
@@ -535,7 +591,7 @@ export class WebSocketService {
   private handleMessage(event: MessageEvent): void {
     try {
       const message: WebSocketMessage = JSON.parse(event.data);
-      
+
       // Handle heartbeat response and calculate latency
       if (message.event === 'heartbeat_response') {
         this.connectionStatus.latency = Date.now() - message.timestamp;
@@ -568,16 +624,23 @@ export class WebSocketService {
               try {
                 handler(message.data || message);
               } catch (error) {
-                logger.error('app', `Error in WebSocket message handler for ${message.event}`, error instanceof Error ? error : undefined);
+                logger.error(
+                  'app',
+                  `Error in WebSocket message handler for ${message.event}`,
+                  error instanceof Error ? error : undefined
+                );
               }
             });
           } else if (process.env.NODE_ENV === 'development') {
             logger.debug('app', 'Unhandled WebSocket message', message);
           }
       }
-
     } catch (error) {
-      logger.error('app', 'Failed to parse WebSocket message', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to parse WebSocket message',
+        error instanceof Error ? error : undefined
+      );
     }
   }
 
@@ -588,7 +651,9 @@ export class WebSocketService {
     }
 
     this.reconnectAttempts++;
-    console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.config.maxReconnectAttempts})...`);
+    console.log(
+      `Attempting to reconnect (${this.reconnectAttempts}/${this.config.maxReconnectAttempts})...`
+    );
 
     setTimeout(() => {
       this.connect().catch(error => {
@@ -617,14 +682,17 @@ export class WebSocketService {
    * Handle incoming real-time messages
    */
   private handleRealtimeMessage(message: RealtimeMessage): void {
-    logger.debug('app', 'Real-time message received', { id: message.id, type: message.type });
-    
+    logger.debug('app', 'Real-time message received', {
+      id: message.id,
+      type: message.type,
+    });
+
     // Store message for offline access
     this.storeMessage(message);
-    
+
     // Notify listeners
     this.notifyMessageListeners(message);
-    
+
     // Send acknowledgment if required
     if (message.requiresAck) {
       this.sendMessageAck(message.id);
@@ -656,14 +724,19 @@ export class WebSocketService {
       pending.message.deliveryStatus = 'delivered';
       this.pendingAcks.delete(data.messageId);
       this.updateStoredMessage(pending.message);
-      logger.debug('app', `Message acknowledged`, { messageId: data.messageId });
+      logger.debug('app', `Message acknowledged`, {
+        messageId: data.messageId,
+      });
     }
   }
 
   /**
    * Handle delivery confirmations
    */
-  private handleDeliveryConfirmation(data: { messageId: string; delivered: boolean }): void {
+  private handleDeliveryConfirmation(data: {
+    messageId: string;
+    delivered: boolean;
+  }): void {
     // Update message delivery status
     logger.debug('app', `Delivery confirmation received`, data);
   }
@@ -693,11 +766,13 @@ export class WebSocketService {
       }
 
       try {
-        this.ws.send(JSON.stringify({
-          event: 'realtime_message',
-          data: message,
-          timestamp: Date.now(),
-        }));
+        this.ws.send(
+          JSON.stringify({
+            event: 'realtime_message',
+            data: message,
+            timestamp: Date.now(),
+          })
+        );
         resolve();
       } catch (error) {
         reject(error);
@@ -710,11 +785,14 @@ export class WebSocketService {
    */
   private queueMessage(message: RealtimeMessage): void {
     this.messageQueue.push(message);
-    
+
     // Limit queue size
     if (this.messageQueue.length > this.config.maxQueueSize) {
       this.messageQueue = this.messageQueue.slice(-this.config.maxQueueSize);
-      logger.warn('app', 'Message queue size limit reached, older messages discarded');
+      logger.warn(
+        'app',
+        'Message queue size limit reached, older messages discarded'
+      );
     }
   }
 
@@ -726,7 +804,10 @@ export class WebSocketService {
       return;
     }
 
-    logger.info('app', `Processing ${this.messageQueue.length} queued messages`);
+    logger.info(
+      'app',
+      `Processing ${this.messageQueue.length} queued messages`
+    );
     const messages = [...this.messageQueue];
     this.messageQueue = [];
 
@@ -746,7 +827,11 @@ export class WebSocketService {
           this.setupAckTimeout(message);
         }
       } catch (error) {
-        logger.error('app', `Failed to send queued message ${message.id}`, error instanceof Error ? error : undefined);
+        logger.error(
+          'app',
+          `Failed to send queued message ${message.id}`,
+          error instanceof Error ? error : undefined
+        );
         this.queueMessage(message); // Re-queue failed message
       }
     }
@@ -757,7 +842,9 @@ export class WebSocketService {
    */
   private setupAckTimeout(message: RealtimeMessage): void {
     const timeout = setTimeout(() => {
-      logger.warn('app', `Message acknowledgment timeout`, { messageId: message.id });
+      logger.warn('app', `Message acknowledgment timeout`, {
+        messageId: message.id,
+      });
       message.deliveryStatus = 'pending'; // Reset to pending for retry
       this.pendingAcks.delete(message.id);
     }, this.config.messageTimeout);
@@ -783,21 +870,29 @@ export class WebSocketService {
    */
   private async storeMessage(message: RealtimeMessage): Promise<void> {
     try {
-      await offlineStorageManager.store('messages', {
-        id: message.id,
-        type: message.type,
-        from: message.from,
-        to: message.to,
-        content: message.content,
-        data: message.data,
-        timestamp: message.timestamp,
-        deliveryStatus: message.deliveryStatus,
-        priority: message.priority,
-        read: false,
-        expiresAt: message.expiresAt
-      }, message.priority);
+      await offlineStorageManager.store(
+        'messages',
+        {
+          id: message.id,
+          type: message.type,
+          from: message.from,
+          to: message.to,
+          content: message.content,
+          data: message.data,
+          timestamp: message.timestamp,
+          deliveryStatus: message.deliveryStatus,
+          priority: message.priority,
+          read: false,
+          expiresAt: message.expiresAt,
+        },
+        message.priority === 'critical' ? 'high' : message.priority
+      );
     } catch (error) {
-      logger.error('app', 'Failed to store message', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to store message',
+        error instanceof Error ? error : undefined
+      );
     }
   }
 
@@ -808,14 +903,22 @@ export class WebSocketService {
     try {
       const stored = await offlineStorageManager.get('messages', message.id);
       if (stored) {
-        await offlineStorageManager.store('messages', {
-          ...stored,
-          deliveryStatus: message.deliveryStatus,
-          timestamp: message.timestamp
-        }, message.priority);
+        await offlineStorageManager.store(
+          'messages',
+          {
+            ...stored,
+            deliveryStatus: message.deliveryStatus,
+            timestamp: message.timestamp,
+          },
+          message.priority === 'critical' ? 'high' : message.priority
+        );
       }
     } catch (error) {
-      logger.error('app', 'Failed to update stored message', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to update stored message',
+        error instanceof Error ? error : undefined
+      );
     }
   }
 
@@ -826,14 +929,22 @@ export class WebSocketService {
     try {
       const stored = await offlineStorageManager.get('messages', messageId);
       if (stored) {
-        await offlineStorageManager.store('messages', {
-          ...stored,
-          read: true,
-          readAt: Date.now()
-        }, stored.priority);
+        await offlineStorageManager.store(
+          'messages',
+          {
+            ...stored,
+            read: true,
+            readAt: Date.now(),
+          },
+          stored.priority
+        );
       }
     } catch (error) {
-      logger.error('app', 'Failed to update message read status', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to update message read status',
+        error instanceof Error ? error : undefined
+      );
     }
   }
 
@@ -851,9 +962,15 @@ export class WebSocketService {
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
-          logger.debug('app', 'Page became hidden, maintaining WebSocket connection');
+          logger.debug(
+            'app',
+            'Page became hidden, maintaining WebSocket connection'
+          );
         } else {
-          logger.debug('app', 'Page became visible, checking WebSocket connection');
+          logger.debug(
+            'app',
+            'Page became visible, checking WebSocket connection'
+          );
           if (!this.isConnected() && this.currentUserId !== 'anonymous') {
             this.connect(this.currentUserId);
           }
@@ -876,7 +993,11 @@ export class WebSocketService {
       try {
         callback(message);
       } catch (error) {
-        logger.error('app', 'Error in message listener', error instanceof Error ? error : undefined);
+        logger.error(
+          'app',
+          'Error in message listener',
+          error instanceof Error ? error : undefined
+        );
       }
     });
   }
@@ -889,7 +1010,11 @@ export class WebSocketService {
       try {
         callback(indicator);
       } catch (error) {
-        logger.error('app', 'Error in typing listener', error instanceof Error ? error : undefined);
+        logger.error(
+          'app',
+          'Error in typing listener',
+          error instanceof Error ? error : undefined
+        );
       }
     });
   }
@@ -902,7 +1027,11 @@ export class WebSocketService {
       try {
         callback(receipt);
       } catch (error) {
-        logger.error('app', 'Error in read receipt listener', error instanceof Error ? error : undefined);
+        logger.error(
+          'app',
+          'Error in read receipt listener',
+          error instanceof Error ? error : undefined
+        );
       }
     });
   }
@@ -915,7 +1044,11 @@ export class WebSocketService {
       try {
         callback(this.connectionStatus);
       } catch (error) {
-        logger.error('app', 'Error in connection status listener', error instanceof Error ? error : undefined);
+        logger.error(
+          'app',
+          'Error in connection status listener',
+          error instanceof Error ? error : undefined
+        );
       }
     });
   }
