@@ -372,7 +372,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   studentId={selectedSession.studentId}
                   teacherId={user.id}
                   subject={selectedSession.subject}
-                  user={user}
+                  currentUser={user}
                 />
               ) : (
                 <Card className="p-6 text-center">
