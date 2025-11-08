@@ -96,7 +96,9 @@ export class SyllabusService {
         return [];
       }
 
-      return [...new Set(data?.map(item => item.subject) || [])];
+      return [
+        ...new Set(data?.map((item: any) => item.subject as string) || []),
+      ];
     } catch (error) {
       console.error('Error in getSubjectsForGrade:', error);
       return [];
@@ -132,9 +134,10 @@ export class SyllabusService {
         if (!academicStandards[standard.subject]) {
           academicStandards[standard.subject] = [];
         }
-        academicStandards[standard.subject].push(
-          ...standard.standards.map(s => s.code)
-        );
+        const subjectStandards = academicStandards[standard.subject];
+        if (subjectStandards) {
+          subjectStandards.push(...standard.standards.map(s => s.code));
+        }
       });
 
       const { data, error } = await supabase
@@ -189,9 +192,10 @@ export class SyllabusService {
           if (!academicStandards[standard.subject]) {
             academicStandards[standard.subject] = [];
           }
-          academicStandards[standard.subject].push(
-            ...standard.standards.map(s => s.code)
-          );
+          const subjectStandards = academicStandards[standard.subject];
+          if (subjectStandards) {
+            subjectStandards.push(...standard.standards.map(s => s.code));
+          }
         });
         updates.academic_standards = academicStandards;
       }
@@ -353,11 +357,13 @@ export class SyllabusService {
 
     if (currentIndex >= 0 && currentIndex < grades.length - 1) {
       const nextGrade = grades[currentIndex + 1];
-      return this.getAcademicStandards(
-        student.country,
-        nextGrade.level,
-        subject
-      );
+      if (nextGrade) {
+        return this.getAcademicStandards(
+          student.country,
+          nextGrade.level,
+          subject
+        );
+      }
     }
 
     return [];
@@ -375,11 +381,13 @@ export class SyllabusService {
 
     if (currentIndex > 0) {
       const previousGrade = grades[currentIndex - 1];
-      return this.getAcademicStandards(
-        student.country,
-        previousGrade.level,
-        subject
-      );
+      if (previousGrade) {
+        return this.getAcademicStandards(
+          student.country,
+          previousGrade.level,
+          subject
+        );
+      }
     }
 
     return [];
@@ -443,7 +451,10 @@ export class SyllabusService {
           g => g.level === ageBasedGrade.level
         );
         if (currentIndex < grades.length - 1) {
-          alternatives.push(grades[currentIndex + 1]);
+          const nextGrade = grades[currentIndex + 1];
+          if (nextGrade) {
+            alternatives.push(nextGrade);
+          }
         }
       } else if (averageScore < 60) {
         // May need support - suggest previous grade if available
@@ -451,7 +462,10 @@ export class SyllabusService {
           g => g.level === ageBasedGrade.level
         );
         if (currentIndex > 0) {
-          alternatives.push(grades[currentIndex - 1]);
+          const previousGrade = grades[currentIndex - 1];
+          if (previousGrade) {
+            alternatives.push(previousGrade);
+          }
         }
       }
     }
