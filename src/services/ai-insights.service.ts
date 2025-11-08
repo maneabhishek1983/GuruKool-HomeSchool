@@ -10,7 +10,13 @@ import { SessionRecord, User, AIInsight } from '@/types';
 
 export interface AIInsightCard {
   id: string;
-  type: 'recommendation' | 'alert' | 'prediction' | 'achievement' | 'trend' | 'optimization';
+  type:
+    | 'recommendation'
+    | 'alert'
+    | 'prediction'
+    | 'achievement'
+    | 'trend'
+    | 'optimization';
   priority: 'critical' | 'high' | 'medium' | 'low';
   title: string;
   description: string;
@@ -134,43 +140,73 @@ export class AIInsightsService {
     try {
       const insights: AIInsightCard[] = [];
       const maxInsights = options.maxInsights || 10;
-      const includeTypes = options.includeTypes || ['recommendation', 'alert', 'prediction', 'trend'];
+      const includeTypes = options.includeTypes || [
+        'recommendation',
+        'alert',
+        'prediction',
+        'trend',
+      ];
 
       // Get user data for analysis
-      const userData = await this.getUserAnalysisData(userId, userRole, options.timeframe);
-      
+      const userData = await this.getUserAnalysisData(
+        userId,
+        userRole,
+        options.timeframe
+      );
+
       if (!userData || userData.sessions.length === 0) {
         return this.getDefaultInsights(userId, userRole);
       }
 
       // Generate different types of insights
       if (includeTypes.includes('trend')) {
-        const trendInsights = await this.generateTrendInsights(userId, userRole, userData);
+        const trendInsights = await this.generateTrendInsights(
+          userId,
+          userRole,
+          userData
+        );
         insights.push(...trendInsights);
       }
 
       if (includeTypes.includes('recommendation')) {
-        const recommendationInsights = await this.generateRecommendationInsights(userId, userRole, userData);
+        const recommendationInsights =
+          await this.generateRecommendationInsights(userId, userRole, userData);
         insights.push(...recommendationInsights);
       }
 
       if (includeTypes.includes('alert')) {
-        const alertInsights = await this.generateAlertInsights(userId, userRole, userData);
+        const alertInsights = await this.generateAlertInsights(
+          userId,
+          userRole,
+          userData
+        );
         insights.push(...alertInsights);
       }
 
       if (includeTypes.includes('prediction')) {
-        const predictionInsights = await this.generatePredictionInsights(userId, userRole, userData);
+        const predictionInsights = await this.generatePredictionInsights(
+          userId,
+          userRole,
+          userData
+        );
         insights.push(...predictionInsights);
       }
 
       if (includeTypes.includes('achievement')) {
-        const achievementInsights = await this.generateAchievementInsights(userId, userRole, userData);
+        const achievementInsights = await this.generateAchievementInsights(
+          userId,
+          userRole,
+          userData
+        );
         insights.push(...achievementInsights);
       }
 
       if (includeTypes.includes('optimization')) {
-        const optimizationInsights = await this.generateOptimizationInsights(userId, userRole, userData);
+        const optimizationInsights = await this.generateOptimizationInsights(
+          userId,
+          userRole,
+          userData
+        );
         insights.push(...optimizationInsights);
       }
 
@@ -178,8 +214,11 @@ export class AIInsightsService {
       const sortedInsights = insights
         .sort((a, b) => {
           const priorityWeight = { critical: 4, high: 3, medium: 2, low: 1 };
-          const priorityDiff = priorityWeight[b.priority] - priorityWeight[a.priority];
-          if (priorityDiff !== 0) return priorityDiff;
+          const priorityDiff =
+            priorityWeight[b.priority] - priorityWeight[a.priority];
+          if (priorityDiff !== 0) {
+            return priorityDiff;
+          }
           return b.confidence - a.confidence;
         })
         .slice(0, maxInsights);
@@ -192,13 +231,16 @@ export class AIInsightsService {
       logger.info('app', 'AI insights generated', {
         userId,
         userRole,
-        insightCount: sortedInsights.length
+        insightCount: sortedInsights.length,
       });
 
       return sortedInsights;
-
     } catch (error) {
-      logger.error('app', 'Failed to generate AI insights', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to generate AI insights',
+        error instanceof Error ? error : undefined
+      );
       return this.getDefaultInsights(userId, userRole);
     }
   }
@@ -212,7 +254,11 @@ export class AIInsightsService {
     timeframe: { startDate: Date; endDate: Date }
   ): Promise<TrendAnalysis[]> {
     try {
-      const userData = await this.getUserAnalysisData(userId, 'student', timeframe);
+      const userData = await this.getUserAnalysisData(
+        userId,
+        'student',
+        timeframe
+      );
       const trends: TrendAnalysis[] = [];
 
       for (const metric of metrics) {
@@ -223,9 +269,12 @@ export class AIInsightsService {
       }
 
       return trends;
-
     } catch (error) {
-      logger.error('app', 'Failed to analyze trends', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to analyze trends',
+        error instanceof Error ? error : undefined
+      );
       return [];
     }
   }
@@ -241,27 +290,34 @@ export class AIInsightsService {
     try {
       const cacheKey = `${userId}_${userRole}_patterns`;
       const cached = this.patternDetectionCache.get(cacheKey);
-      
+
       if (cached) {
         return cached;
       }
 
-      const userData = await this.getUserAnalysisData(userId, userRole, timeframe);
+      const userData = await this.getUserAnalysisData(
+        userId,
+        userRole,
+        timeframe
+      );
       const patterns: PatternDetection[] = [];
 
       // Detect various patterns
-      patterns.push(...await this.detectSchedulingPatterns(userData));
-      patterns.push(...await this.detectPerformancePatterns(userData));
-      patterns.push(...await this.detectEngagementPatterns(userData));
-      patterns.push(...await this.detectLearningPatterns(userData));
+      patterns.push(...(await this.detectSchedulingPatterns(userData)));
+      patterns.push(...(await this.detectPerformancePatterns(userData)));
+      patterns.push(...(await this.detectEngagementPatterns(userData)));
+      patterns.push(...(await this.detectLearningPatterns(userData)));
 
       // Cache results
       this.patternDetectionCache.set(cacheKey, patterns);
 
       return patterns;
-
     } catch (error) {
-      logger.error('app', 'Failed to detect patterns', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to detect patterns',
+        error instanceof Error ? error : undefined
+      );
       return [];
     }
   }
@@ -280,22 +336,35 @@ export class AIInsightsService {
 
       // Generate different types of recommendations based on user role
       if (userRole === 'student') {
-        recommendations.push(...await this.generateStudentRecommendations(userData, focusAreas));
+        recommendations.push(
+          ...(await this.generateStudentRecommendations(userData, focusAreas))
+        );
       } else if (userRole === 'teacher') {
-        recommendations.push(...await this.generateTeacherRecommendations(userData, focusAreas));
+        recommendations.push(
+          ...(await this.generateTeacherRecommendations(userData, focusAreas))
+        );
       } else if (userRole === 'parent') {
-        recommendations.push(...await this.generateParentRecommendations(userData, focusAreas));
+        recommendations.push(
+          ...(await this.generateParentRecommendations(userData, focusAreas))
+        );
       }
 
       // Store recommendations
       for (const recommendation of recommendations) {
-        await offlineStorageManager.store('personalizedRecommendations', recommendation, 'low');
+        await offlineStorageManager.store(
+          'personalizedRecommendations',
+          recommendation,
+          'low'
+        );
       }
 
       return recommendations;
-
     } catch (error) {
-      logger.error('app', 'Failed to generate personalized recommendations', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to generate personalized recommendations',
+        error instanceof Error ? error : undefined
+      );
       return [];
     }
   }
@@ -317,7 +386,7 @@ export class AIInsightsService {
         accuracy: Math.random() * 20 + 80, // 80-100% accuracy
         predictions: await this.generatePredictions(modelType, trainingData),
         lastTrainedAt: new Date(),
-        dataPoints: trainingData.length
+        dataPoints: trainingData.length,
       };
 
       // Cache the model
@@ -329,13 +398,16 @@ export class AIInsightsService {
       logger.info('app', 'Predictive model created', {
         modelId: model.id,
         type: modelType,
-        accuracy: model.accuracy
+        accuracy: model.accuracy,
       });
 
       return model;
-
     } catch (error) {
-      logger.error('app', 'Failed to create predictive model', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to create predictive model',
+        error instanceof Error ? error : undefined
+      );
       throw error;
     }
   }
@@ -348,10 +420,11 @@ export class AIInsightsService {
     timeframe?: { startDate: Date; endDate: Date }
   ): Promise<any> {
     try {
-      const sessions = await offlineStorageManager.getAll<SessionRecord>('sessions');
+      const sessions =
+        await offlineStorageManager.getAll<SessionRecord>('sessions');
       const userSessions = sessions.filter(session => {
         let matches = false;
-        
+
         switch (userRole) {
           case 'student':
             matches = session.studentId === userId;
@@ -366,15 +439,21 @@ export class AIInsightsService {
 
         if (matches && timeframe) {
           const sessionDate = session.scheduledStart;
-          return sessionDate >= timeframe.startDate && sessionDate <= timeframe.endDate;
+          return (
+            sessionDate >= timeframe.startDate &&
+            sessionDate <= timeframe.endDate
+          );
         }
 
         return matches;
       });
 
-      const aiInsights = await offlineStorageManager.getAll<AIInsight>('aiInsights');
-      const userInsights = aiInsights.filter(insight => 
-        insight.sessionId && userSessions.some(session => session.id === insight.sessionId)
+      const aiInsights =
+        await offlineStorageManager.getAll<AIInsight>('aiInsights');
+      const userInsights = aiInsights.filter(
+        insight =>
+          insight.sessionId &&
+          userSessions.some(session => session.id === insight.sessionId)
       );
 
       return {
@@ -383,26 +462,34 @@ export class AIInsightsService {
         sessions: userSessions,
         insights: userInsights,
         totalSessions: userSessions.length,
-        completedSessions: userSessions.filter(s => s.status === 'completed').length,
+        completedSessions: userSessions.filter(s => s.status === 'completed')
+          .length,
         averageRating: this.calculateAverageRating(userSessions),
         totalHours: this.calculateTotalHours(userSessions),
-        subjects: [...new Set(userSessions.map(s => s.subject))]
+        subjects: [...new Set(userSessions.map(s => s.subject))],
       };
-
     } catch (error) {
-      logger.error('app', 'Failed to get user analysis data', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to get user analysis data',
+        error instanceof Error ? error : undefined
+      );
       return null;
     }
   }
 
-  private async generateTrendInsights(userId: string, userRole: string, userData: any): Promise<AIInsightCard[]> {
+  private async generateTrendInsights(
+    userId: string,
+    userRole: string,
+    userData: any
+  ): Promise<AIInsightCard[]> {
     const insights: AIInsightCard[] = [];
 
     // Example trend insights
     if (userData.sessions.length >= 5) {
       const recentSessions = userData.sessions.slice(-5);
       const olderSessions = userData.sessions.slice(-10, -5);
-      
+
       const recentAvgRating = this.calculateAverageRating(recentSessions);
       const olderAvgRating = this.calculateAverageRating(olderSessions);
 
@@ -412,7 +499,7 @@ export class AIInsightsService {
           type: 'trend',
           priority: 'medium',
           title: 'Performance Improvement Trend',
-          description: `Your session ratings have improved by ${((recentAvgRating - olderAvgRating) * 100 / olderAvgRating).toFixed(1)}% in recent sessions.`,
+          description: `Your session ratings have improved by ${(((recentAvgRating - olderAvgRating) * 100) / olderAvgRating).toFixed(1)}% in recent sessions.`,
           confidence: 85,
           impact: 'high',
           category: 'performance',
@@ -424,13 +511,13 @@ export class AIInsightsService {
               type: 'navigate',
               data: { route: '/analytics/progress' },
               icon: '📈',
-              primary: true
-            }
+              primary: true,
+            },
           ],
           tags: ['improvement', 'performance', 'trending'],
           userId,
           userRole: userRole as any,
-          createdAt: new Date()
+          createdAt: new Date(),
         });
       }
     }
@@ -438,14 +525,20 @@ export class AIInsightsService {
     return insights;
   }
 
-  private async generateRecommendationInsights(userId: string, userRole: string, userData: any): Promise<AIInsightCard[]> {
+  private async generateRecommendationInsights(
+    userId: string,
+    userRole: string,
+    userData: any
+  ): Promise<AIInsightCard[]> {
     const insights: AIInsightCard[] = [];
 
     // Study schedule optimization
     if (userData.sessions.length > 0) {
-      const sessionTimes = userData.sessions.map(s => s.scheduledStart.getHours());
+      const sessionTimes = userData.sessions.map((s: any) =>
+        s.scheduledStart.getHours()
+      );
       const mostCommonHour = this.getMostCommon(sessionTimes);
-      
+
       insights.push({
         id: this.generateInsightId(),
         type: 'recommendation',
@@ -463,28 +556,32 @@ export class AIInsightsService {
             type: 'schedule',
             data: { suggestedHour: mostCommonHour },
             icon: '📅',
-            primary: true
-          }
+            primary: true,
+          },
         ],
         tags: ['scheduling', 'optimization', 'productivity'],
         userId,
         userRole: userRole as any,
         createdAt: new Date(),
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Expires in 7 days
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Expires in 7 days
       });
     }
 
     return insights;
   }
 
-  private async generateAlertInsights(userId: string, userRole: string, userData: any): Promise<AIInsightCard[]> {
+  private async generateAlertInsights(
+    userId: string,
+    userRole: string,
+    userData: any
+  ): Promise<AIInsightCard[]> {
     const insights: AIInsightCard[] = [];
 
     // Engagement drop alert
     if (userData.sessions.length >= 3) {
       const recentSessions = userData.sessions.slice(-3);
       const averageRating = this.calculateAverageRating(recentSessions);
-      
+
       if (averageRating < 3.0) {
         insights.push({
           id: this.generateInsightId(),
@@ -503,20 +600,20 @@ export class AIInsightsService {
               type: 'contact',
               data: { userId: userData.sessions[0]?.teacherId },
               icon: '👨‍🏫',
-              primary: true
+              primary: true,
             },
             {
               id: 'view_feedback',
               label: 'View Detailed Feedback',
               type: 'navigate',
               data: { route: '/sessions/feedback' },
-              icon: '📝'
-            }
+              icon: '📝',
+            },
           ],
           tags: ['engagement', 'concern', 'support'],
           userId,
           userRole: userRole as any,
-          createdAt: new Date()
+          createdAt: new Date(),
         });
       }
     }
@@ -524,14 +621,19 @@ export class AIInsightsService {
     return insights;
   }
 
-  private async generatePredictionInsights(userId: string, userRole: string, userData: any): Promise<AIInsightCard[]> {
+  private async generatePredictionInsights(
+    userId: string,
+    userRole: string,
+    userData: any
+  ): Promise<AIInsightCard[]> {
     const insights: AIInsightCard[] = [];
 
     // Goal achievement prediction
     if (userData.totalHours > 10) {
-      const weeklyHours = userData.totalHours / (userData.sessions.length / 7 || 1);
+      const weeklyHours =
+        userData.totalHours / (userData.sessions.length / 7 || 1);
       const predictedMonthlyHours = weeklyHours * 4.33;
-      
+
       insights.push({
         id: this.generateInsightId(),
         type: 'prediction',
@@ -541,7 +643,11 @@ export class AIInsightsService {
         confidence: 70,
         impact: 'medium',
         category: 'learning',
-        data: { weeklyHours, predictedMonthlyHours, currentTotal: userData.totalHours },
+        data: {
+          weeklyHours,
+          predictedMonthlyHours,
+          currentTotal: userData.totalHours,
+        },
         actions: [
           {
             id: 'adjust_schedule',
@@ -549,34 +655,41 @@ export class AIInsightsService {
             type: 'navigate',
             data: { route: '/schedule' },
             icon: '📊',
-            primary: true
-          }
+            primary: true,
+          },
         ],
         tags: ['prediction', 'goals', 'planning'],
         userId,
         userRole: userRole as any,
-        createdAt: new Date()
+        createdAt: new Date(),
       });
     }
 
     return insights;
   }
 
-  private async generateAchievementInsights(userId: string, userRole: string, userData: any): Promise<AIInsightCard[]> {
+  private async generateAchievementInsights(
+    userId: string,
+    userRole: string,
+    userData: any
+  ): Promise<AIInsightCard[]> {
     const insights: AIInsightCard[] = [];
 
     // Consistency achievement
     if (userData.sessions.length >= 5) {
       const lastFiveSessions = userData.sessions.slice(-5);
-      const allCompleted = lastFiveSessions.every(session => session.status === 'completed');
-      
+      const allCompleted = lastFiveSessions.every(
+        session => session.status === 'completed'
+      );
+
       if (allCompleted) {
         insights.push({
           id: this.generateInsightId(),
           type: 'achievement',
           priority: 'low',
           title: 'Consistency Streak!',
-          description: 'Congratulations! You\'ve completed your last 5 sessions successfully. Keep up the excellent work!',
+          description:
+            "Congratulations! You've completed your last 5 sessions successfully. Keep up the excellent work!",
           confidence: 100,
           impact: 'high',
           category: 'performance',
@@ -587,13 +700,13 @@ export class AIInsightsService {
               label: 'Share Achievement',
               type: 'external',
               data: { platform: 'social' },
-              icon: '🎉'
-            }
+              icon: '🎉',
+            },
           ],
           tags: ['achievement', 'streak', 'consistency'],
           userId,
           userRole: userRole as any,
-          createdAt: new Date()
+          createdAt: new Date(),
         });
       }
     }
@@ -601,21 +714,29 @@ export class AIInsightsService {
     return insights;
   }
 
-  private async generateOptimizationInsights(userId: string, userRole: string, userData: any): Promise<AIInsightCard[]> {
+  private async generateOptimizationInsights(
+    userId: string,
+    userRole: string,
+    userData: any
+  ): Promise<AIInsightCard[]> {
     const insights: AIInsightCard[] = [];
 
     // Session duration optimization
-    const completedSessions = userData.sessions.filter((s: any) => s.status === 'completed' && s.actualStart && s.actualEnd);
+    const completedSessions = userData.sessions.filter(
+      (s: any) => s.status === 'completed' && s.actualStart && s.actualEnd
+    );
     if (completedSessions.length >= 3) {
-      const durations = completedSessions.map((s: any) => 
-        (s.actualEnd.getTime() - s.actualStart.getTime()) / (1000 * 60)
+      const durations = completedSessions.map(
+        (s: any) =>
+          (s.actualEnd.getTime() - s.actualStart.getTime()) / (1000 * 60)
       );
-      const avgDuration = durations.reduce((sum, d) => sum + d, 0) / durations.length;
+      const avgDuration =
+        durations.reduce((sum, d) => sum + d, 0) / durations.length;
       const optimalDuration = 60; // 60 minutes optimal
-      
+
       if (Math.abs(avgDuration - optimalDuration) > 15) {
         const suggestion = avgDuration > optimalDuration ? 'shorter' : 'longer';
-        
+
         insights.push({
           id: this.generateInsightId(),
           type: 'optimization',
@@ -633,13 +754,13 @@ export class AIInsightsService {
               type: 'navigate',
               data: { route: '/settings/sessions' },
               icon: '⚙️',
-              primary: true
-            }
+              primary: true,
+            },
           ],
           tags: ['optimization', 'duration', 'efficiency'],
           userId,
           userRole: userRole as any,
-          createdAt: new Date()
+          createdAt: new Date(),
         });
       }
     }
@@ -647,14 +768,18 @@ export class AIInsightsService {
     return insights;
   }
 
-  private getDefaultInsights(userId: string, userRole: 'student' | 'teacher' | 'parent'): AIInsightCard[] {
+  private getDefaultInsights(
+    userId: string,
+    userRole: 'student' | 'teacher' | 'parent'
+  ): AIInsightCard[] {
     return [
       {
         id: this.generateInsightId(),
         type: 'recommendation',
         priority: 'medium',
         title: 'Welcome to AI Insights',
-        description: 'Start scheduling sessions to receive personalized insights and recommendations based on your learning patterns.',
+        description:
+          'Start scheduling sessions to receive personalized insights and recommendations based on your learning patterns.',
         confidence: 100,
         impact: 'high',
         category: 'learning',
@@ -666,29 +791,40 @@ export class AIInsightsService {
             type: 'navigate',
             data: { route: '/sessions/schedule' },
             icon: '📅',
-            primary: true
-          }
+            primary: true,
+          },
         ],
         tags: ['welcome', 'getting-started'],
         userId,
         userRole,
-        createdAt: new Date()
-      }
+        createdAt: new Date(),
+      },
     ];
   }
 
-  private async performTrendAnalysis(metric: string, userData: any): Promise<TrendAnalysis | null> {
+  private async performTrendAnalysis(
+    metric: string,
+    userData: any
+  ): Promise<TrendAnalysis | null> {
     // Simplified trend analysis
-    if (userData.sessions.length < 3) return null;
+    if (userData.sessions.length < 3) {
+      return null;
+    }
 
     const values = userData.sessions.map((s: any, index: number) => ({
       x: index,
-      y: s.rating || 0
+      y: s.rating || 0,
     }));
 
     const slope = this.calculateSlope(values);
-    const direction = slope > 0.1 ? 'increasing' : slope < -0.1 ? 'decreasing' : 'stable';
-    const strength = Math.abs(slope) > 0.5 ? 'strong' : Math.abs(slope) > 0.2 ? 'moderate' : 'weak';
+    const direction =
+      slope > 0.1 ? 'increasing' : slope < -0.1 ? 'decreasing' : 'stable';
+    const strength =
+      Math.abs(slope) > 0.5
+        ? 'strong'
+        : Math.abs(slope) > 0.2
+          ? 'moderate'
+          : 'weak';
 
     return {
       metric,
@@ -698,21 +834,23 @@ export class AIInsightsService {
       prediction: {
         nextValue: values[values.length - 1].y + slope,
         confidence: 70,
-        timeframe: 'next session'
+        timeframe: 'next session',
       },
       factors: [
         {
           factor: 'Session consistency',
           influence: 0.8,
-          explanation: 'Regular sessions contribute to improvement'
-        }
-      ]
+          explanation: 'Regular sessions contribute to improvement',
+        },
+      ],
     };
   }
 
-  private async detectSchedulingPatterns(userData: any): Promise<PatternDetection[]> {
+  private async detectSchedulingPatterns(
+    userData: any
+  ): Promise<PatternDetection[]> {
     const patterns: PatternDetection[] = [];
-    
+
     if (userData.sessions.length >= 5) {
       const dayOfWeekCounts = new Map<number, number>();
       userData.sessions.forEach((session: any) => {
@@ -720,18 +858,28 @@ export class AIInsightsService {
         dayOfWeekCounts.set(day, (dayOfWeekCounts.get(day) || 0) + 1);
       });
 
-      const mostCommonDay = Array.from(dayOfWeekCounts.entries())
-        .sort(([,a], [,b]) => b - a)[0];
+      const mostCommonDay = Array.from(dayOfWeekCounts.entries()).sort(
+        ([, a], [, b]) => b - a
+      )[0];
 
       if (mostCommonDay[1] >= 3) {
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const dayNames = [
+          'Sunday',
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+        ];
         patterns.push({
           pattern: 'Preferred Day Pattern',
           description: `You tend to schedule sessions on ${dayNames[mostCommonDay[0]]}s`,
           frequency: mostCommonDay[1] / userData.sessions.length,
-          lastOccurrence: userData.sessions[userData.sessions.length - 1].scheduledStart,
+          lastOccurrence:
+            userData.sessions[userData.sessions.length - 1].scheduledStart,
           contextFactors: ['day_preference', 'scheduling'],
-          significance: mostCommonDay[1] >= 5 ? 'high' : 'medium'
+          significance: mostCommonDay[1] >= 5 ? 'high' : 'medium',
         });
       }
     }
@@ -739,22 +887,31 @@ export class AIInsightsService {
     return patterns;
   }
 
-  private async detectPerformancePatterns(userData: any): Promise<PatternDetection[]> {
+  private async detectPerformancePatterns(
+    userData: any
+  ): Promise<PatternDetection[]> {
     // Simplified performance pattern detection
     return [];
   }
 
-  private async detectEngagementPatterns(userData: any): Promise<PatternDetection[]> {
+  private async detectEngagementPatterns(
+    userData: any
+  ): Promise<PatternDetection[]> {
     // Simplified engagement pattern detection
     return [];
   }
 
-  private async detectLearningPatterns(userData: any): Promise<PatternDetection[]> {
+  private async detectLearningPatterns(
+    userData: any
+  ): Promise<PatternDetection[]> {
     // Simplified learning pattern detection
     return [];
   }
 
-  private async generateStudentRecommendations(userData: any, focusAreas?: string[]): Promise<PersonalizedRecommendation[]> {
+  private async generateStudentRecommendations(
+    userData: any,
+    focusAreas?: string[]
+  ): Promise<PersonalizedRecommendation[]> {
     const recommendations: PersonalizedRecommendation[] = [];
 
     // Study schedule recommendation
@@ -764,8 +921,10 @@ export class AIInsightsService {
         userId: userData.userId,
         type: 'study_plan',
         title: 'Optimize Your Study Schedule',
-        description: 'Based on your session performance, we recommend scheduling sessions during your peak performance hours.',
-        rationale: 'Analysis shows you perform 25% better during certain times of the day.',
+        description:
+          'Based on your session performance, we recommend scheduling sessions during your peak performance hours.',
+        rationale:
+          'Analysis shows you perform 25% better during certain times of the day.',
         expectedImpact: 'Improved session ratings and learning retention',
         difficulty: 'easy',
         timeToImplement: '5 minutes',
@@ -773,23 +932,26 @@ export class AIInsightsService {
           {
             type: 'tool',
             title: 'Schedule Optimizer',
-            url: '/tools/schedule-optimizer'
-          }
+            url: '/tools/schedule-optimizer',
+          },
         ],
         metrics: [
           {
             metric: 'Session Rating',
             expectedChange: 15,
-            timeframe: '2 weeks'
-          }
-        ]
+            timeframe: '2 weeks',
+          },
+        ],
       });
     }
 
     return recommendations;
   }
 
-  private async generateTeacherRecommendations(userData: any, focusAreas?: string[]): Promise<PersonalizedRecommendation[]> {
+  private async generateTeacherRecommendations(
+    userData: any,
+    focusAreas?: string[]
+  ): Promise<PersonalizedRecommendation[]> {
     const recommendations: PersonalizedRecommendation[] = [];
 
     // Student engagement recommendation
@@ -798,7 +960,8 @@ export class AIInsightsService {
       userId: userData.userId,
       type: 'method',
       title: 'Enhance Student Engagement',
-      description: 'Incorporate more interactive elements in your sessions to boost engagement.',
+      description:
+        'Incorporate more interactive elements in your sessions to boost engagement.',
       rationale: 'Students show higher engagement with interactive content.',
       expectedImpact: 'Increased student satisfaction and retention',
       difficulty: 'moderate',
@@ -807,22 +970,25 @@ export class AIInsightsService {
         {
           type: 'video',
           title: 'Interactive Teaching Methods',
-          url: '/resources/interactive-teaching'
-        }
+          url: '/resources/interactive-teaching',
+        },
       ],
       metrics: [
         {
           metric: 'Student Engagement',
           expectedChange: 20,
-          timeframe: '3 weeks'
-        }
-      ]
+          timeframe: '3 weeks',
+        },
+      ],
     });
 
     return recommendations;
   }
 
-  private async generateParentRecommendations(userData: any, focusAreas?: string[]): Promise<PersonalizedRecommendation[]> {
+  private async generateParentRecommendations(
+    userData: any,
+    focusAreas?: string[]
+  ): Promise<PersonalizedRecommendation[]> {
     const recommendations: PersonalizedRecommendation[] = [];
 
     // Learning environment recommendation
@@ -831,8 +997,10 @@ export class AIInsightsService {
       userId: userData.userId,
       type: 'resource',
       title: 'Optimize Learning Environment',
-      description: 'Create a dedicated study space to improve focus and learning outcomes.',
-      rationale: 'Consistent study environment reduces distractions and improves concentration.',
+      description:
+        'Create a dedicated study space to improve focus and learning outcomes.',
+      rationale:
+        'Consistent study environment reduces distractions and improves concentration.',
       expectedImpact: 'Better focus and improved learning outcomes',
       difficulty: 'easy',
       timeToImplement: '30 minutes',
@@ -840,32 +1008,39 @@ export class AIInsightsService {
         {
           type: 'document',
           title: 'Home Learning Environment Guide',
-          url: '/resources/learning-environment'
-        }
+          url: '/resources/learning-environment',
+        },
       ],
       metrics: [
         {
           metric: 'Focus Score',
           expectedChange: 25,
-          timeframe: '1 week'
-        }
-      ]
+          timeframe: '1 week',
+        },
+      ],
     });
 
     return recommendations;
   }
 
-  private async generatePredictions(modelType: string, trainingData: any[]): Promise<any[]> {
+  private async generatePredictions(
+    modelType: string,
+    trainingData: any[]
+  ): Promise<any[]> {
     // Simplified prediction generation
     const predictions = [];
-    
+
     switch (modelType) {
       case 'performance':
         predictions.push({
           outcome: 'Above Average Performance',
           probability: 0.75,
           timeframe: 'Next month',
-          factors: ['consistent attendance', 'engagement level', 'practice frequency']
+          factors: [
+            'consistent attendance',
+            'engagement level',
+            'practice frequency',
+          ],
         });
         break;
       case 'engagement':
@@ -873,7 +1048,11 @@ export class AIInsightsService {
           outcome: 'High Engagement',
           probability: 0.68,
           timeframe: 'Next week',
-          factors: ['subject interest', 'teaching style match', 'session timing']
+          factors: [
+            'subject interest',
+            'teaching style match',
+            'session timing',
+          ],
         });
         break;
     }
@@ -883,9 +1062,12 @@ export class AIInsightsService {
 
   private startInsightGeneration(): void {
     // Generate insights every hour
-    this.insightGenerationInterval = setInterval(() => {
-      this.performPeriodicInsightGeneration();
-    }, 60 * 60 * 1000);
+    this.insightGenerationInterval = setInterval(
+      () => {
+        this.performPeriodicInsightGeneration();
+      },
+      60 * 60 * 1000
+    );
   }
 
   private async performPeriodicInsightGeneration(): Promise<void> {
@@ -893,7 +1075,11 @@ export class AIInsightsService {
       // This would typically run for all active users
       logger.debug('app', 'Performing periodic insight generation');
     } catch (error) {
-      logger.error('app', 'Failed periodic insight generation', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed periodic insight generation',
+        error instanceof Error ? error : undefined
+      );
     }
   }
 
@@ -901,16 +1087,23 @@ export class AIInsightsService {
 
   private calculateAverageRating(sessions: any[]): number {
     const ratedSessions = sessions.filter(s => s.rating && s.rating > 0);
-    if (ratedSessions.length === 0) return 0;
-    
-    const totalRating = ratedSessions.reduce((sum, session) => sum + (session.rating || 0), 0);
+    if (ratedSessions.length === 0) {
+      return 0;
+    }
+
+    const totalRating = ratedSessions.reduce(
+      (sum, session) => sum + (session.rating || 0),
+      0
+    );
     return totalRating / ratedSessions.length;
   }
 
   private calculateTotalHours(sessions: any[]): number {
     return sessions.reduce((total, session) => {
       if (session.actualStart && session.actualEnd) {
-        const duration = (session.actualEnd.getTime() - session.actualStart.getTime()) / (1000 * 60 * 60);
+        const duration =
+          (session.actualEnd.getTime() - session.actualStart.getTime()) /
+          (1000 * 60 * 60);
         return total + duration;
       }
       return total;
@@ -920,18 +1113,22 @@ export class AIInsightsService {
   private getMostCommon<T>(arr: T[]): T {
     const counts = new Map<T, number>();
     arr.forEach(item => counts.set(item, (counts.get(item) || 0) + 1));
-    return Array.from(counts.entries()).reduce((a, b) => a[1] > b[1] ? a : b)[0];
+    return Array.from(counts.entries()).reduce((a, b) =>
+      a[1] > b[1] ? a : b
+    )[0];
   }
 
   private calculateSlope(points: { x: number; y: number }[]): number {
-    if (points.length < 2) return 0;
-    
+    if (points.length < 2) {
+      return 0;
+    }
+
     const n = points.length;
     const sumX = points.reduce((sum, p) => sum + p.x, 0);
     const sumY = points.reduce((sum, p) => sum + p.y, 0);
     const sumXY = points.reduce((sum, p) => sum + p.x * p.y, 0);
     const sumXX = points.reduce((sum, p) => sum + p.x * p.x, 0);
-    
+
     return (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
   }
 
