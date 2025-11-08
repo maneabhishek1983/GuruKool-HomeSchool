@@ -26,7 +26,9 @@ export abstract class BaseAIAgent implements AIAgent {
   /**
    * Execute with built-in error handling and performance tracking
    */
-  public async executeWithTracking(context: AgentContext): Promise<AgentResult> {
+  public async executeWithTracking(
+    context: AgentContext
+  ): Promise<AgentResult> {
     const startTime = Date.now();
     this.executionCount++;
 
@@ -34,7 +36,9 @@ export abstract class BaseAIAgent implements AIAgent {
       // Pre-execution validation
       const validationResult = this.validateContext(context);
       if (!validationResult.isValid) {
-        return this.createErrorResult(`Context validation failed: ${validationResult.error}`);
+        return this.createErrorResult(
+          `Context validation failed: ${validationResult.error}`
+        );
       }
 
       // Handle health check requests
@@ -44,7 +48,7 @@ export abstract class BaseAIAgent implements AIAgent {
 
       // Execute the agent logic
       const result = await this.execute(context);
-      
+
       // Post-execution tracking
       const executionTime = Date.now() - startTime;
       this.totalExecutionTime += executionTime;
@@ -64,10 +68,10 @@ export abstract class BaseAIAgent implements AIAgent {
     } catch (error) {
       this.errorCount++;
       this.isHealthy = false;
-      
+
       const executionTime = Date.now() - startTime;
       this.totalExecutionTime += executionTime;
-      
+
       return this.createErrorResult(
         `Agent execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         { executionTime }
@@ -78,18 +82,30 @@ export abstract class BaseAIAgent implements AIAgent {
   /**
    * Validate the agent context
    */
-  protected validateContext(context: AgentContext): { isValid: boolean; error?: string } {
+  protected validateContext(context: AgentContext): {
+    isValid: boolean;
+    error?: string;
+  } {
     if (!context) {
       return { isValid: false, error: 'Context is required' };
     }
 
     // Validate required context properties based on agent capabilities
     if (this.capabilities.includes('user-dependent') && !context.user) {
-      return { isValid: false, error: 'User context is required for this agent' };
+      return {
+        isValid: false,
+        error: 'User context is required for this agent',
+      };
     }
 
-    if (this.capabilities.includes('session-dependent') && (!context.sessionData || context.sessionData.length === 0)) {
-      return { isValid: false, error: 'Session data is required for this agent' };
+    if (
+      this.capabilities.includes('session-dependent') &&
+      (!context.sessionData || context.sessionData.length === 0)
+    ) {
+      return {
+        isValid: false,
+        error: 'Session data is required for this agent',
+      };
     }
 
     return { isValid: true };
@@ -100,7 +116,7 @@ export abstract class BaseAIAgent implements AIAgent {
    */
   protected performHealthCheck(): AgentResult {
     const stats = this.getPerformanceStats();
-    
+
     return {
       success: this.isHealthy,
       data: {
@@ -128,8 +144,12 @@ export abstract class BaseAIAgent implements AIAgent {
     return {
       executionCount: this.executionCount,
       errorCount: this.errorCount,
-      errorRate: this.executionCount > 0 ? this.errorCount / this.executionCount : 0,
-      averageExecutionTime: this.executionCount > 0 ? this.totalExecutionTime / this.executionCount : 0,
+      errorRate:
+        this.executionCount > 0 ? this.errorCount / this.executionCount : 0,
+      averageExecutionTime:
+        this.executionCount > 0
+          ? this.totalExecutionTime / this.executionCount
+          : 0,
       lastExecution: this.lastExecution,
       isHealthy: this.isHealthy,
     };
@@ -196,11 +216,9 @@ export abstract class BaseAIAgent implements AIAgent {
     actions?: any[],
     metadata?: Record<string, any>
   ): AgentResult {
-    return {
+    const result: AgentResult = {
       success: true,
       data,
-      insights,
-      actions,
       metadata: {
         ...metadata,
         agentId: this.id,
@@ -208,12 +226,25 @@ export abstract class BaseAIAgent implements AIAgent {
         timestamp: Date.now(),
       },
     };
+
+    if (insights) {
+      result.insights = insights;
+    }
+
+    if (actions) {
+      result.actions = actions;
+    }
+
+    return result;
   }
 
   /**
    * Create an error result
    */
-  protected createErrorResult(error: string, metadata?: Record<string, any>): AgentResult {
+  protected createErrorResult(
+    error: string,
+    metadata?: Record<string, any>
+  ): AgentResult {
     return {
       success: false,
       error,
@@ -229,13 +260,23 @@ export abstract class BaseAIAgent implements AIAgent {
   /**
    * Log agent activity
    */
-  protected log(level: 'info' | 'warn' | 'error', message: string, data?: any): void {
+  protected log(
+    level: 'info' | 'warn' | 'error',
+    message: string,
+    data?: any
+  ): void {
     const enhancedMessage = `[${this.name}] ${message}`;
     const meta = { agentId: this.id, agentName: this.name };
 
     switch (level) {
       case 'error':
-        logger.error('agent', enhancedMessage, data instanceof Error ? data : undefined, data, meta);
+        logger.error(
+          'agent',
+          enhancedMessage,
+          data instanceof Error ? data : undefined,
+          data,
+          meta
+        );
         break;
       case 'warn':
         logger.warn('agent', enhancedMessage, data, meta);
@@ -256,7 +297,10 @@ export abstract class BaseAIAgent implements AIAgent {
     try {
       return processor(data);
     } catch (error) {
-      this.log('warn', 'Context data processing failed, using fallback', { error, data });
+      this.log('warn', 'Context data processing failed, using fallback', {
+        error,
+        data,
+      });
       return fallback;
     }
   }
