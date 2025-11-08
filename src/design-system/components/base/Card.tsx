@@ -19,18 +19,13 @@ const cardVariants_styles = {
     themeClasses.shadow.sm,
     'border'
   ),
-  elevated: cn(
-    themeClasses.bg.surface,
-    themeClasses.shadow.lg
-  ),
+  elevated: cn(themeClasses.bg.surface, themeClasses.shadow.lg),
   outlined: cn(
     themeClasses.bg.surface,
     themeClasses.border.default,
     'border-2'
   ),
-  filled: cn(
-    'bg-slate-50 dark:bg-slate-800/50'
-  ),
+  filled: cn('bg-slate-50 dark:bg-slate-800/50'),
 };
 
 const cardPadding = {
@@ -59,28 +54,30 @@ export function Card({
         // Base styles
         'rounded-xl overflow-hidden',
         'transition-all duration-200 ease-in-out',
-        
+
         // Variant styles
         cardVariants_styles[variant],
-        
+
         // Padding styles
         cardPadding[padding],
-        
+
         // Interactive styles
         interactive && 'cursor-pointer',
-        
+
         className
       )}
       initial="initial"
       animate="animate"
-      {...(interactive && {
-        whileHover: "hover",
-        whileTap: "tap",
-        variants: cardVariants,
-      })}
-      {...(style && { style })}
-      {...motionProps}
-      {...props}
+      {...(interactive
+        ? {
+            whileHover: 'hover',
+            whileTap: 'tap',
+            variants: cardVariants,
+          }
+        : {})}
+      {...(style ? { style } : {})}
+      {...(motionProps || {})}
+      {...(props as any)}
     >
       {children}
     </MotionComponent>
@@ -135,11 +132,7 @@ export function CardDescription({
 }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p
-      className={cn(
-        'text-sm',
-        themeClasses.text.secondary,
-        className
-      )}
+      className={cn('text-sm', themeClasses.text.secondary, className)}
       {...props}
     >
       {children}
@@ -153,10 +146,7 @@ export function CardContent({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div
-      className={cn('space-y-4', className)}
-      {...props}
-    >
+    <div className={cn('space-y-4', className)} {...props}>
       {children}
     </div>
   );
