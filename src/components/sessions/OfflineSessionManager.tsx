@@ -184,15 +184,17 @@ export const OfflineSessionManager: React.FC<OfflineSessionManagerProps> = ({
           throw new Error('Session not found');
         }
 
+        const sessionOptions = {
+          parentId: session.parentId,
+          requireLocationVerification: true as const,
+          ...(session.notes ? { notes: session.notes } : {}),
+        };
+
         const timesheetId = await timesheetAutomationService.startSession(
           sessionId,
           session.teacherId,
           session.studentId,
-          {
-            parentId: session.parentId,
-            notes: session.notes,
-            requireLocationVerification: true,
-          }
+          sessionOptions
         );
 
         // Update session status
