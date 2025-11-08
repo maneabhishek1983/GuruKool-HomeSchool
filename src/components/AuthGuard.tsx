@@ -141,7 +141,7 @@ export function AuthGuard({
 }
 
 // Helper function to get role-based dashboard path
-function getRoleBasedDashboard(role: User['role']): string {
+function getRoleBasedDashboard(role: 'parent' | 'admin' | 'teacher' | 'student'): string {
   switch (role) {
     case 'teacher':
       return '/teacher/dashboard';
