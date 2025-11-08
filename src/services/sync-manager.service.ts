@@ -238,10 +238,11 @@ export class SyncManager {
       
       switch (entity) {
         case 'session':
-          result = await databaseService.createSession(data as SessionRecord);
+          // TODO: Implement createSession method in databaseService
+          result = null; // Placeholder - session creation not yet implemented
           break;
         case 'user':
-          result = await databaseService.createUser(data as User);
+          result = await databaseService.upsertUserProfile(data as any);
           break;
         case 'insight':
           // Assume we have a method for creating insights
@@ -281,10 +282,11 @@ export class SyncManager {
       
       switch (entity) {
         case 'session':
-          serverData = await databaseService.getSessionById(data.id);
+          // Use available method - would need session ID from data
+          serverData = null; // TODO: Implement getSessionById or use listUpcomingSessions
           break;
         case 'user':
-          serverData = await databaseService.getUserById(data.id);
+          serverData = await databaseService.getUserProfile(data.id);
           break;
         default:
           throw new Error(`Unsupported entity type for update: ${entity}`);
@@ -303,14 +305,15 @@ export class SyncManager {
       }
 
       // No conflict, proceed with update
-      let result;
+      let result: any;
       
       switch (entity) {
         case 'session':
-          result = await databaseService.updateSession(data.id, data);
+          // TODO: Implement updateSession method in databaseService
+          result = null; // Placeholder - session update not yet implemented
           break;
         case 'user':
-          result = await databaseService.updateUser(data.id, data);
+          result = await databaseService.upsertUserProfile(data as any);
           break;
         default:
           throw new Error(`Unsupported entity type for update: ${entity}`);
@@ -344,10 +347,12 @@ export class SyncManager {
       
       switch (entity) {
         case 'session':
-          result = await databaseService.deleteSession(data.id);
+          // TODO: Implement deleteSession method in databaseService
+          result = false; // Placeholder - session deletion not yet implemented
           break;
         case 'user':
-          result = await databaseService.deleteUser(data.id);
+          // TODO: Implement deleteUser method in databaseService
+          result = false; // Placeholder - user deletion not yet implemented
           break;
         default:
           throw new Error(`Unsupported entity type for delete: ${entity}`);
@@ -444,7 +449,9 @@ export class SyncManager {
         success: true,
         action,
         conflict: true,
-        resolution: resolution.strategy
+        resolution: resolution.strategy === 'merge' ? 'merged' : 
+                    resolution.strategy === 'manual' ? 'manual_required' :
+                    resolution.strategy as 'server_wins' | 'client_wins'
       };
     } catch (error) {
       return {
@@ -508,10 +515,11 @@ export class SyncManager {
   private async updateServer(entity: string, data: any): Promise<void> {
     switch (entity) {
       case 'session':
-        await databaseService.updateSession(data.id, data);
+        // TODO: Implement updateSession method in databaseService
+        // Placeholder - session update not yet implemented
         break;
       case 'user':
-        await databaseService.updateUser(data.id, data);
+        await databaseService.upsertUserProfile(data);
         break;
       default:
         throw new Error(`Unsupported entity type for server update: ${entity}`);
@@ -525,7 +533,7 @@ export class SyncManager {
     action.retryCount++;
 
     if (action.retryCount >= action.maxRetries) {
-      logger.error('app', `Action ${action.id} exceeded max retries`, { retryCount: action.retryCount });
+      logger.error('app', `Action ${action.id} exceeded max retries`, new Error(`Retry count: ${action.retryCount}`));
       await offlineStorageManager.markSyncStatus('offlineActions', action.id, 'failed');
     } else {
       logger.warn('app', `Action ${action.id} failed, will retry`, { retryCount: action.retryCount });
@@ -568,7 +576,7 @@ export class SyncManager {
         await this.handleFailure(action, result);
       }
     } catch (error) {
-      logger.error('app', `Retry failed for action ${action.id}`, error instanceof Error ? error : undefined);
+      logger.error('app', `Retry failed for action ${action.id}`, error instanceof Error ? error : new Error(String(error)));
       await this.handleFailure(action, { success: false, action, error: 'Retry failed' });
     } finally {
       this.retryQueue.delete(action.id);

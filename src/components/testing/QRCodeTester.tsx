@@ -122,7 +122,11 @@ export function QRCodeTester() {
         );
 
         // Extract token from QR code data
-        const base64Data = qrCode.split(',')[1];
+        const parts = qrCode.split(',');
+        if (parts.length < 2 || !parts[1]) {
+          throw new Error('Invalid QR code format');
+        }
+        const base64Data = parts[1];
         const svgContent = atob(base64Data);
         const tokenMatch = svgContent.match(/"token":"([^"]+)"/);
 
@@ -155,7 +159,11 @@ export function QRCodeTester() {
         );
 
         // Extract token data
-        const base64Data = qrCode.split(',')[1];
+        const parts = qrCode.split(',');
+        if (parts.length < 2 || !parts[1]) {
+          throw new Error('Invalid QR code format');
+        }
+        const base64Data = parts[1];
         const svgContent = atob(base64Data);
         const tokenMatch = svgContent.match(/"token":"([^"]+)"/);
 
@@ -433,7 +441,12 @@ export function QRCodeTester() {
 
   const runSingleTest = async (testIndex: number) => {
     setIsRunning(true);
-    const result = await runTest(tests[testIndex]);
+    const test = tests[testIndex];
+    if (!test) {
+      setIsRunning(false);
+      return;
+    }
+    const result = await runTest(test);
     setTestResults(prev => [
       ...prev.filter(r => r.testName !== result.testName),
       result,

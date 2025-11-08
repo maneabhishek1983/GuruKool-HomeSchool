@@ -567,20 +567,30 @@ export class EnhancedSessionStore {
       this.sessions.set(session.id, session);
 
       // Update indexes
-      if (!this.sessionsByStudent.has(session.studentId)) {
-        this.sessionsByStudent.set(session.studentId, new Set());
-      }
-      this.sessionsByStudent.get(session.studentId)!.add(session.id);
+      const studentId = session.studentId;
+      const teacherId = session.teacherId;
+      const parentId = session.parentId;
 
-      if (!this.sessionsByTeacher.has(session.teacherId)) {
-        this.sessionsByTeacher.set(session.teacherId, new Set());
+      if (studentId) {
+        if (!this.sessionsByStudent.has(studentId)) {
+          this.sessionsByStudent.set(studentId, new Set());
+        }
+        this.sessionsByStudent.get(studentId)!.add(session.id);
       }
-      this.sessionsByTeacher.get(session.teacherId)!.add(session.id);
 
-      if (!this.sessionsByParent.has(session.parentId)) {
-        this.sessionsByParent.set(session.parentId, new Set());
+      if (teacherId) {
+        if (!this.sessionsByTeacher.has(teacherId)) {
+          this.sessionsByTeacher.set(teacherId, new Set());
+        }
+        this.sessionsByTeacher.get(teacherId)!.add(session.id);
       }
-      this.sessionsByParent.get(session.parentId)!.add(session.id);
+
+      if (parentId) {
+        if (!this.sessionsByParent.has(parentId)) {
+          this.sessionsByParent.set(parentId, new Set());
+        }
+        this.sessionsByParent.get(parentId)!.add(session.id);
+      }
     });
   }
 
@@ -754,20 +764,30 @@ export class EnhancedSessionStore {
     this.sessions.set(session.id, session);
 
     // Update indexes
-    if (!this.sessionsByStudent.has(session.studentId)) {
-      this.sessionsByStudent.set(session.studentId, new Set());
-    }
-    this.sessionsByStudent.get(session.studentId)!.add(session.id);
+    const studentId = session.studentId;
+    const teacherId = session.teacherId;
+    const parentId = session.parentId;
 
-    if (!this.sessionsByTeacher.has(session.teacherId)) {
-      this.sessionsByTeacher.set(session.teacherId, new Set());
+    if (studentId) {
+      if (!this.sessionsByStudent.has(studentId)) {
+        this.sessionsByStudent.set(studentId, new Set());
+      }
+      this.sessionsByStudent.get(studentId)!.add(session.id);
     }
-    this.sessionsByTeacher.get(session.teacherId)!.add(session.id);
 
-    if (!this.sessionsByParent.has(session.parentId)) {
-      this.sessionsByParent.set(session.parentId, new Set());
+    if (teacherId) {
+      if (!this.sessionsByTeacher.has(teacherId)) {
+        this.sessionsByTeacher.set(teacherId, new Set());
+      }
+      this.sessionsByTeacher.get(teacherId)!.add(session.id);
     }
-    this.sessionsByParent.get(session.parentId)!.add(session.id);
+
+    if (parentId) {
+      if (!this.sessionsByParent.has(parentId)) {
+        this.sessionsByParent.set(parentId, new Set());
+      }
+      this.sessionsByParent.get(parentId)!.add(session.id);
+    }
   }
 
   private querySessions(query: SessionQuery): SessionRecord[] {

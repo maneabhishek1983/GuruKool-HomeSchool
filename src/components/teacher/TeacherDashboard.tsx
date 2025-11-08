@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/design-system/components/base/Card';
-import { User, SessionRecord } from '@/types';
-import { AILessonPlanSuggestions } from './AILessonPlanSuggestions';
+import { SessionRecord } from '@/types/session.types';
+import { User } from '@/types';
+import AILessonPlanSuggestions from './AILessonPlanSuggestions';
 import { VoiceToTextNotes } from './VoiceToTextNotes';
 import { LocationAwareSessionManager } from './LocationAwareSessionManager';
 import { DragDropScheduleManager } from './DragDropScheduleManager';
@@ -91,8 +92,13 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
     if (session.status === 'in-progress') {
       setStats(prev => ({ ...prev, activeSession: session }));
-    } else if (prev => prev.activeSession?.id === session.id) {
-      setStats(prev => ({ ...prev, activeSession: null }));
+    } else {
+      setStats(prev => {
+        if (prev.activeSession?.id === session.id) {
+          return { ...prev, activeSession: null };
+        }
+        return prev;
+      });
     }
   };
 
@@ -569,7 +575,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                         AI Insights
                       </label>
                       <div className="mt-1 space-y-2">
-                        {selectedSession.aiInsights.map(insight => (
+                        {selectedSession.aiInsights.map((insight: any) => (
                           <div
                             key={insight.id}
                             className="p-3 bg-purple-50 border border-purple-200 rounded-lg"

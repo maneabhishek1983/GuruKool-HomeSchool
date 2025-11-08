@@ -293,12 +293,20 @@ export default function CreateStudentForm({
       | 'interests'
     >
   ) => {
-    setFormData(prev => ({
-      ...prev,
-      [category]: prev[category].find((o: any) => o.id === option.id)
-        ? (prev[category] as any[]).filter((o: any) => o.id !== option.id)
-        : [...(prev[category] as any[]), option],
-    }));
+    setFormData(prev => {
+      const currentValue = prev[category];
+      // Type guard: check if it's an array
+      if (Array.isArray(currentValue)) {
+        const isSelected = currentValue.some((o: any) => o.id === option.id);
+        return {
+          ...prev,
+          [category]: isSelected
+            ? currentValue.filter((o: any) => o.id !== option.id)
+            : [...currentValue, option],
+        };
+      }
+      return prev;
+    });
   };
 
   // Activity toggle functions for data sheet activities
@@ -1013,12 +1021,10 @@ export default function CreateStudentForm({
           type="button"
           onClick={() => {
             // This will be handled by the parent component
-            if (onSubmit) {
-              // For now, we'll just show a message
-              alert(
-                'Teacher creation feature will be available in the parent dashboard'
-              );
-            }
+            // For now, we'll just show a message
+            alert(
+              'Teacher creation feature will be available in the parent dashboard'
+            );
           }}
           className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
         >

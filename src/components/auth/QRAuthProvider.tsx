@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRAuthState, User, AIInsight } from '@/types';
-import { QRAuthService } from '@/services/qr-auth.service';
+import { qrAuthService } from '@/services/qr-auth.service';
 import { wsService } from '@/services/websocket.service';
 import { useAuthContext } from '@/lib/authContext';
 import { AuthStatusIndicator, AuthStatusCard } from './AuthStatusIndicator';
@@ -64,8 +64,6 @@ export function QRAuthProvider({
   const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
   const [showFallback, setShowFallback] = useState(false);
 
-  const qrAuthService = QRAuthService.getInstance();
-
   /**
    * Generate new QR code
    */
@@ -113,7 +111,8 @@ export function QRAuthProvider({
 
           // Handle successful authentication
           if (data.status === 'success' && data.user) {
-            login(data.user);
+            // User is already authenticated via QR, no need to call login
+            // The auth context will be updated via the WebSocket callback
             clearRefreshTimer();
           }
         });

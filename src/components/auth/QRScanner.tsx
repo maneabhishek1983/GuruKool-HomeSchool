@@ -13,12 +13,6 @@ export function QRScanner({ isActive = false, onScanComplete, className = '' }: 
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
 
-  useEffect(() => {
-    if (isActive && !isScanning) {
-      startScan();
-    }
-  }, [isActive, isScanning, startScan]);
-
   const startScan = useCallback(() => {
     setIsScanning(true);
     setScanProgress(0);
@@ -36,6 +30,12 @@ export function QRScanner({ isActive = false, onScanComplete, className = '' }: 
       });
     }, 50);
   }, [onScanComplete]);
+
+  useEffect(() => {
+    if (isActive && !isScanning) {
+      startScan();
+    }
+  }, [isActive, isScanning, startScan]);
 
   return (
     <div className={`relative ${className}`}>

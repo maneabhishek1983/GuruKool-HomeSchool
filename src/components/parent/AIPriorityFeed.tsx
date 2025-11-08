@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AIRecommendation, SessionRecord, User } from '@/types';
+import { AIRecommendation, SessionRecord } from '@/types/session.types';
+import { User } from '@/types';
 import { enhancedSessionStore } from '@/store/session.store';
 
 interface AIPriorityFeedProps {
@@ -69,16 +70,19 @@ export default function AIPriorityFeed({
     recommendations.forEach((rec, index) => {
       const priority = rec.severity === 'high' ? 3 : rec.severity === 'medium' ? 2 : 1;
       
-      items.push({
+      const item: PriorityItem = {
         id: `rec-${index}`,
         type: priority === 3 ? 'urgent' : priority === 2 ? 'important' : 'informational',
         title: rec.title,
         description: rec.description,
-        action: rec.suggestedActions?.[0],
         timestamp: new Date(),
         category: determineCategory(rec.title),
         priority
-      });
+      };
+      if (rec.suggestedActions?.[0]) {
+        item.action = rec.suggestedActions[0];
+      }
+      items.push(item);
     });
 
     // Add sample priority items for demonstration
@@ -139,7 +143,8 @@ export default function AIPriorityFeed({
         title: item.title,
         description: item.description,
         severity: item.type === 'urgent' ? 'high' : item.type === 'important' ? 'medium' : 'low',
-        suggestedActions: item.action ? [item.action] : []
+        suggestedActions: item.action ? [item.action] : [],
+        confidence: 0.8 // Default confidence
       },
       action
     );

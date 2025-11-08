@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/design-system/components/base/Card';
-import { User, SessionRecord } from '@/types';
+import { SessionRecord } from '@/types/session.types';
+import { User } from '@/types';
 import { enhancedSessionStore } from '@/store/session.store';
 
 interface VoiceToTextNotesProps {

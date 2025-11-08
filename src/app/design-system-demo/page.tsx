@@ -276,7 +276,7 @@ function DemoContent() {
                   <HStack spacing="lg" justify="center" align="center">
                     <LoadingSpinner variant="spin" />
                     <LoadingSpinner variant="pulse" color="secondary" />
-                    <LoadingSpinner variant="bounce" color="success" />
+                    <LoadingSpinner variant="bounce" color="primary" />
                     <LoadingSpinner variant="dots" size="lg" />
                   </HStack>
                 </div>

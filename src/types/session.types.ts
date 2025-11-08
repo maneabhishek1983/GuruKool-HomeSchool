@@ -1,5 +1,6 @@
 // Enhanced Session Types with AI Integration
-import { AIInsight, Location, Attachment, User } from './index';
+// Import types directly to avoid circular dependency
+import type { AIInsight, Location, Attachment, User } from './index';
 
 export type SessionStatus = 'scheduled' | 'in-progress' | 'completed' | 'cancelled' | 'rescheduled';
 

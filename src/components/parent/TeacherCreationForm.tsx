@@ -172,17 +172,12 @@ export default function TeacherCreationForm({
 
   const handleArrayToggle = (
     item: string,
-    field:
-      | 'subjects'
-      | 'qualifications'
-      | 'specializations'
-      | 'days'
-      | 'timeSlots'
+    field: 'subjects' | 'qualifications' | 'specializations'
   ) => {
     setFormData(prev => ({
       ...prev,
       [field]: prev[field].includes(item)
-        ? prev[field].filter(i => i !== item)
+        ? prev[field].filter((i: string) => i !== item)
         : [...prev[field], item],
     }));
   };

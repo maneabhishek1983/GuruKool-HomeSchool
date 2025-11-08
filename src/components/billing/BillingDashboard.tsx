@@ -328,7 +328,7 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
               <AreaChart data={analytics.revenueByMonth}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis formatter={(value) => `$${value}`} />
+                <YAxis format={(value: any) => `$${value}`} />
                 <Tooltip formatter={(value) => formatCurrency(value as number)} />
                 <Area
                   type="monotone"
@@ -380,7 +380,7 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
               <BarChart data={analytics.revenueByStudent}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="studentName" />
-                <YAxis formatter={(value) => `$${value}`} />
+                <YAxis format={(value: any) => `$${value}`} />
                 <Tooltip formatter={(value) => formatCurrency(value as number)} />
                 <Bar dataKey="amount" fill={colors.primary} />
               </BarChart>

@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SessionRecord, User, AIRecommendation } from '@/types';
+import { SessionRecord, AIRecommendation } from '@/types/session.types';
+import { User } from '@/types';
 import { enhancedSessionStore } from '@/store/session.store';
 
 interface SmartNotificationSystemProps {
@@ -97,7 +98,7 @@ export default function SmartNotificationSystem({
         timestamp: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000), // Random time in last 24h
         read: false,
         priority,
-        actions: insight.suggestedActions?.map(action => ({
+        actions: insight.suggestedActions?.map((action: string) => ({
           label: action,
           action: action.toLowerCase().replace(/\s+/g, '_'),
           type: priority === 3 ? 'primary' : 'secondary'

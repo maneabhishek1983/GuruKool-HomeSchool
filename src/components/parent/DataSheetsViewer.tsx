@@ -36,7 +36,7 @@ export const DataSheetsViewer: React.FC<DataSheetsViewerProps> = ({
     try {
       const sheets = await DataSheetsService.getDataSheetsByStudent(studentId);
       setDataSheets(sheets);
-      if (sheets.length > 0) {
+      if (sheets.length > 0 && sheets[0]) {
         setSelectedSheet(sheets[0]);
       }
     } catch (error) {

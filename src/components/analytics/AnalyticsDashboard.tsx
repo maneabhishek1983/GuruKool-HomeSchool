@@ -128,26 +128,30 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       let resultIndex = 0;
       if (userRole === 'student' || userRole === 'parent') {
-        if (results[resultIndex].status === 'fulfilled') {
-          setLearningProgress(results[resultIndex].value);
+        const result = results[resultIndex];
+        if (result && result.status === 'fulfilled') {
+          setLearningProgress(result.value);
         }
         resultIndex++;
       }
 
       if (userRole === 'teacher') {
-        if (results[resultIndex].status === 'fulfilled') {
-          setTeacherPerformance(results[resultIndex].value);
+        const result = results[resultIndex];
+        if (result && result.status === 'fulfilled') {
+          setTeacherPerformance(result.value);
         }
         resultIndex++;
       }
 
-      if (results[resultIndex].status === 'fulfilled') {
-        setSessionAnalytics(results[resultIndex].value);
+      const sessionResult = results[resultIndex];
+      if (sessionResult && sessionResult.status === 'fulfilled') {
+        setSessionAnalytics(sessionResult.value);
       }
       resultIndex++;
 
-      if (results[resultIndex].status === 'fulfilled') {
-        setComparativeAnalytics(results[resultIndex].value);
+      const comparativeResult = results[resultIndex];
+      if (comparativeResult && comparativeResult.status === 'fulfilled') {
+        setComparativeAnalytics(comparativeResult.value);
       }
 
     } catch (error) {

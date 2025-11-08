@@ -172,7 +172,6 @@ export class TimesheetAutomationService {
         sessionId,
         teacherId,
         studentId,
-        parentId: options.parentId,
         startTime: new Date(),
         location: {
           start: currentLocation!,
@@ -191,6 +190,10 @@ export class TimesheetAutomationService {
         createdAt: new Date(),
         updatedAt: new Date()
       };
+      
+      if (options.parentId !== undefined) {
+        timesheetEntry.parentId = options.parentId;
+      }
 
       // Store active timer
       this.activeTimers.set(sessionId, timesheetEntry);
@@ -285,7 +288,7 @@ export class TimesheetAutomationService {
         actualDuration,
         location: {
           ...activeTimer.location,
-          end: endLocation,
+          ...(endLocation ? { end: endLocation } : {}),
           verifications: [...activeTimer.location.verifications, endLocationVerification]
         },
         billing: {
@@ -422,7 +425,8 @@ export class TimesheetAutomationService {
           resolve(coordinates);
         },
         (error) => {
-          logger.error('app', 'Failed to get current location', error);
+          const errorObj = error instanceof Error ? error : new Error(`Geolocation error: ${error.message || 'Unknown error'}`);
+          logger.error('app', 'Failed to get current location', errorObj);
           resolve(this.lastKnownPosition); // Fallback to last known position
         },
         options
@@ -444,13 +448,18 @@ export class TimesheetAutomationService {
         Math.max(0.5, 1 - (distance / allowedDistance)) : 
         Math.max(0.1, 0.5 - (distance - allowedDistance) / allowedDistance);
 
-      return {
+      const verification: LocationVerification = {
         isValid,
         distance,
         accuracy: current.accuracy,
-        confidenceScore,
-        errorMessage: !isValid ? `Location is ${Math.round(distance)}m away from expected location` : undefined
+        confidenceScore
       };
+      
+      if (!isValid) {
+        verification.errorMessage = `Location is ${Math.round(distance)}m away from expected location`;
+      }
+      
+      return verification;
 
     } catch (error) {
       return {
@@ -475,13 +484,18 @@ export class TimesheetAutomationService {
       Math.max(0.8, 1 - (distance / maxReasonableDistance)) : 
       0.3;
 
-    return {
+    const verification: LocationVerification = {
       isValid,
       distance,
       accuracy: end.accuracy,
-      confidenceScore,
-      errorMessage: !isValid ? `End location is ${Math.round(distance)}m from start location` : undefined
+      confidenceScore
     };
+    
+    if (!isValid) {
+      verification.errorMessage = `End location is ${Math.round(distance)}m from start location`;
+    }
+    
+    return verification;
   }
 
   /**

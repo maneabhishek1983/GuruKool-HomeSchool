@@ -356,7 +356,9 @@ describe('TeacherDashboard', () => {
 
     // Click on a session
     const sessions = screen.getAllByText('Mathematics');
-    fireEvent.click(sessions[0]);
+    if (sessions.length > 0 && sessions[0]) {
+      fireEvent.click(sessions[0]);
+    }
 
     await waitFor(() => {
       expect(screen.getByTestId('voice-notes')).toBeInTheDocument();

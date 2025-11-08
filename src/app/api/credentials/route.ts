@@ -67,7 +67,9 @@ export async function POST(request: NextRequest) {
     const { email } = parsed.data;
 
     // Type-safe credential lookup
-    const credentials = demoCredentials[email as keyof typeof demoCredentials];
+    const credentials = email in demoCredentials 
+      ? demoCredentials[email as keyof typeof demoCredentials]
+      : undefined;
 
     if (!credentials) {
       return NextResponse.json({ error: 'Email not found' }, { status: 404 });

@@ -83,7 +83,10 @@ function getClientIP(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) {
     // Take the first IP in the list
-    return forwarded.split(',')[0].trim();
+    const parts = forwarded.split(',');
+    if (parts.length > 0 && parts[0]) {
+      return parts[0].trim();
+    }
   }
 
   // Check X-Real-IP header

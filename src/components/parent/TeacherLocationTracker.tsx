@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SessionRecord, User, Location } from '@/types';
+import { SessionRecord } from '@/types/session.types';
+import { User, Location } from '@/types';
 import { enhancedSessionStore } from '@/store/session.store';
 
 interface TeacherLocationTrackerProps {

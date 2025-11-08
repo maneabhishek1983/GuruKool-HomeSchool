@@ -35,6 +35,7 @@ export default function AdminDashboard() {
     role: 'parent' as const,
   });
   const [createdUser, setCreatedUser] = useState<User | null>(null);
+  const [createdUserPassword, setCreatedUserPassword] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -176,7 +177,7 @@ export default function AdminDashboard() {
             name: createdUser.name,
             email: createdUser.email,
             role: createdUser.role,
-            hasPassword: !!createdUser.password,
+            hasPassword: !!password,
             hasQRCode: !!createdUser.qrCode,
           });
 
@@ -194,6 +195,7 @@ export default function AdminDashboard() {
           );
 
           setCreatedUser(createdUser);
+          setCreatedUserPassword(password);
           setNewUser({ name: '', email: '', role: 'parent' });
           setShowCreateUserModal(false);
           setShowCredentialsModal(true);
@@ -606,12 +608,12 @@ export default function AdminDashboard() {
                   </label>
                   <div className="flex items-center space-x-2">
                     <p className="text-sm font-mono text-gray-900 bg-white px-2 py-1 rounded border">
-                      {createdUser.password}
+                      {createdUserPassword || ''}
                     </p>
                     <button
                       onClick={() =>
                         navigator.clipboard.writeText(
-                          createdUser.password || ''
+                          createdUserPassword || ''
                         )
                       }
                       className="text-blue-600 hover:text-blue-800"

@@ -25,6 +25,7 @@ export function Container({
   centered = true,
   className,
   motionProps,
+  style,
   ...props
 }: ContainerProps) {
   return (
@@ -41,6 +42,7 @@ export function Container({
         
         className
       )}
+      {...(style && { style })}
       {...motionProps}
       {...props}
     >

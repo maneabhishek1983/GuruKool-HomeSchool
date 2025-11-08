@@ -44,7 +44,10 @@
       "Bash(python:*)",
       "Bash(tasklist)",
       "Bash(if exist .next rmdir /s /q .next)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(git fetch:*)",
+      "Bash(npx eslint:*)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

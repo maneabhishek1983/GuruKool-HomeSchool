@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/design-system/components/base/Card';
-import { User, SessionRecord } from '@/types';
+import { SessionRecord } from '@/types/session.types';
+import { User } from '@/types';
 import { SessionStatus } from '@/types/session.types';
 import { enhancedSessionStore } from '@/store/session.store';
 
@@ -530,7 +531,7 @@ export const LocationAwareSessionManager: React.FC<
                         onClick={() => startSession(session.id)}
                         disabled={
                           !currentLocation ||
-                          (!isNearby && distance && distance > 500)
+                          (!isNearby && distance !== undefined && distance > 500)
                         }
                         className="px-3 py-1 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                       >

@@ -106,7 +106,7 @@ export const DataSheetsManager: React.FC<DataSheetsManagerProps> = ({
       const newSheet = await DataSheetsService.createDataSheet({
         studentId: student.id,
         teacherId: teacherId,
-        parentId: student.parentId,
+        parentId: student.parentId || '',
         date: selectedDate,
         title: `Daily Activities - ${student.name}`,
         description: `Comprehensive activity tracking for ${student.name} on ${selectedDate}`,

@@ -1819,7 +1819,11 @@ export class AnalyticsAgent implements AIAgent {
   // Utility methods for calculations
 
   private groupSessionsByTimeOfDay(sessions: any[]): Record<string, any> {
-    const timeGroups: Record<string, any[]> = {
+    const timeGroups: {
+      morning: any[];
+      afternoon: any[];
+      evening: any[];
+    } = {
       morning: [],
       afternoon: [],
       evening: [],
@@ -1828,21 +1832,27 @@ export class AnalyticsAgent implements AIAgent {
     sessions.forEach(session => {
       const hour = new Date(session.scheduledStart).getHours();
       if (hour < 12) {
-        timeGroups.morning?.push(session);
+        timeGroups.morning.push(session);
       } else if (hour < 17) {
-        timeGroups.afternoon?.push(session);
+        timeGroups.afternoon.push(session);
       } else {
-        timeGroups.evening?.push(session);
+        timeGroups.evening.push(session);
       }
     });
 
     const result: Record<string, any> = {};
-    Object.entries(timeGroups).forEach(([timeSlot, sessionList]) => {
-      result[timeSlot] = {
-        sessionCount: sessionList.length,
-        averageScore: this.calculateAverageScore(sessionList),
-      };
-    });
+    result.morning = {
+      sessionCount: timeGroups.morning.length,
+      averageScore: this.calculateAverageScore(timeGroups.morning),
+    };
+    result.afternoon = {
+      sessionCount: timeGroups.afternoon.length,
+      averageScore: this.calculateAverageScore(timeGroups.afternoon),
+    };
+    result.evening = {
+      sessionCount: timeGroups.evening.length,
+      averageScore: this.calculateAverageScore(timeGroups.evening),
+    };
 
     return result;
   }

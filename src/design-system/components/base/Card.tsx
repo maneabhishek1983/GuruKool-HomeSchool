@@ -48,6 +48,7 @@ export function Card({
   interactive = false,
   className,
   motionProps,
+  style,
   ...props
 }: CardProps) {
   const MotionComponent = interactive ? motion.div : motion.div;
@@ -72,9 +73,12 @@ export function Card({
       )}
       initial="initial"
       animate="animate"
-      whileHover={interactive ? "hover" : undefined}
-      whileTap={interactive ? "tap" : undefined}
-      variants={interactive ? cardVariants : undefined}
+      {...(interactive && {
+        whileHover: "hover",
+        whileTap: "tap",
+        variants: cardVariants,
+      })}
+      {...(style && { style })}
       {...motionProps}
       {...props}
     >

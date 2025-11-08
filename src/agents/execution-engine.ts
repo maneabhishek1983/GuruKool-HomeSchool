@@ -359,7 +359,11 @@ export class AgentExecutionEngine {
       });
     }
 
-    const agentMetrics = this.metrics.agentMetrics.get(agentId)!;
+    const agentMetrics = this.metrics.agentMetrics.get(agentId);
+    if (!agentMetrics) {
+      return; // Safety check - should never happen but TypeScript needs it
+    }
+    
     agentMetrics.executions++;
     
     if (success) {

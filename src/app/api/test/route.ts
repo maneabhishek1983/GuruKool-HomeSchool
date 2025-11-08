@@ -4,7 +4,7 @@ import { withRedisRateLimit } from '@/lib/rate-limit-redis';
 import { z } from 'zod';
 
 export const POST = (
-  await withRedisRateLimit({ windowSec: 60, max: 30, prefix: 'api:test' })
+  await withRedisRateLimit({ windowMs: 60 * 1000, max: 30, prefix: 'api:test' })
 )(
   withRateLimit({ keyPrefix: 'api:test', max: 20 })(
     withCSRFProtection(async function POST(request: NextRequest) {

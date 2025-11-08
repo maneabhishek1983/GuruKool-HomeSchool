@@ -38,7 +38,7 @@ jest.mock('recharts', () => ({
 describe('AnalyticsDashboard Component', () => {
   const defaultProps = {
     userId: 'test-user-123',
-    role: 'teacher' as const,
+    userRole: 'teacher' as const,
   };
 
   beforeEach(() => {
@@ -65,14 +65,14 @@ describe('AnalyticsDashboard Component', () => {
   });
 
   it('renders teacher performance section for admin role', async () => {
-    render(<AnalyticsDashboard {...defaultProps} role="admin" />);
+    render(<AnalyticsDashboard {...defaultProps} userRole="admin" />);
     await waitFor(() => {
       expect(screen.getByText(/Teacher Performance/i)).toBeInTheDocument();
     });
   });
 
   it('does not render teacher performance for non-admin roles', async () => {
-    render(<AnalyticsDashboard {...defaultProps} role="parent" />);
+    render(<AnalyticsDashboard {...defaultProps} userRole="parent" />);
     await waitFor(() => {
       expect(screen.queryByText(/Teacher Performance/i)).not.toBeInTheDocument();
     });

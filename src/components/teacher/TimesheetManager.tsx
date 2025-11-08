@@ -45,8 +45,18 @@ export const TimesheetManager: React.FC<TimesheetManagerProps> = ({
           actualDuration: 120,
           breakDuration: 10,
           location: {
-            start: { latitude: 51.5074, longitude: -0.1278 },
-            end: { latitude: 51.5074, longitude: -0.1278 },
+            start: { 
+              latitude: 51.5074, 
+              longitude: -0.1278,
+              accuracy: 10,
+              timestamp: Date.now()
+            },
+            end: { 
+              latitude: 51.5074, 
+              longitude: -0.1278,
+              accuracy: 10,
+              timestamp: Date.now()
+            },
             verifications: [],
           },
           billing: {
@@ -74,8 +84,18 @@ export const TimesheetManager: React.FC<TimesheetManagerProps> = ({
           actualDuration: 90,
           breakDuration: 5,
           location: {
-            start: { latitude: 51.5074, longitude: -0.1278 },
-            end: { latitude: 51.5074, longitude: -0.1278 },
+            start: { 
+              latitude: 51.5074, 
+              longitude: -0.1278,
+              accuracy: 10,
+              timestamp: Date.now()
+            },
+            end: { 
+              latitude: 51.5074, 
+              longitude: -0.1278,
+              accuracy: 10,
+              timestamp: Date.now()
+            },
             verifications: [],
           },
           billing: {

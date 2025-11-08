@@ -11,7 +11,8 @@ import { offlineStorageManager } from '@/services/offline-storage.service';
 import { syncManager } from '@/services/sync-manager.service';
 import { networkManager } from '@/services/network-manager.service';
 import { timesheetAutomationService } from '@/services/timesheet-automation.service';
-import { SessionRecord } from '@/types';
+import { SessionRecord, SessionStatus } from '@/types/session.types';
+import { Location, AIInsight } from '@/types';
 
 interface OfflineSessionManagerProps {
   userId: string;
@@ -69,18 +70,27 @@ export const OfflineSessionManager: React.FC<OfflineSessionManagerProps> = ({
         id: `offline_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         teacherId: sessionData.teacherId || '',
         studentId: sessionData.studentId || '',
-        parentId: sessionData.parentId,
+        parentId: sessionData.parentId || '',
         subject: sessionData.subject || '',
         scheduledStart: sessionData.scheduledStart || new Date(),
-        scheduledEnd: sessionData.scheduledEnd || new Date(),
-        status: sessionData.status || 'scheduled',
-        location: sessionData.location || '',
-        notes: sessionData.notes || '',
-        aiInsights: [],
+        scheduledEnd: sessionData.scheduledEnd || new Date(Date.now() + 60 * 60 * 1000),
+        status: (sessionData.status || 'scheduled') as SessionStatus,
+        location: (sessionData.location as Location) || {
+          address: '',
+          coordinates: { latitude: 0, longitude: 0 },
+          verified: false
+        },
+        attachments: sessionData.attachments || [],
+        aiInsights: sessionData.aiInsights || [],
+        aiRecommendations: sessionData.aiRecommendations || [],
+        learningPatterns: sessionData.learningPatterns || [],
+        sessionAnalytics: sessionData.sessionAnalytics || {} as any,
+        notes: sessionData.notes,
+        createdAt: sessionData.createdAt || new Date(),
+        updatedAt: new Date(),
+        version: sessionData.version || 1,
         isOfflineCreated: true,
         syncStatus: 'pending',
-        createdAt: new Date(),
-        updatedAt: new Date()
       };
 
       // Store in offline storage
@@ -186,16 +196,21 @@ export const OfflineSessionManager: React.FC<OfflineSessionManagerProps> = ({
   // Stop session timer
   const stopSessionTimer = useCallback(async (sessionId: string, notes?: string) => {
     try {
-      const completedEntry = await timesheetAutomationService.stopSession(sessionId, {
-        notes
-      });
+      const stopOptions: { notes?: string } = {};
+      if (notes !== undefined && notes !== null) {
+        stopOptions.notes = notes;
+      }
+      const completedEntry = await timesheetAutomationService.stopSession(sessionId, stopOptions);
 
       // Update session status
-      await updateOfflineSession(sessionId, {
+      const updateData: Partial<LocalSession> = {
         status: 'completed',
         actualEnd: completedEntry.endTime,
-        notes: notes || undefined
-      });
+      };
+      if (notes !== undefined) {
+        updateData.notes = notes;
+      }
+      await updateOfflineSession(sessionId, updateData);
 
       // Update active timers
       const updatedTimers = timesheetAutomationService.getActiveSessions();
@@ -333,7 +348,7 @@ export const OfflineSessionManager: React.FC<OfflineSessionManagerProps> = ({
                     
                     {session.location && (
                       <div className="mt-1 text-sm text-gray-500">
-                        📍 {session.location}
+                        📍 {typeof session.location === 'string' ? session.location : session.location.address}
                       </div>
                     )}
 
@@ -389,12 +404,12 @@ export const OfflineSessionManager: React.FC<OfflineSessionManagerProps> = ({
                 )}
 
                 {/* AI Insights */}
-                {session.aiInsights.length > 0 && (
+                {session.aiInsights && session.aiInsights.length > 0 && (
                   <div className="mt-3 space-y-1">
                     <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                       AI Insights
                     </div>
-                    {session.aiInsights.slice(0, 2).map((insight, index) => (
+                    {session.aiInsights.slice(0, 2).map((insight: AIInsight, index: number) => (
                       <div key={index} className="text-sm text-blue-600 dark:text-blue-400">
                         💡 {insight.content}
                       </div>

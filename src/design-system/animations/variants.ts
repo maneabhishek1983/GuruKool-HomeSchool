@@ -120,7 +120,7 @@ export const listVariants: Variants = {
         delayChildren: 0.1,
       },
     },
-  },
+  } as Variants[string],
   item: {
     initial: { opacity: 0, x: -20 },
     animate: { 
@@ -133,7 +133,7 @@ export const listVariants: Variants = {
       x: 20,
       transition: { duration: 0.2, ease: 'easeIn' },
     },
-  },
+  } as Variants[string],
 };
 
 // Card animation variants

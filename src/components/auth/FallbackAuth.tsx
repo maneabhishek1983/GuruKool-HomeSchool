@@ -34,21 +34,12 @@ export function FallbackAuth({ onSuccess, onCancel, className = '' }: FallbackAu
 
       // Demo authentication
       if (email === 'teacher@example.com' && password === 'password') {
-        login({
-          id: 'teacher-1',
-          name: 'John Teacher',
-          role: 'teacher',
-          email: 'teacher@example.com',
-          preferences: {
-            notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
-            dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
-            privacy: { dataSharing: false, analytics: true, aiTraining: true },
-            accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
-          },
-          createdAt: new Date(),
-          lastActive: new Date()
-        });
-        onSuccess?.();
+        const result = await login(email, password);
+        if (result.success && result.user) {
+          onSuccess?.();
+        } else {
+          throw new Error(result.error || 'Invalid credentials');
+        }
       } else {
         throw new Error('Invalid credentials');
       }
@@ -68,21 +59,12 @@ export function FallbackAuth({ onSuccess, onCancel, className = '' }: FallbackAu
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       if (verificationCode === '123456') {
-        login({
-          id: 'teacher-1',
-          name: 'John Teacher',
-          role: 'teacher',
-          email: 'teacher@example.com',
-          preferences: {
-            notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
-            dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
-            privacy: { dataSharing: false, analytics: true, aiTraining: true },
-            accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
-          },
-          createdAt: new Date(),
-          lastActive: new Date()
-        });
-        onSuccess?.();
+        const result = await login('teacher@example.com', 'password');
+        if (result.success && result.user) {
+          onSuccess?.();
+        } else {
+          throw new Error(result.error || 'Invalid verification code');
+        }
       } else {
         throw new Error('Invalid verification code');
       }
@@ -102,21 +84,12 @@ export function FallbackAuth({ onSuccess, onCancel, className = '' }: FallbackAu
       await new Promise(resolve => setTimeout(resolve, 800));
       
       if (backupCode === 'BACKUP123') {
-        login({
-          id: 'teacher-1',
-          name: 'John Teacher',
-          role: 'teacher',
-          email: 'teacher@example.com',
-          preferences: {
-            notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
-            dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
-            privacy: { dataSharing: false, analytics: true, aiTraining: true },
-            accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
-          },
-          createdAt: new Date(),
-          lastActive: new Date()
-        });
-        onSuccess?.();
+        const result = await login('teacher@example.com', 'password');
+        if (result.success && result.user) {
+          onSuccess?.();
+        } else {
+          throw new Error(result.error || 'Invalid backup code');
+        }
       } else {
         throw new Error('Invalid backup code');
       }

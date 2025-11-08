@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { offlineStorageManager } from '@/services/offline-storage.service';
-import { webSocketService } from '@/services/websocket.service';
+import { wsService } from '@/services/websocket.service';
 import { networkManager } from '@/services/network-manager.service';
 
 interface QueuedNotification {
@@ -81,8 +81,12 @@ export const OfflineNotificationQueue: React.FC<OfflineNotificationQueueProps> =
         createdAt: new Date()
       };
 
+      // Map priority: critical -> high for storage (storage doesn't support critical)
+      const storagePriority: 'high' | 'medium' | 'low' =
+        notification.priority === 'critical' ? 'high' : notification.priority;
+
       // Store in offline storage
-      await offlineStorageManager.store('notifications', queuedNotification, notification.priority);
+      await offlineStorageManager.store('notifications', queuedNotification, storagePriority);
 
       // Update local state
       setNotifications(prev => [...prev, queuedNotification]);
@@ -150,8 +154,8 @@ export const OfflineNotificationQueue: React.FC<OfflineNotificationQueueProps> =
           notification.deliveryStatus = 'sending';
 
           // Send via WebSocket if available
-          if (webSocketService.isConnected()) {
-            await webSocketService.sendRealtimeMessage({
+          if (wsService.isConnected()) {
+            await wsService.sendRealtimeMessage({
               type: notification.type as any,
               from: notification.sender,
               to: notification.recipient,
@@ -168,8 +172,12 @@ export const OfflineNotificationQueue: React.FC<OfflineNotificationQueueProps> =
             throw new Error('WebSocket not connected');
           }
 
+          // Map priority: critical -> high for storage
+          const storagePriority: 'high' | 'medium' | 'low' =
+            notification.priority === 'critical' ? 'high' : notification.priority;
+
           // Update in storage
-          await offlineStorageManager.store('notifications', notification, notification.priority);
+          await offlineStorageManager.store('notifications', notification, storagePriority);
 
         } catch (error) {
           console.error(`Failed to send notification ${notification.id}:`, error);
@@ -180,7 +188,11 @@ export const OfflineNotificationQueue: React.FC<OfflineNotificationQueueProps> =
             notification.deliveryStatus = 'queued';
           }
 
-          await offlineStorageManager.store('notifications', notification, notification.priority);
+          // Map priority: critical -> high for storage
+          const storagePriority: 'high' | 'medium' | 'low' =
+            notification.priority === 'critical' ? 'high' : notification.priority;
+
+          await offlineStorageManager.store('notifications', notification, storagePriority);
         }
       })
     );
@@ -216,7 +228,11 @@ export const OfflineNotificationQueue: React.FC<OfflineNotificationQueueProps> =
       notification.deliveryStatus = 'queued';
       notification.attempts = 0;
       
-      await offlineStorageManager.store('notifications', notification, notification.priority);
+      // Map priority: critical -> high for storage
+      const storagePriority: 'high' | 'medium' | 'low' =
+        notification.priority === 'critical' ? 'high' : notification.priority;
+      
+      await offlineStorageManager.store('notifications', notification, storagePriority);
       await loadQueuedNotifications();
 
       if (isOnline && autoProcess) {

@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AIRecommendation, SessionRecord, User } from '@/types';
+import { AIRecommendation, SessionRecord } from '@/types/session.types';
+import { User } from '@/types';
 import { enhancedSessionStore } from '@/store/session.store';
 
 interface AILessonPlanSuggestionsProps {

@@ -280,11 +280,11 @@ export abstract class BaseAgent implements AIAgent {
       data,
     };
 
-    if (insights) {
+    if (insights !== undefined) {
       result.insights = insights;
     }
 
-    if (actions) {
+    if (actions !== undefined) {
       result.actions = actions;
     }
 

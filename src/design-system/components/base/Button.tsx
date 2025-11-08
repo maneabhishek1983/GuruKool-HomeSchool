@@ -74,8 +74,10 @@ export function Button({
         className
       )}
       disabled={isDisabled}
-      whileHover={!isDisabled ? interactionAnimations.buttonHover : undefined}
-      whileTap={!isDisabled ? interactionAnimations.buttonTap : undefined}
+      {...(!isDisabled && {
+        whileHover: interactionAnimations.buttonHover,
+        whileTap: interactionAnimations.buttonTap,
+      })}
       {...motionProps}
       {...props}
     >

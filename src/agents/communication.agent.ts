@@ -1199,11 +1199,10 @@ export class CommunicationAgent implements AIAgent {
     if (success) {
       return { success: true };
     }
-    const result: { success: boolean; error?: string } = {
+    return {
       success: false,
+      error: 'Email delivery service unavailable',
     };
-    result.error = 'Email delivery service unavailable';
-    return result;
   }
 
   /**
@@ -1220,11 +1219,10 @@ export class CommunicationAgent implements AIAgent {
     if (success) {
       return { success: true };
     }
-    const result: { success: boolean; error?: string } = {
+    return {
       success: false,
+      error: 'SMS gateway error',
     };
-    result.error = 'SMS gateway error';
-    return result;
   }
 
   /**
@@ -1241,11 +1239,10 @@ export class CommunicationAgent implements AIAgent {
     if (success) {
       return { success: true };
     }
-    const result: { success: boolean; error?: string } = {
+    return {
       success: false,
+      error: 'Push service unavailable',
     };
-    result.error = 'Push service unavailable';
-    return result;
   }
 
   /**
@@ -1268,7 +1265,7 @@ export class CommunicationAgent implements AIAgent {
           title: message.title,
           content: message.content,
           type: message.type,
-          priority: message.priority,
+          priority: storagePriority,
           data: message.data,
           createdAt: message.createdAt,
           read: false,
