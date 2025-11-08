@@ -58,7 +58,10 @@ export default function TeacherRateManagement({
 
   const updateRate = (index: number, field: keyof TeacherRate, value: any) => {
     const updatedRates = [...rates];
-    updatedRates[index] = { ...updatedRates[index], [field]: value };
+    const currentRate = updatedRates[index];
+    if (currentRate) {
+      updatedRates[index] = { ...currentRate, [field]: value } as TeacherRate;
+    }
     onChange(updatedRates);
   };
 
