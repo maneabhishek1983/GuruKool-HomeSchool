@@ -28,7 +28,7 @@ export function csrfMiddleware(request: NextRequest) {
 
   // For state-changing methods (POST, PUT, DELETE, PATCH)
   const token = extractTokenFromHeaders(request.headers);
-  const cookieToken = request.cookies.get('csrf-token')?.value;
+  const cookieToken = request.cookies.get('csrf-token')?.value ?? null;
 
   if (!validateToken(token, cookieToken)) {
     return NextResponse.json(
