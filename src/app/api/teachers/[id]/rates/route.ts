@@ -10,9 +10,21 @@ import { createClient } from '@supabase/supabase-js';
 export const GET = withRateLimit({
   keyPrefix: 'api:teachers:rates:get',
   max: 100,
-})(async (request: NextRequest, { params }: { params: { id: string } }) => {
+})(async (
+  request: NextRequest,
+  context?: {
+    params?: Record<string, string> | Promise<Record<string, string>>;
+  }
+) => {
   try {
+    const params = await Promise.resolve(context?.params || {});
     const teacherId = params.id;
+    if (!teacherId) {
+      return NextResponse.json(
+        { error: 'Teacher ID is required', code: 'INVALID_REQUEST' },
+        { status: 400 }
+      );
+    }
 
     // Get auth token from header
     const authHeader = request.headers.get('authorization');
@@ -82,9 +94,21 @@ export const GET = withRateLimit({
 export const POST = withRateLimit({
   keyPrefix: 'api:teachers:rates:create',
   max: 20,
-})(async (request: NextRequest, { params }: { params: { id: string } }) => {
+})(async (
+  request: NextRequest,
+  context?: {
+    params?: Record<string, string> | Promise<Record<string, string>>;
+  }
+) => {
   try {
+    const params = await Promise.resolve(context?.params || {});
     const teacherId = params.id;
+    if (!teacherId) {
+      return NextResponse.json(
+        { error: 'Teacher ID is required', code: 'INVALID_REQUEST' },
+        { status: 400 }
+      );
+    }
 
     // Get auth token from header
     const authHeader = request.headers.get('authorization');
@@ -226,9 +250,21 @@ export const POST = withRateLimit({
 export const PUT = withRateLimit({
   keyPrefix: 'api:teachers:rates:update',
   max: 20,
-})(async (request: NextRequest, { params }: { params: { id: string } }) => {
+})(async (
+  request: NextRequest,
+  context?: {
+    params?: Record<string, string> | Promise<Record<string, string>>;
+  }
+) => {
   try {
+    const params = await Promise.resolve(context?.params || {});
     const teacherId = params.id;
+    if (!teacherId) {
+      return NextResponse.json(
+        { error: 'Teacher ID is required', code: 'INVALID_REQUEST' },
+        { status: 400 }
+      );
+    }
 
     // Get auth token from header
     const authHeader = request.headers.get('authorization');

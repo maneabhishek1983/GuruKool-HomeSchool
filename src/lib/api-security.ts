@@ -6,7 +6,12 @@ import {
   validateToken,
 } from '@/lib/csrf';
 
-type Handler = (request: NextRequest, context?: { params?: Record<string, string> }) => Promise<Response> | Response;
+type Handler = (
+  request: NextRequest,
+  context?: {
+    params?: Record<string, string> | Promise<Record<string, string>>;
+  }
+) => Promise<Response> | Response;
 
 interface RateLimitOptions {
   windowMs?: number;
@@ -49,7 +54,12 @@ export function withRateLimit(options?: RateLimitOptions) {
   };
 
   return function wrap(handler: Handler): Handler {
-    return async function limited(request: NextRequest, context?: { params?: Record<string, string> }) {
+    return async function limited(
+      request: NextRequest,
+      context?: {
+        params?: Record<string, string> | Promise<Record<string, string>>;
+      }
+    ) {
       const ip = getClientIP(request);
       const route = request.nextUrl.pathname;
       const bucket = Math.floor(Date.now() / windowMs);
@@ -112,7 +122,12 @@ export function withRateLimit(options?: RateLimitOptions) {
 }
 
 export function withCSRFProtection(handler: Handler): Handler {
-  return async function secured(request: NextRequest, context?: { params?: Record<string, string> }) {
+  return async function secured(
+    request: NextRequest,
+    context?: {
+      params?: Record<string, string> | Promise<Record<string, string>>;
+    }
+  ) {
     // For GET/HEAD: ensure CSRF cookie exists
     if (request.method === 'GET' || request.method === 'HEAD') {
       const hasCookie = !!request.cookies.get('csrf-token')?.value;

@@ -2,38 +2,87 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { z } from 'zod';
-import { SmartForm, AutoCompleteInput, DateTimePicker, FileUpload } from '../index';
+import {
+  SmartForm,
+  AutoCompleteInput,
+  DateTimePicker,
+  FileUpload,
+} from '../index';
 
 // Mock framer-motion to avoid animation issues in tests
-jest.mock('framer-motion', () => ({
-  motion: {
-    form: React.forwardRef<HTMLFormElement, any>(({ children, ...props }, ref) => 
-      <form ref={ref} {...props}>{children}</form>
-    ),
-    div: React.forwardRef<HTMLDivElement, any>(({ children, ...props }, ref) => 
-      <div ref={ref} {...props}>{children}</div>
-    ),
-    ul: React.forwardRef<HTMLUListElement, any>(({ children, ...props }, ref) => 
-      <ul ref={ref} {...props}>{children}</ul>
-    ),
-    li: React.forwardRef<HTMLLIElement, any>(({ children, ...props }, ref) => 
-      <li ref={ref} {...props}>{children}</li>
-    ),
-    button: React.forwardRef<HTMLButtonElement, any>(({ children, ...props }, ref) => 
-      <button ref={ref} {...props}>{children}</button>
-    ),
-    p: React.forwardRef<HTMLParagraphElement, any>(({ children, ...props }, ref) => 
-      <p ref={ref} {...props}>{children}</p>
-    ),
-  },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
-}));
+jest.mock('framer-motion', () => {
+  const FormComponent = React.forwardRef<HTMLFormElement, any>(
+    ({ children, ...props }, ref) => (
+      <form ref={ref} {...props}>
+        {children}
+      </form>
+    )
+  );
+  FormComponent.displayName = 'MockForm';
+
+  const DivComponent = React.forwardRef<HTMLDivElement, any>(
+    ({ children, ...props }, ref) => (
+      <div ref={ref} {...props}>
+        {children}
+      </div>
+    )
+  );
+  DivComponent.displayName = 'MockDiv';
+
+  const UlComponent = React.forwardRef<HTMLUListElement, any>(
+    ({ children, ...props }, ref) => (
+      <ul ref={ref} {...props}>
+        {children}
+      </ul>
+    )
+  );
+  UlComponent.displayName = 'MockUl';
+
+  const LiComponent = React.forwardRef<HTMLLIElement, any>(
+    ({ children, ...props }, ref) => (
+      <li ref={ref} {...props}>
+        {children}
+      </li>
+    )
+  );
+  LiComponent.displayName = 'MockLi';
+
+  const ButtonComponent = React.forwardRef<HTMLButtonElement, any>(
+    ({ children, ...props }, ref) => (
+      <button ref={ref} {...props}>
+        {children}
+      </button>
+    )
+  );
+  ButtonComponent.displayName = 'MockButton';
+
+  const PComponent = React.forwardRef<HTMLParagraphElement, any>(
+    ({ children, ...props }, ref) => (
+      <p ref={ref} {...props}>
+        {children}
+      </p>
+    )
+  );
+  PComponent.displayName = 'MockP';
+
+  return {
+    motion: {
+      form: FormComponent,
+      div: DivComponent,
+      ul: UlComponent,
+      li: LiComponent,
+      button: ButtonComponent,
+      p: PComponent,
+    },
+    AnimatePresence: ({ children }: any) => <>{children}</>,
+  };
+});
 
 // Mock date-fns
 jest.mock('date-fns', () => ({
   format: jest.fn(() => 'Jan 1, 2024 10:00 AM'),
   isValid: jest.fn(() => true),
-  parseISO: jest.fn((dateStr) => new Date(dateStr)),
+  parseISO: jest.fn(dateStr => new Date(dateStr)),
 }));
 
 const TestWrapper = ({ children, defaultValues = {} }: any) => {
@@ -49,7 +98,7 @@ describe('Form Components Basic Tests', () => {
 
     it('renders form with submit and reset buttons', () => {
       const mockOnSubmit = jest.fn();
-      
+
       render(
         <SmartForm schema={testSchema} onSubmit={mockOnSubmit}>
           <input name="name" placeholder="Name" />
@@ -57,15 +106,19 @@ describe('Form Components Basic Tests', () => {
       );
 
       expect(screen.getByPlaceholderText('Name')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /reset/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /submit/i })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /reset/i })
+      ).toBeInTheDocument();
     });
 
     it('applies custom className', () => {
       const mockOnSubmit = jest.fn();
       const { container } = render(
-        <SmartForm 
-          schema={testSchema} 
+        <SmartForm
+          schema={testSchema}
           onSubmit={mockOnSubmit}
           className="custom-form-class"
         >
@@ -90,7 +143,9 @@ describe('Form Components Basic Tests', () => {
       );
 
       expect(screen.getByLabelText('Select Fruit')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('Type to search...')).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText('Type to search...')
+      ).toBeInTheDocument();
     });
 
     it('shows required indicator when required', () => {
@@ -124,10 +179,7 @@ describe('Form Components Basic Tests', () => {
     it('is disabled when disabled prop is true', () => {
       render(
         <TestWrapper>
-          <AutoCompleteInput
-            name="fruit"
-            disabled={true}
-          />
+          <AutoCompleteInput name="fruit" disabled={true} />
         </TestWrapper>
       );
 
@@ -148,7 +200,9 @@ describe('Form Components Basic Tests', () => {
       );
 
       expect(screen.getByLabelText('Select Date & Time')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('Choose date and time')).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText('Choose date and time')
+      ).toBeInTheDocument();
     });
 
     it('shows smart scheduling badge when conflict detection is enabled', () => {
@@ -182,10 +236,7 @@ describe('Form Components Basic Tests', () => {
     it('is disabled when disabled prop is true', () => {
       render(
         <TestWrapper>
-          <DateTimePicker
-            name="datetime"
-            disabled={true}
-          />
+          <DateTimePicker name="datetime" disabled={true} />
         </TestWrapper>
       );
 
@@ -197,10 +248,7 @@ describe('Form Components Basic Tests', () => {
     it('renders upload area with label', () => {
       render(
         <TestWrapper>
-          <FileUpload
-            name="files"
-            label="Upload Files"
-          />
+          <FileUpload name="files" label="Upload Files" />
         </TestWrapper>
       );
 
@@ -211,10 +259,7 @@ describe('Form Components Basic Tests', () => {
     it('shows drag and drop text when enabled', () => {
       render(
         <TestWrapper>
-          <FileUpload
-            name="files"
-            dragAndDrop={true}
-          />
+          <FileUpload name="files" dragAndDrop={true} />
         </TestWrapper>
       );
 
@@ -224,10 +269,7 @@ describe('Form Components Basic Tests', () => {
     it('hides drag and drop text when disabled', () => {
       render(
         <TestWrapper>
-          <FileUpload
-            name="files"
-            dragAndDrop={false}
-          />
+          <FileUpload name="files" dragAndDrop={false} />
         </TestWrapper>
       );
 
@@ -238,11 +280,7 @@ describe('Form Components Basic Tests', () => {
     it('shows required indicator when required', () => {
       render(
         <TestWrapper>
-          <FileUpload
-            name="files"
-            label="Upload Files"
-            required={true}
-          />
+          <FileUpload name="files" label="Upload Files" required={true} />
         </TestWrapper>
       );
 
@@ -269,14 +307,13 @@ describe('Form Components Basic Tests', () => {
     it('is disabled when disabled prop is true', () => {
       render(
         <TestWrapper>
-          <FileUpload
-            name="files"
-            disabled={true}
-          />
+          <FileUpload name="files" disabled={true} />
         </TestWrapper>
       );
 
-      const fileInput = screen.getByRole('textbox', { hidden: true }) as HTMLInputElement;
+      const fileInput = screen.getByRole('textbox', {
+        hidden: true,
+      }) as HTMLInputElement;
       expect(fileInput).toBeDisabled();
     });
   });
@@ -296,7 +333,7 @@ describe('Form Components Basic Tests', () => {
         <SmartForm schema={formSchema} onSubmit={mockOnSubmit}>
           <div className="space-y-4">
             <input name="name" placeholder="Student Name" />
-            
+
             <AutoCompleteInput
               name="subject"
               label="Subject"
@@ -330,8 +367,12 @@ describe('Form Components Basic Tests', () => {
       expect(screen.getByLabelText('Session Materials')).toBeInTheDocument();
 
       // Check form buttons
-      expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /reset/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /submit/i })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /reset/i })
+      ).toBeInTheDocument();
 
       // Check AI and smart features indicators
       expect(screen.getByText('AI')).toBeInTheDocument();

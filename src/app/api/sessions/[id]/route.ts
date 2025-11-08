@@ -10,9 +10,15 @@ import { createClient } from '@supabase/supabase-js';
 export const GET = withRateLimit({
   keyPrefix: 'api:sessions:get-one',
   max: 100,
-})(async (request: NextRequest, context?: { params?: Record<string, string> }) => {
+})(async (
+  request: NextRequest,
+  context?: {
+    params?: Record<string, string> | Promise<Record<string, string>>;
+  }
+) => {
   try {
-    const id = context?.params?.id;
+    const params = await Promise.resolve(context?.params || {});
+    const id = params.id;
     if (!id) {
       return NextResponse.json(
         { error: 'Session ID is required', code: 'INVALID_REQUEST' },
@@ -87,9 +93,15 @@ export const GET = withRateLimit({
 export const PUT = withRateLimit({
   keyPrefix: 'api:sessions:update',
   max: 50,
-})(async (request: NextRequest, context?: { params?: Record<string, string> }) => {
+})(async (
+  request: NextRequest,
+  context?: {
+    params?: Record<string, string> | Promise<Record<string, string>>;
+  }
+) => {
   try {
-    const id = context?.params?.id;
+    const params = await Promise.resolve(context?.params || {});
+    const id = params.id;
     if (!id) {
       return NextResponse.json(
         { error: 'Session ID is required', code: 'INVALID_REQUEST' },
@@ -184,9 +196,15 @@ export const PUT = withRateLimit({
 export const DELETE = withRateLimit({
   keyPrefix: 'api:sessions:delete',
   max: 20,
-})(async (request: NextRequest, context?: { params?: Record<string, string> }) => {
+})(async (
+  request: NextRequest,
+  context?: {
+    params?: Record<string, string> | Promise<Record<string, string>>;
+  }
+) => {
   try {
-    const id = context?.params?.id;
+    const params = await Promise.resolve(context?.params || {});
+    const id = params.id;
     if (!id) {
       return NextResponse.json(
         { error: 'Session ID is required', code: 'INVALID_REQUEST' },

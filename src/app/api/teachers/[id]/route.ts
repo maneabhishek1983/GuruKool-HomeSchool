@@ -11,9 +11,21 @@ import { createClient } from '@supabase/supabase-js';
 export const GET = withRateLimit({
   keyPrefix: 'api:teachers:get-one',
   max: 100,
-})(async (request: NextRequest, { params }: { params: { id: string } }) => {
+})(async (
+  request: NextRequest,
+  context?: {
+    params?: Record<string, string> | Promise<Record<string, string>>;
+  }
+) => {
   try {
-    const { id } = params;
+    const params = await Promise.resolve(context?.params || {});
+    const id = params.id;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Teacher ID is required', code: 'INVALID_REQUEST' },
+        { status: 400 }
+      );
+    }
 
     // Get auth token from header
     const authHeader = request.headers.get('authorization');
@@ -78,9 +90,21 @@ export const GET = withRateLimit({
 export const PUT = withRateLimit({
   keyPrefix: 'api:teachers:update',
   max: 50,
-})(async (request: NextRequest, { params }: { params: { id: string } }) => {
+})(async (
+  request: NextRequest,
+  context?: {
+    params?: Record<string, string> | Promise<Record<string, string>>;
+  }
+) => {
   try {
-    const { id } = params;
+    const params = await Promise.resolve(context?.params || {});
+    const id = params.id;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Teacher ID is required', code: 'INVALID_REQUEST' },
+        { status: 400 }
+      );
+    }
 
     // Get auth token from header
     const authHeader = request.headers.get('authorization');
