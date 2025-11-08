@@ -103,13 +103,14 @@ export const DataSheetsManager: React.FC<DataSheetsManagerProps> = ({
   const createNewDataSheet = async (student: Student) => {
     setCreating(true);
     try {
+      const dateStr = selectedDate || new Date().toISOString().split('T')[0];
       const newSheet = await DataSheetsService.createDataSheet({
         studentId: student.id,
         teacherId: teacherId,
         parentId: student.parentId || '',
-        date: selectedDate,
+        date: dateStr,
         title: `Daily Activities - ${student.name}`,
-        description: `Comprehensive activity tracking for ${student.name} on ${selectedDate}`,
+        description: `Comprehensive activity tracking for ${student.name} on ${dateStr}`,
         activities: [],
         progressSummary: {
           overallProgress: 0,
@@ -123,10 +124,7 @@ export const DataSheetsManager: React.FC<DataSheetsManagerProps> = ({
 
       if (newSheet) {
         // Create default activities
-        await DataSheetsService.createDefaultActivities(
-          newSheet.id,
-          selectedDate
-        );
+        await DataSheetsService.createDefaultActivities(newSheet.id, dateStr);
         setSelectedSheet(newSheet);
         await loadDataSheets();
       }
