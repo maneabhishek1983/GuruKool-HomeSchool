@@ -26,7 +26,7 @@ interface TeacherLocation {
   distanceToSession: number;
 }
 
-interface SessionStatus {
+interface LocalSessionStatus {
   status:
     | 'scheduled'
     | 'in-progress'
@@ -54,10 +54,10 @@ export default function TeacherLocationTracker({
   );
   const [teacherLocation, setTeacherLocation] =
     useState<TeacherLocation | null>(null);
-  const [sessionStatus, setSessionStatus] = useState<SessionStatus>(() => {
+  const [sessionStatus, setSessionStatus] = useState<LocalSessionStatus>(() => {
     const status = initialSession?.status;
     // Ensure status is valid, default to 'scheduled' if invalid
-    const validStatus: SessionStatus['status'] =
+    const validStatus: LocalSessionStatus['status'] =
       status === 'scheduled' ||
       status === 'in-progress' ||
       status === 'completed' ||
@@ -395,10 +395,8 @@ export default function TeacherLocationTracker({
             </span>
           </div>
           <div>
-            <span className="text-gray-600">Teacher:</span>
-            <span className="ml-2 font-medium">
-              {session?.teacherName || 'Teacher'}
-            </span>
+            <span className="text-gray-600">Teacher ID:</span>
+            <span className="ml-2 font-medium">{teacherId || 'N/A'}</span>
           </div>
           <div>
             <span className="text-gray-600">Start Time:</span>
