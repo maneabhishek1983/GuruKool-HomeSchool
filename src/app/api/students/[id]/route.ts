@@ -3,6 +3,7 @@ import { updateStudentSchema } from '@/lib/validation';
 import { DatabaseService } from '@/services/database.service';
 import { withRateLimit } from '@/lib/api-security';
 import { createClient } from '@supabase/supabase-js';
+import { StudentProfile } from '@/types';
 
 /**
  * GET /api/students/[id]
@@ -153,12 +154,14 @@ export const PUT = withRateLimit({
       );
     }
 
-    // Update student
-    const updatedStudent = await DatabaseService.updateStudent(
-      id,
-      validation.data,
-      user.id
-    );
+    // Update student - filter out undefined values for exactOptionalPropertyTypes
+    const updates: Partial<StudentProfile> = {};
+    Object.entries(validation.data).forEach(([key, value]) => {
+      if (value !== undefined) {
+        (updates as any)[key] = value;
+      }
+    });
+    const updatedStudent = await DatabaseService.updateStudent(id, updates);
 
     if (!updatedStudent) {
       return NextResponse.json(
@@ -237,7 +240,7 @@ export const DELETE = withRateLimit({
     }
 
     // Delete student
-    const deleted = await DatabaseService.deleteStudent(id, user.id);
+    const deleted = await DatabaseService.deleteStudent(id);
 
     if (!deleted) {
       return NextResponse.json(
