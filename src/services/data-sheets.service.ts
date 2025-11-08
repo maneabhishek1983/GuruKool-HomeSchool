@@ -341,7 +341,7 @@ export class DataSheetsService {
         academics: [],
       };
 
-      activities.forEach(activity => {
+      activities.forEach((activity: any) => {
         if (activity.rating && activity.status === 'completed') {
           progressByType[activity.activity_type as ActivityType].push(
             activity.rating

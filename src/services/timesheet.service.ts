@@ -321,7 +321,7 @@ export class TimesheetService {
         return [];
       }
 
-      return data.map(entry => ({
+      return data.map((entry: any) => ({
         id: entry.id,
         teacherId: entry.teacher_id,
         teacherName: entry.teacher_name,
@@ -382,25 +382,33 @@ export class TimesheetService {
 
       entries.forEach(entry => {
         // By student
-        if (!byStudent[entry.studentId]) {
+        const studentEntry = byStudent[entry.studentId];
+        if (!studentEntry) {
           byStudent[entry.studentId] = {
             studentName: entry.studentName,
             hours: 0,
             sessions: 0,
           };
         }
-        byStudent[entry.studentId].hours += entry.totalHours || 0;
-        byStudent[entry.studentId].sessions += 1;
+        const currentStudent = byStudent[entry.studentId];
+        if (currentStudent) {
+          currentStudent.hours += entry.totalHours || 0;
+          currentStudent.sessions += 1;
+        }
 
         // By subject
-        if (!bySubject[entry.subject]) {
+        const subjectEntry = bySubject[entry.subject];
+        if (!subjectEntry) {
           bySubject[entry.subject] = {
             hours: 0,
             sessions: 0,
           };
         }
-        bySubject[entry.subject].hours += entry.totalHours || 0;
-        bySubject[entry.subject].sessions += 1;
+        const currentSubject = bySubject[entry.subject];
+        if (currentSubject) {
+          currentSubject.hours += entry.totalHours || 0;
+          currentSubject.sessions += 1;
+        }
       });
 
       const monthNames = [

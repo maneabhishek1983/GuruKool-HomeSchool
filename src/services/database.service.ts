@@ -442,7 +442,7 @@ export class DatabaseService {
       name: dbStudent.name,
       age: dbStudent.age,
       grade: dbStudent.grade_level,
-      country: dbStudent.country,
+      country: dbStudent.country as any,
       academicStandard: dbStudent.academic_standards,
       selectedSubjects: [],
       selectedSocialization: [],
@@ -473,7 +473,7 @@ export class DatabaseService {
       id: dbTeacher.id,
       name: dbTeacher.name,
       email: dbTeacher.email,
-      phone: dbTeacher.phone,
+      ...(dbTeacher.phone ? { phone: dbTeacher.phone } : {}),
       subjects: dbTeacher.subjects,
       experience: dbTeacher.experience_years,
       qualifications: dbTeacher.qualifications,
@@ -481,7 +481,7 @@ export class DatabaseService {
       hourlyRate: dbTeacher.hourly_rate,
       availability: dbTeacher.availability,
       location: dbTeacher.location,
-      bio: dbTeacher.bio,
+      ...(dbTeacher.bio ? { bio: dbTeacher.bio } : {}),
       parentId: dbTeacher.parent_id,
       createdAt: new Date(dbTeacher.created_at),
       updatedAt: new Date(dbTeacher.updated_at),
@@ -582,7 +582,7 @@ export class DatabaseService {
 
       const currentAssignments = student.assigned_teachers || [];
       const updatedAssignments = currentAssignments.filter(
-        id => id !== teacherId
+        (id: any) => id !== teacherId
       );
 
       const { error: updateError } = await supabase
@@ -646,7 +646,7 @@ export class DatabaseService {
         throw error;
       }
 
-      return data.map(student => student.id);
+      return data.map((student: any) => student.id);
     } catch (error) {
       console.error('Error getting teacher assignments:', error);
       return [];
