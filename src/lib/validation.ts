@@ -106,7 +106,7 @@ export const updateUserSchema = z.object({
 /**
  * Country enum
  */
-export const countrySchema = z.enum(['UK', 'US', 'INDIA']);
+export const countrySchema = z.enum(['UK', 'US', 'India']);
 
 /**
  * Grade system enum
