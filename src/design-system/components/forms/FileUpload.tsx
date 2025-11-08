@@ -20,7 +20,11 @@ export function FileUpload<T extends FieldValues = FieldValues>({
   required = false,
   disabled = false,
 }: FileUploadProps<T>) {
-  const { setValue, watch, formState: { errors } } = useFormContext<T>();
+  const {
+    setValue,
+    watch,
+    formState: { errors },
+  } = useFormContext<T>();
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -29,7 +33,9 @@ export function FileUpload<T extends FieldValues = FieldValues>({
   const error = errors[name];
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -40,135 +46,145 @@ export function FileUpload<T extends FieldValues = FieldValues>({
     if (maxSize && file.size > maxSize) {
       return `File size exceeds ${formatFileSize(maxSize)}`;
     }
-    
+
     if (accept) {
       const acceptedTypes = accept.split(',').map(type => type.trim());
       const fileType = file.type;
       const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
-      
+
       const isAccepted = acceptedTypes.some(acceptedType => {
         if (acceptedType.startsWith('.')) {
           return acceptedType.toLowerCase() === fileExtension;
         }
         if (acceptedType.includes('*')) {
           const baseType = acceptedType.split('/')[0];
-          return fileType.startsWith(baseType);
+          if (baseType) {
+            return fileType.startsWith(baseType);
+          }
         }
         return acceptedType === fileType;
       });
-      
+
       if (!isAccepted) {
         return `File type not accepted. Accepted types: ${accept}`;
       }
     }
-    
+
     return null;
   };
 
-  const processFiles = useCallback(async (newFiles: FileList | File[]) => {
-    const fileArray = Array.from(newFiles);
-    const currentFiles = Array.isArray(files) ? files : [];
-    
-    // Validate file count
-    if (!multiple && fileArray.length > 1) {
-      console.error('Multiple files not allowed');
-      return;
-    }
-    
-    if (currentFiles.length + fileArray.length > maxFiles) {
-      console.error(`Maximum ${maxFiles} files allowed`);
-      return;
-    }
+  const processFiles = useCallback(
+    async (newFiles: FileList | File[]) => {
+      const fileArray = Array.from(newFiles);
+      const currentFiles = Array.isArray(files) ? files : [];
 
-    // Validate each file
-    const validFiles: File[] = [];
-    const invalidFiles: { file: File; error: string }[] = [];
-    
-    fileArray.forEach(file => {
-      const error = validateFile(file);
-      if (error) {
-        invalidFiles.push({ file, error });
-      } else {
-        validFiles.push(file);
+      // Validate file count
+      if (!multiple && fileArray.length > 1) {
+        console.error('Multiple files not allowed');
+        return;
       }
-    });
 
-    if (invalidFiles.length > 0) {
-      console.error('Invalid files:', invalidFiles);
-      // TODO: Show user-friendly error messages
-      return;
-    }
+      if (currentFiles.length + fileArray.length > maxFiles) {
+        console.error(`Maximum ${maxFiles} files allowed`);
+        return;
+      }
 
-    // Initialize upload progress
-    const newProgress: UploadProgress[] = validFiles.map(file => ({
-      file,
-      progress: 0,
-      status: 'pending',
-    }));
-    
-    setUploadProgress(prev => [...prev, ...newProgress]);
+      // Validate each file
+      const validFiles: File[] = [];
+      const invalidFiles: { file: File; error: string }[] = [];
 
-    try {
-      if (onUpload) {
-        // Custom upload handler
-        const uploadPromises = validFiles.map(async (file, index) => {
-          const progressIndex = uploadProgress.length + index;
-          
-          setUploadProgress(prev => 
-            prev.map((item, i) => 
-              i === progressIndex 
-                ? { ...item, status: 'uploading' as const }
-                : item
-            )
-          );
+      fileArray.forEach(file => {
+        const error = validateFile(file);
+        if (error) {
+          invalidFiles.push({ file, error });
+        } else {
+          validFiles.push(file);
+        }
+      });
 
-          try {
-            // Simulate progress updates (in real implementation, this would come from upload progress)
-            const progressInterval = setInterval(() => {
-              setUploadProgress(prev => 
-                prev.map((item, i) => 
-                  i === progressIndex && item.progress < 90
-                    ? { ...item, progress: item.progress + 10 }
+      if (invalidFiles.length > 0) {
+        console.error('Invalid files:', invalidFiles);
+        // TODO: Show user-friendly error messages
+        return;
+      }
+
+      // Initialize upload progress
+      const newProgress: UploadProgress[] = validFiles.map(file => ({
+        file,
+        progress: 0,
+        status: 'pending',
+      }));
+
+      setUploadProgress(prev => [...prev, ...newProgress]);
+
+      try {
+        if (onUpload) {
+          // Custom upload handler
+          const uploadPromises = validFiles.map(async (file, index) => {
+            const progressIndex = uploadProgress.length + index;
+
+            setUploadProgress(prev =>
+              prev.map((item, i) =>
+                i === progressIndex
+                  ? { ...item, status: 'uploading' as const }
+                  : item
+              )
+            );
+
+            try {
+              // Simulate progress updates (in real implementation, this would come from upload progress)
+              const progressInterval = setInterval(() => {
+                setUploadProgress(prev =>
+                  prev.map((item, i) =>
+                    i === progressIndex && item.progress < 90
+                      ? { ...item, progress: item.progress + 10 }
+                      : item
+                  )
+                );
+              }, 200);
+
+              const result = await onUpload([file]);
+              clearInterval(progressInterval);
+
+              setUploadProgress(prev =>
+                prev.map((item, i) =>
+                  i === progressIndex
+                    ? { ...item, progress: 100, status: 'completed' as const }
                     : item
                 )
               );
-            }, 200);
 
-            const result = await onUpload([file]);
-            clearInterval(progressInterval);
-            
-            setUploadProgress(prev => 
-              prev.map((item, i) => 
-                i === progressIndex 
-                  ? { ...item, progress: 100, status: 'completed' as const }
-                  : item
-              )
-            );
+              return result[0];
+            } catch (error) {
+              setUploadProgress(prev =>
+                prev.map((item, i) =>
+                  i === progressIndex
+                    ? {
+                        ...item,
+                        status: 'error' as const,
+                        error: (error as Error).message,
+                      }
+                    : item
+                )
+              );
+              throw error;
+            }
+          });
 
-            return result[0];
-          } catch (error) {
-            setUploadProgress(prev => 
-              prev.map((item, i) => 
-                i === progressIndex 
-                  ? { ...item, status: 'error' as const, error: (error as Error).message }
-                  : item
-              )
-            );
-            throw error;
-          }
-        });
+          await Promise.all(uploadPromises);
+        }
 
-        await Promise.all(uploadPromises);
+        // Update form value
+        const updatedFiles = multiple
+          ? [...currentFiles, ...validFiles]
+          : validFiles;
+        setValue(name, updatedFiles as any);
+      } catch (error) {
+        console.error('Upload failed:', error);
       }
-
-      // Update form value
-      const updatedFiles = multiple ? [...currentFiles, ...validFiles] : validFiles;
-      setValue(name, updatedFiles as any);
-
-    } catch (error) {
-      console.error('Upload failed:', error);
-    }
-  }, [files, multiple, maxFiles, onUpload, setValue, name, uploadProgress.length]);
+    },
+    [files, multiple, maxFiles, onUpload, setValue, name, uploadProgress.length]
+  );
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
@@ -192,7 +208,7 @@ export function FileUpload<T extends FieldValues = FieldValues>({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    
+
     if (!disabled && dragAndDrop) {
       const droppedFiles = e.dataTransfer.files;
       if (droppedFiles.length > 0) {
@@ -202,9 +218,11 @@ export function FileUpload<T extends FieldValues = FieldValues>({
   };
 
   const removeFile = (index: number) => {
-    const updatedFiles = Array.isArray(files) ? files.filter((_: any, i: number) => i !== index) : [];
+    const updatedFiles = Array.isArray(files)
+      ? files.filter((_: any, i: number) => i !== index)
+      : [];
     setValue(name, updatedFiles as any);
-    
+
     // Remove corresponding progress
     setUploadProgress(prev => prev.filter((_, i) => i !== index));
   };
@@ -244,7 +262,7 @@ export function FileUpload<T extends FieldValues = FieldValues>({
           disabled={disabled}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
         />
-        
+
         <div className="text-center">
           <motion.div
             initial={{ scale: 1 }}
@@ -260,7 +278,7 @@ export function FileUpload<T extends FieldValues = FieldValues>({
               />
             </svg>
           </motion.div>
-          
+
           <div className="text-sm text-gray-600 dark:text-gray-400">
             {dragAndDrop ? (
               <>
@@ -275,7 +293,7 @@ export function FileUpload<T extends FieldValues = FieldValues>({
               </span>
             )}
           </div>
-          
+
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {accept && <div>Accepted: {accept}</div>}
             <div>Max size: {formatFileSize(maxSize)}</div>
@@ -312,14 +330,24 @@ export function FileUpload<T extends FieldValues = FieldValues>({
                     {formatFileSize(file.size)}
                   </div>
                 </div>
-                
+
                 <button
                   type="button"
                   onClick={() => removeFile(index)}
                   className="ml-3 text-red-500 hover:text-red-700 transition-colors"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </motion.div>
@@ -349,7 +377,7 @@ export function FileUpload<T extends FieldValues = FieldValues>({
                 Clear
               </button>
             </div>
-            
+
             {uploadProgress.map((progress, index) => (
               <motion.div
                 key={`${progress.file.name}-${index}`}
@@ -361,17 +389,22 @@ export function FileUpload<T extends FieldValues = FieldValues>({
                   <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                     {progress.file.name}
                   </span>
-                  <span className={clsx(
-                    'text-xs px-2 py-1 rounded-full',
-                    progress.status === 'completed' && 'bg-green-100 text-green-800',
-                    progress.status === 'uploading' && 'bg-blue-100 text-blue-800',
-                    progress.status === 'error' && 'bg-red-100 text-red-800',
-                    progress.status === 'pending' && 'bg-gray-100 text-gray-800'
-                  )}>
+                  <span
+                    className={clsx(
+                      'text-xs px-2 py-1 rounded-full',
+                      progress.status === 'completed' &&
+                        'bg-green-100 text-green-800',
+                      progress.status === 'uploading' &&
+                        'bg-blue-100 text-blue-800',
+                      progress.status === 'error' && 'bg-red-100 text-red-800',
+                      progress.status === 'pending' &&
+                        'bg-gray-100 text-gray-800'
+                    )}
+                  >
                     {progress.status}
                   </span>
                 </div>
-                
+
                 <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                   <motion.div
                     className={clsx(
@@ -386,7 +419,7 @@ export function FileUpload<T extends FieldValues = FieldValues>({
                     transition={{ duration: 0.3 }}
                   />
                 </div>
-                
+
                 {progress.error && (
                   <div className="text-xs text-red-600 dark:text-red-400 mt-1">
                     {progress.error}
