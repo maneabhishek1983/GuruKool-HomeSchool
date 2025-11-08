@@ -55,16 +55,16 @@ export class OfflineStorageManager {
             { name: 'studentId', keyPath: 'studentId' },
             { name: 'parentId', keyPath: 'parentId' },
             { name: 'syncStatus', keyPath: 'syncStatus' },
-            { name: 'timestamp', keyPath: 'timestamp' }
-          ]
+            { name: 'timestamp', keyPath: 'timestamp' },
+          ],
         },
         {
           name: 'users',
           keyPath: 'id',
           indexes: [
             { name: 'role', keyPath: 'role' },
-            { name: 'syncStatus', keyPath: 'syncStatus' }
-          ]
+            { name: 'syncStatus', keyPath: 'syncStatus' },
+          ],
         },
         {
           name: 'offlineActions',
@@ -73,8 +73,8 @@ export class OfflineStorageManager {
             { name: 'timestamp', keyPath: 'timestamp' },
             { name: 'priority', keyPath: 'priority' },
             { name: 'syncStatus', keyPath: 'syncStatus' },
-            { name: 'entity', keyPath: 'entity' }
-          ]
+            { name: 'entity', keyPath: 'entity' },
+          ],
         },
         {
           name: 'aiInsights',
@@ -82,14 +82,14 @@ export class OfflineStorageManager {
           indexes: [
             { name: 'sessionId', keyPath: 'sessionId' },
             { name: 'type', keyPath: 'type' },
-            { name: 'syncStatus', keyPath: 'syncStatus' }
-          ]
+            { name: 'syncStatus', keyPath: 'syncStatus' },
+          ],
         },
         {
           name: 'metadata',
-          keyPath: 'key'
-        }
-      ]
+          keyPath: 'key',
+        },
+      ],
     };
   }
 
@@ -113,7 +113,13 @@ export class OfflineStorageManager {
         const request = indexedDB.open(this.config.dbName, this.config.version);
 
         request.onerror = () => {
-          logger.error('app', 'Failed to open IndexedDB database', request.error);
+          logger.error(
+            'app',
+            'Failed to open IndexedDB database',
+            request.error instanceof DOMException
+              ? (request.error as unknown as Error)
+              : undefined
+          );
           reject(request.error);
         };
 
@@ -123,18 +129,22 @@ export class OfflineStorageManager {
           resolve(true);
         };
 
-        request.onupgradeneeded = (event) => {
+        request.onupgradeneeded = event => {
           const db = (event.target as IDBOpenDBRequest).result;
-          
+
           // Create object stores and indexes
           this.config.stores.forEach(storeConfig => {
             if (!db.objectStoreNames.contains(storeConfig.name)) {
-              const store = db.createObjectStore(storeConfig.name, { keyPath: storeConfig.keyPath });
-              
+              const store = db.createObjectStore(storeConfig.name, {
+                keyPath: storeConfig.keyPath,
+              });
+
               // Create indexes
               if (storeConfig.indexes) {
                 storeConfig.indexes.forEach(index => {
-                  store.createIndex(index.name, index.keyPath, { unique: index.unique || false });
+                  store.createIndex(index.name, index.keyPath, {
+                    unique: index.unique || false,
+                  });
                 });
               }
             }
@@ -144,7 +154,11 @@ export class OfflineStorageManager {
         };
       });
     } catch (error) {
-      logger.error('app', 'Failed to initialize offline storage', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to initialize offline storage',
+        error instanceof Error ? error : undefined
+      );
       return false;
     }
   }
@@ -152,7 +166,11 @@ export class OfflineStorageManager {
   /**
    * Store data with sync metadata
    */
-  public async store<T>(storeName: string, data: T, priority: 'high' | 'medium' | 'low' = 'medium'): Promise<boolean> {
+  public async store<T>(
+    storeName: string,
+    data: T,
+    priority: 'high' | 'medium' | 'low' = 'medium'
+  ): Promise<boolean> {
     try {
       await this.ensureInitialized();
 
@@ -162,27 +180,39 @@ export class OfflineStorageManager {
         timestamp: Date.now(),
         version: 1,
         syncStatus: 'pending',
-        priority
+        priority,
       };
 
       return new Promise((resolve, reject) => {
         const transaction = this.db!.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
-        
+
         const request = store.put(storedData);
-        
+
         request.onsuccess = () => {
-          logger.debug('app', `Data stored in ${storeName}`, { id: storedData.id });
+          logger.debug('app', `Data stored in ${storeName}`, {
+            id: storedData.id,
+          });
           resolve(true);
         };
-        
+
         request.onerror = () => {
-          logger.error('app', `Failed to store data in ${storeName}`, request.error);
+          logger.error(
+            'app',
+            `Failed to store data in ${storeName}`,
+            request.error instanceof DOMException
+              ? (request.error as unknown as Error)
+              : undefined
+          );
           reject(request.error);
         };
       });
     } catch (error) {
-      logger.error('app', `Failed to store data in ${storeName}`, error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        `Failed to store data in ${storeName}`,
+        error instanceof Error ? error : undefined
+      );
       return false;
     }
   }
@@ -197,9 +227,9 @@ export class OfflineStorageManager {
       return new Promise((resolve, reject) => {
         const transaction = this.db!.transaction([storeName], 'readonly');
         const store = transaction.objectStore(storeName);
-        
+
         const request = store.get(id);
-        
+
         request.onsuccess = () => {
           const result = request.result;
           if (result) {
@@ -208,14 +238,24 @@ export class OfflineStorageManager {
             resolve(null);
           }
         };
-        
+
         request.onerror = () => {
-          logger.error('app', `Failed to get data from ${storeName}`, request.error);
+          logger.error(
+            'app',
+            `Failed to get data from ${storeName}`,
+            request.error instanceof DOMException
+              ? (request.error as unknown as Error)
+              : undefined
+          );
           reject(request.error);
         };
       });
     } catch (error) {
-      logger.error('app', `Failed to get data from ${storeName}`, error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        `Failed to get data from ${storeName}`,
+        error instanceof Error ? error : undefined
+      );
       return null;
     }
   }
@@ -223,42 +263,57 @@ export class OfflineStorageManager {
   /**
    * Retrieve multiple items by criteria
    */
-  public async getAll<T>(storeName: string, criteria?: { index?: string; value?: any; syncStatus?: string }): Promise<T[]> {
+  public async getAll<T>(
+    storeName: string,
+    criteria?: { index?: string; value?: any; syncStatus?: string }
+  ): Promise<T[]> {
     try {
       await this.ensureInitialized();
 
       return new Promise((resolve, reject) => {
         const transaction = this.db!.transaction([storeName], 'readonly');
         const store = transaction.objectStore(storeName);
-        
+
         let request: IDBRequest;
-        
+
         if (criteria?.index && criteria?.value) {
           const index = store.index(criteria.index);
           request = index.getAll(criteria.value);
         } else {
           request = store.getAll();
         }
-        
+
         request.onsuccess = () => {
           let results = request.result as StoredData[];
-          
+
           // Filter by sync status if specified
           if (criteria?.syncStatus) {
-            results = results.filter(item => item.syncStatus === criteria.syncStatus);
+            results = results.filter(
+              item => item.syncStatus === criteria.syncStatus
+            );
           }
-          
+
           const data = results.map(item => item.data as T);
           resolve(data);
         };
-        
+
         request.onerror = () => {
-          logger.error('app', `Failed to get all data from ${storeName}`, request.error);
+          logger.error(
+            'app',
+            `Failed to get all data from ${storeName}`,
+            request.error instanceof DOMException
+              ? (request.error as unknown as Error)
+              : undefined
+          );
           reject(request.error);
         };
       });
     } catch (error) {
-      logger.error('app', `Failed to get all data from ${storeName}`, error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        `Failed to get all data from ${storeName}`,
+        error instanceof Error ? error : undefined
+      );
       return [];
     }
   }
@@ -266,61 +321,85 @@ export class OfflineStorageManager {
   /**
    * Update data with conflict detection
    */
-  public async update<T>(storeName: string, id: string, data: Partial<T>, currentVersion: number): Promise<{ success: boolean; conflict: boolean }> {
+  public async update<T>(
+    storeName: string,
+    id: string,
+    data: Partial<T>,
+    currentVersion: number
+  ): Promise<{ success: boolean; conflict: boolean }> {
     try {
       await this.ensureInitialized();
 
       return new Promise((resolve, reject) => {
         const transaction = this.db!.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
-        
+
         // First, get the current data to check version
         const getRequest = store.get(id);
-        
+
         getRequest.onsuccess = () => {
           const current = getRequest.result as StoredData;
-          
+
           if (!current) {
             resolve({ success: false, conflict: false });
             return;
           }
-          
+
           // Check for version conflict
           if (current.version > currentVersion) {
-            logger.warn('app', `Version conflict detected for ${id}`, { current: current.version, provided: currentVersion });
+            logger.warn('app', `Version conflict detected for ${id}`, {
+              current: current.version,
+              provided: currentVersion,
+            });
             resolve({ success: false, conflict: true });
             return;
           }
-          
+
           // Update the data
           const updatedData: StoredData = {
             ...current,
             data: { ...current.data, ...data },
             timestamp: Date.now(),
             version: current.version + 1,
-            syncStatus: 'pending'
+            syncStatus: 'pending',
           };
-          
+
           const putRequest = store.put(updatedData);
-          
+
           putRequest.onsuccess = () => {
             logger.debug('app', `Data updated in ${storeName}`, { id });
             resolve({ success: true, conflict: false });
           };
-          
+
           putRequest.onerror = () => {
-            logger.error('app', `Failed to update data in ${storeName}`, putRequest.error);
+            logger.error(
+              'app',
+              `Failed to update data in ${storeName}`,
+              putRequest.error instanceof DOMException
+                ? (putRequest.error as unknown as Error)
+                : undefined
+            );
             reject(putRequest.error);
           };
         };
-        
+
         getRequest.onerror = () => {
-          logger.error('app', `Failed to get current data for update in ${storeName}`, getRequest.error);
+          logger.error(
+            'app',
+            `Failed to get current data for update in ${storeName}`,
+            getRequest.error instanceof DOMException
+              ? (getRequest.error as unknown as Error)
+              : undefined
+          );
           reject(getRequest.error);
         };
       });
     } catch (error) {
-      logger.error('app', `Failed to update data in ${storeName}`, error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        `Failed to update data in ${storeName}`,
+        error instanceof Error ? error : undefined
+      );
       return { success: false, conflict: false };
     }
   }
@@ -335,21 +414,31 @@ export class OfflineStorageManager {
       return new Promise((resolve, reject) => {
         const transaction = this.db!.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
-        
+
         const request = store.delete(id);
-        
+
         request.onsuccess = () => {
           logger.debug('app', `Data deleted from ${storeName}`, { id });
           resolve(true);
         };
-        
+
         request.onerror = () => {
-          logger.error('app', `Failed to delete data from ${storeName}`, request.error);
+          logger.error(
+            'app',
+            `Failed to delete data from ${storeName}`,
+            request.error instanceof DOMException
+              ? (request.error as unknown as Error)
+              : undefined
+          );
           reject(request.error);
         };
       });
     } catch (error) {
-      logger.error('app', `Failed to delete data from ${storeName}`, error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        `Failed to delete data from ${storeName}`,
+        error instanceof Error ? error : undefined
+      );
       return false;
     }
   }
@@ -357,13 +446,18 @@ export class OfflineStorageManager {
   /**
    * Add offline action to queue
    */
-  public async queueOfflineAction(action: Omit<OfflineAction, 'id' | 'timestamp' | 'retryCount' | 'syncStatus'>): Promise<boolean> {
+  public async queueOfflineAction(
+    action: Omit<
+      OfflineAction,
+      'id' | 'timestamp' | 'retryCount' | 'syncStatus'
+    >
+  ): Promise<boolean> {
     const offlineAction: OfflineAction = {
       ...action,
       id: this.generateId(),
       timestamp: Date.now(),
       retryCount: 0,
-      syncStatus: 'pending'
+      syncStatus: 'pending',
     };
 
     return this.store('offlineActions', offlineAction, action.priority);
@@ -373,17 +467,20 @@ export class OfflineStorageManager {
    * Get pending offline actions sorted by priority and timestamp
    */
   public async getPendingActions(): Promise<OfflineAction[]> {
-    const actions = await this.getAll<OfflineAction>('offlineActions', { syncStatus: 'pending' });
-    
+    const actions = await this.getAll<OfflineAction>('offlineActions', {
+      syncStatus: 'pending',
+    });
+
     // Sort by priority (high > medium > low) then by timestamp (oldest first)
     return actions.sort((a, b) => {
       const priorityOrder = { high: 3, medium: 2, low: 1 };
-      const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
-      
+      const priorityDiff =
+        priorityOrder[b.priority] - priorityOrder[a.priority];
+
       if (priorityDiff !== 0) {
         return priorityDiff;
       }
-      
+
       return a.timestamp - b.timestamp;
     });
   }
@@ -391,47 +488,67 @@ export class OfflineStorageManager {
   /**
    * Mark sync status for data
    */
-  public async markSyncStatus(storeName: string, id: string, status: 'pending' | 'synced' | 'conflict' | 'failed'): Promise<boolean> {
+  public async markSyncStatus(
+    storeName: string,
+    id: string,
+    status: 'pending' | 'synced' | 'conflict' | 'failed'
+  ): Promise<boolean> {
     try {
       await this.ensureInitialized();
 
       return new Promise((resolve, reject) => {
         const transaction = this.db!.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
-        
+
         const getRequest = store.get(id);
-        
+
         getRequest.onsuccess = () => {
           const current = getRequest.result as StoredData;
-          
+
           if (!current) {
             resolve(false);
             return;
           }
-          
+
           current.syncStatus = status;
           current.timestamp = Date.now();
-          
+
           const putRequest = store.put(current);
-          
+
           putRequest.onsuccess = () => {
             logger.debug('app', `Sync status updated for ${id}`, { status });
             resolve(true);
           };
-          
+
           putRequest.onerror = () => {
-            logger.error('app', `Failed to update sync status for ${id}`, putRequest.error);
+            logger.error(
+              'app',
+              `Failed to update sync status for ${id}`,
+              putRequest.error instanceof DOMException
+                ? (putRequest.error as unknown as Error)
+                : undefined
+            );
             reject(putRequest.error);
           };
         };
-        
+
         getRequest.onerror = () => {
-          logger.error('app', `Failed to get data for sync status update`, getRequest.error);
+          logger.error(
+            'app',
+            `Failed to get data for sync status update`,
+            getRequest.error instanceof DOMException
+              ? (getRequest.error as unknown as Error)
+              : undefined
+          );
           reject(getRequest.error);
         };
       });
     } catch (error) {
-      logger.error('app', `Failed to mark sync status`, error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        `Failed to mark sync status`,
+        error instanceof Error ? error : undefined
+      );
       return false;
     }
   }
@@ -444,17 +561,17 @@ export class OfflineStorageManager {
       await this.ensureInitialized();
 
       const storeNames = this.config.stores.map(store => store.name);
-      
+
       return new Promise((resolve, reject) => {
         const transaction = this.db!.transaction(storeNames, 'readwrite');
-        
+
         let completed = 0;
         const total = storeNames.length;
-        
+
         storeNames.forEach(storeName => {
           const store = transaction.objectStore(storeName);
           const request = store.clear();
-          
+
           request.onsuccess = () => {
             completed++;
             if (completed === total) {
@@ -462,15 +579,25 @@ export class OfflineStorageManager {
               resolve(true);
             }
           };
-          
+
           request.onerror = () => {
-            logger.error('app', `Failed to clear ${storeName}`, request.error);
+            logger.error(
+              'app',
+              `Failed to clear ${storeName}`,
+              request.error instanceof DOMException
+                ? (request.error as unknown as Error)
+                : undefined
+            );
             reject(request.error);
           };
         });
       });
     } catch (error) {
-      logger.error('app', 'Failed to clear all offline data', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to clear all offline data',
+        error instanceof Error ? error : undefined
+      );
       return false;
     }
   }
@@ -478,22 +605,44 @@ export class OfflineStorageManager {
   /**
    * Get storage statistics
    */
-  public async getStorageStats(): Promise<{ [storeName: string]: { total: number; pending: number; synced: number; conflicts: number } }> {
-    const stats: { [storeName: string]: { total: number; pending: number; synced: number; conflicts: number } } = {};
+  public async getStorageStats(): Promise<{
+    [storeName: string]: {
+      total: number;
+      pending: number;
+      synced: number;
+      conflicts: number;
+    };
+  }> {
+    const stats: {
+      [storeName: string]: {
+        total: number;
+        pending: number;
+        synced: number;
+        conflicts: number;
+      };
+    } = {};
 
     for (const storeConfig of this.config.stores) {
-      if (storeConfig.name === 'metadata') continue;
+      if (storeConfig.name === 'metadata') {
+        continue;
+      }
 
       const allData = await this.getAll<any>(storeConfig.name);
-      const pendingData = await this.getAll<any>(storeConfig.name, { syncStatus: 'pending' });
-      const syncedData = await this.getAll<any>(storeConfig.name, { syncStatus: 'synced' });
-      const conflictData = await this.getAll<any>(storeConfig.name, { syncStatus: 'conflict' });
+      const pendingData = await this.getAll<any>(storeConfig.name, {
+        syncStatus: 'pending',
+      });
+      const syncedData = await this.getAll<any>(storeConfig.name, {
+        syncStatus: 'synced',
+      });
+      const conflictData = await this.getAll<any>(storeConfig.name, {
+        syncStatus: 'conflict',
+      });
 
       stats[storeConfig.name] = {
         total: allData.length,
         pending: pendingData.length,
         synced: syncedData.length,
-        conflicts: conflictData.length
+        conflicts: conflictData.length,
       };
     }
 

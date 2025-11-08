@@ -4,7 +4,14 @@
  */
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
-export type LogContext = 'app' | 'agent' | 'auth' | 'database' | 'websocket' | 'api' | 'ui';
+export type LogContext =
+  | 'app'
+  | 'agent'
+  | 'auth'
+  | 'database'
+  | 'websocket'
+  | 'api'
+  | 'ui';
 
 export interface LogEntry {
   timestamp: string;
@@ -25,7 +32,7 @@ export class LoggingService {
   private maxLogEntries = 1000;
 
   private constructor() {
-    this.logLevel = (process.env.NODE_ENV === 'production') ? 'info' : 'debug';
+    this.logLevel = process.env.NODE_ENV === 'production' ? 'info' : 'debug';
     this.isDevelopment = process.env.NODE_ENV !== 'production';
   }
 
@@ -36,19 +43,40 @@ export class LoggingService {
     return LoggingService.instance;
   }
 
-  public debug(context: LogContext, message: string, data?: any, meta?: { userId?: string; sessionId?: string }): void {
+  public debug(
+    context: LogContext,
+    message: string,
+    data?: any,
+    meta?: { userId?: string; sessionId?: string }
+  ): void {
     this.log('debug', context, message, data, undefined, meta);
   }
 
-  public info(context: LogContext, message: string, data?: any, meta?: { userId?: string; sessionId?: string }): void {
+  public info(
+    context: LogContext,
+    message: string,
+    data?: any,
+    meta?: { userId?: string; sessionId?: string }
+  ): void {
     this.log('info', context, message, data, undefined, meta);
   }
 
-  public warn(context: LogContext, message: string, data?: any, meta?: { userId?: string; sessionId?: string }): void {
+  public warn(
+    context: LogContext,
+    message: string,
+    data?: any,
+    meta?: { userId?: string; sessionId?: string }
+  ): void {
     this.log('warn', context, message, data, undefined, meta);
   }
 
-  public error(context: LogContext, message: string, error?: Error, data?: any, meta?: { userId?: string; sessionId?: string }): void {
+  public error(
+    context: LogContext,
+    message: string,
+    error?: Error,
+    data?: any,
+    meta?: { userId?: string; sessionId?: string }
+  ): void {
     this.log('error', context, message, data, error, meta);
   }
 
@@ -61,7 +89,14 @@ export class LoggingService {
     this.error('app', message, undefined, data);
   }
 
-  private log(level: LogLevel, context: LogContext, message: string, data?: any, error?: Error, meta?: { userId?: string; sessionId?: string }): void {
+  private log(
+    level: LogLevel,
+    context: LogContext,
+    message: string,
+    data?: any,
+    error?: Error,
+    meta?: { userId?: string; sessionId?: string }
+  ): void {
     if (!this.shouldLog(level)) {
       return;
     }
@@ -71,10 +106,10 @@ export class LoggingService {
       level,
       context,
       message,
-      data,
-      error,
-      userId: meta?.userId,
-      sessionId: meta?.sessionId,
+      ...(data !== undefined && { data }),
+      ...(error !== undefined && { error }),
+      ...(meta?.userId !== undefined && { userId: meta.userId }),
+      ...(meta?.sessionId !== undefined && { sessionId: meta.sessionId }),
     };
 
     // Store in memory (for debugging and potential sending to logging service)
@@ -135,9 +170,9 @@ export class LoggingService {
     // For now, we'll just prepare the structure
     try {
       // Example: Send to external logging service
-      // await fetch('/api/logs', { 
-      //   method: 'POST', 
-      //   body: JSON.stringify(logEntry) 
+      // await fetch('/api/logs', {
+      //   method: 'POST',
+      //   body: JSON.stringify(logEntry)
       // });
     } catch (error) {
       // Fallback to console if logging service fails
@@ -167,7 +202,15 @@ export class LoggingService {
 export const logger = LoggingService.getInstance();
 
 // Convenience functions for common use cases
-export const logDebug = (context: LogContext, message: string, data?: any) => logger.debug(context, message, data);
-export const logInfo = (context: LogContext, message: string, data?: any) => logger.info(context, message, data);
-export const logWarn = (context: LogContext, message: string, data?: any) => logger.warn(context, message, data);
-export const logError = (context: LogContext, message: string, error?: Error, data?: any) => logger.error(context, message, error, data);
+export const logDebug = (context: LogContext, message: string, data?: any) =>
+  logger.debug(context, message, data);
+export const logInfo = (context: LogContext, message: string, data?: any) =>
+  logger.info(context, message, data);
+export const logWarn = (context: LogContext, message: string, data?: any) =>
+  logger.warn(context, message, data);
+export const logError = (
+  context: LogContext,
+  message: string,
+  error?: Error,
+  data?: any
+) => logger.error(context, message, error, data);

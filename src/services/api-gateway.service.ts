@@ -30,13 +30,13 @@ export class APIGatewayService {
   private rateLimitConfig: RateLimitConfig;
 
   constructor() {
-    this.securityService = new SecurityService();
-    this.loggingService = new LoggingService();
+    this.securityService = SecurityService.getInstance();
+    this.loggingService = LoggingService.getInstance();
     this.rateLimitStore = new Map();
     this.rateLimitConfig = {
       windowMs: 15 * 60 * 1000, // 15 minutes
       maxRequests: 100,
-      message: 'Too many requests, please try again later.'
+      message: 'Too many requests, please try again later.',
     };
   }
 
@@ -45,12 +45,15 @@ export class APIGatewayService {
    */
   async processRequest(request: APIRequest): Promise<APIResponse> {
     const startTime = Date.now();
-    
+
     try {
       // 1. Rate limiting check
       const rateLimitResult = await this.checkRateLimit(request);
       if (!rateLimitResult.allowed) {
-        return this.createErrorResponse(429, rateLimitResult.message);
+        return this.createErrorResponse(
+          429,
+          rateLimitResult.message || 'Too many requests'
+        );
       }
 
       // 2. Authentication and authorization
@@ -62,7 +65,10 @@ export class APIGatewayService {
       // 3. Input validation and sanitization
       const validationResult = await this.validateRequest(request);
       if (!validationResult.valid) {
-        return this.createErrorResponse(400, validationResult.message);
+        return this.createErrorResponse(
+          400,
+          validationResult.message || 'Invalid request'
+        );
       }
 
       // 4. Route the request to appropriate handler
@@ -72,13 +78,12 @@ export class APIGatewayService {
       await this.logRequest(request, response, Date.now() - startTime);
 
       return response;
-
     } catch (error) {
       // Log error and return error response
       await this.loggingService.logError('API Gateway Error', {
         request,
         error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       return this.createErrorResponse(500, 'Internal server error');
@@ -88,41 +93,45 @@ export class APIGatewayService {
   /**
    * Check rate limiting for the request
    */
-  private async checkRateLimit(request: APIRequest): Promise<{ allowed: boolean; message?: string }> {
+  private async checkRateLimit(
+    request: APIRequest
+  ): Promise<{ allowed: boolean; message?: string }> {
     const key = this.getRateLimitKey(request);
     const now = Date.now();
-    
+
     const current = this.rateLimitStore.get(key);
-    
+
     if (!current || now > current.resetTime) {
       // Reset or initialize rate limit
       this.rateLimitStore.set(key, {
         count: 1,
-        resetTime: now + this.rateLimitConfig.windowMs
+        resetTime: now + this.rateLimitConfig.windowMs,
       });
       return { allowed: true };
     }
 
     if (current.count >= this.rateLimitConfig.maxRequests) {
-      return { 
-        allowed: false, 
-        message: this.rateLimitConfig.message 
+      return {
+        allowed: false,
+        message: this.rateLimitConfig.message,
       };
     }
 
     // Increment count
     current.count++;
     this.rateLimitStore.set(key, current);
-    
+
     return { allowed: true };
   }
 
   /**
    * Authenticate and authorize the request
    */
-  private async authenticateRequest(request: APIRequest): Promise<{ authenticated: boolean; user?: any }> {
+  private async authenticateRequest(
+    request: APIRequest
+  ): Promise<{ authenticated: boolean; user?: any }> {
     const authHeader = request.headers.authorization;
-    
+
     if (!authHeader) {
       return { authenticated: false };
     }
@@ -130,7 +139,10 @@ export class APIGatewayService {
     try {
       // Verify JWT token
       const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error } = await supabase.auth.getUser(token);
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser(token);
 
       if (error || !user) {
         return { authenticated: false };
@@ -150,7 +162,9 @@ export class APIGatewayService {
   /**
    * Validate and sanitize the request
    */
-  private async validateRequest(request: APIRequest): Promise<{ valid: boolean; message?: string }> {
+  private async validateRequest(
+    request: APIRequest
+  ): Promise<{ valid: boolean; message?: string }> {
     // Check method
     const allowedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
     if (!allowedMethods.includes(request.method.toUpperCase())) {
@@ -172,14 +186,18 @@ export class APIGatewayService {
     request.headers = sanitizedHeaders;
 
     // Validate body for POST/PUT requests
-    if (['POST', 'PUT', 'PATCH'].includes(request.method.toUpperCase()) && request.body) {
+    if (
+      ['POST', 'PUT', 'PATCH'].includes(request.method.toUpperCase()) &&
+      request.body
+    ) {
       if (typeof request.body !== 'object') {
         return { valid: false, message: 'Invalid request body' };
       }
 
       // Check body size
       const bodySize = JSON.stringify(request.body).length;
-      if (bodySize > 1024 * 1024) { // 1MB limit
+      if (bodySize > 1024 * 1024) {
+        // 1MB limit
         return { valid: false, message: 'Request body too large' };
       }
     }
@@ -222,7 +240,7 @@ export class APIGatewayService {
     return {
       status: 200,
       data: { status: 'healthy', timestamp: new Date().toISOString() },
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     };
   }
 
@@ -231,7 +249,7 @@ export class APIGatewayService {
     return {
       status: 200,
       data: { message: 'Analytics endpoint' },
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     };
   }
 
@@ -240,7 +258,7 @@ export class APIGatewayService {
     return {
       status: 201,
       data: { message: 'Session created' },
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     };
   }
 
@@ -249,7 +267,7 @@ export class APIGatewayService {
     return {
       status: 200,
       data: { sessions: [] },
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     };
   }
 
@@ -258,7 +276,7 @@ export class APIGatewayService {
     return {
       status: 200,
       data: { message: 'Session updated' },
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     };
   }
 
@@ -267,16 +285,18 @@ export class APIGatewayService {
     return {
       status: 204,
       data: null,
-      headers: {}
+      headers: {},
     };
   }
 
-  private async handleQRVerification(request: APIRequest): Promise<APIResponse> {
+  private async handleQRVerification(
+    request: APIRequest
+  ): Promise<APIResponse> {
     // Implementation for QR code verification
     return {
       status: 200,
       data: { verified: true },
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     };
   }
 
@@ -285,21 +305,25 @@ export class APIGatewayService {
     return {
       status: 200,
       data: { exportUrl: 'https://example.com/export.csv' },
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     };
   }
 
   /**
    * Log the request and response
    */
-  private async logRequest(request: APIRequest, response: APIResponse, duration: number): Promise<void> {
+  private async logRequest(
+    request: APIRequest,
+    response: APIResponse,
+    duration: number
+  ): Promise<void> {
     await this.loggingService.logInfo('API Request', {
       method: request.method,
       path: request.path,
       status: response.status,
       duration,
       userId: request.userId,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -310,7 +334,7 @@ export class APIGatewayService {
     return {
       status,
       data: { error: message },
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     };
   }
 
@@ -333,15 +357,15 @@ export class APIGatewayService {
    */
   getRateLimitStats(): Record<string, any> {
     const stats: Record<string, any> = {};
-    
+
     for (const [key, value] of this.rateLimitStore.entries()) {
       stats[key] = {
         count: value.count,
         resetTime: new Date(value.resetTime).toISOString(),
-        remaining: Math.max(0, this.rateLimitConfig.maxRequests - value.count)
+        remaining: Math.max(0, this.rateLimitConfig.maxRequests - value.count),
       };
     }
-    
+
     return stats;
   }
 

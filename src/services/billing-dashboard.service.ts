@@ -5,7 +5,10 @@
 
 import { logger } from './logging.service';
 import { offlineStorageManager } from './offline-storage.service';
-import { timesheetAutomationService, TimesheetEntry } from './timesheet-automation.service';
+import {
+  timesheetAutomationService,
+  TimesheetEntry,
+} from './timesheet-automation.service';
 
 export interface BillingPeriod {
   id: string;
@@ -33,7 +36,13 @@ export interface PaymentRecord {
   billingPeriodId: string;
   amount: number;
   currency: string;
-  paymentMethod: 'cash' | 'check' | 'bank_transfer' | 'credit_card' | 'paypal' | 'other';
+  paymentMethod:
+    | 'cash'
+    | 'check'
+    | 'bank_transfer'
+    | 'credit_card'
+    | 'paypal'
+    | 'other';
   transactionId?: string;
   receivedDate: Date;
   processedBy: string;
@@ -50,14 +59,28 @@ export interface BillingAnalytics {
   paidAmount: number;
   paymentRate: number; // percentage of invoices paid on time
   revenueByMonth: { month: string; amount: number; hours: number }[];
-  revenueByStudent: { studentId: string; studentName: string; amount: number; hours: number }[];
-  paymentMethodBreakdown: { method: string; amount: number; percentage: number }[];
+  revenueByStudent: {
+    studentId: string;
+    studentName: string;
+    amount: number;
+    hours: number;
+  }[];
+  paymentMethodBreakdown: {
+    method: string;
+    amount: number;
+    percentage: number;
+  }[];
   statusBreakdown: { status: string; count: number; amount: number }[];
 }
 
 export interface BillingReport {
   id: string;
-  type: 'summary' | 'detailed' | 'payment_history' | 'tax_report' | 'student_breakdown';
+  type:
+    | 'summary'
+    | 'detailed'
+    | 'payment_history'
+    | 'tax_report'
+    | 'student_breakdown';
   title: string;
   period: {
     startDate: Date;
@@ -124,9 +147,10 @@ export class BillingDashboardService {
       }
 
       // Calculate totals
-      const totalHours = timesheetEntries.reduce((sum, entry) => {
-        return sum + (entry.actualDuration || 0);
-      }, 0) / 60; // Convert minutes to hours
+      const totalHours =
+        timesheetEntries.reduce((sum, entry) => {
+          return sum + (entry.actualDuration || 0);
+        }, 0) / 60; // Convert minutes to hours
 
       const totalAmount = timesheetEntries.reduce((sum, entry) => {
         return sum + (entry.billing.totalAmount || 0);
@@ -138,35 +162,52 @@ export class BillingDashboardService {
       const billingPeriod: BillingPeriod = {
         id: this.generateBillingId(),
         teacherId,
-        studentId: options.studentId,
-        parentId: options.parentId || timesheetEntries[0]?.parentId,
+        ...(options.studentId !== undefined && {
+          studentId: options.studentId,
+        }),
+        ...(options.parentId !== undefined
+          ? { parentId: options.parentId }
+          : timesheetEntries[0]?.parentId !== undefined
+            ? { parentId: timesheetEntries[0].parentId }
+            : {}),
         startDate,
         endDate,
         totalHours,
         totalAmount,
         currency,
         status: 'draft',
-        invoiceNumber: options.invoiceNumber || this.generateInvoiceNumber(),
-        dueDate: options.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-        notes: options.notes,
+        ...(options.invoiceNumber !== undefined
+          ? { invoiceNumber: options.invoiceNumber }
+          : { invoiceNumber: this.generateInvoiceNumber() }),
+        ...(options.dueDate !== undefined
+          ? { dueDate: options.dueDate }
+          : { dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) }),
+        ...(options.notes !== undefined && { notes: options.notes }),
         timesheetEntries: timesheetEntries.map(entry => entry.id),
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       // Store billing period
-      await offlineStorageManager.store('billingPeriods', billingPeriod, 'medium');
+      await offlineStorageManager.store(
+        'billingPeriods',
+        billingPeriod,
+        'medium'
+      );
 
       logger.info('app', 'Billing period generated', {
         id: billingPeriod.id,
         totalHours,
-        totalAmount
+        totalAmount,
       });
 
       return billingPeriod;
-
     } catch (error) {
-      logger.error('app', 'Failed to generate billing period', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to generate billing period',
+        error instanceof Error ? error : undefined
+      );
       throw error;
     }
   }
@@ -180,14 +221,22 @@ export class BillingDashboardService {
   ): Promise<BillingAnalytics> {
     try {
       // Get all billing periods for teacher in the period
-      const billingPeriods = await this.getBillingPeriodsForTeacher(teacherId, period);
-      
+      const billingPeriods = await this.getBillingPeriodsForTeacher(
+        teacherId,
+        period
+      );
+
       // Get payment records
-      const paymentRecords = await this.getPaymentRecords(billingPeriods.map(bp => bp.id));
+      const paymentRecords = await this.getPaymentRecords(
+        billingPeriods.map(bp => bp.id)
+      );
 
       // Calculate analytics
       const analytics: BillingAnalytics = {
-        totalRevenue: billingPeriods.reduce((sum, bp) => sum + bp.totalAmount, 0),
+        totalRevenue: billingPeriods.reduce(
+          (sum, bp) => sum + bp.totalAmount,
+          0
+        ),
         totalHours: billingPeriods.reduce((sum, bp) => sum + bp.totalHours, 0),
         averageHourlyRate: 0,
         pendingAmount: billingPeriods
@@ -203,54 +252,76 @@ export class BillingDashboardService {
         revenueByMonth: [],
         revenueByStudent: [],
         paymentMethodBreakdown: [],
-        statusBreakdown: []
+        statusBreakdown: [],
       };
 
       // Calculate average hourly rate
       if (analytics.totalHours > 0) {
-        analytics.averageHourlyRate = analytics.totalRevenue / analytics.totalHours;
+        analytics.averageHourlyRate =
+          analytics.totalRevenue / analytics.totalHours;
       }
 
       // Calculate payment rate
-      const totalInvoices = billingPeriods.filter(bp => bp.status !== 'draft').length;
-      const paidInvoices = billingPeriods.filter(bp => bp.status === 'paid').length;
+      const totalInvoices = billingPeriods.filter(
+        bp => bp.status !== 'draft'
+      ).length;
+      const paidInvoices = billingPeriods.filter(
+        bp => bp.status === 'paid'
+      ).length;
       if (totalInvoices > 0) {
         analytics.paymentRate = (paidInvoices / totalInvoices) * 100;
       }
 
       // Revenue by month
-      const monthlyRevenue = new Map<string, { amount: number; hours: number }>();
+      const monthlyRevenue = new Map<
+        string,
+        { amount: number; hours: number }
+      >();
       billingPeriods.forEach(bp => {
         const monthKey = bp.startDate.toISOString().substring(0, 7); // YYYY-MM
-        const existing = monthlyRevenue.get(monthKey) || { amount: 0, hours: 0 };
+        const existing = monthlyRevenue.get(monthKey) || {
+          amount: 0,
+          hours: 0,
+        };
         existing.amount += bp.totalAmount;
         existing.hours += bp.totalHours;
         monthlyRevenue.set(monthKey, existing);
       });
 
-      analytics.revenueByMonth = Array.from(monthlyRevenue.entries()).map(([month, data]) => ({
-        month,
-        amount: data.amount,
-        hours: data.hours
-      }));
+      analytics.revenueByMonth = Array.from(monthlyRevenue.entries()).map(
+        ([month, data]) => ({
+          month,
+          amount: data.amount,
+          hours: data.hours,
+        })
+      );
 
       // Revenue by student
-      const studentRevenue = new Map<string, { amount: number; hours: number; name: string }>();
+      const studentRevenue = new Map<
+        string,
+        { amount: number; hours: number; name: string }
+      >();
       billingPeriods.forEach(bp => {
         if (bp.studentId) {
-          const existing = studentRevenue.get(bp.studentId) || { amount: 0, hours: 0, name: bp.studentId };
+          const existing = studentRevenue.get(bp.studentId) || {
+            amount: 0,
+            hours: 0,
+            name: bp.studentId,
+          };
           existing.amount += bp.totalAmount;
           existing.hours += bp.totalHours;
           studentRevenue.set(bp.studentId, existing);
         }
       });
 
-      analytics.revenueByStudent = Array.from(studentRevenue.entries()).map(([studentId, data]) => ({
-        studentId,
-        studentName: data.name,
-        amount: data.amount,
-        hours: data.hours
-      }));
+      analytics.revenueByStudent = Array.from(studentRevenue.entries()).map(
+        ([studentId, data]) => ({
+          studentId,
+          studentName: data.name,
+          amount: data.amount,
+          hours: data.hours,
+        })
+      );
 
       // Payment method breakdown
       const paymentMethods = new Map<string, number>();
@@ -259,11 +330,16 @@ export class BillingDashboardService {
         paymentMethods.set(payment.paymentMethod, existing + payment.amount);
       });
 
-      const totalPayments = Array.from(paymentMethods.values()).reduce((sum, amount) => sum + amount, 0);
-      analytics.paymentMethodBreakdown = Array.from(paymentMethods.entries()).map(([method, amount]) => ({
+      const totalPayments = Array.from(paymentMethods.values()).reduce(
+        (sum, amount) => sum + amount,
+        0
+      );
+      analytics.paymentMethodBreakdown = Array.from(
+        paymentMethods.entries()
+      ).map(([method, amount]) => ({
         method,
         amount,
-        percentage: totalPayments > 0 ? (amount / totalPayments) * 100 : 0
+        percentage: totalPayments > 0 ? (amount / totalPayments) * 100 : 0,
       }));
 
       // Status breakdown
@@ -275,16 +351,21 @@ export class BillingDashboardService {
         statusCounts.set(bp.status, existing);
       });
 
-      analytics.statusBreakdown = Array.from(statusCounts.entries()).map(([status, data]) => ({
-        status,
-        count: data.count,
-        amount: data.amount
-      }));
+      analytics.statusBreakdown = Array.from(statusCounts.entries()).map(
+        ([status, data]) => ({
+          status,
+          count: data.count,
+          amount: data.amount,
+        })
+      );
 
       return analytics;
-
     } catch (error) {
-      logger.error('app', 'Failed to get billing analytics', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to get billing analytics',
+        error instanceof Error ? error : undefined
+      );
       throw error;
     }
   }
@@ -329,7 +410,7 @@ export class BillingDashboardService {
         filters,
         data,
         generatedAt: new Date(),
-        generatedBy
+        generatedBy,
       };
 
       // Store report
@@ -337,13 +418,16 @@ export class BillingDashboardService {
 
       logger.info('app', 'Billing report generated', {
         type,
-        reportId: report.id
+        reportId: report.id,
       });
 
       return report;
-
     } catch (error) {
-      logger.error('app', 'Failed to generate billing report', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to generate billing report',
+        error instanceof Error ? error : undefined
+      );
       throw error;
     }
   }
@@ -364,7 +448,10 @@ export class BillingDashboardService {
   ): Promise<PaymentRecord> {
     try {
       // Get billing period
-      const billingPeriod = await offlineStorageManager.get<BillingPeriod>('billingPeriods', billingPeriodId);
+      const billingPeriod = await offlineStorageManager.get<BillingPeriod>(
+        'billingPeriods',
+        billingPeriodId
+      );
       if (!billingPeriod) {
         throw new Error('Billing period not found');
       }
@@ -376,37 +463,51 @@ export class BillingDashboardService {
         amount: payment.amount,
         currency: billingPeriod.currency,
         paymentMethod: payment.paymentMethod,
-        transactionId: payment.transactionId,
+        ...(payment.transactionId !== undefined && {
+          transactionId: payment.transactionId,
+        }),
         receivedDate: payment.receivedDate,
         processedBy: payment.processedBy,
-        notes: payment.notes,
-        createdAt: new Date()
+        ...(payment.notes !== undefined && { notes: payment.notes }),
+        createdAt: new Date(),
       };
 
       // Store payment record
-      await offlineStorageManager.store('paymentRecords', paymentRecord, 'medium');
+      await offlineStorageManager.store(
+        'paymentRecords',
+        paymentRecord,
+        'medium'
+      );
 
       // Update billing period status if fully paid
-      const totalPayments = await this.getTotalPaymentsForBillingPeriod(billingPeriodId);
+      const totalPayments =
+        await this.getTotalPaymentsForBillingPeriod(billingPeriodId);
       if (totalPayments + payment.amount >= billingPeriod.totalAmount) {
         billingPeriod.status = 'paid';
         billingPeriod.paidDate = payment.receivedDate;
         billingPeriod.paymentMethod = payment.paymentMethod;
         billingPeriod.updatedAt = new Date();
 
-        await offlineStorageManager.store('billingPeriods', billingPeriod, 'medium');
+        await offlineStorageManager.store(
+          'billingPeriods',
+          billingPeriod,
+          'medium'
+        );
       }
 
       logger.info('app', 'Payment recorded', {
         paymentId: paymentRecord.id,
         amount: payment.amount,
-        billingPeriodId
+        billingPeriodId,
       });
 
       return paymentRecord;
-
     } catch (error) {
-      logger.error('app', 'Failed to record payment', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to record payment',
+        error instanceof Error ? error : undefined
+      );
       throw error;
     }
   }
@@ -437,7 +538,7 @@ export class BillingDashboardService {
       taxAmount,
       total,
       taxJurisdiction,
-      exemptions
+      exemptions,
     };
   }
 
@@ -459,36 +560,55 @@ export class BillingDashboardService {
     period: { startDate: Date; endDate: Date }
   ): Promise<BillingPeriod[]> {
     try {
-      const allBillingPeriods = await offlineStorageManager.getAll<BillingPeriod>('billingPeriods');
-      return allBillingPeriods.filter(bp => 
-        bp.teacherId === teacherId &&
-        bp.startDate >= period.startDate &&
-        bp.endDate <= period.endDate
+      const allBillingPeriods =
+        await offlineStorageManager.getAll<BillingPeriod>('billingPeriods');
+      return allBillingPeriods.filter(
+        bp =>
+          bp.teacherId === teacherId &&
+          bp.startDate >= period.startDate &&
+          bp.endDate <= period.endDate
       );
     } catch (error) {
-      logger.error('app', 'Failed to get billing periods', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to get billing periods',
+        error instanceof Error ? error : undefined
+      );
       return [];
     }
   }
 
-  private async getPaymentRecords(billingPeriodIds: string[]): Promise<PaymentRecord[]> {
+  private async getPaymentRecords(
+    billingPeriodIds: string[]
+  ): Promise<PaymentRecord[]> {
     try {
-      const allPayments = await offlineStorageManager.getAll<PaymentRecord>('paymentRecords');
-      return allPayments.filter(payment => 
+      const allPayments =
+        await offlineStorageManager.getAll<PaymentRecord>('paymentRecords');
+      return allPayments.filter(payment =>
         billingPeriodIds.includes(payment.billingPeriodId)
       );
     } catch (error) {
-      logger.error('app', 'Failed to get payment records', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to get payment records',
+        error instanceof Error ? error : undefined
+      );
       return [];
     }
   }
 
-  private async getTotalPaymentsForBillingPeriod(billingPeriodId: string): Promise<number> {
+  private async getTotalPaymentsForBillingPeriod(
+    billingPeriodId: string
+  ): Promise<number> {
     try {
       const payments = await this.getPaymentRecords([billingPeriodId]);
       return payments.reduce((sum, payment) => sum + payment.amount, 0);
     } catch (error) {
-      logger.error('app', 'Failed to get total payments', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to get total payments',
+        error instanceof Error ? error : undefined
+      );
       return 0;
     }
   }
@@ -505,7 +625,7 @@ export class BillingDashboardService {
       totalInvoices: 0,
       paidInvoices: 0,
       pendingAmount: 0,
-      overdueAmount: 0
+      overdueAmount: 0,
     };
   }
 
@@ -518,7 +638,7 @@ export class BillingDashboardService {
       period,
       billingPeriods: [],
       timesheetDetails: [],
-      paymentHistory: []
+      paymentHistory: [],
     };
   }
 
@@ -531,7 +651,7 @@ export class BillingDashboardService {
       period,
       payments: [],
       paymentMethods: [],
-      totalReceived: 0
+      totalReceived: 0,
     };
   }
 
@@ -545,7 +665,7 @@ export class BillingDashboardService {
       taxableIncome: 0,
       taxOwed: 0,
       exemptions: [],
-      quarterlyBreakdown: []
+      quarterlyBreakdown: [],
     };
   }
 
@@ -558,20 +678,23 @@ export class BillingDashboardService {
       period,
       students: [],
       averageRates: {},
-      topStudents: []
+      topStudents: [],
     };
   }
 
-  private getReportTitle(type: BillingReport['type'], period: { startDate: Date; endDate: Date }): string {
+  private getReportTitle(
+    type: BillingReport['type'],
+    period: { startDate: Date; endDate: Date }
+  ): string {
     const startStr = period.startDate.toISOString().split('T')[0];
     const endStr = period.endDate.toISOString().split('T')[0];
-    
+
     const titleMap: Record<BillingReport['type'], string> = {
-      'summary': `Billing Summary Report (${startStr} to ${endStr})`,
-      'detailed': `Detailed Billing Report (${startStr} to ${endStr})`,
-      'payment_history': `Payment History Report (${startStr} to ${endStr})`,
-      'tax_report': `Tax Report (${startStr} to ${endStr})`,
-      'student_breakdown': `Student Breakdown Report (${startStr} to ${endStr})`
+      summary: `Billing Summary Report (${startStr} to ${endStr})`,
+      detailed: `Detailed Billing Report (${startStr} to ${endStr})`,
+      payment_history: `Payment History Report (${startStr} to ${endStr})`,
+      tax_report: `Tax Report (${startStr} to ${endStr})`,
+      student_breakdown: `Student Breakdown Report (${startStr} to ${endStr})`,
     };
 
     return titleMap[type];
@@ -585,7 +708,9 @@ export class BillingDashboardService {
     const date = new Date();
     const year = date.getFullYear().toString().substr(-2);
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const random = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+    const random = Math.floor(Math.random() * 9999)
+      .toString()
+      .padStart(4, '0');
     return `INV-${year}${month}-${random}`;
   }
 

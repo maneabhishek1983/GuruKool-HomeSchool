@@ -51,8 +51,11 @@ export class NetworkManager {
    * Initialize network status
    */
   private getInitialNetworkStatus(): NetworkStatus {
-    const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
-    
+    const connection =
+      (navigator as any).connection ||
+      (navigator as any).mozConnection ||
+      (navigator as any).webkitConnection;
+
     return {
       isOnline: navigator.onLine,
       connectionType: connection?.type || 'unknown',
@@ -60,7 +63,7 @@ export class NetworkManager {
       downlink: connection?.downlink || 0,
       rtt: connection?.rtt || 0,
       saveData: connection?.saveData || false,
-      lastChanged: new Date()
+      lastChanged: new Date(),
     };
   }
 
@@ -73,10 +76,16 @@ export class NetworkManager {
     window.addEventListener('offline', this.handleOffline.bind(this));
 
     // Listen for connection changes (if available)
-    const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
-    
+    const connection =
+      (navigator as any).connection ||
+      (navigator as any).mozConnection ||
+      (navigator as any).webkitConnection;
+
     if (connection) {
-      connection.addEventListener('change', this.handleConnectionChange.bind(this));
+      connection.addEventListener(
+        'change',
+        this.handleConnectionChange.bind(this)
+      );
     }
 
     // Periodic connectivity check
@@ -109,15 +118,18 @@ export class NetworkManager {
    * Handle connection property changes
    */
   private handleConnectionChange(): void {
-    const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
-    
+    const connection =
+      (navigator as any).connection ||
+      (navigator as any).mozConnection ||
+      (navigator as any).webkitConnection;
+
     if (connection) {
       const updates = {
         connectionType: connection.type || 'unknown',
         effectiveType: connection.effectiveType || 'unknown',
         downlink: connection.downlink || 0,
         rtt: connection.rtt || 0,
-        saveData: connection.saveData || false
+        saveData: connection.saveData || false,
       };
 
       logger.debug('app', 'Connection properties changed', updates);
@@ -138,7 +150,7 @@ export class NetworkManager {
     this.networkStatus = {
       ...this.networkStatus,
       ...updates,
-      lastChanged: new Date()
+      lastChanged: new Date(),
     };
 
     // Notify listeners of status change
@@ -146,11 +158,18 @@ export class NetworkManager {
       try {
         listener(this.networkStatus);
       } catch (error) {
-        logger.error('app', 'Error in network status listener', error instanceof Error ? error : undefined);
+        logger.error(
+          'app',
+          'Error in network status listener',
+          error instanceof Error ? error : undefined
+        );
       }
     });
 
-    logger.debug('app', 'Network status updated', { old: oldStatus, new: this.networkStatus });
+    logger.debug('app', 'Network status updated', {
+      old: oldStatus,
+      new: this.networkStatus,
+    });
   }
 
   /**
@@ -161,21 +180,47 @@ export class NetworkManager {
     // 1. Connection type improved (e.g., cellular to wifi)
     // 2. Effective type improved (e.g., 3g to 4g)
     // 3. Downlink speed increased significantly
-    
-    const connectionTypeOrder = { 'ethernet': 4, 'wifi': 3, 'cellular': 2, 'unknown': 1 };
-    const effectiveTypeOrder = { '5g': 5, '4g': 4, '3g': 3, '2g': 2, 'unknown': 1 };
-    
-    const oldConnectionRank = connectionTypeOrder[this.networkStatus.connectionType as keyof typeof connectionTypeOrder] || 1;
-    const newConnectionRank = connectionTypeOrder[updates.connectionType as keyof typeof connectionTypeOrder] || oldConnectionRank;
-    
-    const oldEffectiveRank = effectiveTypeOrder[this.networkStatus.effectiveType as keyof typeof effectiveTypeOrder] || 1;
-    const newEffectiveRank = effectiveTypeOrder[updates.effectiveType as keyof typeof effectiveTypeOrder] || oldEffectiveRank;
-    
-    const downlinkImproved = (updates.downlink || 0) > this.networkStatus.downlink * 1.5;
-    
-    return newConnectionRank > oldConnectionRank || 
-           newEffectiveRank > oldEffectiveRank || 
-           downlinkImproved;
+
+    const connectionTypeOrder = {
+      ethernet: 4,
+      wifi: 3,
+      cellular: 2,
+      unknown: 1,
+    };
+    const effectiveTypeOrder = {
+      '5g': 5,
+      '4g': 4,
+      '3g': 3,
+      '2g': 2,
+      unknown: 1,
+    };
+
+    const oldConnectionRank =
+      connectionTypeOrder[
+        this.networkStatus.connectionType as keyof typeof connectionTypeOrder
+      ] || 1;
+    const newConnectionRank =
+      connectionTypeOrder[
+        updates.connectionType as keyof typeof connectionTypeOrder
+      ] || oldConnectionRank;
+
+    const oldEffectiveRank =
+      effectiveTypeOrder[
+        this.networkStatus.effectiveType as keyof typeof effectiveTypeOrder
+      ] || 1;
+    const newEffectiveRank =
+      effectiveTypeOrder[
+        updates.effectiveType as keyof typeof effectiveTypeOrder
+      ] || oldEffectiveRank;
+
+    const downlinkImproved =
+      (updates.downlink || 0) > this.networkStatus.downlink * 1.5;
+
+    return (
+      newConnectionRank > oldConnectionRank ||
+      newEffectiveRank > oldEffectiveRank ||
+      downlinkImproved
+    );
   }
 
   /**
@@ -184,14 +229,14 @@ export class NetworkManager {
   private async checkConnectivity(): Promise<void> {
     try {
       // Simple connectivity check using a small image
-      const response = await fetch('/favicon.ico', { 
+      const response = await fetch('/favicon.ico', {
         method: 'HEAD',
         cache: 'no-cache',
-        signal: AbortSignal.timeout(5000)
+        signal: AbortSignal.timeout(5000),
       });
-      
+
       const isOnline = response.ok;
-      
+
       if (isOnline !== this.networkStatus.isOnline) {
         if (isOnline) {
           this.handleOnline();
@@ -202,7 +247,10 @@ export class NetworkManager {
     } catch (error) {
       // If ping fails but navigator says we're online, we might have connectivity issues
       if (this.networkStatus.isOnline) {
-        logger.warn('app', 'Connectivity check failed despite navigator.onLine = true');
+        logger.warn(
+          'app',
+          'Connectivity check failed despite navigator.onLine = true'
+        );
         this.updateNetworkStatus({ isOnline: false });
       }
     }
@@ -220,12 +268,16 @@ export class NetworkManager {
     try {
       logger.info('app', 'Triggering sync due to network availability');
       const result = await syncManager.sync();
-      
+
       if (result.completed > 0 || result.failed > 0 || result.conflicts > 0) {
         logger.info('app', 'Network-triggered sync completed', result);
       }
     } catch (error) {
-      logger.error('app', 'Network-triggered sync failed', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Network-triggered sync failed',
+        error instanceof Error ? error : undefined
+      );
     }
   }
 
@@ -266,38 +318,62 @@ export class NetworkManager {
 
     try {
       const pendingActions = await offlineStorageManager.getPendingActions();
-      
+
       if (pendingActions.length === 0) {
         return;
       }
 
       // Group actions by priority
-      const highPriorityActions = pendingActions.filter(action => action.priority === 'high');
-      const mediumPriorityActions = pendingActions.filter(action => action.priority === 'medium');
-      const lowPriorityActions = pendingActions.filter(action => action.priority === 'low');
+      const highPriorityActions = pendingActions.filter(
+        action => action.priority === 'high'
+      );
+      const mediumPriorityActions = pendingActions.filter(
+        action => action.priority === 'medium'
+      );
+      const lowPriorityActions = pendingActions.filter(
+        action => action.priority === 'low'
+      );
 
       // Process high priority actions first
       if (highPriorityActions.length > 0) {
-        logger.debug('app', `Processing ${highPriorityActions.length} high priority actions`);
+        logger.debug(
+          'app',
+          `Processing ${highPriorityActions.length} high priority actions`
+        );
         await this.processPriorityBatch(highPriorityActions, 'high');
       }
 
       // Process medium priority if we have good connectivity
       if (mediumPriorityActions.length > 0 && this.hasGoodConnectivity()) {
-        logger.debug('app', `Processing ${mediumPriorityActions.length} medium priority actions`);
-        await this.processPriorityBatch(mediumPriorityActions.slice(0, 5), 'medium');
+        logger.debug(
+          'app',
+          `Processing ${mediumPriorityActions.length} medium priority actions`
+        );
+        await this.processPriorityBatch(
+          mediumPriorityActions.slice(0, 5),
+          'medium'
+        );
       }
 
       // Process low priority only if we have excellent connectivity and no higher priority items
-      if (lowPriorityActions.length > 0 && 
-          this.hasExcellentConnectivity() && 
-          highPriorityActions.length === 0 && 
-          mediumPriorityActions.length === 0) {
-        logger.debug('app', `Processing ${Math.min(lowPriorityActions.length, 3)} low priority actions`);
+      if (
+        lowPriorityActions.length > 0 &&
+        this.hasExcellentConnectivity() &&
+        highPriorityActions.length === 0 &&
+        mediumPriorityActions.length === 0
+      ) {
+        logger.debug(
+          'app',
+          `Processing ${Math.min(lowPriorityActions.length, 3)} low priority actions`
+        );
         await this.processPriorityBatch(lowPriorityActions.slice(0, 3), 'low');
       }
     } catch (error) {
-      logger.error('app', 'Error processing action queue', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Error processing action queue',
+        error instanceof Error ? error : undefined
+      );
     } finally {
       this.isProcessingQueue = false;
     }
@@ -306,15 +382,25 @@ export class NetworkManager {
   /**
    * Process a batch of actions for a specific priority
    */
-  private async processPriorityBatch(actions: any[], priority: string): Promise<void> {
-    logger.info('app', `Processing ${actions.length} ${priority} priority actions`);
-    
+  private async processPriorityBatch(
+    actions: any[],
+    priority: string
+  ): Promise<void> {
+    logger.info(
+      'app',
+      `Processing ${actions.length} ${priority} priority actions`
+    );
+
     // For now, delegate to sync manager
     // In a more sophisticated implementation, you might process these directly
     try {
       await syncManager.sync();
     } catch (error) {
-      logger.error('app', `Failed to process ${priority} priority batch`, error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        `Failed to process ${priority} priority batch`,
+        error instanceof Error ? error : undefined
+      );
     }
   }
 
@@ -322,22 +408,26 @@ export class NetworkManager {
    * Check if we have good connectivity for medium priority actions
    */
   private hasGoodConnectivity(): boolean {
-    return this.networkStatus.isOnline && 
-           (this.networkStatus.connectionType === 'wifi' || 
-            this.networkStatus.connectionType === 'ethernet' ||
-            (this.networkStatus.connectionType === 'cellular' && 
-             ['4g', '5g'].includes(this.networkStatus.effectiveType)));
+    return (
+      this.networkStatus.isOnline &&
+      (this.networkStatus.connectionType === 'wifi' ||
+        this.networkStatus.connectionType === 'ethernet' ||
+        (this.networkStatus.connectionType === 'cellular' &&
+          ['4g', '5g'].includes(this.networkStatus.effectiveType)))
+    );
   }
 
   /**
    * Check if we have excellent connectivity for low priority actions
    */
   private hasExcellentConnectivity(): boolean {
-    return this.networkStatus.isOnline && 
-           (this.networkStatus.connectionType === 'wifi' || 
-            this.networkStatus.connectionType === 'ethernet') &&
-           this.networkStatus.downlink > 2 && // > 2 Mbps
-           this.networkStatus.rtt < 100; // < 100ms
+    return (
+      this.networkStatus.isOnline &&
+      (this.networkStatus.connectionType === 'wifi' ||
+        this.networkStatus.connectionType === 'ethernet') &&
+      this.networkStatus.downlink > 2 && // > 2 Mbps
+      this.networkStatus.rtt < 100
+    ); // < 100ms
   }
 
   /**
@@ -350,9 +440,11 @@ export class NetworkManager {
   /**
    * Subscribe to network status changes
    */
-  public onNetworkStatusChange(callback: (status: NetworkStatus) => void): () => void {
+  public onNetworkStatusChange(
+    callback: (status: NetworkStatus) => void
+  ): () => void {
     this.connectionListeners.add(callback);
-    
+
     // Return unsubscribe function
     return () => {
       this.connectionListeners.delete(callback);
@@ -364,12 +456,22 @@ export class NetworkManager {
    */
   public async getQueueStats(): Promise<QueueStats> {
     const pendingActions = await offlineStorageManager.getPendingActions();
-    const failedActions = await offlineStorageManager.getAll('offlineActions', { syncStatus: 'failed' });
-    
-    const stats = pendingActions.reduce((acc, action) => {
-      acc[action.priority as keyof Pick<QueueStats, 'high' | 'medium' | 'low'>]++;
-      return acc;
-    }, { high: 0, medium: 0, low: 0 });
+    const failedActions = await offlineStorageManager.getAll('offlineActions', {
+      syncStatus: 'failed',
+    });
+
+    const stats = pendingActions.reduce(
+      (acc, action) => {
+        acc[
+          (action as any).priority as keyof Pick<
+            QueueStats,
+            'high' | 'medium' | 'low'
+          >
+        ]++;
+        return acc;
+      },
+      { high: 0, medium: 0, low: 0 }
+    );
 
     return {
       total: pendingActions.length,
@@ -377,7 +479,7 @@ export class NetworkManager {
       medium: stats.medium,
       low: stats.low,
       processing: this.isProcessingQueue ? 1 : 0,
-      failed: failedActions.length
+      failed: failedActions.length,
     };
   }
 
@@ -398,12 +500,19 @@ export class NetworkManager {
    * Clear failed actions from queue
    */
   public async clearFailedActions(): Promise<number> {
-    const failedActions = await offlineStorageManager.getAll('offlineActions', { syncStatus: 'failed' });
-    
+    const failedActions = await offlineStorageManager.getAll('offlineActions', {
+      syncStatus: 'failed',
+    });
+
     let cleared = 0;
     for (const action of failedActions) {
-      const success = await offlineStorageManager.delete('offlineActions', action.id);
-      if (success) cleared++;
+      const success = await offlineStorageManager.delete(
+        'offlineActions',
+        (action as any).id
+      );
+      if (success) {
+        cleared++;
+      }
     }
 
     logger.info('app', `Cleared ${cleared} failed actions from queue`);
@@ -416,9 +525,9 @@ export class NetworkManager {
   public setDetectionSensitivity(level: 'high' | 'medium' | 'low'): void {
     // Adjust check intervals based on sensitivity
     const intervals = {
-      high: 10000,   // 10 seconds
-      medium: 30000, // 30 seconds  
-      low: 60000     // 60 seconds
+      high: 10000, // 10 seconds
+      medium: 30000, // 30 seconds
+      low: 60000, // 60 seconds
     };
 
     // Clear existing interval
@@ -430,7 +539,9 @@ export class NetworkManager {
       this.checkConnectivity();
     }, intervals[level]);
 
-    logger.info('app', `Network detection sensitivity set to ${level}`, { interval: intervals[level] });
+    logger.info('app', `Network detection sensitivity set to ${level}`, {
+      interval: intervals[level],
+    });
   }
 
   /**
@@ -440,9 +551,15 @@ export class NetworkManager {
     window.removeEventListener('online', this.handleOnline.bind(this));
     window.removeEventListener('offline', this.handleOffline.bind(this));
 
-    const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+    const connection =
+      (navigator as any).connection ||
+      (navigator as any).mozConnection ||
+      (navigator as any).webkitConnection;
     if (connection) {
-      connection.removeEventListener('change', this.handleConnectionChange.bind(this));
+      connection.removeEventListener(
+        'change',
+        this.handleConnectionChange.bind(this)
+      );
     }
 
     if (this.syncTimer) {
@@ -454,7 +571,7 @@ export class NetworkManager {
     }
 
     this.connectionListeners.clear();
-    
+
     logger.info('app', 'NetworkManager cleaned up');
   }
 }

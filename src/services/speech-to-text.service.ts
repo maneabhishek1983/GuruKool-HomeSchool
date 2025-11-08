@@ -29,7 +29,7 @@ export interface STTServiceOptions {
 
 export class SpeechToTextService {
   private static instance: SpeechToTextService;
-  private recognition: SpeechRecognition | null = null;
+  private recognition: any | null = null;
   private mediaRecorder: MediaRecorder | null = null;
   private audioStream: MediaStream | null = null;
   private audioChunks: Blob[] = [];
@@ -69,14 +69,16 @@ export class SpeechToTextService {
 
   private initializeSpeechRecognition(): void {
     // Check if browser supports Speech Recognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
+    const SpeechRecognitionAPI =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognitionAPI) {
       logger.warn('app', 'SpeechRecognition API not supported in this browser');
       return;
     }
 
-    this.recognition = new SpeechRecognition();
+    this.recognition = new SpeechRecognitionAPI();
     this.recognition.lang = this.options.language!;
     this.recognition.continuous = this.options.continuous!;
     this.recognition.interimResults = this.options.interimResults!;
@@ -88,14 +90,18 @@ export class SpeechToTextService {
       this.onStart?.();
     };
 
-    this.recognition.onresult = (event) => {
+    this.recognition.onresult = (event: any) => {
       const results = event.results;
       const lastResult = results[results.length - 1];
       const transcript = lastResult[0].transcript;
       const confidence = lastResult[0].confidence;
       const isFinal = lastResult.isFinal;
 
-      logger.debug('app', 'Speech recognition result', { transcript, confidence, isFinal });
+      logger.debug('app', 'Speech recognition result', {
+        transcript,
+        confidence,
+        isFinal,
+      });
 
       this.onResult?.({
         transcript,
@@ -104,7 +110,7 @@ export class SpeechToTextService {
       });
     };
 
-    this.recognition.onerror = (event) => {
+    this.recognition.onerror = (event: any) => {
       const errorMessage = `Speech recognition error: ${event.error}`;
       logger.error('app', errorMessage);
       this.onError?.(errorMessage);
@@ -138,7 +144,11 @@ export class SpeechToTextService {
       return true;
     } catch (error) {
       const errorMessage = `Failed to start recording: ${error instanceof Error ? error.message : 'Unknown error'}`;
-      logger.error('app', errorMessage, error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        errorMessage,
+        error instanceof Error ? error : undefined
+      );
       this.onError?.(errorMessage);
       return false;
     }
@@ -172,34 +182,48 @@ export class SpeechToTextService {
 
   private async startAudioRecording(): Promise<void> {
     try {
-      this.audioStream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          sampleRate: this.options.audioOptions?.sampleRate,
-          channelCount: this.options.audioOptions?.channelCount,
-          echoCancellation: true,
-          noiseSuppression: true,
-        } 
+      this.audioStream = await navigator.mediaDevices.getUserMedia({
+        audio:
+          this.options.audioOptions?.sampleRate !== undefined ||
+          this.options.audioOptions?.channelCount !== undefined
+            ? {
+                ...(this.options.audioOptions.sampleRate !== undefined && {
+                  sampleRate: this.options.audioOptions.sampleRate,
+                }),
+                ...(this.options.audioOptions.channelCount !== undefined && {
+                  channelCount: this.options.audioOptions.channelCount,
+                }),
+                echoCancellation: true,
+                noiseSuppression: true,
+              }
+            : {
+                echoCancellation: true,
+                noiseSuppression: true,
+              },
       });
 
       this.audioChunks = [];
       this.mediaRecorder = new MediaRecorder(this.audioStream);
 
-      this.mediaRecorder.ondataavailable = (event) => {
+      this.mediaRecorder.ondataavailable = event => {
         if (event.data.size > 0) {
           this.audioChunks.push(event.data);
         }
       };
 
       this.mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(this.audioChunks, { 
-          type: this.options.audioOptions?.format === 'mp3' ? 'audio/mp3' : 'audio/wav' 
+        const audioBlob = new Blob(this.audioChunks, {
+          type:
+            this.options.audioOptions?.format === 'mp3'
+              ? 'audio/mp3'
+              : 'audio/wav',
         });
-        
+
         // In a real implementation, you could send this to a cloud STT service
         // For now, we'll just log it
-        logger.info('app', 'Audio recording completed', { 
-          size: audioBlob.size, 
-          type: audioBlob.type 
+        logger.info('app', 'Audio recording completed', {
+          size: audioBlob.size,
+          type: audioBlob.type,
         });
 
         // Optional: Send to external STT service
@@ -209,18 +233,22 @@ export class SpeechToTextService {
       this.mediaRecorder.start();
       logger.info('app', 'Audio recording started');
     } catch (error) {
-      throw new Error(`Failed to start audio recording: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to start audio recording: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
-  private async processAudioWithExternalService(audioBlob: Blob): Promise<void> {
+  private async processAudioWithExternalService(
+    audioBlob: Blob
+  ): Promise<void> {
     // Placeholder for external STT service integration
     // You would implement integration with services like:
     // - Google Cloud Speech-to-Text
     // - Azure Speech Services
     // - Amazon Transcribe
     // - OpenAI Whisper API
-    
+
     try {
       // Example structure for external service call:
       /*
@@ -242,15 +270,24 @@ export class SpeechToTextService {
         });
       }
       */
-      
-      logger.debug('app', 'Audio would be processed by external STT service', { size: audioBlob.size });
+
+      logger.debug('app', 'Audio would be processed by external STT service', {
+        size: audioBlob.size,
+      });
     } catch (error) {
-      logger.error('app', 'Failed to process audio with external service', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to process audio with external service',
+        error instanceof Error ? error : undefined
+      );
     }
   }
 
   public isSupported(): boolean {
-    return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+    return !!(
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition
+    );
   }
 
   public isCurrentlyRecording(): boolean {
@@ -259,7 +296,7 @@ export class SpeechToTextService {
 
   public setOptions(newOptions: Partial<STTServiceOptions>): void {
     this.options = { ...this.options, ...newOptions };
-    
+
     if (this.recognition) {
       this.recognition.lang = this.options.language!;
       this.recognition.continuous = this.options.continuous!;
@@ -269,7 +306,9 @@ export class SpeechToTextService {
   }
 
   // Event handler setters
-  public onResultReceived(callback: (result: SpeechRecognitionResult) => void): void {
+  public onResultReceived(
+    callback: (result: SpeechRecognitionResult) => void
+  ): void {
     this.onResult = callback;
   }
 
