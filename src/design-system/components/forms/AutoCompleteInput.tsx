@@ -17,7 +17,12 @@ export function AutoCompleteInput<T extends FieldValues = FieldValues>({
   required = false,
   disabled = false,
 }: AutoCompleteInputProps<T>) {
-  const { register, setValue, watch, formState: { errors } } = useFormContext<T>();
+  const {
+    register,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useFormContext<T>();
   const [isOpen, setIsOpen] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -78,25 +83,30 @@ export function AutoCompleteInput<T extends FieldValues = FieldValues>({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      return;
+    }
 
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setHighlightedIndex(prev => 
+        setHighlightedIndex(prev =>
           prev < filteredSuggestions.length - 1 ? prev + 1 : 0
         );
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setHighlightedIndex(prev => 
+        setHighlightedIndex(prev =>
           prev > 0 ? prev - 1 : filteredSuggestions.length - 1
         );
         break;
       case 'Enter':
         e.preventDefault();
         if (highlightedIndex >= 0) {
-          handleSuggestionClick(filteredSuggestions[highlightedIndex]);
+          const selectedSuggestion = filteredSuggestions[highlightedIndex];
+          if (selectedSuggestion) {
+            handleSuggestionClick(selectedSuggestion);
+          }
         }
         break;
       case 'Escape':
@@ -127,7 +137,7 @@ export function AutoCompleteInput<T extends FieldValues = FieldValues>({
           )}
         </label>
       )}
-      
+
       <div className="relative">
         <input
           {...register(name, { required })}
@@ -151,7 +161,7 @@ export function AutoCompleteInput<T extends FieldValues = FieldValues>({
               : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100'
           )}
         />
-        
+
         {loading && (
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
             <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -182,7 +192,8 @@ export function AutoCompleteInput<T extends FieldValues = FieldValues>({
                   'px-3 py-2 cursor-pointer text-sm',
                   'hover:bg-gray-100 dark:hover:bg-gray-700',
                   'transition-colors duration-150',
-                  highlightedIndex === index && 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                  highlightedIndex === index &&
+                    'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
                 )}
                 onClick={() => handleSuggestionClick(suggestion)}
                 onMouseEnter={() => setHighlightedIndex(index)}
