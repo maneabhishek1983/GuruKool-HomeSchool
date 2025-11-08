@@ -29,14 +29,13 @@ export const POST = withRateLimit({
 
     const { name, email, subject, message, category } = validation.data;
 
-    // Create contact request object
+    // Create contact request object matching ContactRequest interface
     const contactRequest = {
       id: `contact-${Date.now()}`,
       name,
       email,
-      subject,
-      message,
-      category,
+      message: `${subject}\n\n${message}`, // Combine subject and message
+      requestType: category, // Map category to requestType
       adminEmail: 'abhishekumane@gmail.com',
       timestamp: new Date().toISOString(),
       status: 'pending' as const,
