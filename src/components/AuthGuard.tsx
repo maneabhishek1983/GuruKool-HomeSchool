@@ -3,8 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { useAuthContext } from '@/lib/authContext';
-import { User } from '@/types';
+import { useAuthContext, User } from '@/lib/authContext';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -150,6 +149,8 @@ function getRoleBasedDashboard(role: User['role']): string {
       return '/parent/dashboard';
     case 'admin':
       return '/admin/dashboard';
+    case 'student':
+      return '/student/dashboard';
     default:
       return '/dashboard';
   }
