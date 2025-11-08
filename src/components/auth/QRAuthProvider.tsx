@@ -79,7 +79,7 @@ export function QRAuthProvider({
 
       // Generate QR code with AI enhancement
       console.log('🎯 Calling QR auth service...');
-      const result = await qrAuthService.generateQRCode(deviceInfo);
+      const result = await qrAuthService.generateQRToken(deviceInfo);
       console.log('✅ QR service result:', result);
 
       setQRAuthState(prev => ({
