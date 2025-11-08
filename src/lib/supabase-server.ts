@@ -88,7 +88,7 @@ export async function getCurrentUserWithRole() {
 
   return {
     user,
-    role: userData?.role as 'parent' | 'teacher' | 'admin' | null,
+    role: (userData as any)?.role as 'parent' | 'teacher' | 'admin' | null,
   };
 }
 
