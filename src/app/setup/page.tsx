@@ -64,7 +64,6 @@ export default function SetupPage() {
       const result = await createUser({
         name: formData.name,
         email: formData.email,
-        password: formData.password,
         role: 'admin',
         preferences: {
           notifications: {
