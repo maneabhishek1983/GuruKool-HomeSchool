@@ -133,12 +133,17 @@ export const OfflineSessionManager: React.FC<OfflineSessionManagerProps> = ({
           throw new Error('Session not found');
         }
 
+        const existingSession = sessions[sessionIndex];
+        if (!existingSession) {
+          throw new Error('Session not found');
+        }
+
         const updatedSession: LocalSession = {
-          ...sessions[sessionIndex],
+          ...existingSession,
           ...updates,
           syncStatus: 'pending',
           updatedAt: new Date(),
-        };
+        } as LocalSession;
 
         // Update in offline storage
         await offlineStorageManager.store('sessions', updatedSession, 'high');
