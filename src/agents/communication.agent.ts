@@ -1,11 +1,23 @@
-import { AIAgent, AgentContext, AgentResult, User, NotificationSettings } from '@/types';
+import {
+  AIAgent,
+  AgentContext,
+  AgentResult,
+  User,
+  NotificationSettings,
+} from '@/types';
 import { logger } from '@/services/logging.service';
 import { offlineStorageManager } from '@/services/offline-storage.service';
 
 export interface NotificationMessage {
   id: string;
   recipient: User;
-  type: 'session_reminder' | 'session_update' | 'emergency' | 'system' | 'billing' | 'progress_report';
+  type:
+    | 'session_reminder'
+    | 'session_update'
+    | 'emergency'
+    | 'system'
+    | 'billing'
+    | 'progress_report';
   priority: 'critical' | 'high' | 'medium' | 'low';
   title: string;
   content: string;
@@ -64,7 +76,7 @@ export class CommunicationAgent implements AIAgent {
       }
 
       const communicationType = this.determineCommunicationType(context);
-      
+
       switch (communicationType) {
         case 'notification_routing':
           return await this.routeNotifications(context);
@@ -112,16 +124,19 @@ export class CommunicationAgent implements AIAgent {
   /**
    * Route notifications intelligently based on user preferences and context
    */
-  private async routeNotifications(context: AgentContext): Promise<AgentResult> {
+  private async routeNotifications(
+    context: AgentContext
+  ): Promise<AgentResult> {
     const { user, eventData, eventType } = context;
 
     try {
       // Analyze notification requirements
-      const notificationRequirements = await this.analyzeNotificationRequirements(
-        eventType || 'unknown',
-        eventData,
-        user
-      );
+      const notificationRequirements =
+        await this.analyzeNotificationRequirements(
+          eventType || 'unknown',
+          eventData,
+          user
+        );
 
       // Determine optimal channels
       const optimalChannels = await this.determineOptimalChannels(
@@ -151,15 +166,17 @@ export class CommunicationAgent implements AIAgent {
           deliveryResults,
           totalNotificationsSent: deliveryResults.length,
         },
-        insights: [{
-          id: `notification-routing-${Date.now()}`,
-          sessionId: eventData?.sessionId || '',
-          type: 'recommendation',
-          content: `Notifications routed through ${optimalChannels.length} optimal channels`,
-          confidence: 0.9,
-          metadata: { channels: optimalChannels, eventType },
-          createdAt: new Date(),
-        }],
+        insights: [
+          {
+            id: `notification-routing-${Date.now()}`,
+            sessionId: eventData?.sessionId || '',
+            type: 'recommendation',
+            content: `Notifications routed through ${optimalChannels.length} optimal channels`,
+            confidence: 0.9,
+            metadata: { channels: optimalChannels, eventType },
+            createdAt: new Date(),
+          },
+        ],
       };
     } catch (error) {
       return {
@@ -195,9 +212,8 @@ export class CommunicationAgent implements AIAgent {
       );
 
       // Monitor escalation effectiveness
-      const effectivenessMetrics = await this.monitorEscalationEffectiveness(
-        escalationResults
-      );
+      const effectivenessMetrics =
+        await this.monitorEscalationEffectiveness(escalationResults);
 
       return {
         success: true,
@@ -227,7 +243,9 @@ export class CommunicationAgent implements AIAgent {
   /**
    * Optimize communication patterns and preferences
    */
-  private async optimizeCommunication(context: AgentContext): Promise<AgentResult> {
+  private async optimizeCommunication(
+    context: AgentContext
+  ): Promise<AgentResult> {
     const { user, historicalData } = context;
 
     if (!user || !historicalData) {
@@ -245,15 +263,15 @@ export class CommunicationAgent implements AIAgent {
       );
 
       // Identify optimization opportunities
-      const optimizationOpportunities = await this.identifyOptimizationOpportunities(
-        communicationPatterns
-      );
+      const optimizationOpportunities =
+        await this.identifyOptimizationOpportunities(communicationPatterns);
 
       // Generate optimization recommendations
-      const optimizationRecommendations = await this.generateOptimizationRecommendations(
-        optimizationOpportunities,
-        user.preferences
-      );
+      const optimizationRecommendations =
+        await this.generateOptimizationRecommendations(
+          optimizationOpportunities,
+          user.preferences
+        );
 
       // Apply automatic optimizations
       const automaticOptimizations = await this.applyAutomaticOptimizations(
@@ -285,12 +303,17 @@ export class CommunicationAgent implements AIAgent {
   /**
    * Handle emergency communications
    */
-  private async handleEmergencyCommunication(context: AgentContext): Promise<AgentResult> {
+  private async handleEmergencyCommunication(
+    context: AgentContext
+  ): Promise<AgentResult> {
     const { eventData, eventType } = context;
 
     try {
       // Assess emergency severity
-      const emergencyAssessment = await this.assessEmergencySeverity(eventData, eventType || 'unknown');
+      const emergencyAssessment = await this.assessEmergencySeverity(
+        eventData,
+        eventType || 'unknown'
+      );
 
       // Identify emergency contacts
       const emergencyContacts = await this.identifyEmergencyContacts(eventData);
@@ -323,15 +346,17 @@ export class CommunicationAgent implements AIAgent {
           monitoringSetup,
           responseTime: Date.now() - (eventData.timestamp || Date.now()),
         },
-        insights: [{
-          id: `emergency-comm-${Date.now()}`,
-          sessionId: eventData?.sessionId || '',
-          type: 'alert',
-          content: `Emergency communication initiated for ${eventType}`,
-          confidence: 1.0,
-          metadata: { severity: emergencyAssessment.severity, eventType },
-          createdAt: new Date(),
-        }],
+        insights: [
+          {
+            id: `emergency-comm-${Date.now()}`,
+            sessionId: eventData?.sessionId || '',
+            type: 'alert',
+            content: `Emergency communication initiated for ${eventType}`,
+            confidence: 1.0,
+            metadata: { severity: emergencyAssessment.severity, eventType },
+            createdAt: new Date(),
+          },
+        ],
       };
     } catch (error) {
       return {
@@ -344,7 +369,9 @@ export class CommunicationAgent implements AIAgent {
   /**
    * Process batch communications efficiently
    */
-  private async processBatchCommunications(context: AgentContext): Promise<AgentResult> {
+  private async processBatchCommunications(
+    context: AgentContext
+  ): Promise<AgentResult> {
     const { batchData } = context;
 
     if (!batchData || batchData.length === 0) {
@@ -359,10 +386,13 @@ export class CommunicationAgent implements AIAgent {
       const groupedCommunications = await this.groupCommunications(batchData);
 
       // Optimize batch processing order
-      const processingOrder = await this.optimizeBatchProcessingOrder(groupedCommunications);
+      const processingOrder = await this.optimizeBatchProcessingOrder(
+        groupedCommunications
+      );
 
       // Process communications in batches
-      const batchResults = await this.processCommunicationBatches(processingOrder);
+      const batchResults =
+        await this.processCommunicationBatches(processingOrder);
 
       // Aggregate results and metrics
       const aggregatedResults = await this.aggregateBatchResults(batchResults);
@@ -389,7 +419,9 @@ export class CommunicationAgent implements AIAgent {
   /**
    * Perform general communication tasks
    */
-  private async performGeneralCommunication(context: AgentContext): Promise<AgentResult> {
+  private async performGeneralCommunication(
+    context: AgentContext
+  ): Promise<AgentResult> {
     return {
       success: true,
       data: {
@@ -417,19 +449,26 @@ export class CommunicationAgent implements AIAgent {
     return requirements;
   }
 
-  private determineUrgency(eventType: string, eventData: any): 'low' | 'medium' | 'high' | 'critical' {
+  private determineUrgency(
+    eventType: string,
+    eventData: any
+  ): 'low' | 'medium' | 'high' | 'critical' {
     const urgencyMap: Record<string, 'low' | 'medium' | 'high' | 'critical'> = {
-      'session_completed': 'low',
-      'session_started': 'medium',
-      'high_risk_auth_attempt': 'critical',
-      'auth_success': 'low',
-      'session_cancelled': 'high',
+      session_completed: 'low',
+      session_started: 'medium',
+      high_risk_auth_attempt: 'critical',
+      auth_success: 'low',
+      session_cancelled: 'high',
     };
 
     return urgencyMap[eventType] || 'medium';
   }
 
-  private determineAudience(eventType: string, eventData: any, user: any): string[] {
+  private determineAudience(
+    eventType: string,
+    eventData: any,
+    user: any
+  ): string[] {
     const audience = [];
 
     if (eventData?.parentId) {
@@ -450,22 +489,28 @@ export class CommunicationAgent implements AIAgent {
       messageType: eventType,
       personalization: true,
       includeDetails: eventType !== 'high_risk_auth_attempt',
-      actionRequired: ['session_cancelled', 'high_risk_auth_attempt'].includes(eventType),
+      actionRequired: ['session_cancelled', 'high_risk_auth_attempt'].includes(
+        eventType
+      ),
     };
   }
 
   private determineOptimalTiming(eventType: string, preferences: any): any {
     const immediateEvents = ['high_risk_auth_attempt', 'session_cancelled'];
-    
+
     return {
       immediate: immediateEvents.includes(eventType),
       respectQuietHours: !immediateEvents.includes(eventType),
       batchWithOthers: eventType === 'session_completed',
-      preferredTime: preferences?.notifications?.frequency === 'immediate' ? 'now' : 'batch',
+      preferredTime:
+        preferences?.notifications?.frequency === 'immediate' ? 'now' : 'batch',
     };
   }
 
-  private async determineOptimalChannels(requirements: any, preferences: any): Promise<string[]> {
+  private async determineOptimalChannels(
+    requirements: any,
+    preferences: any
+  ): Promise<string[]> {
     const channels = [];
 
     if (requirements.urgency === 'critical') {
@@ -515,18 +560,22 @@ export class CommunicationAgent implements AIAgent {
 
   private generateSubject(messageType: string, user: any): string {
     const subjectMap: Record<string, string> = {
-      'session_completed': `Session Completed - ${user?.name || 'Student'}`,
-      'session_started': `Session Started - ${user?.name || 'Student'}`,
-      'high_risk_auth_attempt': 'Security Alert - Suspicious Login Attempt',
-      'auth_success': 'Welcome Back!',
+      session_completed: `Session Completed - ${user?.name || 'Student'}`,
+      session_started: `Session Started - ${user?.name || 'Student'}`,
+      high_risk_auth_attempt: 'Security Alert - Suspicious Login Attempt',
+      auth_success: 'Welcome Back!',
     };
 
     return subjectMap[messageType] || 'GuruKool Notification';
   }
 
-  private generateContent(requirements: any, user: any, channel: string): string {
+  private generateContent(
+    requirements: any,
+    user: any,
+    channel: string
+  ): string {
     const baseContent = this.getBaseContent(requirements.messageType);
-    
+
     if (channel === 'sms') {
       return this.shortenForSMS(baseContent);
     } else if (channel === 'push') {
@@ -538,13 +587,17 @@ export class CommunicationAgent implements AIAgent {
 
   private getBaseContent(messageType: string): string {
     const contentMap: Record<string, string> = {
-      'session_completed': 'Your teaching session has been completed successfully.',
-      'session_started': 'Your teaching session has started.',
-      'high_risk_auth_attempt': 'We detected a suspicious login attempt on your account.',
-      'auth_success': 'You have successfully signed in to your account.',
+      session_completed:
+        'Your teaching session has been completed successfully.',
+      session_started: 'Your teaching session has started.',
+      high_risk_auth_attempt:
+        'We detected a suspicious login attempt on your account.',
+      auth_success: 'You have successfully signed in to your account.',
     };
 
-    return contentMap[messageType] || 'You have a new notification from GuruKool.';
+    return (
+      contentMap[messageType] || 'You have a new notification from GuruKool.'
+    );
   }
 
   private shortenForSMS(content: string): string {
@@ -587,7 +640,10 @@ export class CommunicationAgent implements AIAgent {
     };
   }
 
-  private async assessEscalationRequirements(eventData: any, urgencyLevel: string): Promise<any> {
+  private async assessEscalationRequirements(
+    eventData: any,
+    urgencyLevel: string
+  ): Promise<any> {
     return {
       level: urgencyLevel === 'high' ? 3 : urgencyLevel === 'critical' ? 4 : 2,
       triggers: ['high_risk', 'system_failure', 'user_complaint'],
@@ -600,7 +656,10 @@ export class CommunicationAgent implements AIAgent {
     };
   }
 
-  private async determineEscalationPath(assessment: any, user: any): Promise<any[]> {
+  private async determineEscalationPath(
+    assessment: any,
+    user: any
+  ): Promise<any[]> {
     const path = [];
 
     if (assessment.level >= 2) {
@@ -633,7 +692,10 @@ export class CommunicationAgent implements AIAgent {
     return path;
   }
 
-  private async executeEscalationSteps(escalationPath: any[], eventData: any): Promise<any[]> {
+  private async executeEscalationSteps(
+    escalationPath: any[],
+    eventData: any
+  ): Promise<any[]> {
     const results = [];
 
     for (const step of escalationPath) {
@@ -657,16 +719,22 @@ export class CommunicationAgent implements AIAgent {
     };
   }
 
-  private async monitorEscalationEffectiveness(escalationResults: any[]): Promise<any> {
+  private async monitorEscalationEffectiveness(
+    escalationResults: any[]
+  ): Promise<any> {
     return {
       totalSteps: escalationResults.length,
-      successfulSteps: escalationResults.filter(r => r.status === 'completed').length,
+      successfulSteps: escalationResults.filter(r => r.status === 'completed')
+        .length,
       averageResponseTime: 2500, // 2.5 seconds
       effectivenessScore: 0.92, // 92% effective
     };
   }
 
-  private async analyzeCommunicationPatterns(user: any, historicalData: any): Promise<any> {
+  private async analyzeCommunicationPatterns(
+    user: any,
+    historicalData: any
+  ): Promise<any> {
     return {
       preferredChannels: ['push', 'email'],
       responseRates: {
@@ -687,7 +755,9 @@ export class CommunicationAgent implements AIAgent {
     };
   }
 
-  private async identifyOptimizationOpportunities(patterns: any): Promise<any[]> {
+  private async identifyOptimizationOpportunities(
+    patterns: any
+  ): Promise<any[]> {
     const opportunities = [];
 
     if (patterns.responseRates.sms > patterns.responseRates.push) {
@@ -731,7 +801,9 @@ export class CommunicationAgent implements AIAgent {
     };
   }
 
-  private async applyAutomaticOptimizations(recommendations: any[]): Promise<any[]> {
+  private async applyAutomaticOptimizations(
+    recommendations: any[]
+  ): Promise<any[]> {
     const applied = [];
 
     for (const rec of recommendations) {
@@ -748,7 +820,10 @@ export class CommunicationAgent implements AIAgent {
     return applied;
   }
 
-  private generateOptimizationInsights(patterns: any, recommendations: any[]): any[] {
+  private generateOptimizationInsights(
+    patterns: any,
+    recommendations: any[]
+  ): any[] {
     const insights = [];
 
     if (recommendations.length > 0) {
@@ -766,12 +841,15 @@ export class CommunicationAgent implements AIAgent {
     return insights;
   }
 
-  private async assessEmergencySeverity(eventData: any, eventType: string): Promise<any> {
+  private async assessEmergencySeverity(
+    eventData: any,
+    eventType: string
+  ): Promise<any> {
     const severityMap: Record<string, number> = {
-      'high_risk_auth_attempt': 8,
-      'system_failure': 9,
-      'data_breach': 10,
-      'session_emergency': 7,
+      high_risk_auth_attempt: 8,
+      system_failure: 9,
+      data_breach: 10,
+      session_emergency: 7,
     };
 
     return {
@@ -799,7 +877,10 @@ export class CommunicationAgent implements AIAgent {
     ];
   }
 
-  private async createEmergencyMessages(assessment: any, eventData: any): Promise<any[]> {
+  private async createEmergencyMessages(
+    assessment: any,
+    eventData: any
+  ): Promise<any[]> {
     return [
       {
         type: 'alert',
@@ -827,7 +908,10 @@ export class CommunicationAgent implements AIAgent {
     return results;
   }
 
-  private async sendEmergencyNotification(message: any, contact: any): Promise<any> {
+  private async sendEmergencyNotification(
+    message: any,
+    contact: any
+  ): Promise<any> {
     return {
       messageId: `emergency-${Date.now()}`,
       recipient: contact.id,
@@ -838,7 +922,10 @@ export class CommunicationAgent implements AIAgent {
     };
   }
 
-  private async setupEmergencyMonitoring(assessment: any, notifications: any[]): Promise<any> {
+  private async setupEmergencyMonitoring(
+    assessment: any,
+    notifications: any[]
+  ): Promise<any> {
     return {
       monitoringActive: true,
       checkInterval: 60000, // 1 minute
@@ -869,7 +956,9 @@ export class CommunicationAgent implements AIAgent {
     return grouped;
   }
 
-  private async optimizeBatchProcessingOrder(groupedCommunications: any): Promise<any[]> {
+  private async optimizeBatchProcessingOrder(
+    groupedCommunications: any
+  ): Promise<any[]> {
     const order = [];
 
     // Process urgent first
@@ -882,7 +971,9 @@ export class CommunicationAgent implements AIAgent {
     return order;
   }
 
-  private async processCommunicationBatches(processingOrder: any[]): Promise<any[]> {
+  private async processCommunicationBatches(
+    processingOrder: any[]
+  ): Promise<any[]> {
     const results = [];
     const batchSize = 10;
 
@@ -922,8 +1013,14 @@ export class CommunicationAgent implements AIAgent {
   }
 
   private async aggregateBatchResults(batchResults: any[]): Promise<any> {
-    const totalProcessed = batchResults.reduce((sum, batch) => sum + batch.itemsProcessed, 0);
-    const totalProcessingTime = batchResults.reduce((sum, batch) => sum + batch.processingTime, 0);
+    const totalProcessed = batchResults.reduce(
+      (sum, batch) => sum + batch.itemsProcessed,
+      0
+    );
+    const totalProcessingTime = batchResults.reduce(
+      (sum, batch) => sum + batch.processingTime,
+      0
+    );
 
     return {
       totalBatches: batchResults.length,
@@ -954,9 +1051,15 @@ export class CommunicationAgent implements AIAgent {
     }
 
     // Group messages by priority
-    const criticalMessages = this.messageQueue.filter(msg => msg.priority === 'critical');
-    const highMessages = this.messageQueue.filter(msg => msg.priority === 'high');
-    const mediumMessages = this.messageQueue.filter(msg => msg.priority === 'medium');
+    const criticalMessages = this.messageQueue.filter(
+      msg => msg.priority === 'critical'
+    );
+    const highMessages = this.messageQueue.filter(
+      msg => msg.priority === 'high'
+    );
+    const mediumMessages = this.messageQueue.filter(
+      msg => msg.priority === 'medium'
+    );
     const lowMessages = this.messageQueue.filter(msg => msg.priority === 'low');
 
     // Process critical messages immediately
@@ -995,7 +1098,10 @@ export class CommunicationAgent implements AIAgent {
 
       // Check delivery attempts
       if (message.deliveryAttempts >= message.maxDeliveryAttempts) {
-        logger.error('app', `Message ${message.id} exceeded max delivery attempts`);
+        logger.error(
+          'app',
+          `Message ${message.id} exceeded max delivery attempts`
+        );
         message.status = 'failed';
         return;
       }
@@ -1006,21 +1112,34 @@ export class CommunicationAgent implements AIAgent {
 
       if (deliveryResult.success) {
         message.status = 'delivered';
-        logger.info('app', `Message ${message.id} delivered successfully via ${message.channel}`);
+        logger.info(
+          'app',
+          `Message ${message.id} delivered successfully via ${message.channel}`
+        );
       } else {
         message.status = 'failed';
-        logger.error('app', `Message ${message.id} delivery failed`, deliveryResult.error);
+        logger.error(
+          'app',
+          `Message ${message.id} delivery failed`,
+          deliveryResult.error ? new Error(deliveryResult.error) : undefined
+        );
       }
     } catch (error) {
       message.status = 'failed';
-      logger.error('app', `Error delivering message ${message.id}`, error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        `Error delivering message ${message.id}`,
+        error instanceof Error ? error : undefined
+      );
     }
   }
 
   /**
    * Batch deliver messages for efficiency
    */
-  private async batchDeliverMessages(messages: NotificationMessage[]): Promise<void> {
+  private async batchDeliverMessages(
+    messages: NotificationMessage[]
+  ): Promise<void> {
     const batchResults = await Promise.allSettled(
       messages.map(message => this.deliverMessage(message))
     );
@@ -1034,14 +1153,16 @@ export class CommunicationAgent implements AIAgent {
 
     logger.info('app', `Batch processed ${messages.length} messages`, {
       successful: batchResults.filter(r => r.status === 'fulfilled').length,
-      failed: batchResults.filter(r => r.status === 'rejected').length
+      failed: batchResults.filter(r => r.status === 'rejected').length,
     });
   }
 
   /**
    * Execute actual message delivery based on channel
    */
-  private async executeMessageDelivery(message: NotificationMessage): Promise<{ success: boolean; error?: string }> {
+  private async executeMessageDelivery(
+    message: NotificationMessage
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       switch (message.channel) {
         case 'email':
@@ -1058,7 +1179,8 @@ export class CommunicationAgent implements AIAgent {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown delivery error'
+        error:
+          error instanceof Error ? error.message : 'Unknown delivery error',
       };
     }
   }
@@ -1066,7 +1188,9 @@ export class CommunicationAgent implements AIAgent {
   /**
    * Deliver email message
    */
-  private async deliverEmailMessage(message: NotificationMessage): Promise<{ success: boolean; error?: string }> {
+  private async deliverEmailMessage(
+    message: NotificationMessage
+  ): Promise<{ success: boolean; error?: string }> {
     // Simulate email delivery
     const deliveryDelay = Math.random() * 2000 + 1000; // 1-3 seconds
     await new Promise(resolve => setTimeout(resolve, deliveryDelay));
@@ -1074,14 +1198,16 @@ export class CommunicationAgent implements AIAgent {
     const success = Math.random() > 0.05; // 95% success rate
     return {
       success,
-      error: success ? undefined : 'Email delivery service unavailable'
+      error: success ? undefined : 'Email delivery service unavailable',
     };
   }
 
   /**
    * Deliver SMS message
    */
-  private async deliverSMSMessage(message: NotificationMessage): Promise<{ success: boolean; error?: string }> {
+  private async deliverSMSMessage(
+    message: NotificationMessage
+  ): Promise<{ success: boolean; error?: string }> {
     // Simulate SMS delivery
     const deliveryDelay = Math.random() * 1000 + 500; // 0.5-1.5 seconds
     await new Promise(resolve => setTimeout(resolve, deliveryDelay));
@@ -1089,14 +1215,16 @@ export class CommunicationAgent implements AIAgent {
     const success = Math.random() > 0.03; // 97% success rate
     return {
       success,
-      error: success ? undefined : 'SMS gateway error'
+      error: success ? undefined : 'SMS gateway error',
     };
   }
 
   /**
    * Deliver push notification
    */
-  private async deliverPushMessage(message: NotificationMessage): Promise<{ success: boolean; error?: string }> {
+  private async deliverPushMessage(
+    message: NotificationMessage
+  ): Promise<{ success: boolean; error?: string }> {
     // Simulate push notification delivery
     const deliveryDelay = Math.random() * 500 + 200; // 0.2-0.7 seconds
     await new Promise(resolve => setTimeout(resolve, deliveryDelay));
@@ -1104,33 +1232,39 @@ export class CommunicationAgent implements AIAgent {
     const success = Math.random() > 0.02; // 98% success rate
     return {
       success,
-      error: success ? undefined : 'Push service unavailable'
+      error: success ? undefined : 'Push service unavailable',
     };
   }
 
   /**
    * Deliver in-app message
    */
-  private async deliverInAppMessage(message: NotificationMessage): Promise<{ success: boolean; error?: string }> {
+  private async deliverInAppMessage(
+    message: NotificationMessage
+  ): Promise<{ success: boolean; error?: string }> {
     // Store in offline storage for in-app display
     try {
-      await offlineStorageManager.store('notifications', {
-        id: message.id,
-        recipient: message.recipient,
-        title: message.title,
-        content: message.content,
-        type: message.type,
-        priority: message.priority,
-        data: message.data,
-        createdAt: message.createdAt,
-        read: false
-      }, message.priority);
+      await offlineStorageManager.store(
+        'notifications',
+        {
+          id: message.id,
+          recipient: message.recipient,
+          title: message.title,
+          content: message.content,
+          type: message.type,
+          priority: message.priority,
+          data: message.data,
+          createdAt: message.createdAt,
+          read: false,
+        },
+        message.priority
+      );
 
       return { success: true };
     } catch (error) {
       return {
         success: false,
-        error: 'Failed to store in-app notification'
+        error: 'Failed to store in-app notification',
       };
     }
   }
@@ -1148,7 +1282,7 @@ export class CommunicationAgent implements AIAgent {
   private shouldProcessLowPriority(): boolean {
     const now = new Date();
     const hour = now.getHours();
-    
+
     // Process low priority messages during off-peak hours (e.g., 2-6 AM)
     return hour >= 2 && hour <= 6;
   }
@@ -1156,17 +1290,25 @@ export class CommunicationAgent implements AIAgent {
   /**
    * Queue message for delivery
    */
-  public queueMessage(message: Omit<NotificationMessage, 'id' | 'deliveryAttempts' | 'status' | 'createdAt'>): string {
+  public queueMessage(
+    message: Omit<
+      NotificationMessage,
+      'id' | 'deliveryAttempts' | 'status' | 'createdAt'
+    >
+  ): string {
     const notificationMessage: NotificationMessage = {
       ...message,
       id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       deliveryAttempts: 0,
       status: 'pending',
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     this.messageQueue.push(notificationMessage);
-    logger.debug('app', `Message queued for delivery`, { id: notificationMessage.id, priority: notificationMessage.priority });
+    logger.debug('app', `Message queued for delivery`, {
+      id: notificationMessage.id,
+      priority: notificationMessage.priority,
+    });
 
     return notificationMessage.id;
   }
@@ -1174,28 +1316,40 @@ export class CommunicationAgent implements AIAgent {
   /**
    * Get queue statistics
    */
-  public getQueueStats(): { total: number; critical: number; high: number; medium: number; low: number; processing: number } {
+  public getQueueStats(): {
+    total: number;
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+    processing: number;
+  } {
     return {
       total: this.messageQueue.length,
-      critical: this.messageQueue.filter(msg => msg.priority === 'critical').length,
+      critical: this.messageQueue.filter(msg => msg.priority === 'critical')
+        .length,
       high: this.messageQueue.filter(msg => msg.priority === 'high').length,
       medium: this.messageQueue.filter(msg => msg.priority === 'medium').length,
       low: this.messageQueue.filter(msg => msg.priority === 'low').length,
-      processing: this.messageQueue.filter(msg => msg.status === 'pending').length
+      processing: this.messageQueue.filter(msg => msg.status === 'pending')
+        .length,
     };
   }
 
   /**
    * Update communication pattern for a user
    */
-  public updateCommunicationPattern(userId: string, pattern: Partial<CommunicationPattern>): void {
+  public updateCommunicationPattern(
+    userId: string,
+    pattern: Partial<CommunicationPattern>
+  ): void {
     const existing = this.communicationPatterns.get(userId);
-    
+
     if (existing) {
       this.communicationPatterns.set(userId, {
         ...existing,
         ...pattern,
-        lastAnalyzed: new Date()
+        lastAnalyzed: new Date(),
       });
     } else {
       this.communicationPatterns.set(userId, {
@@ -1206,7 +1360,7 @@ export class CommunicationAgent implements AIAgent {
         quietHours: { start: '22:00', end: '08:00' },
         engagement: 'medium',
         lastAnalyzed: new Date(),
-        ...pattern
+        ...pattern,
       });
     }
 
@@ -1216,7 +1370,9 @@ export class CommunicationAgent implements AIAgent {
   /**
    * Get communication pattern for a user
    */
-  public getCommunicationPattern(userId: string): CommunicationPattern | undefined {
+  public getCommunicationPattern(
+    userId: string
+  ): CommunicationPattern | undefined {
     return this.communicationPatterns.get(userId);
   }
 
@@ -1231,7 +1387,7 @@ export class CommunicationAgent implements AIAgent {
 
     this.messageQueue = [];
     this.communicationPatterns.clear();
-    
+
     logger.info('app', 'CommunicationAgent cleaned up');
   }
 }
