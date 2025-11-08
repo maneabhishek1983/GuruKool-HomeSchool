@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuthContext } from '@/lib/authContext';
+import { useAuthContext, User as AuthUser } from '@/lib/authContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { QRCodeGenerator } from '@/utils/qr-code-generator';
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
               screenReader: false,
             },
           },
-        } as Omit<User, 'id' | 'createdAt' | 'lastActive'>;
+        } as Omit<AuthUser, 'id' | 'createdAt' | 'lastActive'>;
 
         // Use the auth context to create the user
         const result = await createUser(userData);
