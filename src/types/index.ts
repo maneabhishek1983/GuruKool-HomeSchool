@@ -495,6 +495,7 @@ export interface TeacherProfile {
     };
   };
   bio?: string;
+  profilePictureUrl?: string;
   status?: 'available' | 'assigned' | 'unavailable';
   parentId: string; // parent who created this teacher
   createdAt: Date;
@@ -545,7 +546,7 @@ export type {
   AlternativeSchedule,
   SessionUpdateRequest,
   TimeSlot,
-  SchedulingConstraint
+  SchedulingConstraint,
 } from './session.types';
 
 // Also export as values for better compatibility
