@@ -156,8 +156,12 @@ export class AnalyticsService {
   ): Promise<LearningProgress> {
     try {
       // Get sessions for the student
-      const sessions = await this.getSessionsForStudent(studentId, subject, timeframe);
-      
+      const sessions = await this.getSessionsForStudent(
+        studentId,
+        subject,
+        timeframe
+      );
+
       if (sessions.length === 0) {
         throw new Error('No session data found for analysis');
       }
@@ -165,23 +169,29 @@ export class AnalyticsService {
       // Calculate basic metrics
       const totalSessions = sessions.length;
       const totalHours = sessions.reduce((sum, session) => {
-        const duration = session.actualEnd && session.actualStart
-          ? (session.actualEnd.getTime() - session.actualStart.getTime()) / (1000 * 60 * 60)
-          : 0;
+        const duration =
+          session.actualEnd && session.actualStart
+            ? (session.actualEnd.getTime() - session.actualStart.getTime()) /
+              (1000 * 60 * 60)
+            : 0;
         return sum + duration;
       }, 0);
 
       const averageRating = this.calculateAverageRating(sessions);
-      
+
       // Calculate progress percentage based on completed milestones and session outcomes
-      const progressPercentage = await this.calculateProgressPercentage(studentId, subject);
-      
+      const progressPercentage = await this.calculateProgressPercentage(
+        studentId,
+        subject
+      );
+
       // Identify strength and improvement areas from AI insights
-      const { strengthAreas, improvementAreas } = await this.analyzeStudentAreas(sessions);
-      
+      const { strengthAreas, improvementAreas } =
+        await this.analyzeStudentAreas(sessions);
+
       // Get milestones
       const milestones = await this.getStudentMilestones(studentId, subject);
-      
+
       // Generate trend data
       const trendData = this.generateProgressTrend(sessions);
 
@@ -196,13 +206,16 @@ export class AnalyticsService {
         improvementAreas,
         milestones,
         trendData,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       };
 
       return learningProgress;
-
     } catch (error) {
-      logger.error('app', 'Failed to get learning progress', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to get learning progress',
+        error instanceof Error ? error : undefined
+      );
       throw error;
     }
   }
@@ -216,7 +229,7 @@ export class AnalyticsService {
   ): Promise<TeacherPerformance> {
     try {
       const sessions = await this.getSessionsForTeacher(teacherId, timeframe);
-      
+
       if (sessions.length === 0) {
         throw new Error('No session data found for teacher analysis');
       }
@@ -224,31 +237,34 @@ export class AnalyticsService {
       // Calculate basic metrics
       const totalSessions = sessions.length;
       const totalHours = sessions.reduce((sum, session) => {
-        const duration = session.actualEnd && session.actualStart
-          ? (session.actualEnd.getTime() - session.actualStart.getTime()) / (1000 * 60 * 60)
-          : 0;
+        const duration =
+          session.actualEnd && session.actualStart
+            ? (session.actualEnd.getTime() - session.actualStart.getTime()) /
+              (1000 * 60 * 60)
+            : 0;
         return sum + duration;
       }, 0);
 
       const averageRating = this.calculateAverageRating(sessions);
-      
+
       // Calculate retention rate (students who had multiple sessions)
       const studentRetention = this.calculateStudentRetention(sessions);
-      
+
       // Calculate performance scores
       const punctualityScore = await this.calculatePunctualityScore(sessions);
       const preparationScore = await this.calculatePreparationScore(sessions);
       const engagementScore = await this.calculateEngagementScore(sessions);
-      
+
       // Subject expertise analysis
       const subjectExpertise = this.analyzeSubjectExpertise(sessions);
-      
+
       // Generate monthly trends
       const monthlyTrends = this.generateTeacherTrends(sessions);
-      
+
       // Analyze strengths and improvement areas
-      const { strengths, improvementAreas } = await this.analyzeTeacherAreas(sessions);
-      
+      const { strengths, improvementAreas } =
+        await this.analyzeTeacherAreas(sessions);
+
       // Calculate comparative ranking (placeholder)
       const comparativeRanking = 75; // Would be calculated based on peer data
 
@@ -265,13 +281,16 @@ export class AnalyticsService {
         monthlyTrends,
         strengths,
         improvementAreas,
-        comparativeRanking
+        comparativeRanking,
       };
 
       return performance;
-
     } catch (error) {
-      logger.error('app', 'Failed to get teacher performance', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to get teacher performance',
+        error instanceof Error ? error : undefined
+      );
       throw error;
     }
   }
@@ -279,31 +298,37 @@ export class AnalyticsService {
   /**
    * Get comprehensive session analytics
    */
-  public async getSessionAnalytics(filter: AnalyticsFilter): Promise<SessionAnalytics> {
+  public async getSessionAnalytics(
+    filter: AnalyticsFilter
+  ): Promise<SessionAnalytics> {
     try {
       const sessions = await this.getFilteredSessions(filter);
-      
+
       if (sessions.length === 0) {
         throw new Error('No sessions found for the specified criteria');
       }
 
       // Basic counts
       const totalSessions = sessions.length;
-      const completedSessions = sessions.filter(s => s.status === 'completed').length;
-      const cancelledSessions = sessions.filter(s => s.status === 'cancelled').length;
-      
+      const completedSessions = sessions.filter(
+        s => s.status === 'completed'
+      ).length;
+      const cancelledSessions = sessions.filter(
+        s => s.status === 'cancelled'
+      ).length;
+
       // Average duration
       const averageDuration = this.calculateAverageDuration(sessions);
       const averageRating = this.calculateAverageRating(sessions);
-      
+
       // Subject breakdown
       const sessionsBySubject = this.groupSessionsBySubject(sessions);
-      
+
       // Time analysis
       const sessionsByTimeOfDay = this.analyzeSessionsByTimeOfDay(sessions);
       const sessionsByDayOfWeek = this.analyzeSessionsByDayOfWeek(sessions);
       const seasonalTrends = this.analyzeSeasonalTrends(sessions);
-      
+
       // Location analysis
       const locationAnalysis = this.analyzeLocationPerformance(sessions);
 
@@ -317,13 +342,16 @@ export class AnalyticsService {
         sessionsByTimeOfDay,
         sessionsByDayOfWeek,
         seasonalTrends,
-        locationAnalysis
+        locationAnalysis,
       };
 
       return analytics;
-
     } catch (error) {
-      logger.error('app', 'Failed to get session analytics', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to get session analytics',
+        error instanceof Error ? error : undefined
+      );
       throw error;
     }
   }
@@ -331,27 +359,37 @@ export class AnalyticsService {
   /**
    * Get comparative analytics across students, subjects, and teachers
    */
-  public async getComparativeAnalytics(filter: AnalyticsFilter): Promise<ComparativeAnalytics> {
+  public async getComparativeAnalytics(
+    filter: AnalyticsFilter
+  ): Promise<ComparativeAnalytics> {
     try {
       const sessions = await this.getFilteredSessions(filter);
-      
+
       // Generate comparisons
-      const studentComparisons = await this.generateStudentComparisons(sessions);
-      const subjectComparisons = await this.generateSubjectComparisons(sessions);
+      const studentComparisons =
+        await this.generateStudentComparisons(sessions);
+      const subjectComparisons =
+        await this.generateSubjectComparisons(sessions);
       const teacherRankings = await this.generateTeacherRankings(sessions);
-      const peerBenchmarks = await this.generatePeerBenchmarks(sessions, filter);
+      const peerBenchmarks = await this.generatePeerBenchmarks(
+        sessions,
+        filter
+      );
 
       const analytics: ComparativeAnalytics = {
         studentComparisons,
         subjectComparisons,
         teacherRankings,
-        peerBenchmarks
+        peerBenchmarks,
       };
 
       return analytics;
-
     } catch (error) {
-      logger.error('app', 'Failed to get comparative analytics', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to get comparative analytics',
+        error instanceof Error ? error : undefined
+      );
       throw error;
     }
   }
@@ -364,18 +402,32 @@ export class AnalyticsService {
     timeframe?: { startDate: Date; endDate: Date }
   ): Promise<SessionRecord[]> {
     try {
-      const allSessions = await offlineStorageManager.getAll<SessionRecord>('sessions');
+      const allSessions =
+        await offlineStorageManager.getAll<SessionRecord>('sessions');
       return allSessions.filter(session => {
-        if (session.studentId !== studentId) return false;
-        if (subject && session.subject !== subject) return false;
+        if (session.studentId !== studentId) {
+          return false;
+        }
+        if (subject && session.subject !== subject) {
+          return false;
+        }
         if (timeframe) {
           const sessionDate = session.scheduledStart;
-          if (sessionDate < timeframe.startDate || sessionDate > timeframe.endDate) return false;
+          if (
+            sessionDate < timeframe.startDate ||
+            sessionDate > timeframe.endDate
+          ) {
+            return false;
+          }
         }
         return true;
       });
     } catch (error) {
-      logger.error('app', 'Failed to get sessions for student', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to get sessions for student',
+        error instanceof Error ? error : undefined
+      );
       return [];
     }
   }
@@ -385,38 +437,62 @@ export class AnalyticsService {
     timeframe?: { startDate: Date; endDate: Date }
   ): Promise<SessionRecord[]> {
     try {
-      const allSessions = await offlineStorageManager.getAll<SessionRecord>('sessions');
+      const allSessions =
+        await offlineStorageManager.getAll<SessionRecord>('sessions');
       return allSessions.filter(session => {
-        if (session.teacherId !== teacherId) return false;
+        if (session.teacherId !== teacherId) {
+          return false;
+        }
         if (timeframe) {
           const sessionDate = session.scheduledStart;
-          if (sessionDate < timeframe.startDate || sessionDate > timeframe.endDate) return false;
+          if (
+            sessionDate < timeframe.startDate ||
+            sessionDate > timeframe.endDate
+          ) {
+            return false;
+          }
         }
         return true;
       });
     } catch (error) {
-      logger.error('app', 'Failed to get sessions for teacher', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to get sessions for teacher',
+        error instanceof Error ? error : undefined
+      );
       return [];
     }
   }
 
-  private async getFilteredSessions(filter: AnalyticsFilter): Promise<SessionRecord[]> {
+  private async getFilteredSessions(
+    filter: AnalyticsFilter
+  ): Promise<SessionRecord[]> {
     try {
-      const allSessions = await offlineStorageManager.getAll<SessionRecord>('sessions');
+      const allSessions =
+        await offlineStorageManager.getAll<SessionRecord>('sessions');
       return allSessions.filter(session => {
         // Date range filter
         const sessionDate = session.scheduledStart;
-        if (sessionDate < filter.dateRange.startDate || sessionDate > filter.dateRange.endDate) {
+        if (
+          sessionDate < filter.dateRange.startDate ||
+          sessionDate > filter.dateRange.endDate
+        ) {
           return false;
         }
 
         // Student filter
-        if (filter.studentIds && !filter.studentIds.includes(session.studentId)) {
+        if (
+          filter.studentIds &&
+          !filter.studentIds.includes(session.studentId)
+        ) {
           return false;
         }
 
         // Teacher filter
-        if (filter.teacherIds && !filter.teacherIds.includes(session.teacherId)) {
+        if (
+          filter.teacherIds &&
+          !filter.teacherIds.includes(session.teacherId)
+        ) {
           return false;
         }
 
@@ -426,41 +502,68 @@ export class AnalyticsService {
         }
 
         // Location filter
-        if (filter.locations && !filter.locations.includes(session.location)) {
-          return false;
+        if (filter.locations) {
+          const locationString =
+            typeof session.location === 'string'
+              ? session.location
+              : session.location.address;
+          if (!filter.locations.includes(locationString)) {
+            return false;
+          }
         }
 
         return true;
       });
     } catch (error) {
-      logger.error('app', 'Failed to get filtered sessions', error instanceof Error ? error : undefined);
+      logger.error(
+        'app',
+        'Failed to get filtered sessions',
+        error instanceof Error ? error : undefined
+      );
       return [];
     }
   }
 
   private calculateAverageRating(sessions: SessionRecord[]): number {
-    const ratedSessions = sessions.filter(s => s.rating && s.rating > 0);
-    if (ratedSessions.length === 0) return 0;
-    
-    const totalRating = ratedSessions.reduce((sum, session) => sum + (session.rating || 0), 0);
+    const ratedSessions = sessions.filter(s => {
+      const rating = (s as any).rating;
+      return rating && rating > 0;
+    });
+    if (ratedSessions.length === 0) {
+      return 0;
+    }
+
+    const totalRating = ratedSessions.reduce(
+      (sum, session) => sum + ((session as any).rating || 0),
+      0
+    );
     return totalRating / ratedSessions.length;
   }
 
   private calculateAverageDuration(sessions: SessionRecord[]): number {
-    const completedSessions = sessions.filter(s => s.actualStart && s.actualEnd);
-    if (completedSessions.length === 0) return 0;
-    
+    const completedSessions = sessions.filter(
+      s => s.actualStart && s.actualEnd
+    );
+    if (completedSessions.length === 0) {
+      return 0;
+    }
+
     const totalDuration = completedSessions.reduce((sum, session) => {
       if (session.actualStart && session.actualEnd) {
-        return sum + (session.actualEnd.getTime() - session.actualStart.getTime());
+        return (
+          sum + (session.actualEnd.getTime() - session.actualStart.getTime())
+        );
       }
       return sum;
     }, 0);
-    
+
     return totalDuration / completedSessions.length / (1000 * 60); // Return in minutes
   }
 
-  private async calculateProgressPercentage(studentId: string, subject?: string): Promise<number> {
+  private async calculateProgressPercentage(
+    studentId: string,
+    subject?: string
+  ): Promise<number> {
     // Placeholder implementation - would use milestone completion and learning objectives
     return Math.random() * 40 + 60; // 60-100% range
   }
@@ -471,15 +574,26 @@ export class AnalyticsService {
   }> {
     // Analyze AI insights to identify patterns
     const allInsights = sessions.flatMap(session => session.aiInsights || []);
-    
+
     // Group insights by type and identify patterns
-    const strengthAreas = ['Mathematics', 'Problem Solving', 'Critical Thinking'];
-    const improvementAreas = ['Time Management', 'Focus', 'Practice Consistency'];
+    const strengthAreas = [
+      'Mathematics',
+      'Problem Solving',
+      'Critical Thinking',
+    ];
+    const improvementAreas = [
+      'Time Management',
+      'Focus',
+      'Practice Consistency',
+    ];
 
     return { strengthAreas, improvementAreas };
   }
 
-  private async getStudentMilestones(studentId: string, subject?: string): Promise<Milestone[]> {
+  private async getStudentMilestones(
+    studentId: string,
+    subject?: string
+  ): Promise<Milestone[]> {
     // Placeholder implementation - would fetch from milestone tracking system
     return [
       {
@@ -489,39 +603,52 @@ export class AnalyticsService {
         targetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         progress: 75,
         category: 'knowledge',
-        difficulty: 'intermediate'
-      }
+        difficulty: 'intermediate',
+      },
     ];
   }
 
-  private generateProgressTrend(sessions: SessionRecord[]): ProgressTrendPoint[] {
+  private generateProgressTrend(
+    sessions: SessionRecord[]
+  ): ProgressTrendPoint[] {
     // Generate trend data from sessions
     const trendMap = new Map<string, ProgressTrendPoint>();
-    
+
     sessions.forEach(session => {
       const dateKey = session.scheduledStart.toISOString().split('T')[0];
+      if (!dateKey) {
+        return;
+      }
+
       const existing = trendMap.get(dateKey);
-      
+      const rating = (session as any).rating || 0;
+
       if (existing) {
         existing.sessions++;
-        existing.hours += session.actualEnd && session.actualStart
-          ? (session.actualEnd.getTime() - session.actualStart.getTime()) / (1000 * 60 * 60)
-          : 0;
-        existing.score = (existing.score + (session.rating || 0)) / 2;
+        existing.hours +=
+          session.actualEnd && session.actualStart
+            ? (session.actualEnd.getTime() - session.actualStart.getTime()) /
+              (1000 * 60 * 60)
+            : 0;
+        existing.score = (existing.score + rating) / 2;
       } else {
         trendMap.set(dateKey, {
           date: new Date(dateKey),
-          score: session.rating || 0,
-          hours: session.actualEnd && session.actualStart
-            ? (session.actualEnd.getTime() - session.actualStart.getTime()) / (1000 * 60 * 60)
-            : 0,
+          score: rating,
+          hours:
+            session.actualEnd && session.actualStart
+              ? (session.actualEnd.getTime() - session.actualStart.getTime()) /
+                (1000 * 60 * 60)
+              : 0,
           sessions: 1,
-          subject: session.subject
+          subject: session.subject,
         });
       }
     });
-    
-    return Array.from(trendMap.values()).sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    return Array.from(trendMap.values()).sort(
+      (a, b) => a.date.getTime() - b.date.getTime()
+    );
   }
 
   private calculateStudentRetention(sessions: SessionRecord[]): number {
@@ -530,80 +657,111 @@ export class AnalyticsService {
       const count = studentSessions.get(session.studentId) || 0;
       studentSessions.set(session.studentId, count + 1);
     });
-    
-    const repeatStudents = Array.from(studentSessions.values()).filter(count => count > 1).length;
+
+    const repeatStudents = Array.from(studentSessions.values()).filter(
+      count => count > 1
+    ).length;
     const totalStudents = studentSessions.size;
-    
+
     return totalStudents > 0 ? (repeatStudents / totalStudents) * 100 : 0;
   }
 
-  private async calculatePunctualityScore(sessions: SessionRecord[]): Promise<number> {
+  private async calculatePunctualityScore(
+    sessions: SessionRecord[]
+  ): Promise<number> {
     // Calculate based on on-time starts
     const onTimeSessions = sessions.filter(session => {
-      if (!session.actualStart) return false;
+      if (!session.actualStart) {
+        return false;
+      }
       const scheduledTime = session.scheduledStart.getTime();
       const actualTime = session.actualStart.getTime();
-      return actualTime <= scheduledTime + (5 * 60 * 1000); // Within 5 minutes
+      return actualTime <= scheduledTime + 5 * 60 * 1000; // Within 5 minutes
     });
-    
-    return sessions.length > 0 ? (onTimeSessions.length / sessions.length) * 100 : 0;
+
+    return sessions.length > 0
+      ? (onTimeSessions.length / sessions.length) * 100
+      : 0;
   }
 
-  private async calculatePreparationScore(sessions: SessionRecord[]): Promise<number> {
+  private async calculatePreparationScore(
+    sessions: SessionRecord[]
+  ): Promise<number> {
     // Analyze session notes and AI insights for preparation indicators
     return Math.random() * 20 + 80; // 80-100% range
   }
 
-  private async calculateEngagementScore(sessions: SessionRecord[]): Promise<number> {
+  private async calculateEngagementScore(
+    sessions: SessionRecord[]
+  ): Promise<number> {
     // Analyze session duration vs planned, student feedback, interaction patterns
     return Math.random() * 25 + 75; // 75-100% range
   }
 
-  private analyzeSubjectExpertise(sessions: SessionRecord[]): { subject: string; score: number }[] {
+  private analyzeSubjectExpertise(
+    sessions: SessionRecord[]
+  ): { subject: string; score: number }[] {
     const subjectMap = new Map<string, { total: number; ratings: number[] }>();
-    
+
     sessions.forEach(session => {
-      const existing = subjectMap.get(session.subject) || { total: 0, ratings: [] };
+      const existing = subjectMap.get(session.subject) || {
+        total: 0,
+        ratings: [],
+      };
       existing.total++;
-      if (session.rating) existing.ratings.push(session.rating);
+      const rating = (session as any).rating;
+      if (rating) {
+        existing.ratings.push(rating);
+      }
       subjectMap.set(session.subject, existing);
     });
-    
+
     return Array.from(subjectMap.entries()).map(([subject, data]) => ({
       subject,
-      score: data.ratings.length > 0 
-        ? data.ratings.reduce((sum, rating) => sum + rating, 0) / data.ratings.length 
-        : 0
+      score:
+        data.ratings.length > 0
+          ? data.ratings.reduce((sum, rating) => sum + rating, 0) /
+            data.ratings.length
+          : 0,
     }));
   }
 
-  private generateTeacherTrends(sessions: SessionRecord[]): TeacherTrendPoint[] {
+  private generateTeacherTrends(
+    sessions: SessionRecord[]
+  ): TeacherTrendPoint[] {
     const monthMap = new Map<string, TeacherTrendPoint>();
-    
+
     sessions.forEach(session => {
       const monthKey = session.scheduledStart.toISOString().substring(0, 7); // YYYY-MM
       const existing = monthMap.get(monthKey);
-      
+      const rating = (session as any).rating || 0;
+
       if (existing) {
         existing.sessions++;
-        existing.hours += session.actualEnd && session.actualStart
-          ? (session.actualEnd.getTime() - session.actualStart.getTime()) / (1000 * 60 * 60)
-          : 0;
-        existing.rating = (existing.rating + (session.rating || 0)) / 2;
+        existing.hours +=
+          session.actualEnd && session.actualStart
+            ? (session.actualEnd.getTime() - session.actualStart.getTime()) /
+              (1000 * 60 * 60)
+            : 0;
+        existing.rating = (existing.rating + rating) / 2;
       } else {
         monthMap.set(monthKey, {
           month: new Date(monthKey + '-01'),
           sessions: 1,
-          hours: session.actualEnd && session.actualStart
-            ? (session.actualEnd.getTime() - session.actualStart.getTime()) / (1000 * 60 * 60)
-            : 0,
-          rating: session.rating || 0,
-          retention: 0 // Would be calculated separately
+          hours:
+            session.actualEnd && session.actualStart
+              ? (session.actualEnd.getTime() - session.actualStart.getTime()) /
+                (1000 * 60 * 60)
+              : 0,
+          rating: rating,
+          retention: 0, // Would be calculated separately
         });
       }
     });
-    
-    return Array.from(monthMap.values()).sort((a, b) => a.month.getTime() - b.month.getTime());
+
+    return Array.from(monthMap.values()).sort(
+      (a, b) => a.month.getTime() - b.month.getTime()
+    );
   }
 
   private async analyzeTeacherAreas(sessions: SessionRecord[]): Promise<{
@@ -611,115 +769,177 @@ export class AnalyticsService {
     improvementAreas: string[];
   }> {
     // Analyze patterns from session data and AI insights
-    const strengths = ['Student Engagement', 'Subject Knowledge', 'Communication'];
+    const strengths = [
+      'Student Engagement',
+      'Subject Knowledge',
+      'Communication',
+    ];
     const improvementAreas = ['Time Management', 'Lesson Planning'];
 
     return { strengths, improvementAreas };
   }
 
-  private groupSessionsBySubject(sessions: SessionRecord[]): { subject: string; count: number; hours: number }[] {
+  private groupSessionsBySubject(
+    sessions: SessionRecord[]
+  ): { subject: string; count: number; hours: number }[] {
     const subjectMap = new Map<string, { count: number; hours: number }>();
-    
+
     sessions.forEach(session => {
-      const existing = subjectMap.get(session.subject) || { count: 0, hours: 0 };
+      const existing = subjectMap.get(session.subject) || {
+        count: 0,
+        hours: 0,
+      };
       existing.count++;
-      existing.hours += session.actualEnd && session.actualStart
-        ? (session.actualEnd.getTime() - session.actualStart.getTime()) / (1000 * 60 * 60)
-        : 0;
+      existing.hours +=
+        session.actualEnd && session.actualStart
+          ? (session.actualEnd.getTime() - session.actualStart.getTime()) /
+            (1000 * 60 * 60)
+          : 0;
       subjectMap.set(session.subject, existing);
     });
-    
+
     return Array.from(subjectMap.entries()).map(([subject, data]) => ({
       subject,
       count: data.count,
-      hours: data.hours
+      hours: data.hours,
     }));
   }
 
-  private analyzeSessionsByTimeOfDay(sessions: SessionRecord[]): { hour: number; count: number }[] {
+  private analyzeSessionsByTimeOfDay(
+    sessions: SessionRecord[]
+  ): { hour: number; count: number }[] {
     const hourMap = new Map<number, number>();
-    
+
     sessions.forEach(session => {
       const hour = session.scheduledStart.getHours();
       hourMap.set(hour, (hourMap.get(hour) || 0) + 1);
     });
-    
-    return Array.from(hourMap.entries()).map(([hour, count]) => ({ hour, count }));
+
+    return Array.from(hourMap.entries()).map(([hour, count]) => ({
+      hour,
+      count,
+    }));
   }
 
-  private analyzeSessionsByDayOfWeek(sessions: SessionRecord[]): { day: string; count: number }[] {
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  private analyzeSessionsByDayOfWeek(
+    sessions: SessionRecord[]
+  ): { day: string; count: number }[] {
+    const dayNames = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ];
     const dayMap = new Map<number, number>();
-    
+
     sessions.forEach(session => {
       const day = session.scheduledStart.getDay();
       dayMap.set(day, (dayMap.get(day) || 0) + 1);
     });
-    
+
     return Array.from(dayMap.entries()).map(([dayNum, count]) => ({
-      day: dayNames[dayNum],
-      count
+      day: dayNames[dayNum] || 'Unknown',
+      count,
     }));
   }
 
-  private analyzeSeasonalTrends(sessions: SessionRecord[]): { quarter: string; sessions: number; satisfaction: number }[] {
+  private analyzeSeasonalTrends(
+    sessions: SessionRecord[]
+  ): { quarter: string; sessions: number; satisfaction: number }[] {
     // Group by quarters and analyze trends
-    const quarterMap = new Map<string, { sessions: number; ratings: number[] }>();
-    
+    const quarterMap = new Map<
+      string,
+      { sessions: number; ratings: number[] }
+    >();
+
     sessions.forEach(session => {
       const month = session.scheduledStart.getMonth();
       const quarter = `Q${Math.floor(month / 3) + 1}`;
       const existing = quarterMap.get(quarter) || { sessions: 0, ratings: [] };
       existing.sessions++;
-      if (session.rating) existing.ratings.push(session.rating);
+      const rating = (session as any).rating;
+      if (rating) {
+        existing.ratings.push(rating);
+      }
       quarterMap.set(quarter, existing);
     });
-    
+
     return Array.from(quarterMap.entries()).map(([quarter, data]) => ({
       quarter,
       sessions: data.sessions,
-      satisfaction: data.ratings.length > 0 
-        ? data.ratings.reduce((sum, rating) => sum + rating, 0) / data.ratings.length 
-        : 0
+      satisfaction:
+        data.ratings.length > 0
+          ? data.ratings.reduce((sum, rating) => sum + rating, 0) /
+            data.ratings.length
+          : 0,
     }));
   }
 
-  private analyzeLocationPerformance(sessions: SessionRecord[]): { location: string; sessions: number; rating: number }[] {
-    const locationMap = new Map<string, { sessions: number; ratings: number[] }>();
-    
+  private analyzeLocationPerformance(
+    sessions: SessionRecord[]
+  ): { location: string; sessions: number; rating: number }[] {
+    const locationMap = new Map<
+      string,
+      { sessions: number; ratings: number[] }
+    >();
+
     sessions.forEach(session => {
-      const location = session.location || 'Unknown';
-      const existing = locationMap.get(location) || { sessions: 0, ratings: [] };
+      const locationString =
+        typeof session.location === 'string'
+          ? session.location
+          : session.location.address;
+      const location = locationString || 'Unknown';
+      const existing = locationMap.get(location) || {
+        sessions: 0,
+        ratings: [],
+      };
       existing.sessions++;
-      if (session.rating) existing.ratings.push(session.rating);
+      const rating = (session as any).rating;
+      if (rating) {
+        existing.ratings.push(rating);
+      }
       locationMap.set(location, existing);
     });
-    
+
     return Array.from(locationMap.entries()).map(([location, data]) => ({
       location,
       sessions: data.sessions,
-      rating: data.ratings.length > 0 
-        ? data.ratings.reduce((sum, rating) => sum + rating, 0) / data.ratings.length 
-        : 0
+      rating:
+        data.ratings.length > 0
+          ? data.ratings.reduce((sum, rating) => sum + rating, 0) /
+            data.ratings.length
+          : 0,
     }));
   }
 
-  private async generateStudentComparisons(sessions: SessionRecord[]): Promise<StudentComparison[]> {
+  private async generateStudentComparisons(
+    sessions: SessionRecord[]
+  ): Promise<StudentComparison[]> {
     // Generate student comparison data
     return [];
   }
 
-  private async generateSubjectComparisons(sessions: SessionRecord[]): Promise<SubjectComparison[]> {
+  private async generateSubjectComparisons(
+    sessions: SessionRecord[]
+  ): Promise<SubjectComparison[]> {
     // Generate subject comparison data
     return [];
   }
 
-  private async generateTeacherRankings(sessions: SessionRecord[]): Promise<TeacherRanking[]> {
+  private async generateTeacherRankings(
+    sessions: SessionRecord[]
+  ): Promise<TeacherRanking[]> {
     // Generate teacher ranking data
     return [];
   }
 
-  private async generatePeerBenchmarks(sessions: SessionRecord[], filter: AnalyticsFilter): Promise<PeerBenchmark[]> {
+  private async generatePeerBenchmarks(
+    sessions: SessionRecord[],
+    filter: AnalyticsFilter
+  ): Promise<PeerBenchmark[]> {
     // Generate peer benchmark data
     return [];
   }
