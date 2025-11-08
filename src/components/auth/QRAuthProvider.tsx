@@ -79,22 +79,24 @@ export function QRAuthProvider({
       const qrToken = qrAuthService.generateQRToken(tempEmail, 'parent');
       console.log('✅ QR token generated:', qrToken);
 
+      const newSessionId = `session-${Date.now()}`;
+
       setQRAuthState(prev => ({
         ...prev,
         qrCode: qrToken,
         authStatus: 'pending',
       }));
 
-      setSessionId(`session-${Date.now()}`);
+      setSessionId(newSessionId);
 
       // Connect to WebSocket for real-time updates (skip in development)
       let unsubscribe = () => {};
-      
+
       try {
         await wsService.connect();
-        
+
         // Subscribe to authentication status updates
-        unsubscribe = wsService.subscribeToQRAuth(result.sessionId, (data) => {
+        unsubscribe = wsService.subscribeToQRAuth(newSessionId, (data) => {
           setQRAuthState(prev => ({
             ...prev,
             authStatus: data.status,
