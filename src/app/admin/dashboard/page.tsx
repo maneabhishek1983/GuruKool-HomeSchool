@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { QRCodeGenerator } from '@/utils/qr-code-generator';
 
-interface User {
+interface LocalUser {
   id: string;
   name: string;
   email: string;
@@ -19,7 +19,7 @@ interface User {
 export default function AdminDashboard() {
   const { user, logout, createUser, getAllUsers } = useAuthContext();
   const router = useRouter();
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<LocalUser[]>([]);
 
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
@@ -34,7 +34,7 @@ export default function AdminDashboard() {
     email: '',
     role: 'parent' as const,
   });
-  const [createdUser, setCreatedUser] = useState<User | null>(null);
+  const [createdUser, setCreatedUser] = useState<LocalUser | null>(null);
   const [createdUserPassword, setCreatedUserPassword] = useState<string | null>(
     null
   );
