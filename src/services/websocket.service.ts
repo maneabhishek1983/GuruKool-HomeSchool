@@ -936,7 +936,7 @@ export class WebSocketService {
             read: true,
             readAt: Date.now(),
           },
-          stored.priority
+          (stored as any).priority || 'low'
         );
       }
     } catch (error) {
