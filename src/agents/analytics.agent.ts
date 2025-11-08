@@ -1,4 +1,12 @@
-import { AIAgent, AgentContext, AgentResult, AIInsight, LearningPattern, ProgressMetric, Recommendation } from '@/types';
+import {
+  AIAgent,
+  AgentContext,
+  AgentResult,
+  AIInsight,
+  LearningPattern,
+  ProgressMetric,
+  Recommendation,
+} from '@/types';
 
 /**
  * Enhanced Analytics Agent - AI-powered learning analytics and insights generation
@@ -31,7 +39,7 @@ export class AnalyticsAgent implements AIAgent {
       }
 
       const analyticsType = this.determineAnalyticsType(context);
-      
+
       switch (analyticsType) {
         // Enhanced analytics methods
         case 'learning_pattern_analysis':
@@ -42,7 +50,7 @@ export class AnalyticsAgent implements AIAgent {
           return await this.createLearningAlerts(context);
         case 'weekly_report':
           return await this.generateWeeklyReport(context);
-        
+
         // Original analytics methods
         case 'session_analytics':
           return await this.analyzeSessionData(context);
@@ -82,7 +90,7 @@ export class AnalyticsAgent implements AIAgent {
     if (context.eventType === 'weekly_report') {
       return 'weekly_report';
     }
-    
+
     // Original analytics types
     if (context.eventType === 'session_completed') {
       return 'session_analytics';
@@ -105,7 +113,9 @@ export class AnalyticsAgent implements AIAgent {
   /**
    * Analyze session data for insights
    */
-  private async analyzeSessionData(context: AgentContext): Promise<AgentResult> {
+  private async analyzeSessionData(
+    context: AgentContext
+  ): Promise<AgentResult> {
     const sessionData = context.eventData || context.sessionData?.[0];
 
     if (!sessionData) {
@@ -118,15 +128,16 @@ export class AnalyticsAgent implements AIAgent {
     try {
       // Analyze session effectiveness
       const effectiveness = await this.analyzeSessionEffectiveness(sessionData);
-      
+
       // Analyze engagement patterns
       const engagement = await this.analyzeEngagementPatterns(sessionData);
-      
+
       // Generate learning outcomes assessment
       const learningOutcomes = await this.assessLearningOutcomes(sessionData);
-      
+
       // Identify improvement opportunities
-      const improvements = await this.identifyImprovementOpportunities(sessionData);
+      const improvements =
+        await this.identifyImprovementOpportunities(sessionData);
 
       return {
         success: true,
@@ -136,17 +147,26 @@ export class AnalyticsAgent implements AIAgent {
           engagement,
           learningOutcomes,
           improvements,
-          overallScore: this.calculateOverallScore(effectiveness, engagement, learningOutcomes),
+          overallScore: this.calculateOverallScore(
+            effectiveness,
+            engagement,
+            learningOutcomes
+          ),
         },
-        insights: [{
-          id: `session-analysis-${sessionData.sessionId || sessionData.id}`,
-          sessionId: sessionData.sessionId || sessionData.id,
-          type: 'progress',
-          content: this.generateSessionInsightMessage(effectiveness, engagement),
-          confidence: 0.8,
-          metadata: { effectiveness, engagement },
-          createdAt: new Date(),
-        }],
+        insights: [
+          {
+            id: `session-analysis-${sessionData.sessionId || sessionData.id}`,
+            sessionId: sessionData.sessionId || sessionData.id,
+            type: 'progress',
+            content: this.generateSessionInsightMessage(
+              effectiveness,
+              engagement
+            ),
+            confidence: 0.8,
+            metadata: { effectiveness, engagement },
+            createdAt: new Date(),
+          },
+        ],
       };
     } catch (error) {
       return {
@@ -159,7 +179,9 @@ export class AnalyticsAgent implements AIAgent {
   /**
    * Analyze progress data over time
    */
-  private async analyzeProgressData(context: AgentContext): Promise<AgentResult> {
+  private async analyzeProgressData(
+    context: AgentContext
+  ): Promise<AgentResult> {
     const { user, historicalData } = context;
 
     if (!user || !historicalData?.sessions) {
@@ -171,16 +193,25 @@ export class AnalyticsAgent implements AIAgent {
 
     try {
       // Analyze learning progression
-      const progression = await this.analyzeLearningProgression(historicalData.sessions);
-      
+      const progression = await this.analyzeLearningProgression(
+        historicalData.sessions
+      );
+
       // Identify skill development patterns
-      const skillDevelopment = await this.analyzeSkillDevelopment(historicalData.sessions);
-      
+      const skillDevelopment = await this.analyzeSkillDevelopment(
+        historicalData.sessions
+      );
+
       // Calculate progress metrics
-      const progressMetrics = await this.calculateProgressMetrics(historicalData.sessions);
-      
+      const progressMetrics = await this.calculateProgressMetrics(
+        historicalData.sessions
+      );
+
       // Generate progress predictions
-      const predictions = await this.generateProgressPredictions(progression, skillDevelopment);
+      const predictions = await this.generateProgressPredictions(
+        progression,
+        skillDevelopment
+      );
 
       return {
         success: true,
@@ -192,7 +223,11 @@ export class AnalyticsAgent implements AIAgent {
           predictions,
           analysisDate: new Date(),
         },
-        insights: this.generateProgressInsights(progression, skillDevelopment, predictions),
+        insights: this.generateProgressInsights(
+          progression,
+          skillDevelopment,
+          predictions
+        ),
       };
     } catch (error) {
       return {
@@ -205,19 +240,26 @@ export class AnalyticsAgent implements AIAgent {
   /**
    * Generate performance insights
    */
-  private async generatePerformanceInsights(context: AgentContext): Promise<AgentResult> {
+  private async generatePerformanceInsights(
+    context: AgentContext
+  ): Promise<AgentResult> {
     const { user, sessionData, historicalData } = context;
 
     try {
       // Analyze overall performance trends
-      const performanceTrends = await this.analyzePerformanceTrends(sessionData, historicalData);
-      
+      const performanceTrends = await this.analyzePerformanceTrends(
+        sessionData,
+        historicalData
+      );
+
       // Compare with benchmarks
-      const benchmarkComparison = await this.compareToBenchmarks(performanceTrends);
-      
+      const benchmarkComparison =
+        await this.compareToBenchmarks(performanceTrends);
+
       // Identify strengths and weaknesses
-      const strengthsWeaknesses = await this.identifyStrengthsWeaknesses(performanceTrends);
-      
+      const strengthsWeaknesses =
+        await this.identifyStrengthsWeaknesses(performanceTrends);
+
       // Generate actionable recommendations
       const recommendations = await this.generateActionableRecommendations(
         performanceTrends,
@@ -251,21 +293,35 @@ export class AnalyticsAgent implements AIAgent {
   /**
    * Generate predictive analytics
    */
-  private async generatePredictiveAnalytics(context: AgentContext): Promise<AgentResult> {
+  private async generatePredictiveAnalytics(
+    context: AgentContext
+  ): Promise<AgentResult> {
     const { sessionData, historicalData } = context;
 
     try {
       // Predict future performance
-      const performancePredictions = await this.predictFuturePerformance(sessionData, historicalData);
-      
+      const performancePredictions = await this.predictFuturePerformance(
+        sessionData,
+        historicalData
+      );
+
       // Predict learning outcomes
-      const learningPredictions = await this.predictLearningOutcomes(sessionData, historicalData);
-      
+      const learningPredictions = await this.predictLearningOutcomes(
+        sessionData,
+        historicalData
+      );
+
       // Identify risk factors
-      const riskFactors = await this.identifyRiskFactors(sessionData, historicalData);
-      
+      const riskFactors = await this.identifyRiskFactors(
+        sessionData,
+        historicalData
+      );
+
       // Generate intervention recommendations
-      const interventions = await this.recommendInterventions(riskFactors, performancePredictions);
+      const interventions = await this.recommendInterventions(
+        riskFactors,
+        performancePredictions
+      );
 
       return {
         success: true,
@@ -274,7 +330,10 @@ export class AnalyticsAgent implements AIAgent {
           learningPredictions,
           riskFactors,
           interventions,
-          confidence: this.calculatePredictionConfidence(performancePredictions, learningPredictions),
+          confidence: this.calculatePredictionConfidence(
+            performancePredictions,
+            learningPredictions
+          ),
           predictionDate: new Date(),
         },
         insights: this.generatePredictiveInsights(
@@ -300,20 +359,21 @@ export class AnalyticsAgent implements AIAgent {
     if (!sessionData || sessionData.length < 3) {
       return {
         success: false,
-        error: 'Insufficient data for trend analysis (minimum 3 sessions required)',
+        error:
+          'Insufficient data for trend analysis (minimum 3 sessions required)',
       };
     }
 
     try {
       // Analyze time-based trends
       const timeTrends = await this.analyzeTimeTrends(sessionData);
-      
+
       // Analyze subject-based trends
       const subjectTrends = await this.analyzeSubjectTrends(sessionData);
-      
+
       // Analyze engagement trends
       const engagementTrends = await this.analyzeEngagementTrends(sessionData);
-      
+
       // Detect anomalies
       const anomalies = await this.detectTrendAnomalies(sessionData);
 
@@ -327,7 +387,11 @@ export class AnalyticsAgent implements AIAgent {
           trendStrength: this.calculateTrendStrength(timeTrends, subjectTrends),
           analysisDate: new Date(),
         },
-        insights: this.generateTrendInsights(timeTrends, subjectTrends, anomalies),
+        insights: this.generateTrendInsights(
+          timeTrends,
+          subjectTrends,
+          anomalies
+        ),
       };
     } catch (error) {
       return {
@@ -340,7 +404,9 @@ export class AnalyticsAgent implements AIAgent {
   /**
    * Perform general analytics
    */
-  private async performGeneralAnalytics(context: AgentContext): Promise<AgentResult> {
+  private async performGeneralAnalytics(
+    context: AgentContext
+  ): Promise<AgentResult> {
     return {
       success: true,
       data: {
@@ -356,7 +422,8 @@ export class AnalyticsAgent implements AIAgent {
   private async analyzeSessionEffectiveness(sessionData: any): Promise<any> {
     // Simulate session effectiveness analysis
     const duration = sessionData.actualEnd - sessionData.actualStart;
-    const plannedDuration = sessionData.scheduledEnd - sessionData.scheduledStart;
+    const plannedDuration =
+      sessionData.scheduledEnd - sessionData.scheduledStart;
     const durationRatio = duration / plannedDuration;
 
     return {
@@ -385,7 +452,9 @@ export class AnalyticsAgent implements AIAgent {
     };
   }
 
-  private async identifyImprovementOpportunities(sessionData: any): Promise<any[]> {
+  private async identifyImprovementOpportunities(
+    sessionData: any
+  ): Promise<any[]> {
     const opportunities = [];
 
     if (Math.random() > 0.7) {
@@ -409,7 +478,11 @@ export class AnalyticsAgent implements AIAgent {
     return opportunities;
   }
 
-  private calculateOverallScore(effectiveness: any, engagement: any, outcomes: any): number {
+  private calculateOverallScore(
+    effectiveness: any,
+    engagement: any,
+    outcomes: any
+  ): number {
     return (
       effectiveness.overallEffectiveness * 0.4 +
       engagement.attentionLevel * 0.3 +
@@ -417,8 +490,14 @@ export class AnalyticsAgent implements AIAgent {
     );
   }
 
-  private generateSessionInsightMessage(effectiveness: any, engagement: any): string {
-    if (effectiveness.overallEffectiveness > 0.9 && engagement.attentionLevel > 0.9) {
+  private generateSessionInsightMessage(
+    effectiveness: any,
+    engagement: any
+  ): string {
+    if (
+      effectiveness.overallEffectiveness > 0.9 &&
+      engagement.attentionLevel > 0.9
+    ) {
       return 'Excellent session with high effectiveness and engagement';
     } else if (effectiveness.overallEffectiveness > 0.8) {
       return 'Good session with solid learning outcomes';
@@ -428,8 +507,10 @@ export class AnalyticsAgent implements AIAgent {
   }
 
   private async analyzeLearningProgression(sessions: any[]): Promise<any> {
-    const sortedSessions = sessions.sort((a, b) => 
-      new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime()
+    const sortedSessions = sessions.sort(
+      (a, b) =>
+        new Date(a.scheduledStart).getTime() -
+        new Date(b.scheduledStart).getTime()
     );
 
     return {
@@ -438,7 +519,10 @@ export class AnalyticsAgent implements AIAgent {
       consistencyScore: 0.85, // 85% consistency
       milestones: [
         { date: new Date(), achievement: 'Completed basic concepts' },
-        { date: new Date(), achievement: 'Demonstrated problem-solving skills' },
+        {
+          date: new Date(),
+          achievement: 'Demonstrated problem-solving skills',
+        },
       ],
     };
   }
@@ -466,7 +550,10 @@ export class AnalyticsAgent implements AIAgent {
     };
   }
 
-  private async generateProgressPredictions(progression: any, skillDevelopment: any): Promise<any> {
+  private async generateProgressPredictions(
+    progression: any,
+    skillDevelopment: any
+  ): Promise<any> {
     return {
       nextMilestone: {
         skill: 'advanced_problem_solving',
@@ -481,7 +568,11 @@ export class AnalyticsAgent implements AIAgent {
     };
   }
 
-  private generateProgressInsights(progression: any, skillDevelopment: any, predictions: any): any[] {
+  private generateProgressInsights(
+    progression: any,
+    skillDevelopment: any,
+    predictions: any
+  ): any[] {
     const insights = [];
 
     if (progression.overallTrend === 'improving') {
@@ -511,7 +602,10 @@ export class AnalyticsAgent implements AIAgent {
     return insights;
   }
 
-  private async analyzePerformanceTrends(sessionData: any[], historicalData: any): Promise<any> {
+  private async analyzePerformanceTrends(
+    sessionData: any[],
+    historicalData: any
+  ): Promise<any> {
     return {
       overallPerformance: {
         current: 8.2,
@@ -548,7 +642,9 @@ export class AnalyticsAgent implements AIAgent {
     };
   }
 
-  private async identifyStrengthsWeaknesses(performanceTrends: any): Promise<any> {
+  private async identifyStrengthsWeaknesses(
+    performanceTrends: any
+  ): Promise<any> {
     return {
       strengths: [
         { area: 'problem_solving', score: 9.1, confidence: 0.9 },
@@ -616,7 +712,10 @@ export class AnalyticsAgent implements AIAgent {
     return insights;
   }
 
-  private async predictFuturePerformance(sessionData: any[], historicalData: any): Promise<any> {
+  private async predictFuturePerformance(
+    sessionData: any[],
+    historicalData: any
+  ): Promise<any> {
     return {
       nextMonth: {
         expectedScore: 8.6,
@@ -632,7 +731,10 @@ export class AnalyticsAgent implements AIAgent {
     };
   }
 
-  private async predictLearningOutcomes(sessionData: any[], historicalData: any): Promise<any> {
+  private async predictLearningOutcomes(
+    sessionData: any[],
+    historicalData: any
+  ): Promise<any> {
     return {
       skillMastery: {
         currentLevel: 7.8,
@@ -648,7 +750,10 @@ export class AnalyticsAgent implements AIAgent {
     };
   }
 
-  private async identifyRiskFactors(sessionData: any[], historicalData: any): Promise<any[]> {
+  private async identifyRiskFactors(
+    sessionData: any[],
+    historicalData: any
+  ): Promise<any[]> {
     return [
       {
         factor: 'inconsistent_attendance',
@@ -665,7 +770,10 @@ export class AnalyticsAgent implements AIAgent {
     ];
   }
 
-  private async recommendInterventions(riskFactors: any[], predictions: any): Promise<any[]> {
+  private async recommendInterventions(
+    riskFactors: any[],
+    predictions: any
+  ): Promise<any[]> {
     const interventions: any[] = [];
 
     riskFactors.forEach(risk => {
@@ -682,8 +790,15 @@ export class AnalyticsAgent implements AIAgent {
     return interventions;
   }
 
-  private calculatePredictionConfidence(performancePredictions: any, learningPredictions: any): number {
-    return (performancePredictions.nextMonth.confidence + learningPredictions.skillMastery.confidence) / 2;
+  private calculatePredictionConfidence(
+    performancePredictions: any,
+    learningPredictions: any
+  ): number {
+    return (
+      (performancePredictions.nextMonth.confidence +
+        learningPredictions.skillMastery.confidence) /
+      2
+    );
   }
 
   private generatePredictiveInsights(
@@ -698,7 +813,8 @@ export class AnalyticsAgent implements AIAgent {
         id: `prediction-${Date.now()}`,
         sessionId: '',
         type: 'prediction',
-        content: 'Student is on track to achieve excellent performance next month',
+        content:
+          'Student is on track to achieve excellent performance next month',
         confidence: performancePredictions.nextMonth.confidence,
         metadata: performancePredictions.nextMonth,
         createdAt: new Date(),
@@ -769,7 +885,11 @@ export class AnalyticsAgent implements AIAgent {
     return 0.75; // 75% trend strength
   }
 
-  private generateTrendInsights(timeTrends: any, subjectTrends: any, anomalies: any[]): any[] {
+  private generateTrendInsights(
+    timeTrends: any,
+    subjectTrends: any,
+    anomalies: any[]
+  ): any[] {
     const insights = [];
 
     if (subjectTrends.subjectProgress.mathematics.trend === 'improving') {
@@ -792,31 +912,42 @@ export class AnalyticsAgent implements AIAgent {
   /**
    * Analyze learning patterns using historical session data
    */
-  public async analyzeLearningPatterns(context: AgentContext): Promise<AgentResult> {
+  public async analyzeLearningPatterns(
+    context: AgentContext
+  ): Promise<AgentResult> {
     const { user, historicalData } = context;
 
-    if (!user || !historicalData?.sessions || historicalData.sessions.length < 5) {
+    if (
+      !user ||
+      !historicalData?.sessions ||
+      historicalData.sessions.length < 5
+    ) {
       return {
         success: false,
-        error: 'Insufficient historical data for learning pattern analysis (minimum 5 sessions required)',
+        error:
+          'Insufficient historical data for learning pattern analysis (minimum 5 sessions required)',
       };
     }
 
     try {
       const sessions = historicalData.sessions;
-      
+
       // Analyze temporal learning patterns
-      const temporalPatterns = await this.analyzeTemporalLearningPatterns(sessions);
-      
+      const temporalPatterns =
+        await this.analyzeTemporalLearningPatterns(sessions);
+
       // Analyze subject-specific learning patterns
-      const subjectPatterns = await this.analyzeSubjectLearningPatterns(sessions);
-      
+      const subjectPatterns =
+        await this.analyzeSubjectLearningPatterns(sessions);
+
       // Analyze engagement patterns over time
-      const engagementPatterns = await this.analyzeEngagementLearningPatterns(sessions);
-      
+      const engagementPatterns =
+        await this.analyzeEngagementLearningPatterns(sessions);
+
       // Identify learning style patterns
-      const learningStylePatterns = await this.identifyLearningStylePatterns(sessions);
-      
+      const learningStylePatterns =
+        await this.identifyLearningStylePatterns(sessions);
+
       // Generate pattern-based insights
       const patternInsights = this.generatePatternInsights(
         temporalPatterns,
@@ -849,7 +980,9 @@ export class AnalyticsAgent implements AIAgent {
   /**
    * Build progress tracking with AI-generated recommendations
    */
-  public async buildProgressTracking(context: AgentContext): Promise<AgentResult> {
+  public async buildProgressTracking(
+    context: AgentContext
+  ): Promise<AgentResult> {
     const { user, historicalData, sessionData } = context;
 
     if (!user) {
@@ -861,17 +994,28 @@ export class AnalyticsAgent implements AIAgent {
 
     try {
       // Calculate current progress metrics
-      const currentProgress = await this.calculateCurrentProgress(sessionData, historicalData);
-      
+      const currentProgress = await this.calculateCurrentProgress(
+        sessionData,
+        historicalData
+      );
+
       // Generate AI-powered recommendations
-      const aiRecommendations = await this.generateAIRecommendations(currentProgress, historicalData);
-      
+      const aiRecommendations = await this.generateAIRecommendations(
+        currentProgress,
+        historicalData
+      );
+
       // Track skill development over time
-      const skillTracking = await this.trackSkillDevelopment(historicalData?.sessions || []);
-      
+      const skillTracking = await this.trackSkillDevelopment(
+        historicalData?.sessions || []
+      );
+
       // Identify learning milestones
-      const milestones = await this.identifyLearningMilestones(currentProgress, skillTracking);
-      
+      const milestones = await this.identifyLearningMilestones(
+        currentProgress,
+        skillTracking
+      );
+
       // Generate progress insights
       const progressInsights = this.generateProgressTrackingInsights(
         currentProgress,
@@ -895,7 +1039,8 @@ export class AnalyticsAgent implements AIAgent {
           id: `action-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           type: rec.type,
           description: rec.description,
-          priority: rec.priority === 'high' ? 3 : rec.priority === 'medium' ? 2 : 1,
+          priority:
+            rec.priority === 'high' ? 3 : rec.priority === 'medium' ? 2 : 1,
           automated: false,
         })),
       };
@@ -910,7 +1055,9 @@ export class AnalyticsAgent implements AIAgent {
   /**
    * Create alert system for learning gaps and improvements
    */
-  public async createLearningAlerts(context: AgentContext): Promise<AgentResult> {
+  public async createLearningAlerts(
+    context: AgentContext
+  ): Promise<AgentResult> {
     const { user, historicalData, sessionData } = context;
 
     if (!user) {
@@ -922,19 +1069,34 @@ export class AnalyticsAgent implements AIAgent {
 
     try {
       // Detect learning gaps
-      const learningGaps = await this.detectLearningGaps(historicalData?.sessions || [], sessionData || []);
-      
+      const learningGaps = await this.detectLearningGaps(
+        historicalData?.sessions || [],
+        sessionData || []
+      );
+
       // Identify improvement opportunities
-      const improvements = await this.identifyImprovementOpportunities(sessionData?.[0] || {});
-      
+      const improvements = await this.identifyImprovementOpportunities(
+        sessionData?.[0] || {}
+      );
+
       // Generate performance alerts
-      const performanceAlerts = await this.generatePerformanceAlerts(learningGaps, improvements);
-      
+      const performanceAlerts = await this.generatePerformanceAlerts(
+        learningGaps,
+        improvements
+      );
+
       // Create intervention recommendations
-      const interventions = await this.createInterventionRecommendations(learningGaps, performanceAlerts);
-      
+      const interventions = await this.createInterventionRecommendations(
+        learningGaps,
+        performanceAlerts
+      );
+
       // Generate alert insights
-      const alertInsights = this.generateAlertInsights(learningGaps, improvements, performanceAlerts);
+      const alertInsights = this.generateAlertInsights(
+        learningGaps,
+        improvements,
+        performanceAlerts
+      );
 
       return {
         success: true,
@@ -951,7 +1113,12 @@ export class AnalyticsAgent implements AIAgent {
           id: `alert-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           type: 'intervention',
           description: intervention.description,
-          priority: intervention.urgency === 'high' ? 3 : intervention.urgency === 'medium' ? 2 : 1,
+          priority:
+            intervention.urgency === 'high'
+              ? 3
+              : intervention.urgency === 'medium'
+                ? 2
+                : 1,
           automated: intervention.automated || false,
         })),
       };
@@ -966,7 +1133,9 @@ export class AnalyticsAgent implements AIAgent {
   /**
    * Generate weekly reports with actionable insights
    */
-  public async generateWeeklyReport(context: AgentContext): Promise<AgentResult> {
+  public async generateWeeklyReport(
+    context: AgentContext
+  ): Promise<AgentResult> {
     const { user, historicalData, sessionData } = context;
 
     if (!user) {
@@ -978,27 +1147,34 @@ export class AnalyticsAgent implements AIAgent {
 
     try {
       // Get last week's sessions
-      const weeklySessionData = this.getWeeklySessionData(historicalData?.sessions || [], sessionData || []);
-      
+      const weeklySessionData = this.getWeeklySessionData(
+        historicalData?.sessions || [],
+        sessionData || []
+      );
+
       // Generate weekly performance summary
-      const performanceSummary = await this.generateWeeklyPerformanceSummary(weeklySessionData);
-      
+      const performanceSummary =
+        await this.generateWeeklyPerformanceSummary(weeklySessionData);
+
       // Analyze weekly learning achievements
-      const achievements = await this.analyzeWeeklyAchievements(weeklySessionData);
-      
+      const achievements =
+        await this.analyzeWeeklyAchievements(weeklySessionData);
+
       // Identify areas for improvement
-      const improvementAreas = await this.identifyWeeklyImprovementAreas(weeklySessionData);
-      
+      const improvementAreas =
+        await this.identifyWeeklyImprovementAreas(weeklySessionData);
+
       // Generate actionable insights for next week
       const actionableInsights = await this.generateActionableInsights(
         performanceSummary,
         achievements,
         improvementAreas
       );
-      
+
       // Create next week recommendations
-      const nextWeekRecommendations = await this.createNextWeekRecommendations(actionableInsights);
-      
+      const nextWeekRecommendations =
+        await this.createNextWeekRecommendations(actionableInsights);
+
       // Generate report insights
       const reportInsights = this.generateWeeklyReportInsights(
         performanceSummary,
@@ -1027,7 +1203,8 @@ export class AnalyticsAgent implements AIAgent {
           id: `weekly-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           type: rec.type,
           description: rec.description,
-          priority: rec.priority === 'high' ? 3 : rec.priority === 'medium' ? 2 : 1,
+          priority:
+            rec.priority === 'high' ? 3 : rec.priority === 'medium' ? 2 : 1,
           automated: false,
         })),
       };
@@ -1041,9 +1218,11 @@ export class AnalyticsAgent implements AIAgent {
 
   // Helper methods for enhanced analytics
 
-  private async analyzeTemporalLearningPatterns(sessions: any[]): Promise<LearningPattern[]> {
+  private async analyzeTemporalLearningPatterns(
+    sessions: any[]
+  ): Promise<LearningPattern[]> {
     const patterns: LearningPattern[] = [];
-    
+
     // Analyze time-of-day performance patterns
     const timePerformance = this.groupSessionsByTimeOfDay(sessions);
     Object.entries(timePerformance).forEach(([timeSlot, performance]) => {
@@ -1073,7 +1252,9 @@ export class AnalyticsAgent implements AIAgent {
     return patterns;
   }
 
-  private async analyzeSubjectLearningPatterns(sessions: any[]): Promise<LearningPattern[]> {
+  private async analyzeSubjectLearningPatterns(
+    sessions: any[]
+  ): Promise<LearningPattern[]> {
     const patterns: LearningPattern[] = [];
     const subjectPerformance = this.groupSessionsBySubject(sessions);
 
@@ -1087,7 +1268,7 @@ export class AnalyticsAgent implements AIAgent {
           confidence: 0.9,
         });
       }
-      
+
       if (performance.consistencyScore > 0.9) {
         patterns.push({
           pattern: `consistent_performance_${subject}`,
@@ -1101,12 +1282,14 @@ export class AnalyticsAgent implements AIAgent {
     return patterns;
   }
 
-  private async analyzeEngagementLearningPatterns(sessions: any[]): Promise<LearningPattern[]> {
+  private async analyzeEngagementLearningPatterns(
+    sessions: any[]
+  ): Promise<LearningPattern[]> {
     const patterns: LearningPattern[] = [];
-    
+
     // Analyze engagement trends over time
     const engagementTrend = this.calculateEngagementTrend(sessions);
-    
+
     if (engagementTrend.slope > 0.05) {
       patterns.push({
         pattern: 'increasing_engagement',
@@ -1115,7 +1298,7 @@ export class AnalyticsAgent implements AIAgent {
         confidence: 0.8,
       });
     }
-    
+
     if (engagementTrend.variance < 0.1) {
       patterns.push({
         pattern: 'stable_engagement',
@@ -1128,12 +1311,14 @@ export class AnalyticsAgent implements AIAgent {
     return patterns;
   }
 
-  private async identifyLearningStylePatterns(sessions: any[]): Promise<LearningPattern[]> {
+  private async identifyLearningStylePatterns(
+    sessions: any[]
+  ): Promise<LearningPattern[]> {
     const patterns: LearningPattern[] = [];
-    
+
     // Analyze preferred learning modalities
     const modalityPreferences = this.analyzeLearningModalities(sessions);
-    
+
     Object.entries(modalityPreferences).forEach(([modality, effectiveness]) => {
       if ((effectiveness as number) > 0.8) {
         patterns.push({
@@ -1155,7 +1340,7 @@ export class AnalyticsAgent implements AIAgent {
     learningStylePatterns: LearningPattern[]
   ): AIInsight[] {
     const insights: AIInsight[] = [];
-    
+
     // Generate insights from temporal patterns
     temporalPatterns.forEach(pattern => {
       if (pattern.impact === 'positive') {
@@ -1190,10 +1375,13 @@ export class AnalyticsAgent implements AIAgent {
     return insights;
   }
 
-  private async calculateCurrentProgress(sessionData: any[], historicalData: any): Promise<any> {
+  private async calculateCurrentProgress(
+    sessionData: any[],
+    historicalData: any
+  ): Promise<any> {
     const recentSessions = sessionData || [];
     const allSessions = historicalData?.sessions || [];
-    
+
     return {
       overallScore: this.calculateAverageScore(recentSessions),
       improvementRate: this.calculateImprovementRate(allSessions),
@@ -1204,37 +1392,43 @@ export class AnalyticsAgent implements AIAgent {
     };
   }
 
-  private async generateAIRecommendations(currentProgress: any, historicalData: any): Promise<Recommendation[]> {
+  private async generateAIRecommendations(
+    currentProgress: any,
+    historicalData: any
+  ): Promise<Recommendation[]> {
     const recommendations: Recommendation[] = [];
-    
+
     if (currentProgress.overallScore < 7.0) {
       recommendations.push({
         id: `rec-${Date.now()}-1`,
         type: 'action',
         title: 'Focus on Foundational Skills',
-        description: 'Spend additional time on core concepts to improve overall performance',
+        description:
+          'Spend additional time on core concepts to improve overall performance',
         priority: 'high',
         actionable: true,
       });
     }
-    
+
     if (currentProgress.engagementLevel < 0.7) {
       recommendations.push({
         id: `rec-${Date.now()}-2`,
         type: 'resource',
         title: 'Increase Interactive Learning',
-        description: 'Incorporate more hands-on activities and interactive elements',
+        description:
+          'Incorporate more hands-on activities and interactive elements',
         priority: 'medium',
         actionable: true,
       });
     }
-    
+
     if (currentProgress.consistencyIndex < 0.8) {
       recommendations.push({
         id: `rec-${Date.now()}-3`,
         type: 'schedule',
         title: 'Establish Regular Study Routine',
-        description: 'Create a consistent daily learning schedule to improve retention',
+        description:
+          'Create a consistent daily learning schedule to improve retention',
         priority: 'medium',
         actionable: true,
       });
@@ -1244,13 +1438,22 @@ export class AnalyticsAgent implements AIAgent {
   }
 
   private async trackSkillDevelopment(sessions: any[]): Promise<any> {
-    const skillAreas = ['mathematics', 'reading', 'writing', 'science', 'critical_thinking'];
+    const skillAreas = [
+      'mathematics',
+      'reading',
+      'writing',
+      'science',
+      'critical_thinking',
+    ];
     const skillTracking: any = {};
-    
+
     skillAreas.forEach(skill => {
-      const skillSessions = sessions.filter(s => s.subject?.toLowerCase().includes(skill) || 
-                                                 s.notes?.toLowerCase().includes(skill));
-      
+      const skillSessions = sessions.filter(
+        s =>
+          s.subject?.toLowerCase().includes(skill) ||
+          s.notes?.toLowerCase().includes(skill)
+      );
+
       skillTracking[skill] = {
         currentLevel: Math.random() * 3 + 7, // 7-10 scale
         progressRate: Math.random() * 0.2 + 0.05, // 5-25% improvement
@@ -1259,13 +1462,16 @@ export class AnalyticsAgent implements AIAgent {
         trend: Math.random() > 0.3 ? 'improving' : 'stable',
       };
     });
-    
+
     return skillTracking;
   }
 
-  private async identifyLearningMilestones(currentProgress: any, skillTracking: any): Promise<any[]> {
+  private async identifyLearningMilestones(
+    currentProgress: any,
+    skillTracking: any
+  ): Promise<any[]> {
     const milestones: any[] = [];
-    
+
     Object.entries(skillTracking).forEach(([skill, data]) => {
       const skillData = data as any;
       if (skillData.currentLevel > 8.5) {
@@ -1286,7 +1492,7 @@ export class AnalyticsAgent implements AIAgent {
         });
       }
     });
-    
+
     return milestones;
   }
 
@@ -1297,7 +1503,7 @@ export class AnalyticsAgent implements AIAgent {
     milestones: any[]
   ): AIInsight[] {
     const insights: AIInsight[] = [];
-    
+
     if (currentProgress.improvementRate > 0.1) {
       insights.push({
         id: `progress-${Date.now()}-1`,
@@ -1309,7 +1515,7 @@ export class AnalyticsAgent implements AIAgent {
         createdAt: new Date(),
       });
     }
-    
+
     milestones.forEach(milestone => {
       insights.push({
         id: `milestone-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -1321,24 +1527,28 @@ export class AnalyticsAgent implements AIAgent {
         createdAt: new Date(),
       });
     });
-    
+
     return insights;
   }
 
-  private async detectLearningGaps(historicalSessions: any[], recentSessions: any[]): Promise<any[]> {
+  private async detectLearningGaps(
+    historicalSessions: any[],
+    recentSessions: any[]
+  ): Promise<any[]> {
     const gaps: any[] = [];
     const subjects = ['mathematics', 'reading', 'writing', 'science'];
-    
+
     subjects.forEach(subject => {
-      const subjectSessions = [...historicalSessions, ...recentSessions]
-        .filter(s => s.subject?.toLowerCase().includes(subject));
-      
+      const subjectSessions = [...historicalSessions, ...recentSessions].filter(
+        s => s.subject?.toLowerCase().includes(subject)
+      );
+
       if (subjectSessions.length > 0) {
         const averageScore = this.calculateAverageScore(subjectSessions);
         const recentScore = this.calculateAverageScore(
           subjectSessions.slice(-3) // Last 3 sessions
         );
-        
+
         if (recentScore < averageScore - 1.0) {
           gaps.push({
             subject,
@@ -1350,7 +1560,7 @@ export class AnalyticsAgent implements AIAgent {
             sessionCount: subjectSessions.length,
           });
         }
-        
+
         if (averageScore < 6.5) {
           gaps.push({
             subject,
@@ -1363,13 +1573,16 @@ export class AnalyticsAgent implements AIAgent {
         }
       }
     });
-    
+
     return gaps;
   }
 
-  private async generatePerformanceAlerts(learningGaps: any[], improvements: any[]): Promise<any[]> {
+  private async generatePerformanceAlerts(
+    learningGaps: any[],
+    improvements: any[]
+  ): Promise<any[]> {
     const alerts: any[] = [];
-    
+
     learningGaps.forEach(gap => {
       if (gap.severity === 'high') {
         alerts.push({
@@ -1383,13 +1596,16 @@ export class AnalyticsAgent implements AIAgent {
         });
       }
     });
-    
+
     return alerts;
   }
 
-  private async createInterventionRecommendations(learningGaps: any[], performanceAlerts: any[]): Promise<any[]> {
+  private async createInterventionRecommendations(
+    learningGaps: any[],
+    performanceAlerts: any[]
+  ): Promise<any[]> {
     const interventions: any[] = [];
-    
+
     learningGaps.forEach(gap => {
       interventions.push({
         gapId: gap.subject,
@@ -1401,13 +1617,17 @@ export class AnalyticsAgent implements AIAgent {
         automated: false,
       });
     });
-    
+
     return interventions;
   }
 
-  private generateAlertInsights(learningGaps: any[], improvements: any[], performanceAlerts: any[]): AIInsight[] {
+  private generateAlertInsights(
+    learningGaps: any[],
+    improvements: any[],
+    performanceAlerts: any[]
+  ): AIInsight[] {
     const insights: AIInsight[] = [];
-    
+
     if (learningGaps.length > 0) {
       insights.push({
         id: `alert-${Date.now()}-1`,
@@ -1419,37 +1639,48 @@ export class AnalyticsAgent implements AIAgent {
         createdAt: new Date(),
       });
     }
-    
+
     return insights;
   }
 
-  private getWeeklySessionData(historicalSessions: any[], recentSessions: any[]): any[] {
+  private getWeeklySessionData(
+    historicalSessions: any[],
+    recentSessions: any[]
+  ): any[] {
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    
+
     return [...historicalSessions, ...recentSessions].filter(session => {
       const sessionDate = new Date(session.scheduledStart || session.createdAt);
       return sessionDate >= oneWeekAgo;
     });
   }
 
-  private async generateWeeklyPerformanceSummary(weeklySessionData: any[]): Promise<any> {
+  private async generateWeeklyPerformanceSummary(
+    weeklySessionData: any[]
+  ): Promise<any> {
     return {
       totalSessions: weeklySessionData.length,
       averageScore: this.calculateAverageScore(weeklySessionData),
-      completionRate: weeklySessionData.filter(s => s.status === 'completed').length / weeklySessionData.length,
+      completionRate:
+        weeklySessionData.filter(s => s.status === 'completed').length /
+        weeklySessionData.length,
       totalLearningTime: weeklySessionData.reduce((total, session) => {
-        const duration = session.actualEnd && session.actualStart 
-          ? new Date(session.actualEnd).getTime() - new Date(session.actualStart).getTime()
-          : 0;
+        const duration =
+          session.actualEnd && session.actualStart
+            ? new Date(session.actualEnd).getTime() -
+              new Date(session.actualStart).getTime()
+            : 0;
         return total + duration;
       }, 0),
       subjectDistribution: this.calculateSubjectDistribution(weeklySessionData),
     };
   }
 
-  private async analyzeWeeklyAchievements(weeklySessionData: any[]): Promise<any[]> {
+  private async analyzeWeeklyAchievements(
+    weeklySessionData: any[]
+  ): Promise<any[]> {
     const achievements = [];
-    
+
     if (weeklySessionData.length >= 5) {
       achievements.push({
         type: 'consistency',
@@ -1458,7 +1689,7 @@ export class AnalyticsAgent implements AIAgent {
         points: 50,
       });
     }
-    
+
     const averageScore = this.calculateAverageScore(weeklySessionData);
     if (averageScore >= 8.5) {
       achievements.push({
@@ -1468,14 +1699,16 @@ export class AnalyticsAgent implements AIAgent {
         points: 100,
       });
     }
-    
+
     return achievements;
   }
 
-  private async identifyWeeklyImprovementAreas(weeklySessionData: any[]): Promise<any[]> {
+  private async identifyWeeklyImprovementAreas(
+    weeklySessionData: any[]
+  ): Promise<any[]> {
     const improvementAreas: any[] = [];
     const subjectPerformance = this.groupSessionsBySubject(weeklySessionData);
-    
+
     Object.entries(subjectPerformance).forEach(([subject, data]) => {
       const performance = data as any;
       if (performance.averageScore < 7.0) {
@@ -1488,7 +1721,7 @@ export class AnalyticsAgent implements AIAgent {
         });
       }
     });
-    
+
     return improvementAreas;
   }
 
@@ -1498,7 +1731,7 @@ export class AnalyticsAgent implements AIAgent {
     improvementAreas: any[]
   ): Promise<any[]> {
     const insights = [];
-    
+
     if (performanceSummary.completionRate < 0.8) {
       insights.push({
         type: 'attendance',
@@ -1507,7 +1740,7 @@ export class AnalyticsAgent implements AIAgent {
         priority: 'medium',
       });
     }
-    
+
     if (improvementAreas.length > 0) {
       insights.push({
         type: 'academic',
@@ -1516,13 +1749,15 @@ export class AnalyticsAgent implements AIAgent {
         priority: 'high',
       });
     }
-    
+
     return insights;
   }
 
-  private async createNextWeekRecommendations(actionableInsights: any[]): Promise<any[]> {
+  private async createNextWeekRecommendations(
+    actionableInsights: any[]
+  ): Promise<any[]> {
     const recommendations = [];
-    
+
     actionableInsights.forEach(insight => {
       recommendations.push({
         type: insight.type,
@@ -1532,7 +1767,7 @@ export class AnalyticsAgent implements AIAgent {
         category: 'improvement',
       });
     });
-    
+
     // Add general recommendations
     recommendations.push({
       type: 'review',
@@ -1541,7 +1776,7 @@ export class AnalyticsAgent implements AIAgent {
       timeframe: 'next_week',
       category: 'maintenance',
     });
-    
+
     return recommendations;
   }
 
@@ -1551,21 +1786,21 @@ export class AnalyticsAgent implements AIAgent {
     actionableInsights: any[]
   ): AIInsight[] {
     const insights: AIInsight[] = [];
-    
+
     insights.push({
       id: `weekly-${Date.now()}-1`,
       sessionId: '',
       type: 'progress',
-      content: `Weekly summary: ${performanceSummary.totalSessions} sessions completed with ${(performanceSummary.averageScore).toFixed(1)} average score`,
+      content: `Weekly summary: ${performanceSummary.totalSessions} sessions completed with ${performanceSummary.averageScore.toFixed(1)} average score`,
       confidence: 0.95,
-      metadata: { 
+      metadata: {
         sessionCount: performanceSummary.totalSessions,
         averageScore: performanceSummary.averageScore,
-        reportType: 'weekly_summary'
+        reportType: 'weekly_summary',
       },
       createdAt: new Date(),
     });
-    
+
     if (achievements.length > 0) {
       insights.push({
         id: `weekly-${Date.now()}-2`,
@@ -1577,7 +1812,7 @@ export class AnalyticsAgent implements AIAgent {
         createdAt: new Date(),
       });
     }
-    
+
     return insights;
   }
 
@@ -1589,18 +1824,18 @@ export class AnalyticsAgent implements AIAgent {
       afternoon: [],
       evening: [],
     };
-    
+
     sessions.forEach(session => {
       const hour = new Date(session.scheduledStart).getHours();
       if (hour < 12) {
-        timeGroups.morning.push(session);
+        timeGroups.morning?.push(session);
       } else if (hour < 17) {
-        timeGroups.afternoon.push(session);
+        timeGroups.afternoon?.push(session);
       } else {
-        timeGroups.evening.push(session);
+        timeGroups.evening?.push(session);
       }
     });
-    
+
     const result: Record<string, any> = {};
     Object.entries(timeGroups).forEach(([timeSlot, sessionList]) => {
       result[timeSlot] = {
@@ -1608,22 +1843,30 @@ export class AnalyticsAgent implements AIAgent {
         averageScore: this.calculateAverageScore(sessionList),
       };
     });
-    
+
     return result;
   }
 
   private groupSessionsByDayOfWeek(sessions: any[]): Record<string, any> {
     const dayGroups: Record<string, any[]> = {
-      monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: []
+      monday: [],
+      tuesday: [],
+      wednesday: [],
+      thursday: [],
+      friday: [],
+      saturday: [],
+      sunday: [],
     };
-    
+
     sessions.forEach(session => {
-      const dayName = new Date(session.scheduledStart).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      const dayName = new Date(session.scheduledStart)
+        .toLocaleDateString('en-US', { weekday: 'long' })
+        .toLowerCase();
       if (dayGroups[dayName]) {
         dayGroups[dayName].push(session);
       }
     });
-    
+
     const result: Record<string, any> = {};
     Object.entries(dayGroups).forEach(([day, sessionList]) => {
       result[day] = {
@@ -1631,13 +1874,13 @@ export class AnalyticsAgent implements AIAgent {
         averageScore: this.calculateAverageScore(sessionList),
       };
     });
-    
+
     return result;
   }
 
   private groupSessionsBySubject(sessions: any[]): Record<string, any> {
     const subjectGroups: Record<string, any[]> = {};
-    
+
     sessions.forEach(session => {
       const subject = session.subject || 'general';
       if (!subjectGroups[subject]) {
@@ -1645,7 +1888,7 @@ export class AnalyticsAgent implements AIAgent {
       }
       subjectGroups[subject].push(session);
     });
-    
+
     const result: Record<string, any> = {};
     Object.entries(subjectGroups).forEach(([subject, sessionList]) => {
       result[subject] = {
@@ -1655,24 +1898,31 @@ export class AnalyticsAgent implements AIAgent {
         consistencyScore: this.calculateConsistencyIndex(sessionList),
       };
     });
-    
+
     return result;
   }
 
-  private calculateEngagementTrend(sessions: any[]): { slope: number; variance: number } {
+  private calculateEngagementTrend(sessions: any[]): {
+    slope: number;
+    variance: number;
+  } {
     // Simplified engagement trend calculation
     const engagementScores = sessions.map(() => Math.random() * 0.3 + 0.7); // 70-100%
-    
+
     const n = engagementScores.length;
-    const sumX = n * (n - 1) / 2;
+    const sumX = (n * (n - 1)) / 2;
     const sumY = engagementScores.reduce((a, b) => a + b, 0);
     const sumXY = engagementScores.reduce((sum, y, i) => sum + i * y, 0);
-    const sumX2 = n * (n - 1) * (2 * n - 1) / 6;
-    
+    const sumX2 = (n * (n - 1) * (2 * n - 1)) / 6;
+
     const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
     const mean = sumY / n;
-    const variance = engagementScores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / n;
-    
+    const variance =
+      engagementScores.reduce(
+        (sum, score) => sum + Math.pow(score - mean, 2),
+        0
+      ) / n;
+
     return { slope, variance };
   }
 
@@ -1691,7 +1941,9 @@ export class AnalyticsAgent implements AIAgent {
       return 0;
     }
     // Simulate score calculation - in real implementation, extract from session data
-    return sessions.reduce((sum) => sum + (Math.random() * 3 + 7), 0) / sessions.length;
+    return (
+      sessions.reduce(sum => sum + (Math.random() * 3 + 7), 0) / sessions.length
+    );
   }
 
   private calculateImprovementRate(sessions: any[]): number {
@@ -1713,11 +1965,11 @@ export class AnalyticsAgent implements AIAgent {
   private calculateSkillMastery(sessions: any[]): Record<string, number> {
     const skills = ['mathematics', 'reading', 'writing', 'science'];
     const mastery: Record<string, number> = {};
-    
+
     skills.forEach(skill => {
       mastery[skill] = Math.random() * 3 + 7; // 7-10 scale
     });
-    
+
     return mastery;
   }
 
@@ -1729,14 +1981,16 @@ export class AnalyticsAgent implements AIAgent {
     return Math.random() * 0.3 + 0.7; // 70-100%
   }
 
-  private calculateSubjectDistribution(sessions: any[]): Record<string, number> {
+  private calculateSubjectDistribution(
+    sessions: any[]
+  ): Record<string, number> {
     const distribution: Record<string, number> = {};
-    
+
     sessions.forEach(session => {
       const subject = session.subject || 'general';
       distribution[subject] = (distribution[subject] || 0) + 1;
     });
-    
+
     return distribution;
   }
 }
