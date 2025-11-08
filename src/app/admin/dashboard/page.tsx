@@ -9,7 +9,7 @@ interface User {
   id: string;
   name: string;
   email: string;
-  role: 'parent' | 'admin' | 'teacher';
+  role: 'parent' | 'admin' | 'teacher' | 'student';
   status: 'active' | 'inactive';
   createdAt: Date;
   password?: string;

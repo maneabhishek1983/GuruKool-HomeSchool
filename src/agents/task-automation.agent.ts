@@ -1601,10 +1601,13 @@ export class TaskAutomationAgent extends BaseAIAgent {
 
     // Group sessions by teacher (primary resource)
     sessions.forEach(session => {
-      if (!resourceMap.has(session.teacherId)) {
-        resourceMap.set(session.teacherId, []);
+      const teacherId = session.teacherId;
+      if (!teacherId) return;
+
+      if (!resourceMap.has(teacherId)) {
+        resourceMap.set(teacherId, []);
       }
-      resourceMap.get(session.teacherId)!.push(session);
+      resourceMap.get(teacherId)!.push(session);
     });
 
     // Check for teacher conflicts
@@ -1635,7 +1638,7 @@ export class TaskAutomationAgent extends BaseAIAgent {
 
     // Group sessions by location
     sessions.forEach(session => {
-      if (session.location?.coordinates) {
+      if (typeof session.location === 'object' && session.location?.coordinates) {
         const locationKey = `${session.location.coordinates.latitude}_${session.location.coordinates.longitude}`;
         if (!locationMap.has(locationKey)) {
           locationMap.set(locationKey, []);
@@ -1656,13 +1659,14 @@ export class TaskAutomationAgent extends BaseAIAgent {
             session2 &&
             this.sessionsOverlap(session1, session2)
           ) {
+            const location1 = typeof session1.location === 'object' ? session1.location.address : session1.location;
             conflicts.push({
               id: `location_conflict_${session1.id}_${session2.id}`,
               type: 'location_overlap',
               severity: 'medium',
               description: `Sessions at same location have overlapping times`,
               sessions: [session1.id, session2.id],
-              location: session1.location?.address,
+              location: location1,
             });
           }
         }

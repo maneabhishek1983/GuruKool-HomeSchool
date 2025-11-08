@@ -84,13 +84,9 @@ export const GET = withRateLimit({
       query = query.eq('status', status);
     }
     if (startDate && endDate) {
-      // Validate date range
-      const dateValidation = dateRangeSchema.safeParse({ startDate, endDate });
-      if (dateValidation.success) {
-        query = query
-          .gte('scheduled_start', startDate)
-          .lte('scheduled_start', endDate);
-      }
+      query = query
+        .gte('scheduled_start', startDate)
+        .lte('scheduled_start', endDate);
     }
 
     // Execute query with pagination
@@ -188,7 +184,7 @@ export const POST = withRateLimit({
     const { data: student, error: studentError } = await supabase
       .from('students')
       .select('id')
-      .eq('id', validation.data.studentId)
+      .eq('id', validation.data.student_id)
       .eq('parent_id', user.id)
       .single();
 

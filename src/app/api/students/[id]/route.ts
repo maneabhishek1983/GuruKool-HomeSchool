@@ -11,9 +11,15 @@ import { createClient } from '@supabase/supabase-js';
 export const GET = withRateLimit({
   keyPrefix: 'api:students:get-one',
   max: 100,
-})(async (request: NextRequest, { params }: { params: { id: string } }) => {
+})(async (request: NextRequest, context?: { params?: Record<string, string> }) => {
   try {
-    const { id } = params;
+    const id = context?.params?.id;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Student ID is required', code: 'INVALID_REQUEST' },
+        { status: 400 }
+      );
+    }
 
     // Get auth token from header
     const authHeader = request.headers.get('authorization');

@@ -69,7 +69,6 @@ export default function AdminPortalPage() {
       const result = await createUser({
         name: name,
         email: email,
-        password: password,
         role: 'admin',
         preferences: {
           notifications: {
