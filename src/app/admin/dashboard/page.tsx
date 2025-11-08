@@ -132,7 +132,7 @@ export default function AdminDashboard() {
         console.log('Generated QR code:', qrCode ? 'Success' : 'Failed');
 
         // Create user with proper preferences structure
-        const userData: Omit<User, 'id' | 'createdAt' | 'lastActive'> = {
+        const userData = {
           name: newUser.name,
           email: newUser.email,
           role: newUser.role,
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
               screenReader: false,
             },
           },
-        };
+        } as Omit<User, 'id' | 'createdAt' | 'lastActive'>;
 
         // Use the auth context to create the user
         const result = await createUser(userData);
