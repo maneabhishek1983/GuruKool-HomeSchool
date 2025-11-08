@@ -33,18 +33,18 @@ export function Container({
       className={cn(
         // Base styles
         'w-full px-4 sm:px-6 lg:px-8',
-        
+
         // Size styles
         containerSizes[size],
-        
+
         // Centering
         centered && 'mx-auto',
-        
+
         className
       )}
-      {...(style && { style })}
-      {...motionProps}
-      {...props}
+      {...(style ? { style } : {})}
+      {...(motionProps || {})}
+      {...(props as any)}
     >
       {children}
     </motion.div>
@@ -68,12 +68,9 @@ export function Section({
 
   return (
     <motion.section
-      className={cn(
-        spacingClasses[spacing],
-        className
-      )}
-      {...motionProps}
-      {...props}
+      className={cn(spacingClasses[spacing], className)}
+      {...(motionProps || {})}
+      {...(props as any)}
     >
       <Container>{children}</Container>
     </motion.section>
