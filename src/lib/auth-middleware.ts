@@ -5,7 +5,7 @@ import type { Database } from '@/types/supabase';
 
 /**
  * Authentication Middleware for API Routes
- * 
+ *
  * This middleware ensures that API routes are protected and only
  * accessible to authenticated users with the correct roles.
  */
@@ -40,7 +40,7 @@ interface AuthMiddlewareOptions {
 
 /**
  * Wrap an API route handler with authentication
- * 
+ *
  * @example
  * ```typescript
  * export const GET = withAuth({ allowedRoles: ['parent', 'admin'] })(
@@ -53,7 +53,9 @@ interface AuthMiddlewareOptions {
 export function withAuth(options: AuthMiddlewareOptions = {}) {
   const { allowedRoles, allowUnauthenticated = false } = options;
 
-  return function wrap(handler: Handler): (request: NextRequest) => Promise<Response> {
+  return function wrap(
+    handler: Handler
+  ): (request: NextRequest) => Promise<Response> {
     return async function authenticated(request: NextRequest) {
       try {
         // Create Supabase client
@@ -106,7 +108,10 @@ export function withAuth(options: AuthMiddlewareOptions = {}) {
           );
         }
 
-        const userRole = userData.role as 'parent' | 'teacher' | 'admin';
+        const userRole = (userData as any).role as
+          | 'parent'
+          | 'teacher'
+          | 'admin';
 
         // Check role authorization
         if (allowedRoles && !allowedRoles.includes(userRole)) {
@@ -150,7 +155,7 @@ export function withAuth(options: AuthMiddlewareOptions = {}) {
 
 /**
  * Require authentication without role restrictions
- * 
+ *
  * @example
  * ```typescript
  * export const GET = requireAuth(async function GET(request, { user }) {
@@ -200,7 +205,7 @@ export function requireTeacherOrAdmin(handler: Handler) {
 /**
  * Extract user ID from path parameters
  * Useful for checking if user is accessing their own resources
- * 
+ *
  * @example
  * ```typescript
  * const userId = getUserIdFromPath(request); // /api/users/[id]
@@ -211,10 +216,11 @@ export function requireTeacherOrAdmin(handler: Handler) {
  */
 export function getUserIdFromPath(request: NextRequest): string | null {
   const pathParts = request.nextUrl.pathname.split('/');
-  const userIdIndex = pathParts.findIndex((part) => part === 'users') + 1;
+  const userIdIndex = pathParts.findIndex(part => part === 'users') + 1;
 
   if (userIdIndex > 0 && userIdIndex < pathParts.length) {
-    return pathParts[userIdIndex];
+    const userId = pathParts[userIdIndex];
+    return userId || null;
   }
 
   return null;
