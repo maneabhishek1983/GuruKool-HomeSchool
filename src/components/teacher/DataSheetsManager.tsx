@@ -103,7 +103,8 @@ export const DataSheetsManager: React.FC<DataSheetsManagerProps> = ({
   const createNewDataSheet = async (student: Student) => {
     setCreating(true);
     try {
-      const dateStr = selectedDate || new Date().toISOString().split('T')[0];
+      const dateStr: string =
+        selectedDate || new Date().toISOString().split('T')[0];
       const newSheet = await DataSheetsService.createDataSheet({
         studentId: student.id,
         teacherId: teacherId,
