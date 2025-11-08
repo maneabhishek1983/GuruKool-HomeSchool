@@ -1,7 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, useAnimation, useMotionValue, useTransform } from 'framer-motion';
+import {
+  motion,
+  useAnimation,
+  useMotionValue,
+  useTransform,
+} from 'framer-motion';
 import { cn, themeClasses } from '../../themes/theme-utils';
 import { Card, CardHeader, CardTitle, CardContent } from '../base/Card';
 import { animationPresets } from '../../animations/presets';
@@ -35,12 +40,12 @@ interface ProgressTrackerProps {
   className?: string;
 }
 
-const LinearProgress = ({ 
-  progress, 
-  animated = true, 
+const LinearProgress = ({
+  progress,
+  animated = true,
   color = '#0ea5e9',
   gradient = false,
-  showPercentage = true 
+  showPercentage = true,
 }: {
   progress: number;
   animated?: boolean;
@@ -64,14 +69,16 @@ const LinearProgress = ({
 
   return (
     <div className="relative">
-      <div className={cn(
-        'w-full h-3 rounded-full overflow-hidden',
-        'bg-gray-200 dark:bg-gray-700'
-      )}>
+      <div
+        className={cn(
+          'w-full h-3 rounded-full overflow-hidden',
+          'bg-gray-200 dark:bg-gray-700'
+        )}
+      >
         <motion.div
           className={cn(
             'h-full rounded-full',
-            gradient 
+            gradient
               ? 'bg-gradient-to-r from-blue-500 to-purple-500'
               : 'bg-blue-500'
           )}
@@ -94,13 +101,13 @@ const LinearProgress = ({
   );
 };
 
-const CircularProgress = ({ 
-  progress, 
-  size = 80, 
+const CircularProgress = ({
+  progress,
+  size = 80,
   strokeWidth = 8,
   animated = true,
   color = '#0ea5e9',
-  showPercentage = true 
+  showPercentage = true,
 }: {
   progress: number;
   size?: number;
@@ -115,11 +122,7 @@ const CircularProgress = ({
 
   return (
     <div className="relative inline-flex items-center justify-center">
-      <svg
-        width={size}
-        height={size}
-        className="transform -rotate-90"
-      >
+      <svg width={size} height={size} className="transform -rotate-90">
         {/* Background circle */}
         <circle
           cx={size / 2}
@@ -140,9 +143,11 @@ const CircularProgress = ({
           fill="transparent"
           strokeLinecap="round"
           strokeDasharray={circumference}
-          style={{ 
+          style={{
             strokeDashoffset: animated ? undefined : offset,
-            transition: animated ? 'stroke-dashoffset 1.5s ease-out' : undefined
+            transition: animated
+              ? 'stroke-dashoffset 1.5s ease-out'
+              : undefined,
           }}
         />
       </svg>
@@ -153,21 +158,19 @@ const CircularProgress = ({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.5 }}
         >
-          <span className="text-sm font-semibold">
-            {Math.round(progress)}%
-          </span>
+          <span className="text-sm font-semibold">{Math.round(progress)}%</span>
         </motion.div>
       )}
     </div>
   );
 };
 
-const RadialProgress = ({ 
-  progress, 
+const RadialProgress = ({
+  progress,
   size = 120,
   animated = true,
   color = '#0ea5e9',
-  showPercentage = true 
+  showPercentage = true,
 }: {
   progress: number;
   size?: number;
@@ -190,7 +193,7 @@ const RadialProgress = ({
             mask: 'radial-gradient(circle at center, transparent 60%, black 60%)',
           }}
           initial={{ rotate: 0 }}
-          animate={animated ? { rotate: 0 } : undefined}
+          {...(animated ? { animate: { rotate: 0 } } : {})}
         />
       </motion.div>
       {showPercentage && (
@@ -200,19 +203,17 @@ const RadialProgress = ({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.5 }}
         >
-          <span className="text-lg font-bold">
-            {Math.round(progress)}%
-          </span>
+          <span className="text-lg font-bold">{Math.round(progress)}%</span>
         </motion.div>
       )}
     </div>
   );
 };
 
-const MilestoneProgress = ({ 
-  steps, 
+const MilestoneProgress = ({
+  steps,
   onStepClick,
-  animated = true 
+  animated = true,
 }: {
   steps: ProgressStep[];
   onStepClick?: (step: ProgressStep) => void;
@@ -222,14 +223,14 @@ const MilestoneProgress = ({
     <div className="relative">
       {/* Progress line */}
       <div className="absolute left-4 top-8 bottom-8 w-0.5 bg-gray-200 dark:bg-gray-700" />
-      
+
       <div className="space-y-6">
         {steps.map((step, index) => (
           <motion.div
             key={step.id}
-            initial={animated ? { opacity: 0, x: -20 } : undefined}
-            animate={animated ? { opacity: 1, x: 0 } : undefined}
-            transition={animated ? { delay: index * 0.1 } : undefined}
+            {...(animated ? { initial: { opacity: 0, x: -20 } } : {})}
+            {...(animated ? { animate: { opacity: 1, x: 0 } } : {})}
+            {...(animated ? { transition: { delay: index * 0.1 } } : {})}
             className="relative flex items-start gap-4"
           >
             {/* Step indicator */}
@@ -241,11 +242,11 @@ const MilestoneProgress = ({
                 step.completed
                   ? 'bg-green-500 border-green-500 text-white'
                   : step.current
-                  ? 'bg-blue-500 border-blue-500 text-white'
-                  : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'
+                    ? 'bg-blue-500 border-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'
               )}
-              whileHover={onStepClick ? { scale: 1.1 } : undefined}
-              whileTap={onStepClick ? { scale: 0.95 } : undefined}
+              {...(onStepClick ? { whileHover: { scale: 1.1 } } : {})}
+              {...(onStepClick ? { whileTap: { scale: 0.95 } } : {})}
               onClick={() => onStepClick?.(step)}
             >
               {step.completed ? (
@@ -269,17 +270,17 @@ const MilestoneProgress = ({
 
             {/* Step content */}
             <div className="flex-1 min-w-0 pb-4">
-              <h4 className={cn(
-                'font-medium text-sm',
-                step.completed && 'text-green-600 dark:text-green-400',
-                step.current && 'text-blue-600 dark:text-blue-400'
-              )}>
+              <h4
+                className={cn(
+                  'font-medium text-sm',
+                  step.completed && 'text-green-600 dark:text-green-400',
+                  step.current && 'text-blue-600 dark:text-blue-400'
+                )}
+              >
                 {step.label}
               </h4>
               {step.description && (
-                <p className="text-xs text-gray-500 mt-1">
-                  {step.description}
-                </p>
+                <p className="text-xs text-gray-500 mt-1">{step.description}</p>
               )}
             </div>
           </motion.div>
@@ -289,10 +290,10 @@ const MilestoneProgress = ({
   );
 };
 
-const ProgressTrackerCard = ({ 
-  data, 
+const ProgressTrackerCard = ({
+  data,
   interactive = true,
-  onStepClick 
+  onStepClick,
 }: {
   data: ProgressData;
   interactive?: boolean;
@@ -310,46 +311,62 @@ const ProgressTrackerCard = ({
         return (
           <LinearProgress
             progress={data.overallProgress}
-            animated={data.animated}
-            color={data.color}
-            gradient={data.gradient}
-            showPercentage={data.showPercentage}
+            {...(data.animated !== undefined
+              ? { animated: data.animated }
+              : {})}
+            {...(data.color !== undefined ? { color: data.color } : {})}
+            {...(data.gradient !== undefined
+              ? { gradient: data.gradient }
+              : {})}
+            {...(data.showPercentage !== undefined
+              ? { showPercentage: data.showPercentage }
+              : {})}
           />
         );
-      
+
       case 'circular':
         return (
           <div className="flex justify-center">
             <CircularProgress
               progress={data.overallProgress}
-              animated={data.animated}
-              color={data.color}
-              showPercentage={data.showPercentage}
+              {...(data.animated !== undefined
+                ? { animated: data.animated }
+                : {})}
+              {...(data.color !== undefined ? { color: data.color } : {})}
+              {...(data.showPercentage !== undefined
+                ? { showPercentage: data.showPercentage }
+                : {})}
             />
           </div>
         );
-      
+
       case 'radial':
         return (
           <div className="flex justify-center">
             <RadialProgress
               progress={data.overallProgress}
-              animated={data.animated}
-              color={data.color}
-              showPercentage={data.showPercentage}
+              {...(data.animated !== undefined
+                ? { animated: data.animated }
+                : {})}
+              {...(data.color !== undefined ? { color: data.color } : {})}
+              {...(data.showPercentage !== undefined
+                ? { showPercentage: data.showPercentage }
+                : {})}
             />
           </div>
         );
-      
+
       case 'milestone':
         return (
           <MilestoneProgress
             steps={data.steps}
-            onStepClick={handleStepClick}
-            animated={data.animated}
+            {...(handleStepClick ? { onStepClick: handleStepClick } : {})}
+            {...(data.animated !== undefined
+              ? { animated: data.animated }
+              : {})}
           />
         );
-      
+
       default:
         return null;
     }
@@ -360,7 +377,7 @@ const ProgressTrackerCard = ({
       initial="initial"
       animate="animate"
       variants={animationPresets.fadeInUp}
-      whileHover={interactive ? { y: -2 } : undefined}
+      {...(interactive ? { whileHover: { y: -2 } } : {})}
     >
       <Card variant="elevated" className="h-full">
         <CardHeader>
@@ -380,13 +397,14 @@ const ProgressTrackerCard = ({
         </CardHeader>
         <CardContent>
           {renderProgress()}
-          
+
           {/* Steps summary for non-milestone types */}
           {data.type !== 'milestone' && data.steps.length > 0 && (
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <span>
-                  {data.steps.filter(s => s.completed).length} of {data.steps.length} steps completed
+                  {data.steps.filter(s => s.completed).length} of{' '}
+                  {data.steps.length} steps completed
                 </span>
                 <span>
                   {data.steps.filter(s => !s.completed).length} remaining
@@ -437,7 +455,7 @@ export function ProgressTracker({
           <ProgressTrackerCard
             data={data}
             interactive={interactive}
-            onStepClick={onStepClick}
+            {...(onStepClick ? { onStepClick } : {})}
           />
         </motion.div>
       ))}
@@ -446,15 +464,23 @@ export function ProgressTracker({
 }
 
 // Sample data generator for testing
-export const generateSampleProgressData = (count: number = 3): ProgressData[] => {
-  const types: ProgressData['type'][] = ['linear', 'circular', 'radial', 'milestone'];
+export const generateSampleProgressData = (
+  count: number = 3
+): ProgressData[] => {
+  const types: ProgressData['type'][] = [
+    'linear',
+    'circular',
+    'radial',
+    'milestone',
+  ];
   const colors = ['#0ea5e9', '#d946ef', '#10b981', '#f59e0b', '#ef4444'];
 
   return Array.from({ length: count }, (_, i) => {
-    const type = types[i % types.length];
+    const selectedType = types[i % types.length];
+    const selectedColor = colors[i % colors.length];
     const stepCount = Math.floor(Math.random() * 5) + 3;
     const completedSteps = Math.floor(Math.random() * stepCount);
-    
+
     const steps: ProgressStep[] = Array.from({ length: stepCount }, (_, j) => ({
       id: `step-${i}-${j}`,
       label: `Step ${j + 1}`,
@@ -467,10 +493,10 @@ export const generateSampleProgressData = (count: number = 3): ProgressData[] =>
       title: `Progress Tracker ${i + 1}`,
       steps,
       overallProgress: (completedSteps / stepCount) * 100,
-      type,
+      type: selectedType ?? 'linear',
       animated: true,
       showPercentage: true,
-      color: colors[i % colors.length],
+      color: selectedColor ?? '#0ea5e9',
       gradient: Math.random() > 0.5,
     };
   });

@@ -69,36 +69,43 @@ const useAINotificationFilter = (
   enabled: boolean = true
 ) => {
   return useMemo(() => {
-    if (!enabled) return notifications;
+    if (!enabled) {
+      return notifications;
+    }
 
     // AI-like scoring algorithm
     const scoreNotification = (notification: Notification): number => {
       let score = 0;
-      
+
       // Priority scoring
       const priorityScores = { low: 1, medium: 2, high: 3, urgent: 4 };
       score += priorityScores[notification.priority] * 10;
-      
+
       // Recency scoring (more recent = higher score)
-      const hoursSinceCreated = (Date.now() - notification.timestamp.getTime()) / (1000 * 60 * 60);
+      const hoursSinceCreated =
+        (Date.now() - notification.timestamp.getTime()) / (1000 * 60 * 60);
       score += Math.max(0, 24 - hoursSinceCreated) * 2;
-      
+
       // Unread bonus
-      if (!notification.read) score += 5;
-      
+      if (!notification.read) {
+        score += 5;
+      }
+
       // Actionable bonus
-      if (notification.actionable) score += 3;
-      
+      if (notification.actionable) {
+        score += 3;
+      }
+
       // AI confidence bonus
       if (notification.aiConfidence) {
         score += (notification.aiConfidence / 100) * 5;
       }
-      
+
       // Type-specific scoring
       if (notification.type === 'error' || notification.type === 'warning') {
         score += 5;
       }
-      
+
       return score;
     };
 
@@ -131,9 +138,15 @@ const NotificationItem = ({
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
+    if (minutes < 1) {
+      return 'Just now';
+    }
+    if (minutes < 60) {
+      return `${minutes}m ago`;
+    }
+    if (hours < 24) {
+      return `${hours}h ago`;
+    }
     return `${days}d ago`;
   };
 
@@ -163,7 +176,7 @@ const NotificationItem = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               onDismiss?.(notification.id);
             }}
@@ -182,10 +195,12 @@ const NotificationItem = ({
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
-            <h4 className={cn(
-              'font-medium text-sm',
-              !notification.read && 'font-semibold'
-            )}>
+            <h4
+              className={cn(
+                'font-medium text-sm',
+                !notification.read && 'font-semibold'
+              )}
+            >
               {notification.title}
             </h4>
             {showTimestamp && (
@@ -211,14 +226,16 @@ const NotificationItem = ({
                   transition={{ duration: 0.5 }}
                 />
               </div>
-              <span className="text-xs text-gray-500">{notification.aiConfidence}%</span>
+              <span className="text-xs text-gray-500">
+                {notification.aiConfidence}%
+              </span>
             </div>
           )}
 
           {/* Actions */}
           {notification.actions && notification.actions.length > 0 && (
             <div className="flex gap-2 mt-3">
-              {notification.actions.map((action) => (
+              {notification.actions.map(action => (
                 <motion.button
                   key={action.id}
                   whileHover={{ scale: 1.05 }}
@@ -226,11 +243,14 @@ const NotificationItem = ({
                   className={cn(
                     'px-3 py-1 text-xs rounded-full font-medium',
                     'transition-colors duration-200',
-                    action.type === 'primary' && 'bg-blue-500 text-white hover:bg-blue-600',
-                    action.type === 'secondary' && 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200',
-                    action.type === 'danger' && 'bg-red-500 text-white hover:bg-red-600'
+                    action.type === 'primary' &&
+                      'bg-blue-500 text-white hover:bg-blue-600',
+                    action.type === 'secondary' &&
+                      'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200',
+                    action.type === 'danger' &&
+                      'bg-red-500 text-white hover:bg-red-600'
                   )}
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation();
                     action.action(notification);
                   }}
@@ -263,9 +283,14 @@ export function NotificationCenter({
   className,
 }: NotificationCenterProps) {
   const [filter, setFilter] = useState<'all' | 'unread' | 'urgent'>('all');
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set()
+  );
 
-  const filteredNotifications = useAINotificationFilter(notifications, aiFilterEnabled);
+  const filteredNotifications = useAINotificationFilter(
+    notifications,
+    aiFilterEnabled
+  );
 
   const displayNotifications = useMemo(() => {
     let filtered = filteredNotifications;
@@ -276,7 +301,9 @@ export function NotificationCenter({
         filtered = filtered.filter(n => !n.read);
         break;
       case 'urgent':
-        filtered = filtered.filter(n => n.priority === 'urgent' || n.priority === 'high');
+        filtered = filtered.filter(
+          n => n.priority === 'urgent' || n.priority === 'high'
+        );
         break;
     }
 
@@ -285,14 +312,21 @@ export function NotificationCenter({
   }, [filteredNotifications, filter, maxVisible]);
 
   const groupedNotifications = useMemo(() => {
-    if (!groupByCategory) return { 'All': displayNotifications };
+    if (!groupByCategory) {
+      return { All: displayNotifications };
+    }
 
-    return displayNotifications.reduce((groups, notification) => {
-      const category = notification.category || 'General';
-      if (!groups[category]) groups[category] = [];
-      groups[category].push(notification);
-      return groups;
-    }, {} as Record<string, Notification[]>);
+    return displayNotifications.reduce(
+      (groups, notification) => {
+        const category = notification.category || 'General';
+        if (!groups[category]) {
+          groups[category] = [];
+        }
+        groups[category].push(notification);
+        return groups;
+      },
+      {} as Record<string, Notification[]>
+    );
   }, [displayNotifications, groupByCategory]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -334,11 +368,11 @@ export function NotificationCenter({
                 </span>
               )}
             </CardTitle>
-            
+
             <div className="flex items-center gap-2">
               {/* Filter buttons */}
               <div className="flex rounded-lg overflow-hidden border">
-                {(['all', 'unread', 'urgent'] as const).map((filterType) => (
+                {(['all', 'unread', 'urgent'] as const).map(filterType => (
                   <button
                     key={filterType}
                     onClick={() => setFilter(filterType)}
@@ -372,45 +406,56 @@ export function NotificationCenter({
         <CardContent>
           <div className="space-y-3 max-h-96 overflow-y-auto">
             <AnimatePresence mode="popLayout">
-              {Object.entries(groupedNotifications).map(([category, categoryNotifications]) => (
-                <div key={category}>
-                  {groupByCategory && Object.keys(groupedNotifications).length > 1 && (
-                    <motion.button
-                      onClick={() => toggleCategory(category)}
-                      className="flex items-center gap-2 w-full text-left py-2 text-sm font-medium text-gray-600 dark:text-gray-300"
-                    >
-                      <motion.span
-                        animate={{ rotate: expandedCategories.has(category) ? 90 : 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        ▶
-                      </motion.span>
-                      {category} ({categoryNotifications.length})
-                    </motion.button>
-                  )}
+              {Object.entries(groupedNotifications).map(
+                ([category, categoryNotifications]) => (
+                  <div key={category}>
+                    {groupByCategory &&
+                      Object.keys(groupedNotifications).length > 1 && (
+                        <motion.button
+                          onClick={() => toggleCategory(category)}
+                          className="flex items-center gap-2 w-full text-left py-2 text-sm font-medium text-gray-600 dark:text-gray-300"
+                        >
+                          <motion.span
+                            animate={{
+                              rotate: expandedCategories.has(category) ? 90 : 0,
+                            }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            ▶
+                          </motion.span>
+                          {category} ({categoryNotifications.length})
+                        </motion.button>
+                      )}
 
-                  <AnimatePresence>
-                    {(!groupByCategory || expandedCategories.has(category) || Object.keys(groupedNotifications).length === 1) && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="space-y-2"
-                      >
-                        {categoryNotifications.map((notification) => (
-                          <NotificationItem
-                            key={notification.id}
-                            notification={notification}
-                            onDismiss={onNotificationDismiss}
-                            onClick={onNotificationClick}
-                            showTimestamp={showTimestamp}
-                          />
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ))}
+                    <AnimatePresence>
+                      {(!groupByCategory ||
+                        expandedCategories.has(category) ||
+                        Object.keys(groupedNotifications).length === 1) && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="space-y-2"
+                        >
+                          {categoryNotifications.map(notification => (
+                            <NotificationItem
+                              key={notification.id}
+                              notification={notification}
+                              {...(onNotificationDismiss
+                                ? { onDismiss: onNotificationDismiss }
+                                : {})}
+                              {...(onNotificationClick
+                                ? { onClick: onNotificationClick }
+                                : {})}
+                              showTimestamp={showTimestamp}
+                            />
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )
+              )}
             </AnimatePresence>
 
             {displayNotifications.length === 0 && (
@@ -431,35 +476,73 @@ export function NotificationCenter({
 }
 
 // Sample notification generator for testing
-export const generateSampleNotifications = (count: number = 5): Notification[] => {
-  const types: Notification['type'][] = ['info', 'success', 'warning', 'error', 'ai-insight'];
-  const priorities: Notification['priority'][] = ['low', 'medium', 'high', 'urgent'];
-  const categories = ['Sessions', 'Billing', 'AI Insights', 'System', 'Communication'];
+export const generateSampleNotifications = (
+  count: number = 5
+): Notification[] => {
+  const types: Notification['type'][] = [
+    'info',
+    'success',
+    'warning',
+    'error',
+    'ai-insight',
+  ];
+  const priorities: Notification['priority'][] = [
+    'low',
+    'medium',
+    'high',
+    'urgent',
+  ];
+  const categories = [
+    'Sessions',
+    'Billing',
+    'AI Insights',
+    'System',
+    'Communication',
+  ];
 
-  return Array.from({ length: count }, (_, i) => ({
-    id: `notification-${i}`,
-    title: `Notification ${i + 1}`,
-    message: `This is a sample notification message for testing purposes. It contains some important information.`,
-    type: types[Math.floor(Math.random() * types.length)],
-    priority: priorities[Math.floor(Math.random() * priorities.length)],
-    timestamp: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000),
-    read: Math.random() > 0.6,
-    actionable: Math.random() > 0.5,
-    aiConfidence: Math.random() > 0.5 ? Math.floor(Math.random() * 40) + 60 : undefined,
-    category: categories[Math.floor(Math.random() * categories.length)],
-    actions: Math.random() > 0.7 ? [
-      {
-        id: 'action-1',
-        label: 'View Details',
-        type: 'primary',
-        action: () => console.log('View details clicked'),
-      },
-      {
-        id: 'action-2',
-        label: 'Dismiss',
-        type: 'secondary',
-        action: () => console.log('Dismiss clicked'),
-      },
-    ] : undefined,
-  }));
+  return Array.from({ length: count }, (_, i) => {
+    const selectedType = types[Math.floor(Math.random() * types.length)];
+    const selectedPriority =
+      priorities[Math.floor(Math.random() * priorities.length)];
+    const selectedCategory =
+      categories[Math.floor(Math.random() * categories.length)];
+    const hasActions = Math.random() > 0.7;
+    const hasAIConfidence = Math.random() > 0.5;
+
+    const notification: Notification = {
+      id: `notification-${i}`,
+      title: `Notification ${i + 1}`,
+      message: `This is a sample notification message for testing purposes. It contains some important information.`,
+      type: selectedType ?? 'info',
+      priority: selectedPriority ?? 'medium',
+      timestamp: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000),
+      read: Math.random() > 0.6,
+      ...(hasAIConfidence
+        ? { aiConfidence: Math.floor(Math.random() * 40) + 60 }
+        : {}),
+      ...(selectedCategory ? { category: selectedCategory } : {}),
+      ...(Math.random() > 0.5 ? { actionable: true } : {}),
+      ...(hasActions
+        ? {
+            actions: [
+              {
+                id: 'action-1',
+                label: 'View Details',
+                type: 'primary' as const,
+                action: (n: Notification) =>
+                  console.log('View details clicked', n.id),
+              },
+              {
+                id: 'action-2',
+                label: 'Dismiss',
+                type: 'secondary' as const,
+                action: (n: Notification) =>
+                  console.log('Dismiss clicked', n.id),
+              },
+            ],
+          }
+        : {}),
+    };
+    return notification;
+  });
 };
