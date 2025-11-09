@@ -6,6 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 GuruKool HomeSchool is a Next.js 14 application for managing homeschooling with AI-powered features, teacher-student tracking, QR code authentication, and comprehensive academic standards support for UK, US, and India.
 
+**Node.js Version**: v20 (see [.nvmrc](.nvmrc))
+**Package Manager**: npm (uses package-lock.json)
+
 ## Common Commands
 
 ### Development
@@ -266,9 +269,9 @@ Required environment variables (see `.env.example`):
   - Custom alias resolution for `@/` path
   - Fallbacks for Node.js modules: `fs: false, net: false, tls: false`
 - **Build Behavior**:
-  - `eslint.ignoreDuringBuilds: true` in local dev, `false` in CI
-  - `typescript.ignoreBuildErrors: true` in local dev, `false` in CI
-  - This allows faster local iteration but enforces quality in CI/CD
+  - `eslint.ignoreDuringBuilds: false` (enforced in all environments)
+  - `typescript.ignoreBuildErrors: false` (enforced in all environments)
+  - Quality gates are enforced both locally and in CI/CD
 - **Security Headers**: Applied globally via `headers()` async function (see Security section)
 
 ## Code Patterns
@@ -305,31 +308,38 @@ When creating new agents:
 When creating API routes in `src/app/api/`:
 
 1. **Authentication Pattern**: Extract Bearer token → Create Supabase client → Call `getUser()`
+
    ```typescript
    const authHeader = request.headers.get('authorization');
    const supabase = createClient(url, key, {
-     global: { headers: { Authorization: authHeader } }
+     global: { headers: { Authorization: authHeader } },
    });
-   const { data: { user }, error } = await supabase.auth.getUser();
+   const {
+     data: { user },
+     error,
+   } = await supabase.auth.getUser();
    ```
 
 2. **Validation**: Use Zod schemas from `@/lib/validation`
+
    ```typescript
    const validation = studentCreateSchema.safeParse(body);
    if (!validation.success) {
-     return NextResponse.json(
-       createValidationErrorResponse(validation.error),
-       { status: 400 }
-     );
+     return NextResponse.json(createValidationErrorResponse(validation.error), {
+       status: 400,
+     });
    }
    ```
 
 3. **Rate Limiting**: Wrap handlers with `withRateLimit` from `@/lib/api-security`
+
    ```typescript
    export const POST = withRateLimit({
      keyPrefix: 'api:students:create',
      max: 20,
-   })(async (request: NextRequest) => { /* ... */ });
+   })(async (request: NextRequest) => {
+     /* ... */
+   });
    ```
 
 4. **Parent Isolation**: Always pass `user.id` to `DatabaseService` methods or use RLS with Supabase queries
@@ -570,3 +580,10 @@ These scripts use manual `.env` file parsing (no `dotenv` dependency required).
 - They are utility modules, not `middleware.ts` file
 - Actual implementation: `withRateLimit()` and `withCSRFProtection()` wrappers in `src/lib/api-security.ts`
 - Security headers are set via `next.config.mjs` headers() function
+
+### Real-Time Communication
+
+- **Migration**: Migrated from WebSocket to **Supabase Realtime** (see recent commits)
+- Use Supabase Realtime subscriptions for live session updates
+- Connection via `wss://*.supabase.co` (configured in CSP headers)
+- Eliminates need for separate WebSocket server infrastructure

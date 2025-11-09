@@ -94,14 +94,19 @@ export class SupabaseRealtimeService {
       let channel = this.channels.get(channelName);
 
       if (!channel) {
-        channel = supabase.channel(channelName);
-        this.channels.set(channelName, channel);
+        const newChannel = supabase.channel(channelName);
+        if (!newChannel) {
+          logger.error('app', `Failed to create channel: ${channelName}`);
+          return;
+        }
 
-        channel
-          .on('broadcast', { event }, payload => {
+        this.channels.set(channelName, newChannel);
+
+        newChannel
+          .on('broadcast', { event }, (payload: any) => {
             callback(payload);
           })
-          .subscribe(status => {
+          .subscribe((status: string) => {
             if (status === 'SUBSCRIBED') {
               this.connectionState = 'connected';
               this.connectionStatus.isConnected = true;
@@ -119,6 +124,8 @@ export class SupabaseRealtimeService {
               logger.warn('app', `Channel closed: ${channelName}`);
             }
           });
+
+        channel = newChannel;
       }
 
       // Add handler to the set
@@ -153,10 +160,15 @@ export class SupabaseRealtimeService {
       let channel = this.channels.get(channelName);
 
       if (!channel) {
-        channel = supabase.channel(channelName);
-        this.channels.set(channelName, channel);
+        const newChannel = supabase.channel(channelName);
+        if (!newChannel) {
+          logger.error('app', `Failed to create channel: ${channelName}`);
+          return;
+        }
 
-        const postgresChanges = channel.on(
+        this.channels.set(channelName, newChannel);
+
+        const postgresChanges = newChannel.on(
           'postgres_changes',
           {
             event,
@@ -167,11 +179,13 @@ export class SupabaseRealtimeService {
           callback
         );
 
-        postgresChanges.subscribe(status => {
+        postgresChanges.subscribe((status: string) => {
           if (status === 'SUBSCRIBED') {
             logger.info('app', `Subscribed to table changes: ${table}`);
           }
         });
+
+        channel = newChannel;
       }
     } catch (error) {
       logger.error(
@@ -191,19 +205,29 @@ export class SupabaseRealtimeService {
     payload: any
   ): Promise<void> {
     try {
-      let channel = this.channels.get(channelName);
+      const channel = this.channels.get(channelName);
 
       if (!channel) {
-        channel = supabase.channel(channelName);
-        this.channels.set(channelName, channel);
-        await channel.subscribe();
-      }
+        const newChannel = supabase.channel(channelName);
+        if (!newChannel) {
+          logger.error('app', `Failed to create channel: ${channelName}`);
+          return;
+        }
 
-      await channel.send({
-        type: 'broadcast',
-        event,
-        payload,
-      });
+        this.channels.set(channelName, newChannel);
+        await newChannel.subscribe();
+        await newChannel.send({
+          type: 'broadcast',
+          event,
+          payload,
+        });
+      } else {
+        await channel.send({
+          type: 'broadcast',
+          event,
+          payload,
+        });
+      }
 
       logger.debug('app', `Broadcast sent to ${channelName}:${event}`);
     } catch (error) {
@@ -218,14 +242,25 @@ export class SupabaseRealtimeService {
   /**
    * Send a realtime message (compatible with old WebSocket API)
    */
-  async sendRealtimeMessage(message: RealtimeMessage): Promise<void> {
+  async sendRealtimeMessage(
+    message: Partial<RealtimeMessage> &
+      Pick<RealtimeMessage, 'type' | 'from' | 'to' | 'priority'>
+  ): Promise<void> {
     const channelName = `user_${message.to}`;
     const event = message.type;
 
-    await this.sendBroadcast(channelName, event, {
-      ...message,
+    const fullMessage: RealtimeMessage = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: Date.now(),
-    });
+      deliveryStatus: 'sent',
+      ...message,
+      type: message.type,
+      from: message.from,
+      to: message.to,
+      priority: message.priority,
+    };
+
+    await this.sendBroadcast(channelName, event, fullMessage);
   }
 
   /**

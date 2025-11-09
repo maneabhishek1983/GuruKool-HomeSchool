@@ -692,7 +692,7 @@ export class TimesheetAutomationService {
     }
 
     try {
-      await webSocketService.sendRealtimeMessage({
+      await realtimeService.sendRealtimeMessage({
         type: 'notification',
         from: 'system',
         to: activeTimer.teacherId,

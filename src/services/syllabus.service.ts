@@ -96,9 +96,12 @@ export class SyllabusService {
         return [];
       }
 
-      return [
-        ...new Set(data?.map((item: any) => item.subject as string) || []),
-      ];
+      if (!data) {
+        return [];
+      }
+
+      const subjects: string[] = data.map((item: any) => String(item.subject));
+      return [...new Set(subjects)];
     } catch (error) {
       console.error('Error in getSubjectsForGrade:', error);
       return [];
