@@ -116,7 +116,7 @@ function LoginForm() {
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full px-3 py-2 bg-netflix-medium-gray border border-netflix-light-gray rounded-lg text-white placeholder-netflix-text-gray focus:outline-none focus:ring-2 focus:ring-netflix-red focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white border border-netflix-light-gray rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-netflix-red focus:border-transparent"
                   placeholder="Enter your full name"
                   required
                 />
@@ -133,7 +133,7 @@ function LoginForm() {
                   id="role"
                   value={role}
                   onChange={e => setRole(e.target.value as any)}
-                  className="w-full px-3 py-2 bg-netflix-medium-gray border border-netflix-light-gray rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-netflix-red focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white border border-netflix-light-gray rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-netflix-red focus:border-transparent"
                   required
                 >
                   <option value="parent">Parent</option>
@@ -157,7 +157,7 @@ function LoginForm() {
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="w-full px-3 py-2 bg-netflix-medium-gray border border-netflix-light-gray rounded-lg text-white placeholder-netflix-text-gray focus:outline-none focus:ring-2 focus:ring-netflix-red focus:border-transparent"
+              className="w-full px-3 py-2 bg-white border border-netflix-light-gray rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-netflix-red focus:border-transparent"
               placeholder="Enter your email"
               required
             />
@@ -175,7 +175,7 @@ function LoginForm() {
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full px-3 py-2 bg-netflix-medium-gray border border-netflix-light-gray rounded-lg text-white placeholder-netflix-text-gray focus:outline-none focus:ring-2 focus:ring-netflix-red focus:border-transparent"
+              className="w-full px-3 py-2 bg-white border border-netflix-light-gray rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-netflix-red focus:border-transparent"
               placeholder={
                 isSignupMode
                   ? 'Create a password (min 6 characters)'
