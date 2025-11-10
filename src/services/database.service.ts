@@ -293,14 +293,9 @@ export class DatabaseService {
     try {
       // For now, skip creating auth user to avoid rate limiting
       // Teachers can be added later with proper invitation flow
-      // Generate a temporary user_id using browser-compatible UUID
-      const tempUserId =
-        typeof crypto !== 'undefined' && crypto.randomUUID
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
+      // Set user_id to null since we're not creating auth accounts yet
       const dbTeacher = {
-        user_id: tempUserId,
+        user_id: null, // Nullable after migration 008
         parent_id: parentId,
         name: teacherData.name,
         email: teacherData.email,
