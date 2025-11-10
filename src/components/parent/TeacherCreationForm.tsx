@@ -227,7 +227,7 @@ export default function TeacherCreationForm({
                 onChange={e =>
                   setFormData(prev => ({ ...prev, name: e.target.value }))
                 }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter teacher's full name"
@@ -251,7 +251,7 @@ export default function TeacherCreationForm({
                 onChange={e =>
                   setFormData(prev => ({ ...prev, email: e.target.value }))
                 }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
                   errors.email ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter teacher's email"
@@ -275,7 +275,7 @@ export default function TeacherCreationForm({
                 onChange={e =>
                   setFormData(prev => ({ ...prev, phone: e.target.value }))
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 placeholder="Enter phone number"
               />
             </div>
@@ -296,7 +296,7 @@ export default function TeacherCreationForm({
                 onChange={e =>
                   setFormData(prev => ({ ...prev, experience: e.target.value }))
                 }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
                   errors.experience ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Years of experience"
@@ -340,7 +340,7 @@ export default function TeacherCreationForm({
                     location: { ...prev.location, address: e.target.value },
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
                   errors.address ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter address"
@@ -493,7 +493,7 @@ export default function TeacherCreationForm({
               onChange={e =>
                 setFormData(prev => ({ ...prev, bio: e.target.value }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
               placeholder="Tell us about the teacher's background, teaching style, and approach..."
             />
           </div>

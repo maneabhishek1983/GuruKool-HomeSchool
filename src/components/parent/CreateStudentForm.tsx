@@ -478,7 +478,7 @@ export default function CreateStudentForm({
               onChange={e =>
                 setFormData(prev => ({ ...prev, name: e.target.value }))
               }
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
                 errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Enter student's full name"
@@ -505,7 +505,7 @@ export default function CreateStudentForm({
                 onChange={e =>
                   setFormData(prev => ({ ...prev, age: e.target.value }))
                 }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
                   errors.age ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Age"
@@ -532,7 +532,7 @@ export default function CreateStudentForm({
                     gradeLevel: '', // Reset grade level when country changes
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
                   errors.country ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
@@ -561,7 +561,7 @@ export default function CreateStudentForm({
                 onChange={e =>
                   setFormData(prev => ({ ...prev, gradeLevel: e.target.value }))
                 }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
                   errors.gradeLevel ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
@@ -929,7 +929,7 @@ export default function CreateStudentForm({
                   learningStyle: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
             >
               <option value="">Select learning style</option>
               {learningStyles.map(style => (
@@ -953,7 +953,7 @@ export default function CreateStudentForm({
               onChange={e =>
                 setFormData(prev => ({ ...prev, interests: e.target.value }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
               rows={3}
               placeholder="e.g., Sports, Reading, Music, Art, Science, Technology..."
             />
@@ -972,7 +972,7 @@ export default function CreateStudentForm({
               onChange={e =>
                 setFormData(prev => ({ ...prev, specialNeeds: e.target.value }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
               rows={3}
               placeholder="Any special accommodations or learning requirements..."
             />
@@ -1087,7 +1087,7 @@ export default function CreateStudentForm({
           onChange={e =>
             setFormData(prev => ({ ...prev, teacherNotes: e.target.value }))
           }
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
           placeholder="Any specific notes or instructions for teachers..."
         />
       </div>

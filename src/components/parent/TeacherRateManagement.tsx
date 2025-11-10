@@ -123,7 +123,7 @@ export default function TeacherRateManagement({
                   <select
                     value={rate.subject}
                     onChange={e => updateRate(index, 'subject', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                     disabled={readOnly}
                   >
                     <option value="">Select subject</option>
@@ -151,7 +151,7 @@ export default function TeacherRateManagement({
                     onChange={e =>
                       updateRate(index, 'rate_type', e.target.value)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                     disabled={readOnly}
                   >
                     {RATE_TYPES.map(type => (
@@ -179,7 +179,7 @@ export default function TeacherRateManagement({
                       onChange={e =>
                         updateRate(index, 'currency', e.target.value)
                       }
-                      className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                       disabled={readOnly}
                     >
                       {CURRENCIES.map(curr => (
@@ -200,7 +200,7 @@ export default function TeacherRateManagement({
                           parseFloat(e.target.value) || 0
                         )
                       }
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                       placeholder="0.00"
                       disabled={readOnly}
                     />
@@ -222,7 +222,7 @@ export default function TeacherRateManagement({
                     type="text"
                     value={rate.notes || ''}
                     onChange={e => updateRate(index, 'notes', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                     placeholder="Additional notes"
                     disabled={readOnly}
                     maxLength={500}
