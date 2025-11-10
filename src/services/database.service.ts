@@ -291,38 +291,27 @@ export class DatabaseService {
     parentId: string
   ): Promise<TeacherProfile | null> {
     try {
-      // First create a user account for the teacher
-      const { data: userData, error: userError } = await supabase.auth.signUp({
-        email: teacherData.email,
-        password: this.generatePassword(), // Generate a random password
-        options: {
-          data: {
-            name: teacherData.name,
-            role: 'teacher',
-          },
-        },
-      });
-
-      if (userError) {
-        throw userError;
-      }
-
-      const teacherUserId = userData.user!.id;
+      // For now, skip creating auth user to avoid rate limiting
+      // Teachers can be added later with proper invitation flow
+      // Generate a temporary user_id using UUID
+      const crypto = require('crypto');
+      const tempUserId = crypto.randomUUID();
 
       const dbTeacher = {
-        user_id: teacherUserId,
+        user_id: tempUserId,
         parent_id: parentId,
         name: teacherData.name,
         email: teacherData.email,
         phone: teacherData.phone,
         subjects: teacherData.subjects,
-        experience_years: parseInt(teacherData.experience) || 0,
+        experience_years:
+          teacherData.experience_years || parseInt(teacherData.experience) || 0,
         qualifications: teacherData.qualifications,
-        specializations: teacherData.specializations,
+        specializations: teacherData.specializations || [],
         hourly_rate: parseFloat(teacherData.hourlyRate) || 0, // Keep for backward compatibility
-        availability: teacherData.availability,
-        location: teacherData.location,
-        bio: teacherData.bio,
+        availability: teacherData.availability || { days: [], timeSlots: [] },
+        location: teacherData.location || { address: '' },
+        bio: teacherData.bio || '',
         status: 'available',
       };
 
@@ -343,14 +332,14 @@ export class DatabaseService {
         teacherData.rates.length > 0
       ) {
         const ratesToInsert = teacherData.rates.map((rate: any) => ({
-          teacher_id: teacherUserId,
+          teacher_id: data.id, // Use the teacher's database ID, not user_id
           subject: rate.subject,
           rate_type: rate.rate_type || 'hourly',
           rate_amount: rate.rate_amount,
           currency: rate.currency || 'USD',
           effective_date:
             rate.effective_date || new Date().toISOString().split('T')[0],
-          notes: rate.notes,
+          notes: rate.notes || '',
           is_active: true,
         }));
 
