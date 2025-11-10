@@ -145,7 +145,17 @@ export default function ParentDashboard() {
     }
 
     try {
-      const newTeacher = await DatabaseService.createTeacher(formData, user.id);
+      // Transform form data to match API schema
+      const teacherData = {
+        ...formData,
+        experience_years: parseInt(formData.experience) || 0,
+        hourlyRate: formData.hourlyRate || '0',
+      };
+
+      const newTeacher = await DatabaseService.createTeacher(
+        teacherData,
+        user.id
+      );
 
       if (newTeacher) {
         setTeachers(prev => [newTeacher, ...prev]);
