@@ -293,9 +293,11 @@ export class DatabaseService {
     try {
       // For now, skip creating auth user to avoid rate limiting
       // Teachers can be added later with proper invitation flow
-      // Generate a temporary user_id using UUID
-      const crypto = require('crypto');
-      const tempUserId = crypto.randomUUID();
+      // Generate a temporary user_id using browser-compatible UUID
+      const tempUserId =
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       const dbTeacher = {
         user_id: tempUserId,
