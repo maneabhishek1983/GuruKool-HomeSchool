@@ -405,7 +405,7 @@ export function MonthlyTimesheetReport({
                           : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                        {entry.totalHours ? entry.totalHours.toFixed(2) : '0'}h
+                        {entry.hours ? entry.hours.toFixed(2) : '0'}h
                       </td>
                     </tr>
                   ))}

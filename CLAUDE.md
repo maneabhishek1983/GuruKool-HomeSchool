@@ -26,6 +26,8 @@ GuruKool HomeSchool is a Next.js 14 application for managing homeschooling with 
 - `npm run format` - Format code with Prettier
 - `npm run format:check` - Check code formatting
 
+**CRITICAL**: Before pushing any code changes to GitHub, ALWAYS run `npm run type-check` locally to catch TypeScript errors that will fail in Vercel deployment. Fix all type errors before committing.
+
 ### Testing
 
 - `npm test` - Run Jest unit tests
