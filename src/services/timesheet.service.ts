@@ -480,6 +480,15 @@ export class TimesheetService {
   }
 
   /**
+   * Legacy alias for getActiveCheckIn
+   */
+  static async getActiveSession(
+    teacherId: string
+  ): Promise<TimesheetEntry | null> {
+    return this.getActiveCheckIn(teacherId);
+  }
+
+  /**
    * Generate signature for QR code validation
    */
   private static generateSignature(
