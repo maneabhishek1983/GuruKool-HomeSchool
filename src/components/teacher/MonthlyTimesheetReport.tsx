@@ -26,6 +26,14 @@ interface MonthlyTimesheetSummary {
       hours: number;
     }
   >;
+  entries: Array<{
+    id: string;
+    checkInTime: Date;
+    checkOutTime: Date | null;
+    studentName: string;
+    subject: string;
+    hours: number;
+  }>;
 }
 
 interface MonthlyTimesheetReportProps {
