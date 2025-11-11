@@ -11,8 +11,8 @@ import {
 } from '@/components/NetflixBackground';
 import { DataSheetsManager } from '@/components/teacher/DataSheetsManager';
 import { TimesheetManager } from '@/components/teacher/TimesheetManager';
-import TeacherCheckInOut from '@/components/teacher/TeacherCheckInOut';
-import MonthlyTimesheetReport from '@/components/teacher/MonthlyTimesheetReport';
+import { QRCheckInOut } from '@/components/teacher/QRCheckInOut';
+import { MonthlyTimesheetReport } from '@/components/teacher/MonthlyTimesheetReport';
 
 export default function TeacherDashboard() {
   const { user, logout } = useAuthContext();
@@ -159,17 +159,14 @@ export default function TeacherDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Check-In/Out Tab - PRIORITY FEATURE FOR PRODUCTION */}
         {activeTab === 'checkin' && (
-          <TeacherCheckInOut
-            teacherId={user?.id || ''}
-            onCheckInSuccess={entry => {
-              console.log('Checked in:', entry);
+          <QRCheckInOut
+            onSuccess={entry => {
+              console.log('Check-in/out successful:', entry);
               // Refresh stats
               loadDashboardStats();
             }}
-            onCheckOutSuccess={entry => {
-              console.log('Checked out:', entry);
-              // Refresh stats
-              loadDashboardStats();
+            onError={error => {
+              console.error('Check-in/out error:', error);
             }}
           />
         )}
