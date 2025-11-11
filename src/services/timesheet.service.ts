@@ -454,6 +454,32 @@ export class TimesheetService {
   }
 
   /**
+   * Legacy method stubs for backward compatibility with old components
+   * These methods are not implemented in the new QR-based flow
+   */
+  static async getMonthlyTimesheetSummary(
+    teacherId: string,
+    month: number,
+    year: number
+  ): Promise<any> {
+    console.warn(
+      'getMonthlyTimesheetSummary is a legacy method - not implemented'
+    );
+    return null;
+  }
+
+  static async exportMonthlyTimesheetCSV(
+    teacherId: string,
+    month: number,
+    year: number
+  ): Promise<string | null> {
+    console.warn(
+      'exportMonthlyTimesheetCSV is a legacy method - not implemented'
+    );
+    return null;
+  }
+
+  /**
    * Generate signature for QR code validation
    */
   private static generateSignature(

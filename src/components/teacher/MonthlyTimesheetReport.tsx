@@ -2,10 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import {
-  TimesheetService,
-  type MonthlyTimesheetSummary,
-} from '@/services/timesheet.service';
+import { TimesheetService } from '@/services/timesheet.service';
+
+// Legacy type definition for old component
+interface MonthlyTimesheetSummary {
+  totalHours: number;
+  totalSessions: number;
+  totalEarnings: number;
+  sessionsByDate: Record<string, any>;
+}
 
 interface MonthlyTimesheetReportProps {
   teacherId: string;
