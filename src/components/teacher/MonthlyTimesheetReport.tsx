@@ -18,6 +18,14 @@ interface MonthlyTimesheetSummary {
       hours: number;
     }
   >;
+  bySubject: Record<
+    string,
+    {
+      subjectName: string;
+      sessions: number;
+      hours: number;
+    }
+  >;
 }
 
 interface MonthlyTimesheetReportProps {
