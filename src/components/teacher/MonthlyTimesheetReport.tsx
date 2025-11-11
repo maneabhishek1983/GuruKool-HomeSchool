@@ -10,6 +10,14 @@ interface MonthlyTimesheetSummary {
   totalSessions: number;
   totalEarnings: number;
   sessionsByDate: Record<string, any>;
+  byStudent: Record<
+    string,
+    {
+      studentName: string;
+      sessions: number;
+      hours: number;
+    }
+  >;
 }
 
 interface MonthlyTimesheetReportProps {
