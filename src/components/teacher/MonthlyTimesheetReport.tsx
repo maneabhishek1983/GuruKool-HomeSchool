@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import TimesheetService, {
+import {
+  TimesheetService,
   type MonthlyTimesheetSummary,
 } from '@/services/timesheet.service';
 
