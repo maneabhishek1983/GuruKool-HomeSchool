@@ -49,7 +49,13 @@
       "Bash(npx eslint:*)",
       "Bash(git reset:*)",
       "Bash(git rev-parse:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(cut:*)",
+      "Bash(dir:*)",
+      "Bash(echo \"Open this file in your browser: file:///$PWD/test-deployed-signup.html\")",
+      "Bash(del test-teacher-creation.js verify-teacher-fix.js)",
+      "Bash(npx:*)",
+      "Bash(del nul)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

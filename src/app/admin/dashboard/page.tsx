@@ -79,44 +79,19 @@ export default function AdminDashboard() {
     return password;
   };
 
-  const generateQRCode = (email: string, password: string) => {
+  const generateQRCode = async (
+    email: string,
+    password: string
+  ): Promise<string> => {
     try {
-      // Generate a simple QR code data string
-      const qrData = JSON.stringify({
-        email,
-        password,
-        timestamp: new Date().toISOString(),
-        type: 'login',
-      });
-
-      // Create SVG content
-      const svgContent = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
-          <rect width="200" height="200" fill="white"/>
-          <text x="100" y="100" text-anchor="middle" font-family="monospace" font-size="8">${qrData}</text>
-        </svg>
-      `;
-
-      // Convert to base64
-      const base64Data = btoa(svgContent);
-      const qrCodeUrl = `data:image/svg+xml;base64,${base64Data}`;
-
-      console.log('QR Code generated successfully:', {
-        email,
-        qrCodeLength: qrCodeUrl.length,
-        hasData: qrCodeUrl.includes(email),
-      });
-
-      return qrCodeUrl;
+      // Use the QRCodeGenerator utility to generate REAL QR codes (iOS compatible)
+      return await QRCodeGenerator.generateQRCode(email, password);
     } catch (error) {
       console.error('Error generating QR code:', error);
-      // Return a fallback QR code
-      return `data:image/svg+xml;base64,${btoa(`
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
-          <rect width="200" height="200" fill="white"/>
-          <text x="100" y="100" text-anchor="middle" font-family="monospace" font-size="12" fill="red">QR Code Error</text>
-        </svg>
-      `)}`;
+      // Return a fallback QR code using the utility
+      return await QRCodeGenerator.generateIOSOptimizedQRCode(
+        JSON.stringify({ error: 'QR generation failed', email })
+      );
     }
   };
 
@@ -128,8 +103,11 @@ export default function AdminDashboard() {
         const password = generatePassword();
         console.log('Generated password:', password);
 
-        const qrCode = generateQRCode(newUser.email, password);
-        console.log('Generated QR code:', qrCode ? 'Success' : 'Failed');
+        const qrCode = await generateQRCode(newUser.email, password);
+        console.log(
+          'Generated REAL QR code (iOS compatible):',
+          qrCode ? 'Success' : 'Failed'
+        );
 
         // Create user with proper preferences structure
         const userData = {

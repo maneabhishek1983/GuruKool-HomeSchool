@@ -1,6 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRAuthState, User, AIInsight } from '@/types';
 import { qrAuthService } from '@/services/qr-auth.service';
@@ -46,10 +52,10 @@ interface QRAuthProviderProps {
   refreshInterval?: number;
 }
 
-export function QRAuthProvider({ 
-  children, 
-  autoRefresh = true, 
-  refreshInterval = 30000 
+export function QRAuthProvider({
+  children,
+  autoRefresh = true,
+  refreshInterval = 30000,
 }: QRAuthProviderProps) {
   const { login } = useAuthContext();
   const [qrAuthState, setQRAuthState] = useState<QRAuthState>({
@@ -76,8 +82,8 @@ export function QRAuthProvider({
       // Generate QR code with placeholder user info (real email/role will be set after scan)
       console.log('🎯 Calling QR auth service...');
       const tempEmail = `qr-login-${Date.now()}@temp.local`;
-      const qrToken = qrAuthService.generateQRToken(tempEmail, 'parent');
-      console.log('✅ QR token generated:', qrToken);
+      const qrToken = await qrAuthService.generateQRToken(tempEmail, 'parent');
+      console.log('✅ QR token generated (real QR code for iOS)');
 
       const newSessionId = `session-${Date.now()}`;
 
@@ -96,7 +102,7 @@ export function QRAuthProvider({
         await wsService.connect();
 
         // Subscribe to authentication status updates
-        unsubscribe = wsService.subscribeToQRAuth(newSessionId, (data) => {
+        unsubscribe = wsService.subscribeToQRAuth(newSessionId, data => {
           setQRAuthState(prev => ({
             ...prev,
             authStatus: data.status,
@@ -111,7 +117,10 @@ export function QRAuthProvider({
           }
         });
       } catch (wsError) {
-        console.warn('WebSocket connection failed, continuing without real-time updates:', wsError);
+        console.warn(
+          'WebSocket connection failed, continuing without real-time updates:',
+          wsError
+        );
       }
 
       // Set up auto-refresh if enabled
@@ -132,11 +141,11 @@ export function QRAuthProvider({
           }));
         }
       }, 300000); // 5 minutes
-
     } catch (err) {
       console.error('❌ QR service failed:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to generate QR code';
-      
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to generate QR code';
+
       // Fallback: Generate a simple QR code directly
       try {
         console.log('🔧 Attempting fallback QR generation...');
@@ -144,22 +153,25 @@ export function QRAuthProvider({
           type: 'fallback_auth',
           sessionId: `fallback-${Date.now()}`,
           timestamp: Date.now(),
-          version: '1.0'
+          version: '1.0',
         };
 
         const QRCode = (await import('qrcode')).default;
-        const fallbackQRCode = await QRCode.toDataURL(JSON.stringify(fallbackData), {
-          errorCorrectionLevel: 'H',
-          margin: 1,
-          color: {
-            dark: '#1f2937',
-            light: '#ffffff',
-          },
-          width: 256,
-        });
+        const fallbackQRCode = await QRCode.toDataURL(
+          JSON.stringify(fallbackData),
+          {
+            errorCorrectionLevel: 'H',
+            margin: 1,
+            color: {
+              dark: '#1f2937',
+              light: '#ffffff',
+            },
+            width: 256,
+          }
+        );
 
         console.log('✅ Fallback QR generated successfully');
-        
+
         setQRAuthState(prev => ({
           ...prev,
           qrCode: fallbackQRCode,
@@ -168,7 +180,6 @@ export function QRAuthProvider({
 
         setSessionId(fallbackData.sessionId);
         setShowFallback(true);
-        
       } catch (fallbackErr) {
         console.error('❌ Fallback QR generation also failed:', fallbackErr);
         setError('QR code generation failed. Please try again.');
@@ -180,7 +191,13 @@ export function QRAuthProvider({
     } finally {
       setIsLoading(false);
     }
-  }, [autoRefresh, refreshInterval, login, qrAuthService, qrAuthState.authStatus]);
+  }, [
+    autoRefresh,
+    refreshInterval,
+    login,
+    qrAuthService,
+    qrAuthState.authStatus,
+  ]);
 
   /**
    * Clear error state
@@ -213,7 +230,7 @@ export function QRAuthProvider({
   // Initialize QR generation on mount
   useEffect(() => {
     generateQR();
-    
+
     return () => {
       if (refreshTimer) {
         clearTimeout(refreshTimer);
@@ -261,38 +278,47 @@ interface QRCodeDisplayProps {
   showRefreshButton?: boolean;
 }
 
-export function QRCodeDisplay({ 
-  className = '', 
-  showStatus = true, 
-  showRefreshButton = true 
+export function QRCodeDisplay({
+  className = '',
+  showStatus = true,
+  showRefreshButton = true,
 }: QRCodeDisplayProps) {
-  const { 
-    qrAuthState, 
-    refreshQR, 
-    isLoading, 
-    error, 
-    clearError, 
-    aiInsights, 
-    showFallback, 
-    setShowFallback 
+  const {
+    qrAuthState,
+    refreshQR,
+    isLoading,
+    error,
+    clearError,
+    aiInsights,
+    showFallback,
+    setShowFallback,
   } = useQRAuth();
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'success': return 'text-success-600';
-      case 'expired': return 'text-warning-600';
-      case 'error': return 'text-error-600';
-      default: return 'text-primary-600';
+      case 'success':
+        return 'text-success-600';
+      case 'expired':
+        return 'text-warning-600';
+      case 'error':
+        return 'text-error-600';
+      default:
+        return 'text-primary-600';
     }
   };
 
   const getStatusMessage = (status: string) => {
     switch (status) {
-      case 'pending': return 'Scan QR code with your mobile device';
-      case 'success': return 'Authentication successful!';
-      case 'expired': return 'QR code expired. Please refresh.';
-      case 'error': return 'Authentication failed. Please try again.';
-      default: return 'Preparing QR code...';
+      case 'pending':
+        return 'Scan QR code with your mobile device';
+      case 'success':
+        return 'Authentication successful!';
+      case 'expired':
+        return 'QR code expired. Please refresh.';
+      case 'error':
+        return 'Authentication failed. Please try again.';
+      default:
+        return 'Preparing QR code...';
     }
   };
 
@@ -362,7 +388,7 @@ export function QRCodeDisplay({
 
             {/* Enhanced Status Indicator */}
             <div className="absolute -top-2 -right-2">
-              <AuthStatusIndicator 
+              <AuthStatusIndicator
                 authStatus={qrAuthState.authStatus}
                 showText={false}
                 size="md"
@@ -395,7 +421,7 @@ export function QRCodeDisplay({
               {isLoading ? 'Generating...' : 'Refresh QR Code'}
             </motion.button>
           )}
-          
+
           <motion.button
             onClick={() => setShowFallback(true)}
             className="flex-1 px-6 py-3 bg-neutral-100 hover:bg-neutral-200 

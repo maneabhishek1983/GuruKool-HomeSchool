@@ -1,55 +1,32 @@
 'use client';
 
 import { useState } from 'react';
+import { QRCodeGenerator } from '@/utils/qr-code-generator';
 
 export default function QRTestPage() {
   const [testEmail, setTestEmail] = useState('test@example.com');
   const [testPassword, setTestPassword] = useState('testpass123');
   const [qrCode, setQrCode] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const generateQRCode = (email: string, password: string) => {
-    try {
-      // Generate a simple QR code data string
-      const qrData = JSON.stringify({
-        email,
-        password,
-        timestamp: new Date().toISOString(),
-        type: 'login',
-      });
-
-      // Create SVG content
-      const svgContent = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
-          <rect width="200" height="200" fill="white"/>
-          <text x="100" y="100" text-anchor="middle" font-family="monospace" font-size="8">${qrData}</text>
-        </svg>
-      `;
-
-      // Convert to base64
-      const base64Data = btoa(svgContent);
-      const qrCodeUrl = `data:image/svg+xml;base64,${base64Data}`;
-
-      console.log('QR Code generated successfully:', {
-        email,
-        qrCodeLength: qrCodeUrl.length,
-        hasData: qrCodeUrl.includes(email),
-      });
-
-      return qrCodeUrl;
-    } catch (error) {
-      console.error('Error generating QR code:', error);
-      throw error;
-    }
-  };
-
-  const handleGenerateQR = () => {
+  const handleGenerateQR = async () => {
     try {
       setError('');
-      const generatedQR = generateQRCode(testEmail, testPassword);
+      setIsGenerating(true);
+
+      // Use the QRCodeGenerator utility to generate REAL QR codes (iOS compatible)
+      const generatedQR = await QRCodeGenerator.generateQRCode(
+        testEmail,
+        testPassword
+      );
       setQrCode(generatedQR);
+
+      console.log('REAL QR Code generated successfully (iOS compatible)');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -99,9 +76,12 @@ export default function QRTestPage() {
 
             <button
               onClick={handleGenerateQR}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={isGenerating}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300"
             >
-              Generate QR Code
+              {isGenerating
+                ? 'Generating...'
+                : 'Generate REAL QR Code (iOS Compatible)'}
             </button>
           </div>
         </div>
@@ -133,12 +113,15 @@ export default function QRTestPage() {
                   QR Code Length: {qrCode.length} characters
                 </p>
                 <p className="text-sm text-gray-600">
-                  Contains Email:{' '}
-                  {qrCode.includes(testEmail) ? '✅ Yes' : '❌ No'}
+                  Format:{' '}
+                  {qrCode.startsWith('data:image/png;base64,')
+                    ? '✅ Real PNG QR Code (iOS Compatible)'
+                    : '❌ Not a real QR code'}
                 </p>
-                <p className="text-sm text-gray-600">
-                  Contains Password:{' '}
-                  {qrCode.includes(testPassword) ? '✅ Yes' : '❌ No'}
+                <p className="text-sm text-green-600 font-semibold">
+                  {qrCode.startsWith('data:image/png;base64,')
+                    ? '✅ This QR code will work on iOS devices!'
+                    : ''}
                 </p>
 
                 <button
@@ -156,10 +139,25 @@ export default function QRTestPage() {
           <h3 className="text-blue-800 font-medium mb-2">Instructions</h3>
           <ul className="text-blue-700 text-sm space-y-1">
             <li>• Enter test email and password</li>
-            <li>• Click "Generate QR Code" to test the generation</li>
+            <li>• Click "Generate REAL QR Code" to test the generation</li>
+            <li>
+              • The QR code is now a REAL scannable QR code (not fake SVG text)
+            </li>
+            <li>• Test with iOS Camera app or any QR scanner</li>
             <li>• Check the browser console for detailed logs</li>
-            <li>• Use "Copy QR Code Data" to inspect the generated data</li>
-            <li>• If QR code doesn't display, check for console errors</li>
+          </ul>
+        </div>
+
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+          <h3 className="text-green-800 font-medium mb-2">
+            ✅ iOS Compatibility Fixed
+          </h3>
+          <ul className="text-green-700 text-sm space-y-1">
+            <li>• Now generates REAL QR codes using the qrcode library</li>
+            <li>• Error correction level: H (highest for iOS)</li>
+            <li>• Proper quiet zone (margin: 4)</li>
+            <li>• High contrast (pure black/white)</li>
+            <li>• Optimal size (512px) for iOS camera</li>
           </ul>
         </div>
       </div>

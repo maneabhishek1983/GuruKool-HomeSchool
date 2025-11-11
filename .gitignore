@@ -134,3 +134,6 @@ type-check-output.txt
 type-check-full.txt
 implementation-progress.json
 CLEANUP_REPORT.json
+
+.cursor/rules/kluster-code-verify.mdc
+.kluster

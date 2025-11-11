@@ -1,29 +1,68 @@
+# Vercel Environment Variables Configuration
 # Copy these environment variables to Vercel Dashboard
 # Go to: https://vercel.com/dashboard → Your Project → Settings → Environment Variables
 
 # Husky Configuration (for CI compatibility)
 HUSKY=0
 
-# Database Configuration
+# Database Configuration (CRITICAL - Required for database access)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
-# AI Services
-OPENAI_API_KEY=your_openai_api_key
-
-# Security & Authentication
+# JWT Authentication (CRITICAL - Required for session management)
 JWT_SECRET=your_jwt_secret_minimum_32_characters
 
 # Application Configuration
 NODE_ENV=production
-NEXT_PUBLIC_APP_URL=https://gurukool-homeschool-dpjucoitx-abhishek-manes-projects-efbe2a67.vercel.app
+NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
+
+# AI Services (Optional - if using AI features)
+OPENAI_API_KEY=your_openai_api_key
+PINECONE_API_KEY=your_pinecone_api_key
+PINECONE_ENVIRONMENT=your_pinecone_environment
+
+# Real-Time Services (Optional - if using WebSocket)
+# NOTE: Vercel doesn't support persistent WebSocket connections
+# Consider using Supabase Realtime instead
+NEXT_PUBLIC_WS_URL=wss://your-websocket-server.com/ws
+
+# QR Authentication (Optional)
+NEXT_PUBLIC_QR_SECRET=your_qr_secret_key
+
+# Rate Limiting (RECOMMENDED for production)
+UPSTASH_REDIS_REST_URL=your_upstash_redis_rest_url
+UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_rest_token
+
+# Error Tracking (Optional but recommended)
+SENTRY_DSN=your_sentry_dsn
+SENTRY_AUTH_TOKEN=your_sentry_auth_token
+
+# Demo Credentials (MUST BE DISABLED IN PRODUCTION)
+# Set ENABLE_DEMO_CREDENTIALS=false in production
+DEMO_PARENT_PASSWORD=parent123
+DEMO_ADMIN_PASSWORD=admin123
+DEMO_TEACHER_PASSWORD=teacher123
+ENABLE_DEMO_CREDENTIALS=false
 
 # Instructions:
 # 1. Replace all 'your_*' values with your actual credentials
 # 2. Add each variable in Vercel Dashboard
-# 3. Set environment to 'Production, Preview, and Development'
+# 3. Set environment to 'Production, Preview, and Development' for each variable
 # 4. Click 'Save' for each variable
 # 5. Redeploy after adding all variables
 #
 # IMPORTANT: Never commit actual API keys or secrets to version control!
 # This file should only contain template values.
+#
+# CRITICAL VARIABLES (Must be set):
+# - NEXT_PUBLIC_SUPABASE_URL
+# - NEXT_PUBLIC_SUPABASE_ANON_KEY
+# - SUPABASE_SERVICE_ROLE_KEY
+# - JWT_SECRET
+# - NODE_ENV=production
+#
+# RECOMMENDED VARIABLES (Should be set):
+# - UPSTASH_REDIS_REST_URL
+# - UPSTASH_REDIS_REST_TOKEN
+# - NEXT_PUBLIC_APP_URL

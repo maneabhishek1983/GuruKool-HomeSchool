@@ -1,3 +1,5 @@
+import QRCode from 'qrcode';
+
 export interface QRToken {
   id: string;
   email: string;
@@ -9,7 +11,7 @@ export interface QRToken {
 class QRAuthService {
   private tokens: Map<string, QRToken> = new Map();
 
-  generateQRToken(email: string, role: string): string {
+  async generateQRToken(email: string, role: string): Promise<string> {
     const tokenId = `qr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutes
 
@@ -23,20 +25,34 @@ class QRAuthService {
 
     this.tokens.set(tokenId, token);
 
-    // Return QR code data URL
+    // Create QR code data
     const qrData = JSON.stringify({
       token: tokenId,
       email,
       role,
       timestamp: new Date().toISOString(),
+      version: '1.0',
     });
 
-    return `data:image/svg+xml;base64,${btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
-        <rect width="200" height="200" fill="white"/>
-        <text x="100" y="100" text-anchor="middle" font-family="monospace" font-size="8">${qrData}</text>
-      </svg>
-    `)}`;
+    try {
+      // Generate REAL QR code using qrcode library (iOS compatible)
+      const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
+        errorCorrectionLevel: 'H', // Highest error correction for iOS
+        type: 'image/png',
+        quality: 1,
+        margin: 4, // Adequate quiet zone for iOS
+        width: 512, // Optimal size for iOS scanning
+        color: {
+          dark: '#000000', // Pure black for maximum contrast
+          light: '#FFFFFF', // Pure white background
+        },
+      });
+
+      return qrCodeDataUrl;
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+      throw new Error('Failed to generate QR code');
+    }
   }
 
   verifyQRToken(tokenId: string): QRToken | null {

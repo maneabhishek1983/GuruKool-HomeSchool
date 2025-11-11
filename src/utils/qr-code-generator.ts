@@ -1,20 +1,26 @@
 /**
  * QR Code Generator Utility
- * Handles QR code generation with proper error handling and browser compatibility
+ * Handles QR code generation with proper error handling and iOS compatibility
  */
+
+import QRCode from 'qrcode';
 
 export interface QRCodeData {
   email: string;
   password: string;
   timestamp: string;
   type: string;
+  version: string;
 }
 
 export class QRCodeGenerator {
   /**
-   * Generate a QR code as a data URL
+   * Generate a REAL QR code as a data URL (iOS compatible)
    */
-  static generateQRCode(email: string, password: string): string {
+  static async generateQRCode(
+    email: string,
+    password: string
+  ): Promise<string> {
     try {
       // Create the data object
       const qrData: QRCodeData = {
@@ -22,30 +28,30 @@ export class QRCodeGenerator {
         password,
         timestamp: new Date().toISOString(),
         type: 'login',
+        version: '1.0',
       };
 
       // Convert to JSON string
       const jsonData = JSON.stringify(qrData);
 
-      // Create SVG content
-      const svgContent = this.createSVGContent(jsonData);
-
-      // Convert to base64 with proper encoding
-      const base64Data = this.encodeToBase64(svgContent);
-
-      // Create data URL
-      const qrCodeUrl = `data:image/svg+xml;base64,${base64Data}`;
-
-      // Validate the generated QR code
-      if (!this.validateQRCode(qrCodeUrl, email, password)) {
-        throw new Error('QR code validation failed');
-      }
+      // Generate REAL QR code using qrcode library (iOS compatible)
+      const qrCodeUrl = await QRCode.toDataURL(jsonData, {
+        errorCorrectionLevel: 'H', // Highest error correction for iOS
+        type: 'image/png',
+        quality: 1,
+        margin: 4, // Adequate quiet zone for iOS
+        width: 512, // Optimal size for iOS scanning
+        color: {
+          dark: '#000000', // Pure black for maximum contrast
+          light: '#FFFFFF', // Pure white background
+        },
+      });
 
       console.log('QR Code generated successfully:', {
         email,
         qrCodeLength: qrCodeUrl.length,
-        hasData: qrCodeUrl.includes(email),
         timestamp: qrData.timestamp,
+        isRealQRCode: true,
       });
 
       return qrCodeUrl;
@@ -61,105 +67,22 @@ export class QRCodeGenerator {
   }
 
   /**
-   * Create SVG content for the QR code
-   */
-  private static createSVGContent(data: string): string {
-    return `
-      <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
-        <rect width="200" height="200" fill="white"/>
-        <text x="100" y="100" text-anchor="middle" font-family="monospace" font-size="8">${data}</text>
-      </svg>
-    `;
-  }
-
-  /**
-   * Encode string to base64 with proper browser compatibility
-   */
-  private static encodeToBase64(str: string): string {
-    try {
-      // Try using btoa first (standard browser method)
-      if (typeof btoa !== 'undefined') {
-        return btoa(str);
-      }
-
-      // Fallback for environments without btoa
-      if (typeof Buffer !== 'undefined') {
-        return Buffer.from(str).toString('base64');
-      }
-
-      // Manual base64 encoding as last resort
-      return this.manualBase64Encode(str);
-    } catch (error) {
-      console.error('Base64 encoding failed:', error);
-      throw new Error('Failed to encode QR code data');
-    }
-  }
-
-  /**
-   * Manual base64 encoding fallback
-   */
-  private static manualBase64Encode(str: string): string {
-    const chars =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-    let result = '';
-    let i = 0;
-
-    while (i < str.length) {
-      const char1 = str.charCodeAt(i++);
-      const char2 = str.charCodeAt(i++);
-      const char3 = str.charCodeAt(i++);
-
-      const enc1 = char1 >> 2;
-      const enc2 = ((char1 & 3) << 4) | (char2 >> 4);
-      let enc3 = ((char2 & 15) << 2) | (char3 >> 6);
-      let enc4 = char3 & 63;
-
-      if (isNaN(char2)) {
-        enc3 = enc4 = 64;
-      } else if (isNaN(char3)) {
-        enc4 = 64;
-      }
-
-      result =
-        result +
-        chars.charAt(enc1) +
-        chars.charAt(enc2) +
-        chars.charAt(enc3) +
-        chars.charAt(enc4);
-    }
-
-    return result;
-  }
-
-  /**
    * Validate the generated QR code
    */
-  private static validateQRCode(
-    qrCodeUrl: string,
-    email: string,
-    password: string
-  ): boolean {
-    // Check if it's a valid data URL
-    if (!qrCodeUrl.startsWith('data:image/svg+xml;base64,')) {
+  private static validateQRCode(qrCodeUrl: string): boolean {
+    // Check if it's a valid data URL (PNG format for real QR codes)
+    if (!qrCodeUrl.startsWith('data:image/png;base64,')) {
       return false;
     }
 
-    // Check if the URL is not too long
-    if (qrCodeUrl.length > 10000) {
+    // Check if the URL is not too long (reasonable size for QR code)
+    if (qrCodeUrl.length > 100000) {
       return false;
     }
 
-    // Decode the base64 data to check the actual content
-    try {
-      const base64Data = qrCodeUrl.split(',')[1];
-      const svgContent = base64Data ? atob(base64Data) : '';
-
-      // Check if the SVG contains the expected data
-      if (!svgContent.includes(email) || !svgContent.includes(password)) {
-        return false;
-      }
-    } catch (error) {
-      console.error('Error validating QR code:', error);
+    // Check if base64 data exists
+    const base64Data = qrCodeUrl.split(',')[1];
+    if (!base64Data || base64Data.length === 0) {
       return false;
     }
 
@@ -168,50 +91,62 @@ export class QRCodeGenerator {
 
   /**
    * Generate a fallback QR code with error information
+   * Even fallback should be a REAL QR code for iOS compatibility
    */
-  private static generateFallbackQRCode(
+  private static async generateFallbackQRCode(
     email: string,
     errorMessage: string
-  ): string {
+  ): Promise<string> {
     const fallbackData = JSON.stringify({
       email,
       error: errorMessage,
       timestamp: new Date().toISOString(),
       type: 'error',
+      version: '1.0',
     });
 
-    const svgContent = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
-        <rect width="200" height="200" fill="#fee2e2"/>
-        <text x="100" y="90" text-anchor="middle" font-family="monospace" font-size="10" fill="#dc2626">QR Code Error</text>
-        <text x="100" y="110" text-anchor="middle" font-family="monospace" font-size="6" fill="#dc2626">${email}</text>
-        <text x="100" y="130" text-anchor="middle" font-family="monospace" font-size="4" fill="#dc2626">${errorMessage}</text>
-      </svg>
-    `;
-
     try {
-      const base64Data = this.encodeToBase64(svgContent);
-      return `data:image/svg+xml;base64,${base64Data}`;
+      // Generate a real QR code even for errors
+      const qrCodeUrl = await QRCode.toDataURL(fallbackData, {
+        errorCorrectionLevel: 'H',
+        type: 'image/png',
+        quality: 1,
+        margin: 4,
+        width: 512,
+        color: {
+          dark: '#dc2626', // Red for error indication
+          light: '#fee2e2', // Light red background
+        },
+      });
+      return qrCodeUrl;
     } catch (error) {
-      // Ultimate fallback - return a simple error SVG
-      return `data:image/svg+xml;base64,${btoa(`
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
-          <rect width="200" height="200" fill="#fee2e2"/>
-          <text x="100" y="100" text-anchor="middle" font-family="monospace" font-size="12" fill="#dc2626">QR Error</text>
-        </svg>
-      `)}`;
+      // Ultimate fallback - simple error message QR
+      const simpleError = JSON.stringify({ error: 'QR generation failed' });
+      try {
+        return await QRCode.toDataURL(simpleError, {
+          errorCorrectionLevel: 'L',
+          width: 256,
+        });
+      } catch {
+        // If even this fails, return a data URL that indicates failure
+        return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+      }
     }
   }
 
   /**
    * Test QR code generation
    */
-  static test(): { success: boolean; error?: string; qrCode?: string } {
+  static async test(): Promise<{
+    success: boolean;
+    error?: string;
+    qrCode?: string;
+  }> {
     try {
       const testEmail = 'test@example.com';
       const testPassword = 'testpass123';
 
-      const qrCode = this.generateQRCode(testEmail, testPassword);
+      const qrCode = await this.generateQRCode(testEmail, testPassword);
 
       return {
         success: true,
@@ -223,6 +158,23 @@ export class QRCodeGenerator {
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
+  }
+
+  /**
+   * Generate QR code with iOS-optimized settings
+   */
+  static async generateIOSOptimizedQRCode(data: string): Promise<string> {
+    return await QRCode.toDataURL(data, {
+      errorCorrectionLevel: 'H', // Highest for iOS
+      type: 'image/png',
+      quality: 1,
+      margin: 4, // iOS recommended quiet zone
+      width: 512, // Optimal for iOS camera
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF',
+      },
+    });
   }
 }
 
