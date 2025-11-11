@@ -1,507 +1,492 @@
 import { supabase } from '@/lib/supabase';
+import QRCode from 'qrcode';
 
 export interface TimesheetEntry {
   id: string;
-  teacherId: string;
-  teacherName: string;
-  studentId: string;
-  studentName: string;
-  parentId: string;
-  checkInTime: Date;
-  checkOutTime: Date | null;
-  totalHours: number | null;
-  subject: string;
-  status: 'checked-in' | 'checked-out';
+  teacher_id: string;
+  student_id: string;
+  parent_id: string;
+  check_in_time: string;
+  check_out_time?: string;
+  duration_minutes?: number;
   location?: {
-    latitude: number;
-    longitude: number;
+    latitude?: number;
+    longitude?: number;
     address?: string;
   };
-  qrCodeUsed: string;
   notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  qr_code_id: string;
+  status: 'checked_in' | 'checked_out';
+  created_at: string;
+  updated_at: string;
 }
 
-export interface MonthlyTimesheetSummary {
-  teacherId: string;
-  teacherName: string;
-  month: string;
-  year: number;
-  totalHours: number;
-  totalSessions: number;
-  entries: TimesheetEntry[];
-  byStudent: {
-    [studentId: string]: {
-      studentName: string;
-      hours: number;
-      sessions: number;
-    };
-  };
-  bySubject: {
-    [subject: string]: {
-      hours: number;
-      sessions: number;
-    };
-  };
+export interface ParentQRCode {
+  id: string;
+  parent_id: string;
+  student_id: string;
+  qr_code_data: string;
+  qr_code_image: string;
+  is_active: boolean;
+  created_at: string;
+  expires_at?: string;
+}
+
+export interface CheckInOutData {
+  type: 'check_in' | 'check_out';
+  parentId: string;
+  studentId: string;
+  teacherId?: string;
+  timestamp: number;
+  signature: string;
 }
 
 export class TimesheetService {
   /**
-   * Check in teacher for a session using QR code
+   * Generate QR code for parent portal (for teacher check-in/out)
    */
-  static async checkIn(
-    qrCodeData: string,
-    location?: { latitude: number; longitude: number }
-  ): Promise<{ success: boolean; entry?: TimesheetEntry; error?: string }> {
+  static async generateParentQRCode(
+    parentId: string,
+    studentId: string
+  ): Promise<ParentQRCode> {
     try {
-      // Parse QR code data
-      const qrData = JSON.parse(qrCodeData);
-      const { teacherId, studentId, parentId } = qrData;
+      // Create QR code data
+      const qrData: CheckInOutData = {
+        type: 'check_in', // Default, will be selected by teacher
+        parentId,
+        studentId,
+        timestamp: Date.now(),
+        signature: this.generateSignature(parentId, studentId),
+      };
 
-      // Validate QR code
-      const { data: qrCode, error: qrError } = await supabase
-        .from('teacher_qr_codes')
-        .select('*')
-        .eq('teacher_id', teacherId)
-        .eq('student_id', studentId)
-        .eq('parent_id', parentId)
-        .eq('is_active', true)
-        .single();
+      const qrDataString = JSON.stringify(qrData);
 
-      if (qrError || !qrCode) {
-        return {
-          success: false,
-          error: 'Invalid or expired QR code',
-        };
-      }
-
-      // Get teacher and student details
-      const [teacherRes, studentRes] = await Promise.all([
-        supabase.from('teachers').select('name').eq('id', teacherId).single(),
-        supabase.from('students').select('name').eq('id', studentId).single(),
-      ]);
-
-      if (teacherRes.error || studentRes.error) {
-        return {
-          success: false,
-          error: 'Teacher or student not found',
-        };
-      }
-
-      // Check if there's an active check-in
-      const { data: activeSession, error: activeError } = await supabase
-        .from('teacher_sessions')
-        .select('*')
-        .eq('teacher_id', teacherId)
-        .eq('student_id', studentId)
-        .eq('status', 'checked-in')
-        .order('check_in_time', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (activeSession && !activeError) {
-        return {
-          success: false,
-          error: 'Teacher is already checked in for this student',
-        };
-      }
-
-      // Create new timesheet entry
-      const checkInTime = new Date();
-      const { data: newEntry, error: insertError } = await supabase
-        .from('teacher_sessions')
-        .insert([
-          {
-            teacher_id: teacherId,
-            teacher_name: teacherRes.data.name,
-            student_id: studentId,
-            student_name: studentRes.data.name,
-            parent_id: parentId,
-            check_in_time: checkInTime.toISOString(),
-            status: 'checked-in',
-            subject: qrCode.subject || 'General',
-            location: location ? JSON.stringify(location) : null,
-            qr_code_used: qrCodeData,
-            created_at: checkInTime.toISOString(),
-            updated_at: checkInTime.toISOString(),
-          },
-        ])
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error('Error creating timesheet entry:', insertError);
-        return {
-          success: false,
-          error: 'Failed to create timesheet entry',
-        };
-      }
-
-      return {
-        success: true,
-        entry: {
-          id: newEntry.id,
-          teacherId: newEntry.teacher_id,
-          teacherName: newEntry.teacher_name,
-          studentId: newEntry.student_id,
-          studentName: newEntry.student_name,
-          parentId: newEntry.parent_id,
-          checkInTime: new Date(newEntry.check_in_time),
-          checkOutTime: null,
-          totalHours: null,
-          subject: newEntry.subject,
-          status: 'checked-in',
-          location: newEntry.location
-            ? JSON.parse(newEntry.location)
-            : undefined,
-          qrCodeUsed: newEntry.qr_code_used,
-          notes: newEntry.notes,
-          createdAt: new Date(newEntry.created_at),
-          updatedAt: new Date(newEntry.updated_at),
+      // Generate real QR code image (iOS compatible)
+      const qrCodeImage = await QRCode.toDataURL(qrDataString, {
+        errorCorrectionLevel: 'H',
+        type: 'image/png',
+        quality: 1,
+        margin: 4,
+        width: 512,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF',
         },
-      };
-    } catch (error) {
-      console.error('Check-in error:', error);
-      return {
-        success: false,
-        error: 'An error occurred during check-in',
-      };
-    }
-  }
+      });
 
-  /**
-   * Check out teacher from a session
-   */
-  static async checkOut(
-    sessionId: string,
-    notes?: string
-  ): Promise<{ success: boolean; entry?: TimesheetEntry; error?: string }> {
-    try {
-      // Get the active session
-      const { data: session, error: sessionError } = await supabase
-        .from('teacher_sessions')
-        .select('*')
-        .eq('id', sessionId)
-        .eq('status', 'checked-in')
-        .single();
-
-      if (sessionError || !session) {
-        return {
-          success: false,
-          error: 'Active session not found',
-        };
-      }
-
-      // Calculate total hours
-      const checkInTime = new Date(session.check_in_time);
-      const checkOutTime = new Date();
-      const totalHours =
-        (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60);
-
-      // Update session
-      const { data: updatedSession, error: updateError } = await supabase
-        .from('teacher_sessions')
-        .update({
-          check_out_time: checkOutTime.toISOString(),
-          total_hours: totalHours,
-          status: 'checked-out',
-          notes: notes || session.notes,
-          updated_at: checkOutTime.toISOString(),
+      // Store in database
+      const { data, error } = await supabase
+        .from('parent_qr_codes')
+        .insert({
+          parent_id: parentId,
+          student_id: studentId,
+          qr_code_data: qrDataString,
+          qr_code_image: qrCodeImage,
+          is_active: true,
+          expires_at: new Date(
+            Date.now() + 30 * 24 * 60 * 60 * 1000
+          ).toISOString(), // 30 days
         })
-        .eq('id', sessionId)
         .select()
         .single();
-
-      if (updateError) {
-        console.error('Error updating session:', updateError);
-        return {
-          success: false,
-          error: 'Failed to check out',
-        };
-      }
-
-      return {
-        success: true,
-        entry: {
-          id: updatedSession.id,
-          teacherId: updatedSession.teacher_id,
-          teacherName: updatedSession.teacher_name,
-          studentId: updatedSession.student_id,
-          studentName: updatedSession.student_name,
-          parentId: updatedSession.parent_id,
-          checkInTime: new Date(updatedSession.check_in_time),
-          checkOutTime: new Date(updatedSession.check_out_time),
-          totalHours: updatedSession.total_hours,
-          subject: updatedSession.subject,
-          status: 'checked-out',
-          location: updatedSession.location
-            ? JSON.parse(updatedSession.location)
-            : undefined,
-          qrCodeUsed: updatedSession.qr_code_used,
-          notes: updatedSession.notes,
-          createdAt: new Date(updatedSession.created_at),
-          updatedAt: new Date(updatedSession.updated_at),
-        },
-      };
-    } catch (error) {
-      console.error('Check-out error:', error);
-      return {
-        success: false,
-        error: 'An error occurred during check-out',
-      };
-    }
-  }
-
-  /**
-   * Get active session for a teacher
-   */
-  static async getActiveSession(
-    teacherId: string
-  ): Promise<TimesheetEntry | null> {
-    try {
-      const { data, error } = await supabase
-        .from('teacher_sessions')
-        .select('*')
-        .eq('teacher_id', teacherId)
-        .eq('status', 'checked-in')
-        .order('check_in_time', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error || !data) {
-        return null;
-      }
-
-      return {
-        id: data.id,
-        teacherId: data.teacher_id,
-        teacherName: data.teacher_name,
-        studentId: data.student_id,
-        studentName: data.student_name,
-        parentId: data.parent_id,
-        checkInTime: new Date(data.check_in_time),
-        checkOutTime: data.check_out_time
-          ? new Date(data.check_out_time)
-          : null,
-        totalHours: data.total_hours,
-        subject: data.subject,
-        status: data.status,
-        location: data.location ? JSON.parse(data.location) : undefined,
-        qrCodeUsed: data.qr_code_used,
-        notes: data.notes,
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at),
-      };
-    } catch (error) {
-      console.error('Error getting active session:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Get timesheet entries for a teacher in a date range
-   */
-  static async getTimesheetEntries(
-    teacherId: string,
-    startDate: Date,
-    endDate: Date
-  ): Promise<TimesheetEntry[]> {
-    try {
-      const { data, error } = await supabase
-        .from('teacher_sessions')
-        .select('*')
-        .eq('teacher_id', teacherId)
-        .gte('check_in_time', startDate.toISOString())
-        .lte('check_in_time', endDate.toISOString())
-        .order('check_in_time', { ascending: false });
 
       if (error) {
-        console.error('Error fetching timesheet entries:', error);
-        return [];
+        throw error;
       }
 
-      return data.map((entry: any) => ({
-        id: entry.id,
-        teacherId: entry.teacher_id,
-        teacherName: entry.teacher_name,
-        studentId: entry.student_id,
-        studentName: entry.student_name,
-        parentId: entry.parent_id,
-        checkInTime: new Date(entry.check_in_time),
-        checkOutTime: entry.check_out_time
-          ? new Date(entry.check_out_time)
-          : null,
-        totalHours: entry.total_hours,
-        subject: entry.subject,
-        status: entry.status,
-        location: entry.location ? JSON.parse(entry.location) : undefined,
-        qrCodeUsed: entry.qr_code_used,
-        notes: entry.notes,
-        createdAt: new Date(entry.created_at),
-        updatedAt: new Date(entry.updated_at),
-      }));
+      return data;
     } catch (error) {
-      console.error('Error fetching timesheet entries:', error);
+      console.error('Error generating parent QR code:', error);
+      throw new Error('Failed to generate QR code');
+    }
+  }
+
+  /**
+   * Get active QR codes for a parent
+   */
+  static async getParentQRCodes(parentId: string): Promise<ParentQRCode[]> {
+    try {
+      const { data, error } = await supabase
+        .from('parent_qr_codes')
+        .select('*')
+        .eq('parent_id', parentId)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching parent QR codes:', error);
       return [];
     }
   }
 
   /**
-   * Get monthly timesheet summary for a teacher
+   * Validate QR code and decode data
    */
-  static async getMonthlyTimesheetSummary(
-    teacherId: string,
-    month: number,
-    year: number
-  ): Promise<MonthlyTimesheetSummary | null> {
+  static validateQRCode(qrDataString: string): CheckInOutData | null {
     try {
-      // Get start and end dates for the month
-      const startDate = new Date(year, month - 1, 1);
-      const endDate = new Date(year, month, 0, 23, 59, 59);
+      const qrData: CheckInOutData = JSON.parse(qrDataString);
 
-      // Get all entries for the month
-      const entries = await this.getTimesheetEntries(
-        teacherId,
-        startDate,
-        endDate
+      // Verify signature
+      const expectedSignature = this.generateSignature(
+        qrData.parentId,
+        qrData.studentId
       );
 
-      if (entries.length === 0) {
-        return null;
+      if (qrData.signature !== expectedSignature) {
+        throw new Error('Invalid QR code signature');
       }
 
-      // Calculate summary
-      const totalHours = entries.reduce(
-        (sum, entry) => sum + (entry.totalHours || 0),
-        0
-      );
+      // Check if QR code is not too old (24 hours)
+      const age = Date.now() - qrData.timestamp;
+      if (age > 24 * 60 * 60 * 1000) {
+        throw new Error('QR code expired');
+      }
 
-      const byStudent: MonthlyTimesheetSummary['byStudent'] = {};
-      const bySubject: MonthlyTimesheetSummary['bySubject'] = {};
-
-      entries.forEach(entry => {
-        // By student
-        const studentEntry = byStudent[entry.studentId];
-        if (!studentEntry) {
-          byStudent[entry.studentId] = {
-            studentName: entry.studentName,
-            hours: 0,
-            sessions: 0,
-          };
-        }
-        const currentStudent = byStudent[entry.studentId];
-        if (currentStudent) {
-          currentStudent.hours += entry.totalHours || 0;
-          currentStudent.sessions += 1;
-        }
-
-        // By subject
-        const subjectEntry = bySubject[entry.subject];
-        if (!subjectEntry) {
-          bySubject[entry.subject] = {
-            hours: 0,
-            sessions: 0,
-          };
-        }
-        const currentSubject = bySubject[entry.subject];
-        if (currentSubject) {
-          currentSubject.hours += entry.totalHours || 0;
-          currentSubject.sessions += 1;
-        }
-      });
-
-      const monthNames = [
-        'January',
-        'February',
-        'March',
-        'April',
-        'May',
-        'June',
-        'July',
-        'August',
-        'September',
-        'October',
-        'November',
-        'December',
-      ];
-
-      return {
-        teacherId,
-        teacherName: entries[0]?.teacherName || '',
-        month: monthNames[month - 1] || '',
-        year,
-        totalHours,
-        totalSessions: entries.length,
-        entries,
-        byStudent,
-        bySubject,
-      };
+      return qrData;
     } catch (error) {
-      console.error('Error generating monthly summary:', error);
+      console.error('Error validating QR code:', error);
       return null;
     }
   }
 
   /**
-   * Export monthly timesheet to CSV format
+   * Check in teacher
    */
-  static async exportMonthlyTimesheetCSV(
+  static async checkIn(
     teacherId: string,
-    month: number,
-    year: number
-  ): Promise<string> {
-    const summary = await this.getMonthlyTimesheetSummary(
-      teacherId,
-      month,
-      year
-    );
+    qrDataString: string,
+    location?: { latitude?: number; longitude?: number; address?: string }
+  ): Promise<TimesheetEntry | null> {
+    try {
+      // Validate QR code
+      const qrData = this.validateQRCode(qrDataString);
+      if (!qrData) {
+        throw new Error('Invalid QR code');
+      }
 
-    if (!summary) {
-      return '';
+      // Check if teacher is already checked in for this student
+      const { data: existingEntry } = await supabase
+        .from('timesheet_entries')
+        .select('*')
+        .eq('teacher_id', teacherId)
+        .eq('student_id', qrData.studentId)
+        .eq('status', 'checked_in')
+        .single();
+
+      if (existingEntry) {
+        throw new Error('Teacher is already checked in for this student');
+      }
+
+      // Get QR code ID
+      const { data: qrCode } = await supabase
+        .from('parent_qr_codes')
+        .select('id')
+        .eq('parent_id', qrData.parentId)
+        .eq('student_id', qrData.studentId)
+        .eq('is_active', true)
+        .single();
+
+      if (!qrCode) {
+        throw new Error('QR code not found');
+      }
+
+      // Create timesheet entry
+      const { data, error } = await supabase
+        .from('timesheet_entries')
+        .insert({
+          teacher_id: teacherId,
+          student_id: qrData.studentId,
+          parent_id: qrData.parentId,
+          check_in_time: new Date().toISOString(),
+          location: location || {},
+          qr_code_id: qrCode.id,
+          status: 'checked_in',
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error checking in:', error);
+      return null;
     }
+  }
 
-    const header = [
-      'Date',
-      'Student Name',
-      'Subject',
-      'Check-In Time',
-      'Check-Out Time',
-      'Total Hours',
-      'Status',
-      'Notes',
-    ].join(',');
+  /**
+   * Check out teacher
+   */
+  static async checkOut(
+    teacherId: string,
+    qrDataString: string,
+    notes?: string,
+    location?: { latitude?: number; longitude?: number; address?: string }
+  ): Promise<TimesheetEntry | null> {
+    try {
+      // Validate QR code
+      const qrData = this.validateQRCode(qrDataString);
+      if (!qrData) {
+        throw new Error('Invalid QR code');
+      }
 
-    const rows = summary.entries.map(entry => {
-      return [
-        entry.checkInTime.toLocaleDateString(),
-        entry.studentName,
-        entry.subject,
-        entry.checkInTime.toLocaleTimeString(),
-        entry.checkOutTime ? entry.checkOutTime.toLocaleTimeString() : 'N/A',
-        entry.totalHours ? entry.totalHours.toFixed(2) : '0',
-        entry.status,
-        entry.notes || '',
-      ]
-        .map(field => `"${field}"`)
-        .join(',');
-    });
+      // Find active check-in entry
+      const { data: entry, error: fetchError } = await supabase
+        .from('timesheet_entries')
+        .select('*')
+        .eq('teacher_id', teacherId)
+        .eq('student_id', qrData.studentId)
+        .eq('status', 'checked_in')
+        .order('check_in_time', { ascending: false })
+        .limit(1)
+        .single();
 
-    const summaryRows = [
-      '',
-      'Summary',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      `Total Hours: ${summary.totalHours.toFixed(2)}`,
-      `Total Sessions: ${summary.totalSessions}`,
-    ];
+      if (fetchError || !entry) {
+        throw new Error('No active check-in found');
+      }
 
-    return [header, ...rows, ...summaryRows].join('\n');
+      // Calculate duration
+      const checkInTime = new Date(entry.check_in_time);
+      const checkOutTime = new Date();
+      const durationMinutes = Math.round(
+        (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60)
+      );
+
+      // Update entry
+      const { data, error } = await supabase
+        .from('timesheet_entries')
+        .update({
+          check_out_time: checkOutTime.toISOString(),
+          duration_minutes: durationMinutes,
+          notes: notes || '',
+          status: 'checked_out',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', entry.id)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error checking out:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get active check-in for teacher
+   */
+  static async getActiveCheckIn(
+    teacherId: string
+  ): Promise<TimesheetEntry | null> {
+    try {
+      const { data, error } = await supabase
+        .from('timesheet_entries')
+        .select('*')
+        .eq('teacher_id', teacherId)
+        .eq('status', 'checked_in')
+        .order('check_in_time', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error) {
+        return null;
+      }
+      return data;
+    } catch (error) {
+      console.error('Error fetching active check-in:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get timesheet entries for teacher
+   */
+  static async getTeacherTimesheet(
+    teacherId: string,
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<TimesheetEntry[]> {
+    try {
+      let query = supabase
+        .from('timesheet_entries')
+        .select('*')
+        .eq('teacher_id', teacherId)
+        .order('check_in_time', { ascending: false });
+
+      if (startDate) {
+        query = query.gte('check_in_time', startDate.toISOString());
+      }
+
+      if (endDate) {
+        query = query.lte('check_in_time', endDate.toISOString());
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw error;
+      }
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching teacher timesheet:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get timesheet entries for parent
+   */
+  static async getParentTimesheet(
+    parentId: string,
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<TimesheetEntry[]> {
+    try {
+      let query = supabase
+        .from('timesheet_entries')
+        .select('*')
+        .eq('parent_id', parentId)
+        .order('check_in_time', { ascending: false });
+
+      if (startDate) {
+        query = query.gte('check_in_time', startDate.toISOString());
+      }
+
+      if (endDate) {
+        query = query.lte('check_in_time', endDate.toISOString());
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw error;
+      }
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching parent timesheet:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Calculate total hours for teacher
+   */
+  static async calculateTeacherHours(
+    teacherId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<{
+    totalMinutes: number;
+    totalHours: number;
+    entriesCount: number;
+    byStudent: Record<
+      string,
+      { minutes: number; hours: number; count: number }
+    >;
+  }> {
+    try {
+      const entries = await this.getTeacherTimesheet(
+        teacherId,
+        startDate,
+        endDate
+      );
+
+      const completedEntries = entries.filter(
+        e => e.status === 'checked_out' && e.duration_minutes
+      );
+
+      const totalMinutes = completedEntries.reduce(
+        (sum, e) => sum + (e.duration_minutes || 0),
+        0
+      );
+
+      const byStudent: Record<
+        string,
+        { minutes: number; hours: number; count: number }
+      > = {};
+
+      completedEntries.forEach(entry => {
+        if (!byStudent[entry.student_id]) {
+          byStudent[entry.student_id] = { minutes: 0, hours: 0, count: 0 };
+        }
+        const studentData = byStudent[entry.student_id];
+        if (studentData) {
+          studentData.minutes += entry.duration_minutes || 0;
+          studentData.count += 1;
+        }
+      });
+
+      // Convert minutes to hours for each student
+      Object.keys(byStudent).forEach(studentId => {
+        const studentData = byStudent[studentId];
+        if (studentData) {
+          studentData.hours =
+            Math.round((studentData.minutes / 60) * 100) / 100;
+        }
+      });
+
+      return {
+        totalMinutes,
+        totalHours: Math.round((totalMinutes / 60) * 100) / 100,
+        entriesCount: completedEntries.length,
+        byStudent,
+      };
+    } catch (error) {
+      console.error('Error calculating teacher hours:', error);
+      return {
+        totalMinutes: 0,
+        totalHours: 0,
+        entriesCount: 0,
+        byStudent: {},
+      };
+    }
+  }
+
+  /**
+   * Generate signature for QR code validation
+   */
+  private static generateSignature(
+    parentId: string,
+    studentId: string
+  ): string {
+    const secret = process.env.NEXT_PUBLIC_QR_SECRET || 'default-secret';
+    const data = `${parentId}-${studentId}-${secret}`;
+    return btoa(data).slice(0, 16);
+  }
+
+  /**
+   * Regenerate QR code for parent
+   */
+  static async regenerateParentQRCode(
+    parentId: string,
+    studentId: string
+  ): Promise<ParentQRCode> {
+    try {
+      // Deactivate old QR codes
+      await supabase
+        .from('parent_qr_codes')
+        .update({ is_active: false })
+        .eq('parent_id', parentId)
+        .eq('student_id', studentId);
+
+      // Generate new QR code
+      return await this.generateParentQRCode(parentId, studentId);
+    } catch (error) {
+      console.error('Error regenerating QR code:', error);
+      throw new Error('Failed to regenerate QR code');
+    }
   }
 }
 
-export default TimesheetService;
+export const timesheetService = TimesheetService;
