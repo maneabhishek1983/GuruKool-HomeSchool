@@ -62,10 +62,11 @@ export class InvitationService {
 
       if (existing && !existingError) {
         // Revoke old invitation
+        const existingToken = existing as InvitationToken;
         await admin
           .from('invitation_tokens')
           .update({ status: 'revoked' as const })
-          .eq('id', existing.id);
+          .eq('id', existingToken.id);
       }
 
       // Create new invitation token
