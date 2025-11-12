@@ -28,6 +28,12 @@ GuruKool HomeSchool is a Next.js 14 application for managing homeschooling with 
 
 **CRITICAL**: Before pushing any code changes to GitHub, ALWAYS run `npm run type-check` locally to catch TypeScript errors that will fail in Vercel deployment. Fix all type errors before committing.
 
+### Git Hooks
+
+- Pre-commit hook (Husky): Automatically runs `lint-staged` on staged files
+- Lint-staged: Runs linting and formatting checks on staged files before commit
+- **Note**: Hooks are automatically installed via `postinstall` script (skipped in production/CI)
+
 ### Testing
 
 - `npm test` - Run Jest unit tests
@@ -48,6 +54,13 @@ GuruKool HomeSchool is a Next.js 14 application for managing homeschooling with 
 
 - `npm run verify:supabase` - Verify Supabase connection and schema
 - `npm run verify:rls` - Verify Row Level Security policies
+- `npm run db:login` - Login to Supabase CLI
+- `npm run db:link` - Link local project to Supabase project (project ref: miqhtpbutevdrkyndflf)
+- `npm run db:push` - Push local migrations to Supabase
+- `npm run db:pull` - Pull schema from Supabase
+- `npm run db:diff` - Show diff between local and remote schema
+- `npm run db:generate` - Generate new migration from diff
+- `npm run db:status` - List migration status
 - Database migrations must be applied manually in Supabase Dashboard (see `supabase/migrations/`)
 
 ### Utilities
@@ -404,6 +417,46 @@ The `scripts/` directory contains utility scripts:
 
 These scripts use manual `.env` file parsing (no `dotenv` dependency required).
 
+## Kluster.ai Code Verification
+
+This project uses Kluster.ai for automated code quality and security verification:
+
+### Automatic Verification
+
+- Runs automatically after ANY code modification or file creation
+- Checks for security issues, bugs, and code quality problems
+- Provides actionable todo lists for fixes
+- Always announces issues found before applying fixes
+
+### Manual Verification
+
+Trigger with these phrases:
+
+- "verify with kluster"
+- "verify this file"
+- "check for bugs"
+- "check security"
+
+### Session Management
+
+- First kluster call: No `chat_id` required
+- Subsequent calls: MUST include `chat_id` from previous response to maintain context
+- Always complete all items in `agent_todo_list` before re-running verification
+
+### Dependency Checks
+
+- Automatically runs before package installation
+- Validates security and compliance of new dependencies
+- Checks before updating `package.json`, `requirements.txt`, etc.
+
+### Workflow
+
+1. Kluster analyzes code changes
+2. Returns prioritized issue list (P0-P5)
+3. Follow `agent_todo_list` in exact order
+4. Higher priority (lower P number) always wins in conflicts
+5. Verification summary provided at end of session
+
 ## Security & Production Hardening
 
 ### Current Security Measures
@@ -532,6 +585,9 @@ These scripts use manual `.env` file parsing (no `dotenv` dependency required).
   - See `QUICK_START_MIGRATIONS.md` for step-by-step guide
 - **API Documentation**: Complete API reference in `API_DOCUMENTATION.md` with cURL examples
 - **Testing Status**: QA report in `QA_TEST_REPORT.md` shows current test coverage and gaps
+- **Pre-commit Hooks**: Husky + lint-staged ensure code quality before commits (auto-installed in dev)
+- **Kluster.ai**: Automated code verification runs on all code changes; follow agent_todo_list for fixes
+- **Test Files with Credentials**: Never commit test HTML files containing hardcoded API keys or credentials
 
 ## Key Architectural Decisions & Gotchas
 

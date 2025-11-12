@@ -55,7 +55,8 @@
       "Bash(echo \"Open this file in your browser: file:///$PWD/test-deployed-signup.html\")",
       "Bash(del test-teacher-creation.js verify-teacher-fix.js)",
       "Bash(npx:*)",
-      "Bash(del nul)"
+      "Bash(del nul)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

@@ -137,3 +137,30 @@ CLEANUP_REPORT.json
 
 .cursor/rules/kluster-code-verify.mdc
 .kluster
+
+# Test files with hardcoded credentials (SECURITY: never commit these)
+test-deployed-signup.html
+test-signup.js
+**/test-*-credentials*.html
+**/test-*-credentials*.js
+
+# Temporary development scripts and files
+create-parent-account.js
+create-user-profile.js
+reset-admin-password.js
+setup-demo-accounts.js
+scripts/fix-vercel-issues.js
+
+# Teacher QR code images (generated artifacts)
+teacher-qr-*.png
+
+# Temporary deployment and migration guides (consolidated in main docs)
+APPLY_MIGRATIONS_008_AND_009.md
+APPLY_MIGRATION_008.md
+QUICK_START_CHECKLIST.md
+VERCEL_DEPLOYMENT_FIX.md
+VERCEL_DEPLOYMENT_ISSUES.md
+VERCEL_DEPLOYMENT_SUMMARY.md
+QR_CODE_FIX_SUMMARY.md
+QR_CODE_IOS_FIX_REPORT.md
+QR_CODE_IOS_TESTING_GUIDE.md
