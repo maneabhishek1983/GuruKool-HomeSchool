@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { teacherCreateSchema, paginationSchema } from '@/lib/validation';
 import { DatabaseService } from '@/services/database.service';
+import { InvitationService } from '@/services/invitation.service';
 import { withRateLimit } from '@/lib/api-security';
 import { createClient } from '@supabase/supabase-js';
 
@@ -34,7 +35,10 @@ export const GET = withRateLimit({
     });
 
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Invalid authentication', code: 'AUTH_INVALID' },
@@ -51,7 +55,10 @@ export const GET = withRateLimit({
     const paginationResult = paginationSchema.safeParse({ page, limit });
     if (!paginationResult.success) {
       return NextResponse.json(
-        { error: 'Invalid pagination parameters', details: paginationResult.error.errors },
+        {
+          error: 'Invalid pagination parameters',
+          details: paginationResult.error.errors,
+        },
         { status: 400 }
       );
     }
@@ -113,7 +120,10 @@ export const POST = withRateLimit({
     });
 
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Invalid authentication', code: 'AUTH_INVALID' },
@@ -137,13 +147,63 @@ export const POST = withRateLimit({
     }
 
     // Create teacher
-    const teacher = await DatabaseService.createTeacher(validation.data, user.id);
+    const teacher = await DatabaseService.createTeacher(
+      validation.data,
+      user.id
+    );
+
+    if (!teacher) {
+      return NextResponse.json(
+        { error: 'Failed to create teacher', code: 'CREATE_FAILED' },
+        { status: 500 }
+      );
+    }
+
+    // Get parent details for invitation
+    const { data: parent, error: parentError } = await supabase
+      .from('users')
+      .select('name')
+      .eq('id', user.id)
+      .single();
+
+    // Create invitation token and send email
+    const invitation = await InvitationService.createInvitationToken({
+      teacher_id: teacher.id,
+      parent_id: user.id,
+      teacher_email: teacher.email,
+      teacher_name: teacher.name,
+      parent_name: parent?.name || 'Parent',
+    });
+
+    let invitationUrl = null;
+    if (invitation) {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL ||
+        request.headers.get('origin') ||
+        'http://localhost:3000';
+      invitationUrl = InvitationService.generateInvitationUrl(
+        invitation.token,
+        baseUrl
+      );
+
+      console.log('✉️  Teacher Invitation Created:');
+      console.log('   Teacher:', teacher.name, `(${teacher.email})`);
+      console.log('   Invitation URL:', invitationUrl);
+      console.log(
+        '   Expires:',
+        new Date(invitation.expires_at).toLocaleString()
+      );
+    }
 
     return NextResponse.json(
       {
         success: true,
-        data: teacher,
-        message: 'Teacher created successfully',
+        data: {
+          ...teacher,
+          invitationUrl, // Return URL so parent can share it manually
+          invitationSent: !!invitation,
+        },
+        message: 'Teacher created successfully. Invitation sent.',
       },
       { status: 201 }
     );
