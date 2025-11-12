@@ -154,6 +154,11 @@ scripts/fix-vercel-issues.js
 # Teacher QR code images (generated artifacts)
 teacher-qr-*.png
 
+# Test output files (QR codes and reports - contain test data)
+test-output-*.png
+test-output-*.jpg
+QR_TEST_REPORT.json
+
 # Temporary deployment and migration guides (consolidated in main docs)
 APPLY_MIGRATIONS_008_AND_009.md
 APPLY_MIGRATION_008.md
