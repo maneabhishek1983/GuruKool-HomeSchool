@@ -53,18 +53,18 @@ export class InvitationService {
       const admin = getSupabaseAdmin();
 
       // Check if there's already a pending invitation for this teacher
-      const { data: existing } = await admin
+      const { data: existing, error: existingError } = await admin
         .from('invitation_tokens')
         .select('*')
         .eq('teacher_id', data.teacher_id)
         .eq('status', 'pending')
         .single();
 
-      if (existing) {
+      if (existing && !existingError) {
         // Revoke old invitation
         await admin
           .from('invitation_tokens')
-          .update({ status: 'revoked' })
+          .update({ status: 'revoked' as const })
           .eq('id', existing.id);
       }
 
@@ -76,18 +76,18 @@ export class InvitationService {
           teacher_id: data.teacher_id,
           parent_id: data.parent_id,
           email: data.teacher_email,
-          status: 'pending',
+          status: 'pending' as const,
           expires_at: expiresAt.toISOString(),
         })
         .select()
         .single();
 
-      if (error) {
+      if (error || !invitation) {
         console.error('Error creating invitation token:', error);
         return null;
       }
 
-      return invitation;
+      return invitation as InvitationToken;
     } catch (error) {
       console.error('Error in createInvitationToken:', error);
       return null;
@@ -113,18 +113,20 @@ export class InvitationService {
         return null;
       }
 
+      const invitation = data as InvitationToken;
+
       // Check if expired
-      if (new Date(data.expires_at) < new Date()) {
+      if (new Date(invitation.expires_at) < new Date()) {
         // Auto-expire
         await admin
           .from('invitation_tokens')
-          .update({ status: 'expired' })
-          .eq('id', data.id);
+          .update({ status: 'expired' as const })
+          .eq('id', invitation.id);
 
-        return { ...data, status: 'expired' };
+        return { ...invitation, status: 'expired' as const };
       }
 
-      return data;
+      return invitation;
     } catch (error) {
       console.error('Error getting invitation:', error);
       return null;
@@ -322,13 +324,17 @@ export class InvitationService {
         return null;
       }
 
+      // Type assertions for database records
+      const teacherData = teacher as { email: string; name: string };
+      const parentData = parent as { name: string };
+
       // Create new invitation (this will auto-revoke existing pending invitations)
       return await this.createInvitationToken({
         teacher_id: teacherId,
         parent_id: parentId,
-        teacher_email: teacher.email,
-        teacher_name: teacher.name,
-        parent_name: parent.name,
+        teacher_email: teacherData.email,
+        teacher_name: teacherData.name,
+        parent_name: parentData.name,
       });
     } catch (error) {
       console.error('Error resending invitation:', error);
