@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { timesheetService, TimesheetEntry } from '@/services/timesheet.service';
 import { useAuthContext } from '@/lib/authContext';
+import { QRScanner } from '@/components/shared/QRScanner';
 
 interface QRCheckInOutProps {
   onSuccess?: (entry: TimesheetEntry) => void;
@@ -23,6 +24,7 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
   // Check for active check-in on mount
   useEffect(() => {
@@ -108,13 +110,21 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
   };
 
   const simulateQRScan = () => {
-    // For testing: simulate a QR scan
+    // DEVELOPMENT ONLY: This function should be removed in production builds
+    // Security Note: Uses mock data with predictable signature for testing only
+    // Production builds should use NODE_ENV check or build-time code elimination
+    if (process.env.NODE_ENV === 'production') {
+      setError('Mock QR scan is disabled in production');
+      return;
+    }
+
     const mockQRData = JSON.stringify({
       type: 'check_in',
       parentId: 'parent-123',
       studentId: 'student-456',
       timestamp: Date.now(),
-      signature: btoa('parent-123-student-456-default-secret').slice(0, 16),
+      // Mock signature for dev testing only - NOT secure for production
+      signature: btoa('parent-123-student-456-dev-test-only').slice(0, 16),
     });
     handleQRScan(mockQRData);
   };
@@ -187,35 +197,66 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
               exit={{ opacity: 0, scale: 0.95 }}
               className="text-center space-y-6"
             >
-              <div className="w-64 h-64 mx-auto bg-neutral-100 rounded-2xl flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">📱</div>
-                  <p className="text-neutral-600">
-                    Open camera to scan QR code
+              {!showScanner ? (
+                <>
+                  <div className="w-64 h-64 mx-auto bg-neutral-100 rounded-2xl flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-6xl mb-4">📱</div>
+                      <p className="text-neutral-600">Ready to scan QR code</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => setShowScanner(true)}
+                      className="w-full px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-xl transition-colors"
+                    >
+                      📷 Open Camera Scanner
+                    </button>
+
+                    <button
+                      onClick={simulateQRScan}
+                      className="w-full px-6 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-xl transition-colors text-sm"
+                    >
+                      🧪 Test with Mock QR Code (Dev Only)
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-neutral-500">
+                    Point your camera at the parent's QR code displayed in their
+                    portal
                   </p>
-                </div>
-              </div>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-4">
+                    <QRScanner
+                      onScan={data => {
+                        handleQRScan(data);
+                        setShowScanner(false);
+                      }}
+                      onError={err => {
+                        setError(err);
+                        setShowScanner(false);
+                      }}
+                      width={400}
+                      qrbox={250}
+                      fps={10}
+                    />
 
-              <div className="space-y-3">
-                <button
-                  onClick={simulateQRScan}
-                  className="w-full px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-xl transition-colors"
-                >
-                  Open Camera Scanner
-                </button>
+                    <button
+                      onClick={() => setShowScanner(false)}
+                      className="w-full px-6 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-xl transition-colors text-sm"
+                    >
+                      ← Cancel Scanning
+                    </button>
+                  </div>
 
-                <button
-                  onClick={simulateQRScan}
-                  className="w-full px-6 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-xl transition-colors text-sm"
-                >
-                  Test with Mock QR Code
-                </button>
-              </div>
-
-              <p className="text-xs text-neutral-500">
-                Point your camera at the parent's QR code displayed in their
-                portal
-              </p>
+                  <p className="text-xs text-neutral-500">
+                    Position the QR code within the camera frame
+                  </p>
+                </>
+              )}
             </motion.div>
           )}
 
