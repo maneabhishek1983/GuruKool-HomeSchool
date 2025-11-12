@@ -34,42 +34,73 @@ export interface TeacherSession {
 
 export class TeacherQRService {
   // Generate QR code data for teacher-student authentication
-  static generateQRCodeData(
+  static async generateQRCodeData(
     teacherId: string,
     studentId: string,
     parentId: string
-  ): string {
+  ): Promise<string> {
+    const signature = await this.generateSignature(
+      teacherId,
+      studentId,
+      parentId
+    );
     const data = {
       type: 'teacher_auth',
       teacherId,
       studentId,
       parentId,
       timestamp: Date.now(),
-      signature: this.generateSignature(teacherId, studentId, parentId),
+      signature,
     };
 
     return JSON.stringify(data);
   }
 
-  // Generate a simple signature for QR code validation
-  private static generateSignature(
+  // Generate a cryptographically secure signature for QR code validation
+  private static async generateSignature(
     teacherId: string,
     studentId: string,
     parentId: string
-  ): string {
-    const data = `${teacherId}-${studentId}-${parentId}-${process.env.NEXT_PUBLIC_QR_SECRET || 'default-secret'}`;
-    return btoa(data).slice(0, 16); // Simple base64 encoding, truncated
+  ): Promise<string> {
+    const secret = process.env.NEXT_PUBLIC_QR_SECRET || 'default-secret';
+    const data = `${teacherId}-${studentId}-${parentId}`;
+
+    // Use Web Crypto API for HMAC-SHA256 (works in both browser and Node.js)
+    // Web Crypto API is available in all modern browsers and Node.js 15+
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secret);
+    const messageData = encoder.encode(data);
+
+    // Import key for HMAC
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+
+    // Generate HMAC signature
+    const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
+
+    // Convert to base64 and take first 32 characters for compact representation
+    const signatureArray = Array.from(new Uint8Array(signature));
+    const base64Signature = btoa(String.fromCharCode(...signatureArray));
+    return base64Signature.slice(0, 32); // Use first 32 chars for compact but secure signature
   }
 
-  // Create QR code image from data
+  // Create QR code image from data (iOS optimized)
   static async generateQRCodeImage(qrData: string): Promise<string> {
     try {
       const qrImageDataUrl = await QRCode.toDataURL(qrData, {
-        width: 200,
-        margin: 2,
+        errorCorrectionLevel: 'H', // Highest error correction for iOS compatibility
+        type: 'image/png',
+        quality: 1,
+        margin: 4, // Adequate quiet zone for iOS scanning
+        width: 512, // Optimal size for iOS camera recognition
         color: {
-          dark: '#000000',
-          light: '#FFFFFF',
+          dark: '#000000', // Pure black for maximum contrast
+          light: '#FFFFFF', // Pure white background
         },
       });
       return qrImageDataUrl;
@@ -86,10 +117,13 @@ export class TeacherQRService {
     parentId: string
   ): Promise<TeacherQRCode[]> {
     try {
-      const qrCodes: TeacherQRCode[] = [];
-
-      for (const studentId of studentIds) {
-        const qrData = this.generateQRCodeData(teacherId, studentId, parentId);
+      // Generate QR codes in parallel for better performance
+      const qrCodePromises = studentIds.map(async studentId => {
+        const qrData = await this.generateQRCodeData(
+          teacherId,
+          studentId,
+          parentId
+        );
 
         const { data, error } = await supabase
           .from('teacher_qr_codes')
@@ -107,9 +141,10 @@ export class TeacherQRService {
         if (error) {
           throw error;
         }
-        qrCodes.push(data);
-      }
+        return data;
+      });
 
+      const qrCodes = await Promise.all(qrCodePromises);
       return qrCodes;
     } catch (error) {
       console.error('Error creating teacher QR codes:', error);
@@ -181,7 +216,7 @@ export class TeacherQRService {
       }
 
       // Verify signature
-      const expectedSignature = this.generateSignature(
+      const expectedSignature = await this.generateSignature(
         parsedData.teacherId,
         parsedData.studentId,
         parsedData.parentId
@@ -350,7 +385,7 @@ export class TeacherQRService {
       }
 
       // Generate new QR data
-      const newQRData = this.generateQRCodeData(
+      const newQRData = await this.generateQRCodeData(
         existingQR.teacher_id,
         existingQR.student_id,
         existingQR.parent_id
