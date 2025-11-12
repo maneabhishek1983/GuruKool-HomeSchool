@@ -61,8 +61,8 @@ export class InvitationService {
         .single();
 
       if (existing && !existingError) {
-        // Revoke old invitation
-        const existingToken = existing as InvitationToken;
+        // Revoke old invitation (double cast for TypeScript strict mode)
+        const existingToken = existing as unknown as InvitationToken;
         await admin
           .from('invitation_tokens')
           .update({ status: 'revoked' as const })
@@ -88,7 +88,7 @@ export class InvitationService {
         return null;
       }
 
-      return invitation as InvitationToken;
+      return invitation as unknown as InvitationToken;
     } catch (error) {
       console.error('Error in createInvitationToken:', error);
       return null;
@@ -114,7 +114,7 @@ export class InvitationService {
         return null;
       }
 
-      const invitation = data as InvitationToken;
+      const invitation = data as unknown as InvitationToken;
 
       // Check if expired
       if (new Date(invitation.expires_at) < new Date()) {
@@ -325,9 +325,9 @@ export class InvitationService {
         return null;
       }
 
-      // Type assertions for database records
-      const teacherData = teacher as { email: string; name: string };
-      const parentData = parent as { name: string };
+      // Type assertions for database records (double cast for TypeScript strict mode)
+      const teacherData = teacher as unknown as { email: string; name: string };
+      const parentData = parent as unknown as { name: string };
 
       // Create new invitation (this will auto-revoke existing pending invitations)
       return await this.createInvitationToken({
