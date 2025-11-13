@@ -72,7 +72,10 @@ export function QRScanner({
   const startScanning = async (cameraId: string) => {
     try {
       // Create Html5Qrcode instance
-      html5QrCodeRef.current = new Html5Qrcode('qr-scanner-container');
+      html5QrCodeRef.current = new Html5Qrcode('qr-scanner-container', {
+        formatsToSupport: [0], // 0 = QR_CODE format only
+        verbose: false,
+      });
 
       await html5QrCodeRef.current.start(
         cameraId,
@@ -80,6 +83,13 @@ export function QRScanner({
           fps: Math.min(fps, 10),
           qrbox: { width: qrbox, height: qrbox },
           aspectRatio,
+          disableFlip,
+          // Advanced camera settings for better QR detection
+          videoConstraints: {
+            facingMode: { ideal: 'environment' }, // Back camera preferred
+            focusMode: 'continuous',
+            advanced: [{ zoom: 1.0 }],
+          },
         },
         decodedText => {
           console.log('QR Code scanned:', decodedText);
