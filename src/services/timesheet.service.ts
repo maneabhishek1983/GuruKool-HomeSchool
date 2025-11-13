@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import QRCode from 'qrcode';
+import { TeacherSession } from '@/services/teacher-qr.service';
 
 export interface TimesheetEntry {
   id: string;
@@ -41,7 +42,174 @@ export interface CheckInOutData {
   signature: string;
 }
 
+export interface MonthlyTimesheetSummary {
+  totalHours: number;
+  totalSessions: number;
+  totalEarnings: number;
+  sessionsByDate: Record<string, any>;
+  byStudent: Record<
+    string,
+    {
+      studentName: string;
+      sessions: number;
+      hours: number;
+    }
+  >;
+  bySubject: Record<
+    string,
+    {
+      subjectName: string;
+      sessions: number;
+      hours: number;
+    }
+  >;
+  entries: Array<{
+    id: string;
+    checkInTime: Date;
+    checkOutTime: Date | null;
+    studentName: string;
+    subject: string;
+    hours: number;
+  }>;
+}
+
 export class TimesheetService {
+  /**
+   * PRIVATE HELPER: Convert TeacherSession to TimesheetEntry format
+   * Enables unified display of sessions from both OLD and NEW systems
+   */
+  private static convertTeacherSessionToTimesheetEntry(
+    session: TeacherSession
+  ): TimesheetEntry {
+    return {
+      id: session.id,
+      teacher_id: session.teacher_id,
+      student_id: session.student_id,
+      parent_id: session.parent_id,
+      check_in_time: session.session_start,
+      check_out_time: session.session_end || undefined,
+      duration_minutes: session.duration_minutes || undefined,
+      location: session.location,
+      notes: session.notes || undefined,
+      qr_code_id: session.qr_code_used || '',
+      status: session.session_end ? 'checked_out' : 'checked_in',
+      created_at: session.created_at,
+      updated_at: session.updated_at,
+    } as unknown as TimesheetEntry;
+  }
+
+  /**
+   * PRIVATE HELPER: Deduplicate entries by ID
+   * Prevents showing the same session twice when it exists in both tables
+   */
+  private static deduplicateById(entries: TimesheetEntry[]): TimesheetEntry[] {
+    const seen = new Set<string>();
+    return entries.filter(entry => {
+      if (seen.has(entry.id)) {
+        return false;
+      }
+      seen.add(entry.id);
+      return true;
+    });
+  }
+
+  /**
+   * PRIVATE HELPER: Query both OLD and NEW systems, merge results
+   * This is the core abstraction that fixes data fragmentation
+   */
+  private static async queryBothSystems(filters: {
+    teacherId?: string;
+    parentId?: string;
+    studentId?: string;
+    startDate?: Date;
+    endDate?: Date;
+    onlyActive?: boolean; // For getActiveCheckIn
+  }): Promise<TimesheetEntry[]> {
+    try {
+      const results: TimesheetEntry[] = [];
+
+      // Query OLD system (timesheet_entries)
+      let oldQuery = supabase.from('timesheet_entries').select('*');
+
+      if (filters.teacherId) {
+        oldQuery = oldQuery.eq('teacher_id', filters.teacherId);
+      }
+      if (filters.parentId) {
+        oldQuery = oldQuery.eq('parent_id', filters.parentId);
+      }
+      if (filters.studentId) {
+        oldQuery = oldQuery.eq('student_id', filters.studentId);
+      }
+      if (filters.onlyActive) {
+        oldQuery = oldQuery.eq('status', 'checked_in');
+      }
+      if (filters.startDate) {
+        oldQuery = oldQuery.gte(
+          'check_in_time',
+          filters.startDate.toISOString()
+        );
+      }
+      if (filters.endDate) {
+        oldQuery = oldQuery.lte('check_in_time', filters.endDate.toISOString());
+      }
+
+      oldQuery = oldQuery.order('check_in_time', { ascending: false });
+
+      const { data: oldEntries } = await oldQuery;
+
+      if (oldEntries) {
+        results.push(...oldEntries);
+      }
+
+      // Query NEW system (teacher_sessions)
+      let newQuery = supabase.from('teacher_sessions').select('*');
+
+      if (filters.teacherId) {
+        newQuery = newQuery.eq('teacher_id', filters.teacherId);
+      }
+      if (filters.parentId) {
+        newQuery = newQuery.eq('parent_id', filters.parentId);
+      }
+      if (filters.studentId) {
+        newQuery = newQuery.eq('student_id', filters.studentId);
+      }
+      if (filters.onlyActive) {
+        newQuery = newQuery.is('session_end', null); // NULL = still checked in
+      }
+      if (filters.startDate) {
+        newQuery = newQuery.gte(
+          'session_start',
+          filters.startDate.toISOString()
+        );
+      }
+      if (filters.endDate) {
+        newQuery = newQuery.lte('session_start', filters.endDate.toISOString());
+      }
+
+      newQuery = newQuery.order('session_start', { ascending: false });
+
+      const { data: newSessions } = await newQuery;
+
+      if (newSessions) {
+        const converted = newSessions.map((session: TeacherSession) =>
+          this.convertTeacherSessionToTimesheetEntry(session)
+        );
+        results.push(...converted);
+      }
+
+      // Deduplicate and sort by check-in time (most recent first)
+      const deduplicated = this.deduplicateById(results);
+      return deduplicated.sort(
+        (a, b) =>
+          new Date(b.check_in_time).getTime() -
+          new Date(a.check_in_time).getTime()
+      );
+    } catch (error) {
+      console.error('Error querying both systems:', error);
+      return [];
+    }
+  }
+
   /**
    * Generate QR code for parent portal (for teacher check-in/out)
    */
@@ -285,24 +453,19 @@ export class TimesheetService {
 
   /**
    * Get active check-in for teacher
+   * FIXED: Now queries BOTH OLD and NEW systems to prevent duplicate check-ins
    */
   static async getActiveCheckIn(
     teacherId: string
   ): Promise<TimesheetEntry | null> {
     try {
-      const { data, error } = await supabase
-        .from('timesheet_entries')
-        .select('*')
-        .eq('teacher_id', teacherId)
-        .eq('status', 'checked_in')
-        .order('check_in_time', { ascending: false })
-        .limit(1)
-        .single();
+      const results = await this.queryBothSystems({
+        teacherId,
+        onlyActive: true,
+      });
 
-      if (error) {
-        return null;
-      }
-      return data;
+      // Return the most recent active check-in (already sorted by queryBothSystems)
+      return results[0] || null;
     } catch (error) {
       console.error('Error fetching active check-in:', error);
       return null;
@@ -311,6 +474,7 @@ export class TimesheetService {
 
   /**
    * Get timesheet entries for teacher
+   * FIXED: Now queries BOTH OLD and NEW systems for complete data
    */
   static async getTeacherTimesheet(
     teacherId: string,
@@ -318,26 +482,19 @@ export class TimesheetService {
     endDate?: Date
   ): Promise<TimesheetEntry[]> {
     try {
-      let query = supabase
-        .from('timesheet_entries')
-        .select('*')
-        .eq('teacher_id', teacherId)
-        .order('check_in_time', { ascending: false });
-
+      const filters: {
+        teacherId: string;
+        startDate?: Date;
+        endDate?: Date;
+      } = { teacherId };
       if (startDate) {
-        query = query.gte('check_in_time', startDate.toISOString());
+        filters.startDate = startDate;
       }
-
       if (endDate) {
-        query = query.lte('check_in_time', endDate.toISOString());
+        filters.endDate = endDate;
       }
 
-      const { data, error } = await query;
-
-      if (error) {
-        throw error;
-      }
-      return data || [];
+      return await this.queryBothSystems(filters);
     } catch (error) {
       console.error('Error fetching teacher timesheet:', error);
       return [];
@@ -346,6 +503,7 @@ export class TimesheetService {
 
   /**
    * Get timesheet entries for parent
+   * FIXED: Now queries BOTH OLD and NEW systems for complete data
    */
   static async getParentTimesheet(
     parentId: string,
@@ -353,26 +511,19 @@ export class TimesheetService {
     endDate?: Date
   ): Promise<TimesheetEntry[]> {
     try {
-      let query = supabase
-        .from('timesheet_entries')
-        .select('*')
-        .eq('parent_id', parentId)
-        .order('check_in_time', { ascending: false });
-
+      const filters: {
+        parentId: string;
+        startDate?: Date;
+        endDate?: Date;
+      } = { parentId };
       if (startDate) {
-        query = query.gte('check_in_time', startDate.toISOString());
+        filters.startDate = startDate;
       }
-
       if (endDate) {
-        query = query.lte('check_in_time', endDate.toISOString());
+        filters.endDate = endDate;
       }
 
-      const { data, error } = await query;
-
-      if (error) {
-        throw error;
-      }
-      return data || [];
+      return await this.queryBothSystems(filters);
     } catch (error) {
       console.error('Error fetching parent timesheet:', error);
       return [];
@@ -454,29 +605,154 @@ export class TimesheetService {
   }
 
   /**
-   * Legacy method stubs for backward compatibility with old components
-   * These methods are not implemented in the new QR-based flow
+   * Get monthly timesheet summary for teacher
+   * FIXED: Now properly implemented using queryBothSystems
    */
   static async getMonthlyTimesheetSummary(
     teacherId: string,
     month: number,
     year: number
-  ): Promise<any> {
-    console.warn(
-      'getMonthlyTimesheetSummary is a legacy method - not implemented'
-    );
-    return null;
+  ): Promise<MonthlyTimesheetSummary | null> {
+    try {
+      // Calculate date range for the month
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+      // Get all entries for the month (from BOTH systems)
+      const entries = await this.getTeacherTimesheet(
+        teacherId,
+        startDate,
+        endDate
+      );
+
+      // Filter completed entries only
+      const completedEntries = entries.filter(
+        e => e.status === 'checked_out' && e.duration_minutes
+      );
+
+      // Calculate totals
+      const totalMinutes = completedEntries.reduce(
+        (sum, e) => sum + (e.duration_minutes || 0),
+        0
+      );
+      const totalHours = Math.round((totalMinutes / 60) * 100) / 100;
+
+      // Group by student
+      const byStudent: Record<string, any> = {};
+      completedEntries.forEach(entry => {
+        if (!byStudent[entry.student_id]) {
+          byStudent[entry.student_id] = {
+            studentName: `Student ${entry.student_id.slice(0, 8)}`, // TODO: Fetch actual student name
+            sessions: 0,
+            hours: 0,
+          };
+        }
+        const student = byStudent[entry.student_id];
+        if (student) {
+          student.sessions += 1;
+          student.hours +=
+            Math.round(((entry.duration_minutes || 0) / 60) * 100) / 100;
+        }
+      });
+
+      // Group by date
+      const sessionsByDate: Record<string, any[]> = {};
+      completedEntries.forEach(entry => {
+        const dateKey = new Date(entry.check_in_time)
+          .toISOString()
+          .split('T')[0];
+        if (dateKey) {
+          if (!sessionsByDate[dateKey]) {
+            sessionsByDate[dateKey] = [];
+          }
+          sessionsByDate[dateKey]?.push(entry);
+        }
+      });
+
+      return {
+        totalHours,
+        totalSessions: completedEntries.length,
+        totalEarnings: 0, // TODO: Calculate based on hourly rate if available
+        sessionsByDate,
+        byStudent,
+        bySubject: {}, // TODO: Implement if subject tracking is added
+        entries: completedEntries.map(e => ({
+          id: e.id,
+          checkInTime: new Date(e.check_in_time),
+          checkOutTime: e.check_out_time ? new Date(e.check_out_time) : null,
+          studentName: `Student ${e.student_id.slice(0, 8)}`,
+          subject: '', // TODO: Add subject field if available
+          hours: Math.round(((e.duration_minutes || 0) / 60) * 100) / 100,
+        })),
+      };
+    } catch (error) {
+      console.error('Error getting monthly timesheet summary:', error);
+      return null;
+    }
   }
 
+  /**
+   * Export monthly timesheet as CSV
+   * FIXED: Now properly implemented using getMonthlyTimesheetSummary
+   */
   static async exportMonthlyTimesheetCSV(
     teacherId: string,
     month: number,
     year: number
   ): Promise<string | null> {
-    console.warn(
-      'exportMonthlyTimesheetCSV is a legacy method - not implemented'
-    );
-    return null;
+    try {
+      const summary = await this.getMonthlyTimesheetSummary(
+        teacherId,
+        month,
+        year
+      );
+      if (!summary) {
+        return null;
+      }
+
+      // CSV header
+      let csv =
+        'Date,Check In Time,Check Out Time,Duration (hours),Student,Subject,Notes\n';
+
+      // CSV rows
+      summary.entries.forEach(entry => {
+        const date = entry.checkInTime.toLocaleDateString('en-US');
+        const checkIn = entry.checkInTime.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        const checkOut = entry.checkOutTime
+          ? entry.checkOutTime.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : '';
+        const hours = entry.hours.toFixed(2);
+        const student = entry.studentName;
+        const subject = entry.subject || '';
+
+        // Escape quotes in fields for CSV safety
+        const escapeCsv = (str: string) => `"${str.replace(/"/g, '""')}"`;
+
+        csv += `${escapeCsv(date)},${escapeCsv(checkIn)},${escapeCsv(checkOut)},${hours},${escapeCsv(student)},${escapeCsv(subject)},""\n`;
+      });
+
+      // Summary rows
+      csv += '\n';
+      csv += `Total Sessions,,,,${summary.totalSessions}\n`;
+      csv += `Total Hours,,,,${summary.totalHours.toFixed(2)}\n`;
+
+      // By-student breakdown
+      csv += '\nStudent,Sessions,Hours\n';
+      Object.values(summary.byStudent).forEach((student: any) => {
+        csv += `"${student.studentName}",${student.sessions},${student.hours.toFixed(2)}\n`;
+      });
+
+      return csv;
+    } catch (error) {
+      console.error('Error exporting monthly timesheet CSV:', error);
+      return null;
+    }
   }
 
   /**

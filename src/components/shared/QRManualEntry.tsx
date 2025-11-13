@@ -3,6 +3,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+/**
+ * QRManualEntry - Manual QR code entry component (fallback)
+ *
+ * This component provides a manual text entry interface for QR codes
+ * when camera scanning is not available or fails. It does NOT perform
+ * actual QR code scanning - use QRScanner from shared/ for real scanning.
+ *
+ * @component
+ * @example
+ * <QRManualEntry
+ *   onScan={(data) => handleQRData(data)}
+ *   onClose={() => setModalOpen(false)}
+ *   isOpen={isModalOpen}
+ * />
+ */
+
 interface QRScannerProps {
   onScan: (data: string) => void;
   onClose: () => void;

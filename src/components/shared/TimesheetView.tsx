@@ -30,20 +30,19 @@ export function TimesheetView({ role, userId }: TimesheetViewProps) {
 
       const { startDate, endDate } = getDateRange();
 
-      let fetchedEntries: TimesheetEntry[] = [];
-      if (role === 'teacher') {
-        fetchedEntries = await timesheetService.getTeacherTimesheet(
-          userId,
-          startDate,
-          endDate
-        );
-      } else {
-        fetchedEntries = await timesheetService.getParentTimesheet(
-          userId,
-          startDate,
-          endDate
-        );
-      }
+      // SIMPLIFIED: Service layer now handles querying both tables
+      const fetchedEntries =
+        role === 'teacher'
+          ? await timesheetService.getTeacherTimesheet(
+              userId,
+              startDate,
+              endDate
+            )
+          : await timesheetService.getParentTimesheet(
+              userId,
+              startDate,
+              endDate
+            );
 
       setEntries(fetchedEntries);
       calculateSummary(fetchedEntries);

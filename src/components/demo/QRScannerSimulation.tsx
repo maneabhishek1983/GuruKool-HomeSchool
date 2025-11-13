@@ -3,13 +3,34 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+/**
+ * QRScannerSimulation - Mock/Demo QR Scanner (NO REAL SCANNING)
+ *
+ * This component simulates QR code scanning with animations and returns
+ * mock data after 5 seconds. It does NOT perform actual QR code detection.
+ * Use this ONLY for demos, prototypes, or testing UI flows.
+ *
+ * For production QR scanning, use: @/components/shared/QRScanner
+ *
+ * @component
+ * @example
+ * <QRScannerSimulation
+ *   isActive={true}
+ *   onScanComplete={(data) => console.log('Mock data:', data)}
+ * />
+ */
+
 interface QRScannerProps {
   isActive?: boolean;
   onScanComplete?: (data: string) => void;
   className?: string;
 }
 
-export function QRScanner({ isActive = false, onScanComplete, className = '' }: QRScannerProps) {
+export function QRScanner({
+  isActive = false,
+  onScanComplete,
+  className = '',
+}: QRScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
 
@@ -56,14 +77,14 @@ export function QRScanner({ isActive = false, onScanComplete, className = '' }: 
                     <motion.div
                       className="absolute left-0 right-0 h-0.5 bg-primary-400 shadow-lg shadow-primary-400/50"
                       initial={{ top: 0, opacity: 0 }}
-                      animate={{ 
-                        top: '100%', 
+                      animate={{
+                        top: '100%',
                         opacity: [0, 1, 1, 0],
-                        transition: { 
-                          duration: 2, 
-                          repeat: Infinity, 
-                          ease: 'linear' 
-                        }
+                        transition: {
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: 'linear',
+                        },
                       }}
                     />
                   )}
@@ -117,7 +138,9 @@ export function QRScanner({ isActive = false, onScanComplete, className = '' }: 
             <div className="absolute top-4 left-4 right-4">
               <div className="bg-black bg-opacity-50 rounded-lg p-2 text-center">
                 <span className="text-white text-sm font-medium">
-                  {isScanning ? 'Scanning QR Code...' : 'Position QR code in frame'}
+                  {isScanning
+                    ? 'Scanning QR Code...'
+                    : 'Position QR code in frame'}
                 </span>
               </div>
             </div>
@@ -136,7 +159,10 @@ interface MobileQRScannerProps {
   className?: string;
 }
 
-export function MobileQRScanner({ onScan, className = '' }: MobileQRScannerProps) {
+export function MobileQRScanner({
+  onScan,
+  className = '',
+}: MobileQRScannerProps) {
   const [isActive, setIsActive] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
@@ -172,7 +198,8 @@ export function MobileQRScanner({ onScan, className = '' }: MobileQRScannerProps
               Scan QR Code
             </h3>
             <p className="text-sm text-neutral-600 mb-4">
-              Use your device camera to scan the QR code for quick authentication
+              Use your device camera to scan the QR code for quick
+              authentication
             </p>
             <motion.button
               onClick={requestCameraPermission}
@@ -225,7 +252,7 @@ export function MobileQRScanner({ onScan, className = '' }: MobileQRScannerProps
             onScanComplete={handleScanComplete}
             className="mx-auto"
           />
-          
+
           <div className="text-center space-y-2">
             <p className="text-sm text-neutral-600">
               Point your camera at the QR code
