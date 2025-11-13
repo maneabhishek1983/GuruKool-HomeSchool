@@ -30,56 +30,96 @@ export function QRScanner({
 
   useEffect(() => {
     if (!scannerRef.current) {
-      // Create scanner instance
-      scannerRef.current = new Html5QrcodeScanner(
-        'qr-scanner-container',
-        {
-          fps,
-          qrbox: { width: qrbox, height: qrbox },
-          aspectRatio,
-          disableFlip,
-          showTorchButtonIfSupported: true,
-          showZoomSliderIfSupported: true,
-          defaultZoomValueIfSupported: 2,
-        },
-        /* verbose= */ false
-      );
+      try {
+        // Create scanner instance with mobile-friendly settings
+        scannerRef.current = new Html5QrcodeScanner(
+          'qr-scanner-container',
+          {
+            fps,
+            qrbox: { width: qrbox, height: qrbox },
+            aspectRatio,
+            disableFlip,
+            showTorchButtonIfSupported: true,
+            showZoomSliderIfSupported: true,
+            defaultZoomValueIfSupported: 2,
+            // Mobile Safari compatibility
+            rememberLastUsedCamera: true,
+            supportedScanTypes: [0, 1], // QR_CODE and BARCODE
+          },
+          /* verbose= */ false
+        );
 
-      // Start scanning
-      scannerRef.current.render(
-        (decodedText, decodedResult) => {
-          // Successfully scanned QR code
-          console.log('QR Code scanned:', decodedText);
-          setIsScanning(false);
-          onScan(decodedText);
+        // Start scanning with error handling
+        scannerRef.current.render(
+          (decodedText, decodedResult) => {
+            // Successfully scanned QR code
+            console.log('QR Code scanned:', decodedText);
+            setIsScanning(false);
+            setError(null); // Clear any previous errors
+            onScan(decodedText);
 
-          // Clear scanner after successful scan
-          scannerRef.current?.clear().catch(err => {
-            console.error('Error clearing scanner:', err);
-          });
-        },
-        errorMessage => {
-          // Handle scan errors (most are just "no QR code detected")
-          // Only log actual errors, not routine scanning messages
-          if (!errorMessage.includes('No MultiFormat Readers')) {
-            console.debug('QR Scan error:', errorMessage);
+            // Clear scanner after successful scan
+            scannerRef.current?.clear().catch(err => {
+              console.error('Error clearing scanner:', err);
+            });
+          },
+          errorMessage => {
+            // Handle scan errors (most are just "no QR code detected")
+            // Only log actual errors, not routine scanning messages
+            if (errorMessage && typeof errorMessage === 'string') {
+              if (
+                !errorMessage.includes('No MultiFormat Readers') &&
+                !errorMessage.includes('NotFoundException')
+              ) {
+                console.debug('QR Scan error:', errorMessage);
+
+                // Set user-friendly error message for critical errors
+                if (
+                  errorMessage.includes('NotAllowedError') ||
+                  errorMessage.includes('Permission')
+                ) {
+                  setError(
+                    'Camera permission denied. Please allow camera access.'
+                  );
+                  onError?.('Camera permission denied');
+                } else if (errorMessage.includes('NotFoundError')) {
+                  setError('No camera found on this device.');
+                  onError?.('No camera found');
+                } else if (errorMessage.includes('NotReadableError')) {
+                  setError('Camera is already in use by another application.');
+                  onError?.('Camera in use');
+                }
+              }
+            }
           }
-        }
-      );
+        );
 
-      setIsScanning(true);
+        setIsScanning(true);
+      } catch (err) {
+        console.error('Error initializing QR scanner:', err);
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : 'Failed to initialize camera scanner';
+        setError(errorMessage);
+        onError?.(errorMessage);
+      }
     }
 
     // Cleanup on unmount
     return () => {
       if (scannerRef.current) {
-        scannerRef.current.clear().catch(err => {
-          console.error('Error clearing scanner on unmount:', err);
-        });
-        scannerRef.current = null;
+        scannerRef.current
+          .clear()
+          .catch(err => {
+            console.error('Error clearing scanner on unmount:', err);
+          })
+          .finally(() => {
+            scannerRef.current = null;
+          });
       }
     };
-  }, [onScan, fps, qrbox, aspectRatio, disableFlip]);
+  }, [onScan, onError, fps, qrbox, aspectRatio, disableFlip]);
 
   return (
     <div className="qr-scanner-wrapper">
