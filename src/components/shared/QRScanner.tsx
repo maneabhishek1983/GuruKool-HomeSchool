@@ -29,14 +29,22 @@ export function QRScanner({
   const [error, setError] = useState<string | null>(null);
   const [cameras, setCameras] = useState<any[]>([]);
   const [cameraStarted, setCameraStarted] = useState(false);
+  const [debugLog, setDebugLog] = useState<string[]>([]);
+
+  const addDebugLog = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const logMessage = `[${timestamp}] ${message}`;
+    console.log(logMessage);
+    setDebugLog(prev => [...prev.slice(-4), logMessage]); // Keep last 5 logs
+  };
 
   // Get available cameras on mount
   useEffect(() => {
-    console.log('[QRScanner] Initializing camera...');
+    addDebugLog('Initializing camera...');
 
     Html5Qrcode.getCameras()
       .then(devices => {
-        console.log('[QRScanner] Found cameras:', devices.length, devices);
+        addDebugLog(`Found ${devices.length} cameras`);
 
         if (devices && devices.length) {
           setCameras(devices);
@@ -48,19 +56,19 @@ export function QRScanner({
           );
           const selectedCamera = backCamera || devices[0];
 
-          console.log('[QRScanner] Selected camera:', selectedCamera);
+          addDebugLog(`Using: ${selectedCamera.label || 'Default camera'}`);
 
           if (selectedCamera?.id) {
             startScanning(selectedCamera.id);
           }
         } else {
-          console.error('[QRScanner] No cameras found');
+          addDebugLog('ERROR: No cameras found');
           setError('No cameras found on this device.');
           onError?.('No cameras found');
         }
       })
       .catch(err => {
-        console.error('[QRScanner] Error getting cameras:', err);
+        addDebugLog(`ERROR: ${err.message || 'Camera access failed'}`);
         setError('Unable to access cameras. Please check permissions.');
         onError?.('Unable to access cameras');
       });
@@ -80,12 +88,12 @@ export function QRScanner({
 
   const startScanning = async (cameraId: string) => {
     try {
-      console.log('[QRScanner] Starting scanner with camera:', cameraId);
+      addDebugLog('Starting scanner...');
 
       // Create Html5Qrcode instance
       html5QrCodeRef.current = new Html5Qrcode('qr-scanner-container', {
         formatsToSupport: [0], // 0 = QR_CODE format only
-        verbose: true, // Enable verbose logging for debugging
+        verbose: false, // Disable verbose to reduce console noise
       });
 
       await html5QrCodeRef.current.start(
@@ -112,10 +120,7 @@ export function QRScanner({
           },
         },
         decodedText => {
-          console.log(
-            '[QRScanner] ✅ QR Code scanned successfully:',
-            decodedText
-          );
+          addDebugLog(`✅ QR SCANNED: ${decodedText.substring(0, 50)}...`);
           setError(null);
           onScan(decodedText);
 
@@ -129,26 +134,18 @@ export function QRScanner({
           }
         },
         errorMessage => {
-          // Log all errors for debugging, but don't show routine scanning errors to user
-          if (errorMessage) {
-            if (
-              !errorMessage.includes('No MultiFormat Readers') &&
-              !errorMessage.includes('NotFoundException')
-            ) {
-              console.warn('[QRScanner] Scan error:', errorMessage);
-            }
-          }
+          // Silently ignore routine scanning errors
         }
       );
 
-      console.log('[QRScanner] ✅ Scanner started successfully');
+      addDebugLog('✅ Scanner ready - scanning...');
       setCameraStarted(true);
       setIsScanning(true);
       setError(null);
     } catch (err) {
-      console.error('[QRScanner] ❌ Error starting scanner:', err);
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to start camera';
+      addDebugLog(`❌ ERROR: ${errorMessage}`);
 
       if (
         errorMessage.includes('NotAllowedError') ||
@@ -192,6 +189,22 @@ export function QRScanner({
       {error && (
         <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
           {error}
+        </div>
+      )}
+
+      {/* Debug Log Overlay */}
+      {debugLog.length > 0 && (
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-xs font-semibold text-blue-900 mb-2">
+            📋 Scanner Debug Log:
+          </p>
+          <div className="space-y-1">
+            {debugLog.map((log, index) => (
+              <p key={index} className="text-xs text-blue-700 font-mono">
+                {log}
+              </p>
+            ))}
+          </div>
         </div>
       )}
 
