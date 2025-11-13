@@ -32,26 +32,35 @@ export function QRScanner({
 
   // Get available cameras on mount
   useEffect(() => {
+    console.log('[QRScanner] Initializing camera...');
+
     Html5Qrcode.getCameras()
       .then(devices => {
+        console.log('[QRScanner] Found cameras:', devices.length, devices);
+
         if (devices && devices.length) {
           setCameras(devices);
           // Auto-start with back camera on mobile, or first camera
-          const backCamera = devices.find(device =>
-            device.label.toLowerCase().includes('back')
+          const backCamera = devices.find(
+            device =>
+              device.label.toLowerCase().includes('back') ||
+              device.label.toLowerCase().includes('environment')
           );
-          const selectedCamera = backCamera?.id || devices[0]?.id;
+          const selectedCamera = backCamera || devices[0];
 
-          if (selectedCamera) {
-            startScanning(selectedCamera);
+          console.log('[QRScanner] Selected camera:', selectedCamera);
+
+          if (selectedCamera?.id) {
+            startScanning(selectedCamera.id);
           }
         } else {
+          console.error('[QRScanner] No cameras found');
           setError('No cameras found on this device.');
           onError?.('No cameras found');
         }
       })
       .catch(err => {
-        console.error('Error getting cameras:', err);
+        console.error('[QRScanner] Error getting cameras:', err);
         setError('Unable to access cameras. Please check permissions.');
         onError?.('Unable to access cameras');
       });
@@ -71,57 +80,73 @@ export function QRScanner({
 
   const startScanning = async (cameraId: string) => {
     try {
+      console.log('[QRScanner] Starting scanner with camera:', cameraId);
+
       // Create Html5Qrcode instance
       html5QrCodeRef.current = new Html5Qrcode('qr-scanner-container', {
         formatsToSupport: [0], // 0 = QR_CODE format only
-        verbose: false,
+        verbose: true, // Enable verbose logging for debugging
       });
 
       await html5QrCodeRef.current.start(
         cameraId,
         {
-          fps: Math.min(fps, 10),
-          qrbox: { width: qrbox, height: qrbox },
+          fps: 10, // Keep FPS at 10 for better detection
+          qrbox: function (viewfinderWidth, viewfinderHeight) {
+            // Make qrbox 70% of the smaller dimension for better detection
+            const minEdgePercentage = 0.7;
+            const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+            const qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+            return {
+              width: qrboxSize,
+              height: qrboxSize,
+            };
+          },
           aspectRatio,
-          disableFlip,
+          disableFlip: false, // Enable flip for better detection
           // Advanced camera settings for better QR detection
           videoConstraints: {
             facingMode: { ideal: 'environment' }, // Back camera preferred
-            focusMode: 'continuous',
-            advanced: [{ zoom: 1.0 }],
+            width: { ideal: 1280 }, // Higher resolution for better QR detection
+            height: { ideal: 720 },
           },
         },
         decodedText => {
-          console.log('QR Code scanned:', decodedText);
+          console.log(
+            '[QRScanner] ✅ QR Code scanned successfully:',
+            decodedText
+          );
           setError(null);
           onScan(decodedText);
 
           // Stop scanning after successful scan
           if (html5QrCodeRef.current) {
             html5QrCodeRef.current.stop().catch(err => {
-              console.error('Error stopping scanner:', err);
+              console.error('[QRScanner] Error stopping scanner:', err);
             });
             setCameraStarted(false);
             setIsScanning(false);
           }
         },
         errorMessage => {
-          // Ignore routine scanning errors
-          if (
-            errorMessage &&
-            !errorMessage.includes('No MultiFormat Readers') &&
-            !errorMessage.includes('NotFoundException')
-          ) {
-            console.debug('QR Scan error:', errorMessage);
+          // Log all errors for debugging, but don't show routine scanning errors to user
+          if (errorMessage) {
+            if (
+              !errorMessage.includes('No MultiFormat Readers') &&
+              !errorMessage.includes('NotFoundException')
+            ) {
+              console.warn('[QRScanner] Scan error:', errorMessage);
+            }
           }
         }
       );
 
+      console.log('[QRScanner] ✅ Scanner started successfully');
       setCameraStarted(true);
       setIsScanning(true);
       setError(null);
     } catch (err) {
-      console.error('Error starting scanner:', err);
+      console.error('[QRScanner] ❌ Error starting scanner:', err);
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to start camera';
 
