@@ -292,13 +292,29 @@ export class TimesheetService {
   }
 
   /**
-   * Validate QR code and decode data
+   * Validate QR code and decode data (supports BOTH OLD and NEW systems)
    */
   static validateQRCode(qrDataString: string): CheckInOutData | null {
     try {
-      const qrData: CheckInOutData = JSON.parse(qrDataString);
+      const parsedData = JSON.parse(qrDataString);
 
-      // Verify signature
+      // CASE 1: NEW System (teacher_auth from TeacherQRService)
+      if (parsedData.type === 'teacher_auth') {
+        // Convert NEW format to OLD format for compatibility
+        return {
+          type: 'check_in', // Will be determined by context
+          parentId: parsedData.parentId,
+          studentId: parsedData.studentId,
+          teacherId: parsedData.teacherId, // NEW system includes teacherId
+          timestamp: parsedData.timestamp,
+          signature: parsedData.signature,
+        } as CheckInOutData;
+      }
+
+      // CASE 2: OLD System (check_in/check_out from TimesheetService)
+      const qrData: CheckInOutData = parsedData;
+
+      // Verify signature for OLD system
       const expectedSignature = this.generateSignature(
         qrData.parentId,
         qrData.studentId
@@ -322,7 +338,7 @@ export class TimesheetService {
   }
 
   /**
-   * Check in teacher
+   * Check in teacher (supports BOTH OLD and NEW QR systems)
    */
   static async checkIn(
     teacherId: string,
@@ -330,39 +346,54 @@ export class TimesheetService {
     location?: { latitude?: number; longitude?: number; address?: string }
   ): Promise<TimesheetEntry | null> {
     try {
-      // Validate QR code
+      // Validate QR code (handles both OLD and NEW formats)
       const qrData = this.validateQRCode(qrDataString);
       if (!qrData) {
         throw new Error('Invalid QR code');
       }
 
-      // Check if teacher is already checked in for this student
-      const { data: existingEntry } = await supabase
-        .from('timesheet_entries')
-        .select('*')
-        .eq('teacher_id', teacherId)
-        .eq('student_id', qrData.studentId)
-        .eq('status', 'checked_in')
-        .single();
-
-      if (existingEntry) {
-        throw new Error('Teacher is already checked in for this student');
+      // P0 FIX: Check if teacher is already checked in (queries BOTH systems)
+      const activeSession = await this.getActiveCheckIn(teacherId);
+      if (activeSession) {
+        throw new Error(
+          'Teacher is already checked in. Please check out first.'
+        );
       }
 
-      // Get QR code ID
-      const { data: qrCode } = await supabase
-        .from('parent_qr_codes')
+      // Try to find QR code in BOTH systems
+      let qrCodeId: string | null = null;
+
+      // Check NEW system first (teacher_qr_codes)
+      const { data: newQrCode } = await supabase
+        .from('teacher_qr_codes')
         .select('id')
         .eq('parent_id', qrData.parentId)
         .eq('student_id', qrData.studentId)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
-      if (!qrCode) {
-        throw new Error('QR code not found');
+      if (newQrCode) {
+        qrCodeId = newQrCode.id;
+      } else {
+        // Fallback to OLD system (parent_qr_codes)
+        const { data: oldQrCode } = await supabase
+          .from('parent_qr_codes')
+          .select('id')
+          .eq('parent_id', qrData.parentId)
+          .eq('student_id', qrData.studentId)
+          .eq('is_active', true)
+          .maybeSingle();
+
+        if (oldQrCode) {
+          qrCodeId = oldQrCode.id;
+        }
       }
 
-      // Create timesheet entry
+      if (!qrCodeId) {
+        throw new Error('QR code not found in database');
+      }
+
+      // Create timesheet entry in OLD system
       const { data, error } = await supabase
         .from('timesheet_entries')
         .insert({
@@ -371,7 +402,7 @@ export class TimesheetService {
           parent_id: qrData.parentId,
           check_in_time: new Date().toISOString(),
           location: location || {},
-          qr_code_id: qrCode.id,
+          qr_code_id: qrCodeId,
           status: 'checked_in',
         })
         .select()
