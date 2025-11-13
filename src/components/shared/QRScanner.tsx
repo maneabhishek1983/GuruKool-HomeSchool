@@ -30,80 +30,101 @@ export function QRScanner({
 
   useEffect(() => {
     if (!scannerRef.current) {
-      try {
-        // Create scanner instance with mobile-friendly settings
-        scannerRef.current = new Html5QrcodeScanner(
-          'qr-scanner-container',
-          {
-            fps,
-            qrbox: { width: qrbox, height: qrbox },
-            aspectRatio,
-            disableFlip,
-            showTorchButtonIfSupported: true,
-            showZoomSliderIfSupported: true,
-            defaultZoomValueIfSupported: 2,
-            // Mobile Safari compatibility
-            rememberLastUsedCamera: true,
-            supportedScanTypes: [0, 1], // QR_CODE and BARCODE
-          },
-          /* verbose= */ false
-        );
+      // Wait for DOM to be fully ready before initializing scanner
+      // This prevents the "r.toString()" error on mobile Safari
+      const initTimeout = setTimeout(() => {
+        try {
+          // Verify DOM element exists before creating scanner
+          const containerElement = document.getElementById(
+            'qr-scanner-container'
+          );
+          if (!containerElement) {
+            console.error('QR scanner container not found in DOM');
+            setError('Scanner initialization failed. Please refresh the page.');
+            return;
+          }
 
-        // Start scanning with error handling
-        scannerRef.current.render(
-          (decodedText, decodedResult) => {
-            // Successfully scanned QR code
-            console.log('QR Code scanned:', decodedText);
-            setIsScanning(false);
-            setError(null); // Clear any previous errors
-            onScan(decodedText);
+          // Create scanner instance with mobile-friendly settings
+          scannerRef.current = new Html5QrcodeScanner(
+            'qr-scanner-container',
+            {
+              fps: Math.min(fps, 5), // Lower FPS for mobile (reduces errors)
+              qrbox: { width: qrbox, height: qrbox },
+              aspectRatio,
+              disableFlip,
+              showTorchButtonIfSupported: true,
+              showZoomSliderIfSupported: true,
+              defaultZoomValueIfSupported: 2,
+              // Mobile Safari compatibility
+              rememberLastUsedCamera: true,
+              supportedScanTypes: [0, 1], // QR_CODE and BARCODE
+              formatsToSupport: [0], // Only QR codes (reduces processing)
+            },
+            /* verbose= */ false
+          );
 
-            // Clear scanner after successful scan
-            scannerRef.current?.clear().catch(err => {
-              console.error('Error clearing scanner:', err);
-            });
-          },
-          errorMessage => {
-            // Handle scan errors (most are just "no QR code detected")
-            // Only log actual errors, not routine scanning messages
-            if (errorMessage && typeof errorMessage === 'string') {
-              if (
-                !errorMessage.includes('No MultiFormat Readers') &&
-                !errorMessage.includes('NotFoundException')
-              ) {
-                console.debug('QR Scan error:', errorMessage);
+          // Start scanning with error handling
+          scannerRef.current.render(
+            (decodedText, decodedResult) => {
+              // Successfully scanned QR code
+              console.log('QR Code scanned:', decodedText);
+              setIsScanning(false);
+              setError(null); // Clear any previous errors
+              onScan(decodedText);
 
-                // Set user-friendly error message for critical errors
+              // Clear scanner after successful scan
+              scannerRef.current?.clear().catch(err => {
+                console.error('Error clearing scanner:', err);
+              });
+            },
+            errorMessage => {
+              // Handle scan errors (most are just "no QR code detected")
+              // Only log actual errors, not routine scanning messages
+              if (errorMessage && typeof errorMessage === 'string') {
                 if (
-                  errorMessage.includes('NotAllowedError') ||
-                  errorMessage.includes('Permission')
+                  !errorMessage.includes('No MultiFormat Readers') &&
+                  !errorMessage.includes('NotFoundException')
                 ) {
-                  setError(
-                    'Camera permission denied. Please allow camera access.'
-                  );
-                  onError?.('Camera permission denied');
-                } else if (errorMessage.includes('NotFoundError')) {
-                  setError('No camera found on this device.');
-                  onError?.('No camera found');
-                } else if (errorMessage.includes('NotReadableError')) {
-                  setError('Camera is already in use by another application.');
-                  onError?.('Camera in use');
+                  console.debug('QR Scan error:', errorMessage);
+
+                  // Set user-friendly error message for critical errors
+                  if (
+                    errorMessage.includes('NotAllowedError') ||
+                    errorMessage.includes('Permission')
+                  ) {
+                    setError(
+                      'Camera permission denied. Please allow camera access.'
+                    );
+                    onError?.('Camera permission denied');
+                  } else if (errorMessage.includes('NotFoundError')) {
+                    setError('No camera found on this device.');
+                    onError?.('No camera found');
+                  } else if (errorMessage.includes('NotReadableError')) {
+                    setError(
+                      'Camera is already in use by another application.'
+                    );
+                    onError?.('Camera in use');
+                  }
                 }
               }
             }
-          }
-        );
+          );
 
-        setIsScanning(true);
-      } catch (err) {
-        console.error('Error initializing QR scanner:', err);
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : 'Failed to initialize camera scanner';
-        setError(errorMessage);
-        onError?.(errorMessage);
-      }
+          setIsScanning(true);
+        } catch (err) {
+          console.error('Error initializing QR scanner:', err);
+          const errorMessage =
+            err instanceof Error
+              ? err.message
+              : 'Failed to initialize camera scanner. Try refreshing the page or using a different browser.';
+          setError(errorMessage);
+          onError?.(errorMessage);
+        }
+      }, 500); // 500ms delay ensures DOM is ready on mobile Safari
+
+      return () => {
+        clearTimeout(initTimeout);
+      };
     }
 
     // Cleanup on unmount
