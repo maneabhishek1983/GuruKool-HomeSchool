@@ -469,6 +469,28 @@ export function sanitizeObject(obj: Record<string, any>): Record<string, any> {
 }
 
 // ============================================================================
+// Teacher QR Session Schemas
+// ============================================================================
+
+/**
+ * Schema for teacher QR code scanning
+ */
+export const teacherSessionScanSchema = z.object({
+  qrData: z.string().min(10, 'QR code data is required'),
+  sessionType: z.enum(['sign_in', 'sign_out'], {
+    errorMap: () => ({ message: 'Session type must be sign_in or sign_out' }),
+  }),
+  location: z
+    .object({
+      latitude: z.number().min(-90).max(90).optional(),
+      longitude: z.number().min(-180).max(180).optional(),
+      address: z.string().max(500).optional(),
+    })
+    .optional(),
+  notes: z.string().max(1000).optional(),
+});
+
+// ============================================================================
 // Export Aliases (for backward compatibility)
 // ============================================================================
 export const teacherCreateSchema = createTeacherSchema;

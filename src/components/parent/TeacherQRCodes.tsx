@@ -269,6 +269,32 @@ export default function TeacherQRCodes({
                 </p>
               </div>
 
+              {/* QR Code Format Info */}
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-left">
+                <p className="text-xs font-semibold text-blue-800 mb-2">
+                  📱 QR Code Information
+                </p>
+                <div className="space-y-1 text-xs text-blue-700">
+                  <p>
+                    <strong>Type:</strong>{' '}
+                    <code className="bg-blue-100 px-1 py-0.5 rounded">
+                      teacher_auth
+                    </code>
+                  </p>
+                  <p>
+                    <strong>Format:</strong> JSON with HMAC-SHA256 signature
+                  </p>
+                  <p>
+                    <strong>Contains:</strong> Teacher ID, Student ID, Parent
+                    ID, Timestamp
+                  </p>
+                  <p>
+                    <strong>Security:</strong> Cryptographically signed and
+                    validated
+                  </p>
+                </div>
+              </div>
+
               <div className="mt-6 space-y-2">
                 <button
                   onClick={() => {
@@ -281,7 +307,25 @@ export default function TeacherQRCodes({
                   }}
                   className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                 >
-                  Download QR Code
+                  📥 Download QR Code
+                </button>
+                <button
+                  onClick={() => {
+                    // Test QR code format
+                    try {
+                      const parsedData = JSON.parse(
+                        selectedQRCode.qr_code_data
+                      );
+                      alert(
+                        `✅ QR Code Valid!\n\nType: ${parsedData.type}\nTeacher ID: ${parsedData.teacherId}\nStudent ID: ${parsedData.studentId}\nParent ID: ${parsedData.parentId}\nTimestamp: ${new Date(parsedData.timestamp).toLocaleString()}\n\nSignature: ${parsedData.signature.substring(0, 16)}...`
+                      );
+                    } catch (err) {
+                      alert('❌ Invalid QR code format');
+                    }
+                  }}
+                  className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+                >
+                  🧪 Test QR Code Format
                 </button>
                 <button
                   onClick={() => setShowQRModal(false)}

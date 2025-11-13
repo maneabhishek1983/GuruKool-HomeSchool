@@ -42,18 +42,34 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
     setActiveCheckIn(active);
   };
 
-  const handleQRScan = (data: string) => {
+  const handleQRScan = async (data: string) => {
     setScannedData(data);
     setError(null);
 
-    // Validate QR code
-    const qrData = timesheetService.validateQRCode(data);
-    if (!qrData) {
-      setError('Invalid QR code. Please scan a valid parent QR code.');
-      return;
-    }
+    // Try to parse QR code to validate format
+    try {
+      const parsedData = JSON.parse(data);
 
-    setStep('select_action');
+      // Check if it's the new TeacherQRService format
+      if (parsedData.type === 'teacher_auth') {
+        // Valid format, proceed to action selection
+        setStep('select_action');
+        return;
+      }
+
+      // Fall back to timesheet service validation for backward compatibility
+      const qrData = timesheetService.validateQRCode(data);
+      if (!qrData) {
+        setError(
+          'Invalid QR code. Please scan a valid teacher or parent QR code.'
+        );
+        return;
+      }
+
+      setStep('select_action');
+    } catch (err) {
+      setError('Invalid QR code format. Please scan a valid QR code.');
+    }
   };
 
   const handleActionSelect = async (
@@ -68,12 +84,55 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
     setStep('processing');
 
     try {
+      // Parse QR data to determine which API to use
+      const parsedData = JSON.parse(scannedData);
+
       let result: TimesheetEntry | null = null;
 
-      if (selectedAction === 'check_in') {
-        result = await timesheetService.checkIn(user.id, scannedData);
+      // Use new TeacherQRService API for teacher_auth type
+      if (parsedData.type === 'teacher_auth') {
+        // Call new API endpoint
+        const response = await fetch('/api/teacher-sessions/scan', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            qrData: scannedData,
+            sessionType: selectedAction === 'check_in' ? 'sign_in' : 'sign_out',
+            notes: notes || undefined,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to process QR code');
+        }
+
+        // Convert to TimesheetEntry format for compatibility
+        result = {
+          id: data.session.id,
+          teacher_id: data.session.teacher_id,
+          student_id: data.session.student_id,
+          parent_id: data.session.parent_id,
+          check_in_time: data.session.session_start,
+          check_out_time: data.session.session_end,
+          duration_minutes: data.session.duration_minutes,
+          location: data.session.location,
+          notes: data.session.notes,
+          qr_code_id: data.session.qr_code_used || '',
+          status: selectedAction === 'check_in' ? 'checked_in' : 'checked_out',
+          created_at: data.session.created_at,
+          updated_at: data.session.updated_at,
+        };
       } else {
-        result = await timesheetService.checkOut(user.id, scannedData, notes);
+        // Fall back to timesheet service for backward compatibility
+        if (selectedAction === 'check_in') {
+          result = await timesheetService.checkIn(user.id, scannedData);
+        } else {
+          result = await timesheetService.checkOut(user.id, scannedData, notes);
+        }
       }
 
       if (!result) {
