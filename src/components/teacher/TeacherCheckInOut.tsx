@@ -28,6 +28,7 @@ export function TeacherCheckInOut({
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [scannedData, setScannedData] = useState<string>('');
   const [location, setLocation] = useState<{
     latitude: number;
     longitude: number;
@@ -67,11 +68,27 @@ export function TeacherCheckInOut({
   };
 
   const handleQRScan = async (qrData: string) => {
+    console.log('[TeacherCheckInOut] QR data received:', qrData);
+    console.log('[TeacherCheckInOut] QR data length:', qrData.length);
+    console.log('[TeacherCheckInOut] QR data type:', typeof qrData);
+
+    setScannedData(qrData); // Store for debugging display
     setError('');
     setSuccess('');
     setShowQRScanner(false);
 
     try {
+      // Try to parse as JSON to see the structure
+      try {
+        const parsed = JSON.parse(qrData);
+        console.log('[TeacherCheckInOut] Parsed QR data:', parsed);
+      } catch (parseError) {
+        console.log(
+          '[TeacherCheckInOut] QR data is not JSON, raw value:',
+          qrData
+        );
+      }
+
       const result = await TimesheetService.checkIn(
         teacherId,
         qrData,
@@ -83,10 +100,15 @@ export function TeacherCheckInOut({
         setActiveSession(result);
         onCheckInSuccess?.(result);
       } else {
-        setError('Check-in failed');
+        setError('Check-in failed - Invalid QR code or already checked in');
       }
     } catch (error) {
-      setError('An error occurred during check-in');
+      console.error('[TeacherCheckInOut] Check-in error:', error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'An error occurred during check-in';
+      setError(errorMessage);
     }
   };
 
@@ -156,6 +178,16 @@ export function TeacherCheckInOut({
               </svg>
               <p className="text-sm text-red-800">{error}</p>
             </div>
+            {scannedData && (
+              <div className="mt-3 pt-3 border-t border-red-200">
+                <p className="text-xs text-red-700 font-semibold mb-1">
+                  Scanned QR Data (Debug):
+                </p>
+                <pre className="text-xs text-red-600 bg-red-100 p-2 rounded overflow-x-auto max-h-32">
+                  {scannedData}
+                </pre>
+              </div>
+            )}
           </motion.div>
         )}
 
