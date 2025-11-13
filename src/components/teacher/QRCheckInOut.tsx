@@ -168,25 +168,7 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
     setError(null);
   };
 
-  const simulateQRScan = () => {
-    // DEVELOPMENT ONLY: This function should be removed in production builds
-    // Security Note: Uses mock data with predictable signature for testing only
-    // Production builds should use NODE_ENV check or build-time code elimination
-    if (process.env.NODE_ENV === 'production') {
-      setError('Mock QR scan is disabled in production');
-      return;
-    }
-
-    const mockQRData = JSON.stringify({
-      type: 'check_in',
-      parentId: 'parent-123',
-      studentId: 'student-456',
-      timestamp: Date.now(),
-      // Mock signature for dev testing only - NOT secure for production
-      signature: btoa('parent-123-student-456-dev-test-only').slice(0, 16),
-    });
-    handleQRScan(mockQRData);
-  };
+  // Mock QR scan function removed for production security
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
@@ -265,21 +247,12 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => setShowScanner(true)}
-                      className="w-full px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-xl transition-colors"
-                    >
-                      📷 Open Camera Scanner
-                    </button>
-
-                    <button
-                      onClick={simulateQRScan}
-                      className="w-full px-6 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-xl transition-colors text-sm"
-                    >
-                      🧪 Test with Mock QR Code (Dev Only)
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setShowScanner(true)}
+                    className="w-full px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-xl transition-colors"
+                  >
+                    📷 Open Camera Scanner
+                  </button>
 
                   <p className="text-xs text-neutral-500">
                     Point your camera at the parent's QR code displayed in their
