@@ -56,7 +56,14 @@
       "Bash(del test-teacher-creation.js verify-teacher-fix.js)",
       "Bash(npx:*)",
       "Bash(del nul)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(flutter:*)",
+      "Bash(git mv:*)",
+      "Bash(for file in build-output.txt type-check-errors.log type-check-full.txt type-check-output.txt typescript-errors.log CLEANUP_REPORT.json implementation-plan.json implementation-progress.json implementation-status-report.json QR_TEST_REPORT.json task-validation-report.json TEST_REPORT.json ui-implementation-report.json)",
+      "Bash(do)",
+      "Bash([ -f \"$file\" ])",
+      "Bash(done)",
+      "Bash(/dev/null echo \"\" echo \"📖 Documentation:\" find docs/ -name \"*.md\")"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

@@ -93,7 +93,7 @@ export function QRScanner({
       // Create Html5Qrcode instance
       html5QrCodeRef.current = new Html5Qrcode('qr-scanner-container', {
         formatsToSupport: [0], // 0 = QR_CODE format only
-        verbose: false, // Disable verbose to reduce console noise
+        verbose: true, // Enable verbose for debugging QR detection issues
       });
 
       await html5QrCodeRef.current.start(
@@ -101,13 +101,16 @@ export function QRScanner({
         {
           fps: 10, // Keep FPS at 10 for better detection
           qrbox: function (viewfinderWidth, viewfinderHeight) {
-            // Make qrbox 70% of the smaller dimension for better detection
-            const minEdgePercentage = 0.7;
+            // Use 50% of smaller dimension for better detection (reduced from 70%)
+            // Smaller box = more focused scanning area = better detection
+            const minEdgePercentage = 0.5;
             const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
             const qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+            // Ensure minimum size of 200px for small screens
+            const finalSize = Math.max(qrboxSize, 200);
             return {
-              width: qrboxSize,
-              height: qrboxSize,
+              width: finalSize,
+              height: finalSize,
             };
           },
           aspectRatio,
@@ -121,6 +124,7 @@ export function QRScanner({
         },
         decodedText => {
           addDebugLog(`✅ QR SCANNED: ${decodedText.substring(0, 50)}...`);
+          console.log('[QRScanner] Full QR data:', decodedText);
           setError(null);
           onScan(decodedText);
 
@@ -134,7 +138,15 @@ export function QRScanner({
           }
         },
         errorMessage => {
-          // Silently ignore routine scanning errors
+          // Log errors for debugging (but filter out routine scanning messages)
+          if (
+            !errorMessage.includes('NotFoundException') &&
+            !errorMessage.includes('No MultiFormat Readers') &&
+            !errorMessage.includes('QR code parse error')
+          ) {
+            console.debug('[QRScanner] Scan error:', errorMessage);
+            addDebugLog(`⚠️ ${errorMessage.substring(0, 50)}...`);
+          }
         }
       );
 

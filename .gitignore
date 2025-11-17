@@ -169,3 +169,10 @@ VERCEL_DEPLOYMENT_SUMMARY.md
 QR_CODE_FIX_SUMMARY.md
 QR_CODE_IOS_FIX_REPORT.md
 QR_CODE_IOS_TESTING_GUIDE.md
+
+# Temporary files folder
+temp/
+*.log
+*.txt
+!VERCEL_ENV_VARS.txt
+!LICENSE.txt
