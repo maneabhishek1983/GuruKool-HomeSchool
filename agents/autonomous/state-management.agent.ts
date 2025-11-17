@@ -17,7 +17,7 @@
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 
 interface AgentContext {
   action: string;
@@ -813,8 +813,8 @@ class StateSyncService {
   // ==================== HELPER METHODS ====================
 
   private writeFile(path: string, content: string): void {
-    const dir = path.substring(0, path.lastIndexOf('/'));
-    if (!existsSync(dir)) {
+    const dir = dirname(path);
+    if (dir && !existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
     writeFileSync(path, content, 'utf-8');

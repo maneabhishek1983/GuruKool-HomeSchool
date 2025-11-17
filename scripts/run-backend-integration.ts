@@ -106,33 +106,49 @@ async function main() {
     console.log('[STEP 3/5] Generating data models from Supabase schema...');
     console.log('');
 
-    const modelsResult: AgentResult = await backendAgent.execute({
-      action: 'generate_data_models',
-      payload: {
-        platform: 'flutter',
-        outputDir: join(process.cwd(), 'gurukool_teacher', 'lib', 'models'),
-        tables: [
-          'students',
-          'teachers',
-          'teacher_sessions',
-          'teacher_qr_codes',
-        ],
-      },
-    });
+    const tables = [
+      'students',
+      'teachers',
+      'teacher_sessions',
+      'teacher_qr_codes',
+    ];
+    const modelArtifacts: string[] = [];
 
-    if (!modelsResult.success) {
-      console.error('❌ Data model generation failed:', modelsResult.message);
-      if (modelsResult.errors) {
-        modelsResult.errors.forEach(err => console.error('  -', err));
+    for (const tableName of tables) {
+      const modelsResult: AgentResult = await backendAgent.execute({
+        action: 'generate_data_models',
+        payload: {
+          tableName,
+          outputDir: join(process.cwd(), 'gurukool_teacher', 'lib', 'models'),
+        },
+      });
+
+      if (!modelsResult.success) {
+        console.error(
+          `❌ Data model generation failed for ${tableName}:`,
+          modelsResult.message
+        );
+        if (modelsResult.errors) {
+          modelsResult.errors.forEach(err => console.error('  -', err));
+        }
+        process.exit(1);
       }
-      process.exit(1);
+
+      if (modelsResult.artifacts) {
+        modelArtifacts.push(...modelsResult.artifacts);
+      }
     }
 
     console.log('✅ Data models generated');
-    if (modelsResult.artifacts) {
-      modelsResult.artifacts.forEach(file => console.log(`   → ${file}`));
-    }
+    modelArtifacts.forEach(file => console.log(`   → ${file}`));
     console.log('');
+
+    // Create a combined result for saving
+    const modelsResult = {
+      success: true,
+      message: 'All data models generated',
+      artifacts: modelArtifacts,
+    };
 
     // Step 4: Setup Supabase realtime subscriptions
     console.log('[STEP 4/5] Setting up Supabase Realtime subscriptions...');
