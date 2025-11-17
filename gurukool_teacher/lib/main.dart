@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'services/hive_storage.service.dart';
+import 'design_system/tokens/colors.dart';
 
 /// GuruKool HomeSchool Teacher Mobile App
 /// Auto-initialized by setup script
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Hive for offline storage
+  await HiveStorageService.initialize();
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -17,7 +22,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'GuruKool Teacher',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2563EB)),
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
         useMaterial3: true,
       ),
       home: const PlaceholderScreen(),
@@ -43,7 +48,7 @@ class PlaceholderScreen extends StatelessWidget {
             Icon(
               Icons.school,
               size: 100,
-              color: const Color(0xFF2563EB),
+              color: AppColors.primary,
             ),
             const SizedBox(height: 24),
             Text(
@@ -54,15 +59,20 @@ class PlaceholderScreen extends StatelessWidget {
             Text(
               'Teacher Mobile App',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondary,
                   ),
             ),
             const SizedBox(height: 32),
-            const CircularProgressIndicator(),
+            CircularProgressIndicator(
+              color: AppColors.primary,
+            ),
             const SizedBox(height: 16),
             Text(
-              'Autonomous agents will generate screens...',
-              style: TextStyle(color: Colors.grey[600]),
+              'Ready to run! Hive initialized ✓',
+              style: TextStyle(
+                color: AppColors.success,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
