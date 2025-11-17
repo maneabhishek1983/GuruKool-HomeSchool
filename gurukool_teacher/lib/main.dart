@@ -42,7 +42,7 @@ class PlaceholderScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('GuruKool Teacher'),
-        backgroundColor: const Color(0xFF2563EB),
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
       body: Center(
@@ -63,7 +63,7 @@ class PlaceholderScreen extends StatelessWidget {
             Text(
               'Teacher Mobile App',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: AppColors.gray600,
                   ),
             ),
             const SizedBox(height: 32),
