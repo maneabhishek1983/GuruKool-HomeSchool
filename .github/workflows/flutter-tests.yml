@@ -1,0 +1,146 @@
+name: Flutter Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'gurukool_teacher/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'gurukool_teacher/**'
+
+jobs:
+  test:
+    name: Flutter Unit & Widget Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.0'
+          channel: 'stable'
+      
+      - name: Install dependencies
+        working-directory: ./gurukool_teacher
+        run: flutter pub get
+      
+      - name: Run analyzer
+        working-directory: ./gurukool_teacher
+        run: flutter analyze
+      
+      - name: Run unit tests
+        working-directory: ./gurukool_teacher
+        run: flutter test --coverage
+      
+      - name: Check coverage threshold
+        working-directory: ./gurukool_teacher
+        run: |
+          if [ -f coverage/lcov.info ]; then
+            COVERAGE=$(lcov --summary coverage/lcov.info 2>/dev/null | grep 'lines' | awk '{print $2}' | sed 's/%//' || echo "0")
+            echo "Coverage: $COVERAGE%"
+            if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+              echo "⚠️ Coverage $COVERAGE% is below 80% threshold"
+              exit 1
+            fi
+          fi
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./gurukool_teacher/coverage/lcov.info
+          flags: flutter
+          name: flutter-coverage
+      
+      - name: Notify Orchestrator on failure
+        if: failure()
+        run: |
+          echo "Test failure detected. Notifying Orchestrator..."
+          # Add notification logic here (webhook, API call, etc.)
+
+  integration-test:
+    name: Flutter Integration Tests
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.0'
+          channel: 'stable'
+      
+      - name: Install dependencies
+        working-directory: ./gurukool_teacher
+        run: flutter pub get
+      
+      - name: Run integration tests
+        working-directory: ./gurukool_teacher
+        run: flutter test integration_test
+      
+      - name: Notify Orchestrator on failure
+        if: failure()
+        run: |
+          echo "Integration test failure detected. Notifying Orchestrator..."
+
+  performance-test:
+    name: Flutter Performance Tests
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run performance tests
+        run: npx tsx scripts/flutter-performance-test.ts
+      
+      - name: Upload performance report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-report
+          path: gurukool_teacher/test/performance_report.json
+
+  accessibility-test:
+    name: Flutter Accessibility Tests
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run accessibility tests
+        run: npx tsx scripts/flutter-accessibility-test.ts
+      
+      - name: Upload accessibility report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: accessibility-report
+          path: gurukool_teacher/test/accessibility_report.json
+

@@ -4,927 +4,777 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GuruKool HomeSchool is a Next.js 14 application for managing homeschooling with AI-powered features, teacher-student tracking, QR code authentication, and comprehensive academic standards support for UK, US, and India.
+GuruKool HomeSchool is a full-stack homeschooling management platform with:
+
+- **Web Application**: Next.js 14 with App Router (parent/admin dashboards)
+- **Mobile Application**: Flutter mobile app for teachers (QR check-in, session tracking)
+- **Backend**: Supabase (PostgreSQL + Auth + Realtime)
+- **AI Features**: Agent-based architecture for autonomous code generation and analytics
 
 **Node.js Version**: 20 (see [.nvmrc](.nvmrc))
 **Package Manager**: npm (uses package-lock.json)
 
 ---
 
-## ⚠️ CRITICAL ARCHITECTURE ISSUES (November 2025)
-
-**STATUS**: ✅ All 3 critical fixes implemented (see [FIXES_SUMMARY.md](FIXES_SUMMARY.md))
-
-Original analysis: [ARCHITECTURE_REVIEW_REPORT.md](ARCHITECTURE_REVIEW_REPORT.md)
-
-### Critical Findings
-
-1. **Data Fragmentation (P0 - Critical)**
-   - Parent timesheet view (`TimesheetView.tsx`) only reads `timesheet_entries` table
-   - Sessions created in `teacher_sessions` table are **invisible to parents**
-   - **Impact**: Parents cannot see sessions created via teacher QR check-in flow
-   - **File**: [src/components/shared/TimesheetView.tsx](src/components/shared/TimesheetView.tsx) lines 40-45
-
-2. **Component Duplication (P1 - High)**
-   - THREE different `QRScanner` components exist:
-     - `src/components/shared/QRScanner.tsx` ✅ Production scanner (html5-qrcode)
-     - `src/components/auth/QRScanner.tsx` ⚠️ Mock/simulation only (no real scanning)
-     - `src/components/QRScanner.tsx` ⚠️ Manual entry only (no real scanning)
-   - **Impact**: Developer confusion, maintenance burden, unclear which to use
-
-3. **System Inconsistency (P0 - Critical)**
-   - Dual timesheet systems with NO synchronization:
-     - OLD: `timesheet_entries` + `parent_qr_codes` (uses btoa signatures ❌)
-     - NEW: `teacher_sessions` + `teacher_qr_codes` (uses HMAC-SHA256 ✅)
-   - **Impact**: Data stored in two places, no automatic sync, parent confusion
-
-4. **QR Code Format Mismatch (P1 - High)**
-   - Two incompatible QR formats: `teacher_auth` vs `check_in`
-   - Runtime type detection in `QRCheckInOut.tsx` converts between formats
-   - **Impact**: Performance overhead, brittle field mapping, no type safety
-
-### Immediate Actions Required (Est. 7-11 hours total)
-
-#### 1. Fix Parent Timesheet View (2-3 hours) - **DO THIS FIRST**
-
-**Problem**: Parents can't see sessions from `teacher_sessions` table.
-
-**Solution**: Update `TimesheetView.tsx` to read from BOTH tables and merge results.
-
-```typescript
-// src/components/shared/TimesheetView.tsx (lines 34-46)
-const loadTimesheet = async () => {
-  const { startDate, endDate } = getDateRange();
-
-  // Query OLD system
-  const oldEntries = await timesheetService.getParentTimesheet(
-    userId,
-    startDate,
-    endDate
-  );
-
-  // Query NEW system
-  const newSessions = await TeacherQRService.getParentTeacherSessions(userId);
-  const newEntriesConverted = newSessions
-    .filter(s => isWithinDateRange(s.session_start, startDate, endDate))
-    .map(s => convertTeacherSessionToTimesheetEntry(s));
-
-  // Merge and deduplicate by session ID
-  const allEntries = [...oldEntries, ...newEntriesConverted];
-  const uniqueEntries = deduplicateById(allEntries);
-
-  setEntries(uniqueEntries);
-};
-```
-
-**Files to modify**:
-
-- [src/components/shared/TimesheetView.tsx](src/components/shared/TimesheetView.tsx)
-- Add helper: `convertTeacherSessionToTimesheetEntry()` function
-
-**Acceptance criteria**:
-
-- [ ] Parents see sessions from BOTH `timesheet_entries` and `teacher_sessions`
-- [ ] No duplicate sessions displayed
-- [ ] Date range filtering works correctly
-- [ ] Manual test: Create session via teacher QR check-in, verify parent sees it
-
----
-
-#### 2. Consolidate QRScanner Components (1-2 hours)
-
-**Problem**: Three components named `QRScanner` with different capabilities.
-
-**Solution**: Keep production scanner, rename/move others.
-
-**Actions**:
-
-1. **Keep**: `src/components/shared/QRScanner.tsx` (production scanner with html5-qrcode)
-2. **Rename**: `src/components/QRScanner.tsx` → `src/components/shared/QRManualEntry.tsx`
-3. **Move**: `src/components/auth/QRScanner.tsx` → `src/components/demo/QRScannerSimulation.tsx`
-4. **Update imports**: Search codebase for `import.*QRScanner` and update to use correct component
-
-**Files to modify**:
-
-- Rename/move 2 component files
-- Update imports in [src/components/teacher/QRCheckInOut.tsx](src/components/teacher/QRCheckInOut.tsx)
-- Update any other files importing QRScanner (use global search)
-
-**Acceptance criteria**:
-
-- [ ] Only ONE component named `QRScanner.tsx` (the production one)
-- [ ] No import errors
-- [ ] All QR scanning functionality still works
-- [ ] Manual test: Teacher can scan QR code for check-in
-
----
-
-#### 3. Add Synchronization Mechanism (4-6 hours) - **✅ IMPLEMENTED**
-
-**Problem**: Data in `teacher_sessions` and `timesheet_entries` never syncs.
-
-**Solution**: Database trigger automatically syncs teacher_sessions → timesheet_entries on INSERT/UPDATE.
-
-**Implementation**: See [supabase/migrations/007_sync_teacher_sessions_to_timesheet.sql](supabase/migrations/007_sync_teacher_sessions_to_timesheet.sql)
-
-**Option A: Database Trigger (Recommended)**
-
-```sql
--- Create function to sync teacher_sessions → timesheet_entries
-CREATE OR REPLACE FUNCTION sync_teacher_session_to_timesheet()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- On INSERT or UPDATE of teacher_sessions
-  INSERT INTO timesheet_entries (
-    teacher_id, student_id, parent_id,
-    check_in_time, check_out_time, duration_minutes,
-    location, notes, status, qr_code_id, created_at
-  )
-  VALUES (
-    NEW.teacher_id, NEW.student_id, NEW.parent_id,
-    COALESCE(NEW.check_in_time, NEW.session_start),
-    COALESCE(NEW.check_out_time, NEW.session_end),
-    NEW.duration_minutes,
-    NEW.location,
-    NEW.notes,
-    CASE WHEN NEW.session_end IS NOT NULL THEN 'checked_out' ELSE 'checked_in' END,
-    NEW.qr_code_used::text,
-    NEW.created_at
-  )
-  ON CONFLICT (teacher_id, student_id, check_in_time) DO UPDATE
-  SET
-    check_out_time = EXCLUDED.check_out_time,
-    duration_minutes = EXCLUDED.duration_minutes,
-    notes = EXCLUDED.notes,
-    status = EXCLUDED.status;
-
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Create trigger
-CREATE TRIGGER sync_teacher_session_after_insert_update
-AFTER INSERT OR UPDATE ON teacher_sessions
-FOR EACH ROW
-EXECUTE FUNCTION sync_teacher_session_to_timesheet();
-```
-
-**Option B: Service Layer Sync (Alternative)**
-
-```typescript
-// src/services/session-sync.service.ts
-export class SessionSyncService {
-  static async syncTeacherSessionToTimesheet(teacherSessionId: string) {
-    const { data: session } = await supabase
-      .from('teacher_sessions')
-      .select('*')
-      .eq('id', teacherSessionId)
-      .single();
-
-    if (!session) return;
-
-    await supabase.from('timesheet_entries').upsert({
-      teacher_id: session.teacher_id,
-      student_id: session.student_id,
-      parent_id: session.parent_id,
-      check_in_time: session.check_in_time || session.session_start,
-      check_out_time: session.check_out_time || session.session_end,
-      duration_minutes: session.duration_minutes,
-      location: session.location,
-      notes: session.notes,
-      status: session.session_end ? 'checked_out' : 'checked_in',
-      qr_code_id: session.qr_code_used,
-    });
-  }
-
-  // Call this after every teacher check-in/check-out
-  static async backfillExistingSessions() {
-    const { data: sessions } = await supabase
-      .from('teacher_sessions')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    for (const session of sessions || []) {
-      await this.syncTeacherSessionToTimesheet(session.id);
-    }
-  }
-}
-```
-
-**Files to create/modify**:
-
-- **Option A**: Create migration file `supabase/migrations/013_sync_teacher_sessions_to_timesheet.sql`
-- **Option B**: Create `src/services/session-sync.service.ts`
-- Update [src/services/teacher-qr.service.ts](src/services/teacher-qr.service.ts) to call sync after session creation
-
-**Acceptance criteria**:
-
-- [ ] New sessions in `teacher_sessions` automatically appear in `timesheet_entries`
-- [ ] Session updates (check-out) sync correctly
-- [ ] Backfill script successfully syncs existing data
-- [ ] Manual test: Check-in via teacher QR, verify both tables have data
-- [ ] Manual test: Parent timesheet shows session immediately
-
----
-
-### Testing Checklist for Immediate Fixes
-
-After implementing all three fixes, verify:
-
-- [ ] **Parent Timesheet View**
-  - [ ] Parent dashboard loads without errors
-  - [ ] Sessions from OLD system (`timesheet_entries`) visible
-  - [ ] Sessions from NEW system (`teacher_sessions`) visible
-  - [ ] No duplicate sessions shown
-  - [ ] Date range filtering works (This Week, This Month, All Time)
-
-- [ ] **QRScanner Consolidation**
-  - [ ] Teacher check-in page loads QR scanner correctly
-  - [ ] QR scanner detects and scans real QR codes (test with phone camera)
-  - [ ] No import errors in console
-  - [ ] TypeScript compilation passes (`npm run type-check`)
-
-- [ ] **Synchronization**
-  - [ ] Teacher checks in → session appears in BOTH tables
-  - [ ] Teacher checks out → both tables update with duration
-  - [ ] Backfill script runs without errors
-  - [ ] Existing `teacher_sessions` data now in `timesheet_entries`
-
----
-
-### Long-Term Architecture Improvements (See Full Report)
-
-After completing immediate fixes, see [ARCHITECTURE_REVIEW_REPORT.md](ARCHITECTURE_REVIEW_REPORT.md) for:
-
-- **Phase 1 (Week 1)**: Fix security vulnerability (btoa → HMAC-SHA256)
-- **Phase 2 (Weeks 2-3)**: Rename QR scanner components properly
-- **Phase 3 (Weeks 4-6)**: Create unified `QRAuthenticationService`
-- **Phase 4 (Weeks 7-10)**: Migrate to unified database schema
-- **Phase 5 (Weeks 11-12)**: Clean up deprecated code
-
-**Total effort**: 12 weeks with phased rollout and rollback procedures.
-
----
-
 ## Common Commands
 
-### Development
+### Web Application (Next.js)
+
+**Development:**
 
 - `npm run dev` - Start development server on http://localhost:3000
 - `npm run build` - Build production bundle
 - `npm start` - Start production server
-- `ANALYZE=true npm run build` - Build with bundle analyzer
-
-### Code Quality
-
+- `npm run type-check` - Run TypeScript compiler checks (**CRITICAL**: Run before every commit)
 - `npm run lint` - Run ESLint
 - `npm run lint:fix` - Fix ESLint issues automatically
-- `npm run type-check` - Run TypeScript compiler checks (no emit)
-- `npm run format` - Format code with Prettier
-- `npm run format:check` - Check code formatting
 
-**CRITICAL**: Before pushing any code changes to GitHub, ALWAYS run `npm run type-check` locally to catch TypeScript errors that will fail in Vercel deployment. Fix all type errors before committing.
-
-### Git Hooks
-
-- Pre-commit hook (Husky): Automatically runs `lint-staged` on staged files
-- Lint-staged: Runs linting and formatting checks on staged files before commit
-- **Note**: Hooks are automatically installed via `postinstall` script (skipped in production/CI)
-
-### Testing
+**Testing:**
 
 - `npm test` - Run Jest unit tests
-- `npm test -- <test-file-pattern>` - Run specific test file(s) (e.g., `npm test -- session`)
-- `npm run test:watch` - Run tests in watch mode
-- `npm run test:coverage` - Generate test coverage report
+- `npm test -- <pattern>` - Run specific test file(s) (e.g., `npm test -- session`)
 - `npm run test:e2e` - Run Playwright E2E tests
-- `npm run test:e2e:ui` - Run E2E tests with UI
-- `npm run test:e2e:debug` - Debug E2E tests
-- `npm run test:all` - Run all tests (unit + E2E)
-- `npm run test:comprehensive` - Run comprehensive testing suite (all test types)
-- `npm run test:performance` - Run performance benchmarks
+- `npm run test:comprehensive` - Run comprehensive testing suite
 - `npm run test:security` - Run security penetration tests
-- `npm run test:security-verification` - Verify security implementation
-- `npm run test:full-suite` - Run all test suites in sequence
 
-### Database & Supabase
+**Database:**
 
 - `npm run verify:supabase` - Verify Supabase connection and schema
 - `npm run verify:rls` - Verify Row Level Security policies
-- `npm run db:login` - Login to Supabase CLI
-- `npm run db:link` - Link local project to Supabase project (project ref: miqhtpbutevdrkyndflf)
 - `npm run db:push` - Push local migrations to Supabase
-- `npm run db:pull` - Pull schema from Supabase
-- `npm run db:diff` - Show diff between local and remote schema
-- `npm run db:generate` - Generate new migration from diff
 - `npm run db:status` - List migration status
-- `node scripts/apply-migration-007.js` - Apply synchronization trigger (teacher_sessions → timesheet_entries)
-- `node scripts/verify-sync-mechanism.js` - Verify sync trigger is working correctly
-- Database migrations must be applied manually in Supabase Dashboard (see `supabase/migrations/`)
+- `node scripts/apply-migration-007.js` - Apply teacher_sessions → timesheet_entries sync trigger
+- `node scripts/verify-sync-mechanism.js` - Verify sync trigger is working
 
-### Utilities
+### Mobile Application (Flutter)
 
-- `npm run storybook` - Start Storybook on port 6006
-- `npm run build-storybook` - Build Storybook for production
-- `npm run validate:tasks` - Validate implementation tasks
-- `npm run check:status` - Check implementation status
+**Setup:**
+
+- `cd gurukool_teacher` - Navigate to Flutter project
+- `flutter pub get` - Install Flutter dependencies
+- `flutter doctor` - Check Flutter installation
+
+**Development:**
+
+- `flutter run -d chrome` - Run on Chrome (web)
+- `flutter run -d windows` - Run on Windows desktop
+- `flutter run` - Run on connected device/emulator
+- Press `r` in terminal - Hot reload
+- Press `R` in terminal - Hot restart
+- Press `q` - Quit app
+
+**Testing:**
+
+- `flutter test` - Run unit tests
+- `flutter test integration_test/` - Run integration tests
+- `flutter analyze` - Run static analysis
+
+**Build:**
+
+- `flutter build apk` - Build Android APK
+- `flutter build ios` - Build iOS (macOS only)
+- `flutter build web` - Build for web deployment
+
+---
 
 ## Architecture
 
 ### Tech Stack
 
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript (strict mode)
-- **UI**: React 18, Tailwind CSS, Framer Motion
-- **Component Library**: Mantine UI
-- **State Management**: Zustand (session store), React Query (TanStack Query)
-- **Database**: Supabase (PostgreSQL + Auth)
-- **AI/ML**: OpenAI API, Langchain, Pinecone (vector DB)
-- **Testing**: Jest, Playwright, Testing Library, Storybook
+**Web Application:**
+
+- Framework: Next.js 14 with App Router
+- Language: TypeScript (strict mode)
+- UI: React 18, Tailwind CSS, Framer Motion, Mantine UI
+- State: Zustand (session store), React Query (TanStack Query)
+- Database: Supabase (PostgreSQL + Auth + Realtime)
+- AI/ML: OpenAI API (dev only), Langchain, Pinecone
+- Testing: Jest, Playwright, Testing Library, Storybook
+
+**Mobile Application:**
+
+- Framework: Flutter 3.x
+- Language: Dart
+- UI: Material Design 3
+- State: Riverpod (providers + StateNotifier)
+- Storage: Hive (offline-first), flutter_secure_storage
+- Backend: Supabase (same as web)
+- Testing: flutter_test, integration_test, mockito
 
 ### Key Directories
 
 ```
-src/
-├── app/                    # Next.js App Router pages and API routes
-│   ├── parent/            # Parent dashboard and features
-│   ├── teacher/           # Teacher dashboard and sessions
-│   ├── admin/             # Admin portal
-│   ├── api/               # API routes
-│   │   ├── students/      # Student CRUD endpoints
-│   │   ├── teachers/      # Teacher CRUD endpoints
-│   │   ├── sessions/      # Session CRUD endpoints
-│   │   ├── contact-admin/ # Contact form endpoint
-│   │   ├── health/        # Health check endpoint
-│   │   ├── metrics/       # Prometheus metrics endpoint
-│   │   ├── invitations/   # Teacher invitation endpoints
-│   │   │   ├── send/     # Send invitation to teacher
-│   │   │   └── accept/   # Accept teacher invitation
-│   │   └── teacher-sessions/ # Teacher session management
-│   └── *-demo/            # Feature demo pages
-├── components/            # React components
-│   ├── auth/             # Authentication components (QR, fallback)
-│   ├── parent/           # Parent-specific components
-│   ├── teacher/          # Teacher-specific components
-│   ├── analytics/        # Analytics dashboards
-│   └── sessions/         # Session management components
-├── agents/               # AI agent system
-│   ├── base.agent.ts    # Abstract base agent class with health checks
-│   ├── orchestrator.ts  # Agent orchestration with priority execution
-│   └── registry.ts      # Agent registry and discovery
-├── services/            # Business logic and external integrations
-│   ├── database.service.ts      # Supabase CRUD with parent isolation
-│   ├── qr-auth.service.ts       # QR code authentication
-│   ├── teacher-qr.service.ts    # Teacher QR code management
-│   ├── ai-insights.service.ts   # AI-powered insights
-│   ├── analytics.service.ts     # Analytics processing
-│   ├── session.service.ts       # Session management
-│   ├── sync-manager.service.ts  # Offline sync
-│   └── logging.service.ts       # Structured logging
-├── lib/                 # Core libraries and utilities
-│   ├── supabase.ts     # Supabase client configuration (client/server)
-│   ├── validation.ts   # Zod validation schemas for all API inputs
-│   ├── api-security.ts # Rate limiting and CSRF protection wrappers
-│   ├── authContext.tsx # Authentication context
-│   └── syncContext.tsx # Sync context
-├── store/              # State management (Zustand)
-│   └── session.store.ts # Session state singleton with caching
-├── design-system/      # Custom design system
-│   ├── components/     # Reusable UI components
-│   ├── tokens/         # Design tokens (colors, typography, spacing)
-│   ├── themes/         # Theme configuration
-│   └── animations/     # Animation presets (Framer Motion)
-├── types/              # TypeScript type definitions
-│   └── index.ts        # Centralized type exports
-└── middleware/         # Next.js middleware (currently unused - see lib/api-security.ts)
+gurukool-homeschool/
+├── src/                          # Next.js web application
+│   ├── app/                      # App Router pages and API routes
+│   │   ├── parent/              # Parent dashboard
+│   │   ├── teacher/             # Teacher dashboard
+│   │   ├── admin/               # Admin portal
+│   │   └── api/                 # REST API endpoints
+│   ├── components/              # React components
+│   ├── services/                # Business logic services
+│   │   ├── database.service.ts  # Supabase CRUD with parent isolation
+│   │   ├── qr-auth.service.ts   # QR code authentication
+│   │   └── teacher-qr.service.ts # Teacher QR management
+│   ├── agents/                  # AI agent system (autonomous code generation)
+│   │   ├── base.agent.ts       # Abstract base agent
+│   │   ├── orchestrator.ts     # Agent coordination
+│   │   └── registry.ts         # Agent discovery
+│   ├── lib/                     # Core utilities
+│   │   ├── supabase.ts         # Supabase client (client/server)
+│   │   ├── validation.ts       # Zod schemas
+│   │   └── api-security.ts     # Rate limiting, CSRF
+│   ├── store/                   # Zustand state stores
+│   └── design-system/           # Custom design tokens
+│
+├── gurukool_teacher/            # Flutter mobile application
+│   ├── lib/
+│   │   ├── config/
+│   │   │   └── env.dart         # Environment configuration (dotenv)
+│   │   ├── design_system/
+│   │   │   └── tokens/          # Material Design 3 tokens
+│   │   │       ├── colors.dart  # Color palette
+│   │   │       ├── spacing.dart # Spacing scale
+│   │   │       └── typography.dart # Typography system
+│   │   ├── models/
+│   │   │   └── flutter/         # Dart data models (mirrored from TypeScript)
+│   │   ├── providers/           # Riverpod providers
+│   │   │   ├── auth_provider.dart
+│   │   │   ├── session_provider.dart
+│   │   │   └── state/           # StateNotifier classes
+│   │   ├── services/
+│   │   │   ├── supabase.service.dart # Supabase client (PKCE auth)
+│   │   │   ├── auth.service.dart     # Authentication
+│   │   │   ├── hive_storage.service.dart # Offline storage
+│   │   │   └── sync_queue.service.dart # Offline sync queue
+│   │   ├── screens/             # Flutter screens/pages
+│   │   └── main.dart            # App entry point
+│   ├── integration_test/        # Integration tests
+│   ├── test/                    # Unit tests
+│   ├── .env                     # Environment variables (not in git)
+│   ├── .env.example             # Template for .env
+│   └── pubspec.yaml             # Flutter dependencies
+│
+├── supabase/
+│   └── migrations/              # Database migrations (001-007)
+│
+├── scripts/                     # Utility scripts
+│   ├── verify-supabase-connection.js
+│   ├── apply-migration-007.js   # Sync trigger script
+│   └── comprehensive-testing.js
+│
+└── agents/autonomous/           # Autonomous AI agents for code generation
+    ├── orchestrator-agent.ts    # Sprint planning, task management
+    ├── backend-integration-agent.ts # Supabase, auth, data models
+    ├── ui-designer-agent.ts     # Screens, design tokens
+    └── state-management-agent.ts # Providers, state classes
 ```
 
-### AI Agent System
+### AI Agent System (Autonomous Code Generation)
 
-The application uses a sophisticated AI agent architecture:
+The project uses autonomous AI agents to generate production-ready code:
 
-- **BaseAgent** (`src/agents/base.agent.ts`): Abstract base class with health checks, metrics tracking, and error handling
-- **Agent Orchestrator** (`src/agents/orchestrator.ts`): Coordinates multiple agents with priority-based execution
-- **Agent Registry** (`src/agents/registry.ts`): Dynamic agent registration and discovery
-- **Specialized Agents**:
-  - `auth-verification.agent.ts` - Multi-factor authentication and risk scoring
-  - `analytics.agent.ts` - Learning analytics and progress tracking
-  - `task-automation.agent.ts` - Automated task scheduling and batch processing
-  - `communication.agent.ts` - Smart notifications and alerts
-  - `security-analysis.agent.ts` - Security threat detection
+**Web Application Agents** (`src/agents/`):
+
+- `base.agent.ts` - Abstract base class with health checks and metrics
+- `orchestrator.ts` - Coordinates multiple agents with priority execution
+- `registry.ts` - Dynamic agent registration and discovery
+- Specialized agents: auth-verification, analytics, task-automation, communication, security-analysis
+
+**Mobile Application Agents** (`agents/autonomous/`):
+
+- `orchestrator-agent.ts` - Sprint planning, task breakdown (Priority 10)
+- `backend-integration-agent.ts` - Generates Supabase services, data models (Priority 9)
+- `qr-scanner-specialist-agent.ts` - Native QR scanner implementation (Priority 8)
+- `ui-designer-agent.ts` - Generates screens with Material Design 3 (Priority 8)
+- `state-management-agent.ts` - Generates Riverpod providers (Priority 7)
+- `testing-qa-agent.ts` - Generates unit/integration tests (Priority 6)
+
+**How to Use Agents:**
+
+```bash
+# Web app agents (interactive)
+# Use through conversation - agents execute automatically
+
+# Mobile app agents (batch execution)
+cd agents/autonomous
+npx tsx orchestrator-agent.ts  # Runs all agents in priority order
+```
+
+See [AGENT_IMPLEMENTATION_STATUS.md](AGENT_IMPLEMENTATION_STATUS.md) for complete agent documentation.
+
+### Flutter Mobile App Architecture
+
+**Purpose**: Teacher-focused mobile app for QR check-in/out and session tracking
+
+**Key Features:**
+
+- QR code scanner for student authentication
+- Session check-in/check-out with location tracking
+- Offline-first architecture (Hive storage)
+- Real-time sync with Supabase
+- Material Design 3 UI matching web app design tokens
+
+**State Management Pattern:**
+
+```dart
+// Riverpod Provider + StateNotifier
+final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  return AuthNotifier(ref.read(authServiceProvider));
+});
+
+// State class (immutable)
+class AuthState {
+  final User? user;
+  final bool isLoading;
+  final String? error;
+  // ...
+}
+
+// StateNotifier
+class AuthNotifier extends StateNotifier<AuthState> {
+  final AuthService _authService;
+
+  AuthNotifier(this._authService) : super(AuthState.initial());
+
+  Future<void> login(String email, String password) async {
+    state = state.copyWith(isLoading: true);
+    // ... authentication logic
+  }
+}
+```
+
+**Offline Support:**
+
+- Hive databases: `sessions`, `settings`
+- Sync queue for network failures
+- Automatic sync when connection restored
+- Cache service with configurable TTL
+
+**Environment Configuration:**
+
+```dart
+// gurukool_teacher/.env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+QR_SECRET=your-qr-secret
+API_BASE_URL=http://localhost:3000/api  # or production URL
+
+// Load with flutter_dotenv
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+await dotenv.load(fileName: ".env");
+final supabaseUrl = dotenv.env['SUPABASE_URL']!;
+```
 
 ### Authentication System
 
-Multi-layered authentication approach:
+**Multi-layered authentication:**
 
-1. **Teacher QR Authentication**: Student-specific QR codes for teacher sign-in/sign-out
-2. **QR Auth Service**: Token-based QR authentication with expiry
-3. **Supabase Auth**: Primary authentication backend
-4. **AI-Enhanced Auth**: Risk scoring and behavioral analysis
-5. **Fallback Auth**: Manual authentication when QR fails
+1. **Web App (Next.js)**:
+   - Supabase Auth with Bearer tokens
+   - API routes use `Authorization` header → `supabase.auth.getUser()`
+   - RLS policies enforce parent isolation
+   - QR codes signed with HMAC-SHA256 (32-byte secret)
+
+2. **Mobile App (Flutter)**:
+   - Supabase Auth with PKCE flow (OAuth 2.0)
+   - JWT token stored in flutter_secure_storage
+   - Auto-refresh on token expiry
+   - QR scanner validates signatures before check-in
+
+3. **QR Code Flow**:
+   - Parent generates student-specific QR code (web app)
+   - Teacher scans QR code (mobile app)
+   - Mobile app validates signature + creates session
+   - Session syncs to Supabase → appears in parent dashboard
 
 ### Database Schema
 
-Key tables in Supabase:
+**Key Tables:**
 
 - `users` - User accounts (parent/teacher/admin)
 - `students` - Student profiles with academic standards
 - `teachers` - Teacher profiles with qualifications
-- `sessions` - Teaching sessions with location tracking
 - `teacher_qr_codes` - Student-specific QR codes for teachers
-- `teacher_sessions` - Session logs with verification
-- `ai_insights` - AI-generated insights and recommendations
-- `learning_analytics` - Progress metrics and patterns
+- `teacher_sessions` - Session logs (check-in/out)
+- `timesheet_entries` - Legacy timesheet data
+- `sessions` - Teaching sessions (older table)
 
-### Data Persistence & Caching
+**Critical Migration:**
 
-- **Database Service** (`database.service.ts`): Handles CRUD for students and teachers with proper parent isolation
-  - Uses in-memory cache for read-heavy data (30s TTL for users, 15s for sessions)
-  - Cache invalidation on writes (upsert, update)
-  - Exposes both client-safe methods (anon key) and server-only methods (service role)
-- **Session Store** (`session.store.ts`): Zustand singleton with:
-  - Multiple indexes (by student, teacher, parent)
-  - AI insights cache and learning patterns cache
-  - Sample data initialization for development
-  - `clearAll()` and `resetToSampleData()` for testing
-- **Teacher Assignment**: Students can be assigned to multiple teachers; QR codes auto-generated on assignment
-- **Profile Management**: Separate creation flows for students (parent dashboard) and teachers (parent-created)
+- Migration 007: Sync trigger `teacher_sessions` → `timesheet_entries`
+- Ensures parent dashboard shows sessions from both tables
+- Run: `node scripts/apply-migration-007.js`
 
-## Production Deployment
-
-### Hosting Platform
-
-- **Primary**: Vercel (preferred for Next.js 14 App Router)
-- **Fallback**: Container-based deployment for preview/dev environments only
-
-### Data & Authentication
-
-- **Source of Truth**: Supabase (PostgreSQL + Auth)
-- All database operations and authentication flow through Supabase
-- Row Level Security (RLS) must be enforced on all tables
-- Use `supabase/migrations/` for version-controlled schema changes
-  - Existing migrations: initial schema, data sheets, timesheet, teachers, QR codes, RLS policies
-  - All migrations are numbered sequentially (001, 002, 003, etc.)
-
-### Environment Configuration
-
-Required environment variables (see `.env.example`):
-
-#### Supabase (All Environments)
-
-- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key (public, RLS-protected)
-- `SUPABASE_SERVICE_ROLE_KEY` - Service role key (server-side only, never expose to client)
-
-#### AI/ML
-
-- `OPENAI_API_KEY` - OpenAI API key (server-side only; local dev only, production uses alternative)
-- `PINECONE_API_KEY` - Pinecone vector DB key
-- `PINECONE_ENVIRONMENT` - Pinecone environment
-
-#### Security
-
-- `JWT_SECRET` - JWT signing secret
-- `NEXT_PUBLIC_QR_SECRET` - 32-byte base64 secret for QR code signing (generate with: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`)
-  - Used to sign and verify QR code authenticity
-  - Must be consistent across server instances
-  - Should be rotated periodically for security
-
-#### Redis & Rate Limiting
-
-- `UPSTASH_REDIS_REST_URL` - Upstash Redis URL for distributed rate limiting
-- `UPSTASH_REDIS_REST_TOKEN` - Upstash Redis authentication token
-
-#### Other
-
-- `NEXT_PUBLIC_WS_URL` - WebSocket URL for real-time features
-- `MCP_*_ENDPOINT` - MCP server endpoints (education, security, communication)
-- `SENTRY_DSN` - Sentry error tracking DSN (optional)
-- `SENTRY_AUTH_TOKEN` - Sentry authentication token (optional)
-
-#### Development/Staging Only
-
-- `DEMO_PARENT_PASSWORD` - Demo parent account password
-- `DEMO_ADMIN_PASSWORD` - Demo admin account password
-- `DEMO_TEACHER_PASSWORD` - Demo teacher account password
-- `ENABLE_DEMO_CREDENTIALS` - Enable/disable demo credentials (set to `false` in production)
-
-### Environment Strategy
-
-- **Development**: Use OpenAI API key for local LLM testing
-- **Production**: Use Chomsky LLM, OKTA (future integration), and APIM (future integration)
-- **Vercel Environments**: Configure separate env groups for `Development`, `Preview`, `Production`
-- Document all production environment variables in `VERCEL_ENV_VARS.txt`
-
-### Deployment Workflow
-
-1. Push to GitHub triggers Vercel build
-2. Preview deployments for all branches
-3. Production deployment on merge to `main`
-4. Run `npm run type-check` and `npm run lint` in CI before deploy
-5. Playwright E2E tests gate production deployments
-
-## TypeScript & Build Configuration
-
-### TypeScript (tsconfig.json)
-
-- **Strict mode enabled** with additional safety checks:
-  - `noUncheckedIndexedAccess: true` - Arrays/objects require explicit undefined checks
-  - `exactOptionalPropertyTypes: true` - `foo?: string` only allows `string | undefined`, not `null`
-  - `noImplicitReturns: true` - All code paths must return a value
-  - `noFallthroughCasesInSwitch: true` - Switch cases must break/return
-  - `noUncheckedSideEffectImports: true` - Side-effect imports must be validated
-
-- **Path aliases** configured (also mirrored in `next.config.mjs` webpack config):
-  - `@/*` → `src/*`
-  - `@/components/*` → `src/components/*`
-  - `@/lib/*` → `src/lib/*`
-  - `@/store/*` → `src/store/*`
-  - `@/types/*` → `src/types/*`
-  - `@/agents/*` → `src/agents/*`
-  - `@/services/*` → `src/services/*`
-  - `@/design-system/*` → `src/design-system/*`
-
-### Next.js Configuration (next.config.mjs)
-
-- **Webpack Configuration**:
-  - Custom alias resolution for `@/` path
-  - Fallbacks for Node.js modules: `fs: false, net: false, tls: false`
-- **Build Behavior**:
-  - `eslint.ignoreDuringBuilds: false` (enforced in all environments)
-  - `typescript.ignoreBuildErrors: false` (enforced in all environments)
-  - Quality gates are enforced both locally and in CI/CD
-- **Security Headers**: Applied globally via `headers()` async function (see Security section)
+---
 
 ## Code Patterns
 
-### Type Safety
+### TypeScript (Web App)
 
-All types centralized in `src/types/index.ts`. Import from `@/types` rather than relative paths.
+**Type Safety:**
 
-### Service Layer
+- All types centralized in `src/types/index.ts`
+- Import from `@/types` (never relative paths)
+- Use Zod schemas from `@/lib/validation.ts` for API validation
 
-Services in `src/services/` handle all business logic and external integrations. Components should import services, not implement business logic.
+**API Route Pattern:**
 
-### Component Structure
+```typescript
+// src/app/api/students/route.ts
+import { withRateLimit } from '@/lib/api-security';
+import { studentCreateSchema } from '@/lib/validation';
+import { NextRequest, NextResponse } from 'next/server';
 
-- Use functional components with TypeScript
-- Prefer composition over inheritance
-- Implement proper error boundaries
-- Use React Query for server state
-- Use Zustand for client state
+export const POST = withRateLimit({
+  keyPrefix: 'api:students:create',
+  max: 20,
+})(async (request: NextRequest) => {
+  // 1. Authenticate
+  const authHeader = request.headers.get('authorization');
+  const supabase = createClient(url, key, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
-### AI Agent Development
+  // 2. Validate input
+  const body = await request.json();
+  const validation = studentCreateSchema.safeParse(body);
+  if (!validation.success) {
+    return NextResponse.json(createValidationErrorResponse(validation.error), {
+      status: 400,
+    });
+  }
 
-When creating new agents:
+  // 3. Business logic with parent isolation
+  const student = await DatabaseService.createStudent(validation.data, user.id);
 
-1. Extend `BaseAgent` from `@/agents/base.agent`
-2. Implement required properties: `id`, `name`, `capabilities`, `priority`
-3. Implement `execute(context: AgentContext): Promise<AgentResult>`
-4. Override `validateContext()` for custom validation
-5. Use `createInsight()` and `log()` helper methods
-6. Register in `src/agents/registry.ts`
+  return NextResponse.json({ data: student }, { status: 201 });
+});
+```
 
-### API Route Development
+**Database Operations:**
 
-When creating API routes in `src/app/api/`:
+```typescript
+// Always use DatabaseService for CRUD (enforces parent isolation)
+import { DatabaseService } from '@/services/database.service';
 
-1. **Authentication Pattern**: Extract Bearer token → Create Supabase client → Call `getUser()`
+// Get parent's students
+const students = await DatabaseService.getStudents(parentId);
 
-   ```typescript
-   const authHeader = request.headers.get('authorization');
-   const supabase = createClient(url, key, {
-     global: { headers: { Authorization: authHeader } },
-   });
-   const {
-     data: { user },
-     error,
-   } = await supabase.auth.getUser();
-   ```
+// Create student (auto-assigns to parent)
+const student = await DatabaseService.createStudent(data, parentId);
 
-2. **Validation**: Use Zod schemas from `@/lib/validation`
+// Update student (validates parent ownership)
+await DatabaseService.updateStudent(id, data, parentId);
+```
 
-   ```typescript
-   const validation = studentCreateSchema.safeParse(body);
-   if (!validation.success) {
-     return NextResponse.json(createValidationErrorResponse(validation.error), {
-       status: 400,
-     });
-   }
-   ```
+### Dart (Mobile App)
 
-3. **Rate Limiting**: Wrap handlers with `withRateLimit` from `@/lib/api-security`
+**Service Pattern:**
 
-   ```typescript
-   export const POST = withRateLimit({
-     keyPrefix: 'api:students:create',
-     max: 20,
-   })(async (request: NextRequest) => {
-     /* ... */
-   });
-   ```
+```dart
+// lib/services/session_api.service.dart
+class SessionApiService {
+  final SupabaseClient _supabase;
+  final String _apiBaseUrl;
 
-4. **Parent Isolation**: Always pass `user.id` to `DatabaseService` methods or use RLS with Supabase queries
+  SessionApiService(this._supabase, this._apiBaseUrl);
 
-### Database Operations
+  Future<Session> checkIn({
+    required String teacherId,
+    required String studentId,
+    required LatLng location,
+  }) async {
+    final token = _supabase.auth.currentSession?.accessToken;
 
-Use `DatabaseService` static methods for CRUD operations:
+    final response = await http.post(
+      Uri.parse('$_apiBaseUrl/teacher-sessions'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'teacher_id': teacherId,
+        'student_id': studentId,
+        'location': '${location.latitude},${location.longitude}',
+      }),
+    );
 
-- `getStudents(parentId)` / `createStudent(data, parentId)`
-- `getTeachers(parentId)` / `createTeacher(data, parentId)`
-- `updateStudent(id, data, parentId)` / `updateTeacher(id, data, parentId)`
-- `assignTeacherToStudent(teacherId, studentId, parentId)`
+    if (response.statusCode != 201) {
+      throw ApiException('Check-in failed', response.statusCode);
+    }
 
-All methods enforce parent isolation. QR codes are automatically generated on teacher assignment.
+    return Session.fromJson(jsonDecode(response.body));
+  }
+}
+```
 
-### Offline Support
+**Provider Usage:**
 
-Use `offline-storage.service.ts` and `sync-manager.service.ts` for offline-first features. Queue actions when offline and sync when connection restored.
+```dart
+// In a Widget
+class SessionScreen extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sessionState = ref.watch(sessionProvider);
 
-## Academic Standards
+    return sessionState.when(
+      loading: () => CircularProgressIndicator(),
+      error: (error) => Text('Error: $error'),
+      data: (session) => SessionCard(session: session),
+    );
+  }
+}
 
-Supports three educational systems:
+// Trigger state change
+ref.read(sessionProvider.notifier).checkIn(teacherId, studentId);
+```
 
-- **UK**: Year-based system (Foundation to Year 13)
-- **US**: Grade-based system (Pre-K to Grade 12)
-- **India**: Class-based system (Nursery to Class 12)
+---
 
-Each system has country-specific subjects, assessment methods, and learning outcomes. See `src/services/academic-standards.service.ts`.
+## Production Deployment
 
-## Design System
+### Web Application (Vercel)
 
-Custom design system in `src/design-system/`:
+**Platform:** Vercel (preferred for Next.js 14)
 
-- **Tokens**: Colors, typography, spacing, shadows, borders
-- **Components**: Button, Card, Container, Text, Forms, Feedback
-- **Themes**: Light/dark themes with context provider
-- **Animations**: Framer Motion presets and variants
+**Environment Variables:**
 
-Use design system components instead of raw Tailwind classes when possible.
+```env
+# Supabase (Required)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key  # Server-only
+
+# Security (Required)
+JWT_SECRET=your-jwt-secret
+NEXT_PUBLIC_QR_SECRET=your-32-byte-base64-secret
+
+# AI/ML (Development only)
+OPENAI_API_KEY=your-openai-key  # Local dev only
+PINECONE_API_KEY=your-pinecone-key
+
+# Redis (Production)
+UPSTASH_REDIS_REST_URL=your-upstash-url
+UPSTASH_REDIS_REST_TOKEN=your-upstash-token
+
+# Demo Credentials (Dev/Staging only)
+ENABLE_DEMO_CREDENTIALS=false  # Must be false in production
+```
+
+**Deployment Workflow:**
+
+1. Push to GitHub → Vercel build triggered
+2. Preview deployments for all branches
+3. Production deployment on merge to `main`
+4. **CRITICAL**: Run `npm run type-check` locally before pushing
+
+### Mobile Application
+
+**Android:**
+
+```bash
+cd gurukool_teacher
+flutter build apk --release
+# APK: build/app/outputs/flutter-apk/app-release.apk
+```
+
+**iOS (macOS only):**
+
+```bash
+flutter build ios --release
+# Open Xcode to publish to App Store
+```
+
+**Web (Flutter Web):**
+
+```bash
+flutter build web
+# Output: build/web/ (deploy to Vercel/Firebase Hosting)
+```
+
+**Environment Configuration:**
+
+- Copy `.env.example` to `.env`
+- Add production Supabase credentials
+- Never commit `.env` to git
+
+---
 
 ## Testing Strategy
 
-- **Unit Tests**: Jest + Testing Library for components and services
-- **E2E Tests**: Playwright for full user journeys
-- **Storybook**: Component development and visual testing
-- **Security Tests**: Penetration testing suite in `scripts/` directory
-- **Performance Tests**: Performance benchmarking suite
-- **Regression Tests**: Automated regression testing
-- **Coverage**: Aim for >80% on business logic
+### Web Application
 
-### Test Utility Scripts
+**Unit Tests (Jest):**
 
-The `scripts/` directory contains utility scripts:
+```bash
+npm test                    # All tests
+npm test -- session.store   # Specific file
+npm run test:coverage       # Coverage report
+```
 
-- `verify-supabase-connection.js` - Verify Supabase connectivity and schema (no external dependencies)
-- `verify-rls-policies.js` - Verify Row Level Security policies
-- `comprehensive-testing.js` - Run comprehensive test suite
-- `performance-testing.js` - Run performance benchmarks
-- `security-verification.js` - Verify security implementation
+**E2E Tests (Playwright):**
 
-These scripts use manual `.env` file parsing (no `dotenv` dependency required).
+```bash
+npm run test:e2e            # Headless
+npm run test:e2e:ui         # With UI
+npm run test:e2e:debug      # Debug mode
+```
+
+**Security Tests:**
+
+```bash
+npm run test:security       # Penetration tests
+npm run verify:rls          # RLS policies
+```
+
+### Mobile Application
+
+**Unit Tests:**
+
+```bash
+cd gurukool_teacher
+flutter test                # All tests
+flutter test test/unit/     # Unit tests only
+```
+
+**Integration Tests:**
+
+```bash
+flutter test integration_test/
+flutter test integration_test/auth_flow_test.dart  # Specific test
+```
+
+**Widget Tests:**
+
+```bash
+flutter test test/widget/
+```
+
+**Coverage:**
+
+```bash
+flutter test --coverage
+genhtml coverage/lcov.info -o coverage/html
+```
+
+---
+
+## Important Notes & Gotchas
+
+### Critical Architecture Issues
+
+**⚠️ Data Fragmentation (PARTIALLY FIXED)**:
+
+- Migration 007 syncs `teacher_sessions` → `timesheet_entries` via database trigger
+- Parent dashboard may still need updates to query both tables
+- See [ARCHITECTURE_REVIEW_REPORT.md](ARCHITECTURE_REVIEW_REPORT.md) for details
+
+**⚠️ QRScanner Component Duplication**:
+
+- THREE `QRScanner` components exist with different capabilities
+- Production scanner: `src/components/shared/QRScanner.tsx` (html5-qrcode)
+- Mock scanner: `src/components/auth/QRScanner.tsx` (simulation)
+- Manual entry: `src/components/QRScanner.tsx` (no scanning)
+
+### Key Architectural Decisions
+
+**Authentication Flow:**
+
+- Web: Bearer token authentication (not cookies)
+- Mobile: PKCE flow with JWT stored in secure storage
+- Do NOT use `withCSRFProtection()` on API routes (Bearer tokens are CSRF-safe)
+
+**Rate Limiting:**
+
+- Current: In-memory Map (loses state on restart)
+- Limitation: Doesn't work across Vercel serverless instances
+- TODO: Migrate to Redis (Upstash) for production
+
+**Supabase Client Configuration:**
+
+- `src/lib/supabase.ts` exports:
+  - `supabase` - Client-side (anon key, RLS-protected)
+  - `getSupabaseAdmin()` - Server-side (service role, bypasses RLS)
+- Never import service role key in client components
+
+**Real-Time Communication:**
+
+- Migrated from WebSocket to Supabase Realtime
+- Connection: `wss://*.supabase.co`
+- No separate WebSocket server needed
+
+**Environment Variables (Scripts):**
+
+- Verification scripts in `scripts/` use manual .env parsing
+- No `dotenv` dependency (avoids production bloat)
+- Scripts read `.env` file directly using `fs.readFileSync()`
+
+### Flutter-Specific Gotchas
+
+**Platform-Specific Code:**
+
+- QR scanner requires camera permissions (different per platform)
+- Location services need platform-specific configuration
+- iOS requires Info.plist entries for camera/location
+
+**Offline Sync:**
+
+- Hive stores data locally
+- Sync queue retries failed API calls
+- Always check network status before API calls
+
+**State Management:**
+
+- Use `ref.watch()` to rebuild on state changes
+- Use `ref.read()` for one-time reads or callbacks
+- StateNotifier state must be immutable (use `copyWith()`)
+
+**Design Tokens:**
+
+- Flutter design tokens mirror Tailwind CSS tokens from web app
+- Keep `design_system/tokens/` in sync across web and mobile
+- Use semantic color names (e.g., `AppColors.primary`) not raw hex values
+
+---
 
 ## Kluster.ai Code Verification
 
-This project uses Kluster.ai for automated code quality and security verification:
+This project uses Kluster.ai for automated code quality and security verification.
 
 ### Automatic Verification
 
-- Runs automatically after ANY code modification or file creation
+**When it runs:**
+
+- After ANY code modification or file creation
+- After ANY file changes (all file types, not just code)
+
+**What it does:**
+
 - Checks for security issues, bugs, and code quality problems
-- Provides actionable todo lists for fixes
-- Always announces issues found before applying fixes
+- Returns prioritized issue list (P0-P5)
+- Provides `agent_todo_list` for fixes
+
+**Important:**
+
+- ALWAYS announce issues found BEFORE making changes (never fix silently)
+- Follow `agent_todo_list` in exact order
+- Complete all fixes before running verification again
 
 ### Manual Verification
 
-Trigger with these phrases:
+**Trigger phrases:**
 
 - "verify with kluster"
 - "verify this file"
-- "verify project"
 - "check for bugs"
 - "check security"
 
-### Session Management & Chat ID
+### Session Management (CRITICAL)
 
-- **First kluster call**: Do NOT include `chat_id` field
-- **Subsequent calls**: MANDATORY - Always include `chat_id` with exact value from previous kluster response
-- **Critical**: Missing `chat_id` on subsequent calls creates isolated sessions instead of maintaining context
-- **Enforcement**: Every kluster tool call after the first MUST include `chat_id` parameter
-- Always complete all items in `agent_todo_list` before re-running verification
+**First kluster call:** Do NOT include `chat_id` field
 
-### End of Conversation Summary
+**Subsequent calls:** MANDATORY - Always include `chat_id` with exact value from previous kluster response
+
+**Why:** Missing `chat_id` creates isolated sessions instead of maintaining context
+
+### Dependency Checks
+
+Automatically runs before:
+
+- Package installation (npm install, flutter pub add)
+- Updating package.json or pubspec.yaml
+- Adding new libraries/frameworks
+
+### End-of-Conversation Summary
 
 At the end of ANY conversation where kluster tools were used, ALWAYS provide:
 
 **🔍 kluster.ai Review Summary:**
 
 - **📋 kluster feedback**: Summarize ALL issues found across all kluster calls (grouped by severity)
-- **✅ Issues found and fixed**: Document what changes were applied to resolve kluster-detected issues
-  - What fixes were implemented
-  - ⚠️ **Impact Assessment**: What would have happened without these fixes
+- **✅ Issues found and fixed**: Document what changes were applied
+- **⚠️ Impact Assessment**: What would have happened without these fixes
 
-### Dependency Checks
+---
 
-- Automatically runs before package installation
-- Validates security and compliance of new dependencies
-- Checks before updating `package.json`, `requirements.txt`, etc.
+## Project-Specific Rules (from .claude/CLAUDE.md)
 
-### Workflow & Announcement Policy
+**Data Handling:**
 
-1. Kluster analyzes code changes
-2. Returns prioritized issue list (P0-P5)
-3. **IMPORTANT**: ALWAYS announce issues found BEFORE making any changes (never fix silently)
-4. Follow `agent_todo_list` in exact order
-5. Higher priority (lower P number) always wins in conflicts
-6. Complete all fixes from `agent_todo_list` before running verification again
-7. Verification summary REQUIRED at end of session
+- Never generate dummy/mock data in production code
+- Always use real data from Supabase
 
-## Security & Production Hardening
+**Environment Separation:**
 
-### Current Security Measures
+- **Development**: Use OpenAI API key for local LLM testing
+- **Production**: Use Chomsky LLM, OKTA, APIM (when integrated)
 
-- **Rate Limiting**: Implemented via `withRateLimit()` wrapper in `src/lib/api-security.ts`
-  - In-memory store per route (consider Redis for production)
-  - Configurable window, max requests, and key prefix
-  - Returns 429 with Retry-After header
-- **CSRF Protection**: Implemented via `withCSRFProtection()` wrapper in `src/lib/api-security.ts`
-  - Token validation for state-changing methods (POST/PUT/DELETE/PATCH)
-  - Currently not used in API routes (authentication via Bearer token instead)
-- **Input Validation**: Zod schemas in `src/lib/validation.ts` for all API inputs
-  - Comprehensive validation for students, teachers, sessions, auth
-  - Type-safe with TypeScript inference
-  - Formatted error responses via `createValidationErrorResponse()`
-- **Content Security Policy**: Configured in `next.config.mjs`
-  - Environment-aware CSP (stricter in production)
-  - Restricts script sources, connect sources, and frame sources
-  - Blocks object embeds and enforces HTTPS upgrades
-- **Security Headers**: Set via `next.config.mjs` headers()
-  - X-Frame-Options, X-Content-Type-Options, HSTS, Referrer-Policy, Permissions-Policy
-- **QR Codes**: 5-minute expiration, student-specific
-- **Authentication**: Supabase auth with Bearer tokens, parent isolation via RLS
-- **API Key Management**: Never commit `.env`, use separate keys for dev/prod
-- `poweredByHeader: false` to hide Next.js signature
+**Chomsky Directory:**
 
-### Production Hardening Checklist
+- Always keep `chomsky--0.17.9/` directory
+- Used for production LLM integration
 
-#### Supabase Security
+**Database Migrations:**
 
-- [ ] Enforce Row Level Security (RLS) on all tables
-- [ ] Create least-privilege RLS policies (version in `supabase/migrations/`)
-- [ ] Rotate `NEXT_PUBLIC_SUPABASE_ANON_KEY` if exposed
-- [ ] Keep service role key only in server environment variables (never client-side)
-- [ ] Enable Supabase PITR backups and document RPO/RTO
+- Apply via Supabase Dashboard only (no CLI)
+- Migrations in `supabase/migrations/` (001-007)
+- Apply in sequence
+- See [QUICK_START_MIGRATIONS.md](QUICK_START_MIGRATIONS.md)
 
-#### Secrets & Environment Management
+**TypeScript Quality Gates:**
 
-- [ ] Create Vercel environment groups for `Development`, `Preview`, `Production`
-- [ ] Move server-only secrets (`OPENAI_API_KEY`, service keys) to server-only routes
-- [ ] Use `server-only` package imports for sensitive utilities
-- [ ] Document all production env vars in `VERCEL_ENV_VARS.txt`
+- ALWAYS run `npm run type-check` before committing
+- 0 TypeScript errors required for deployment
+- Vercel builds fail on type errors
 
-#### Content Security Policy (CSP)
+**Testing Before Deployment:**
 
-- [ ] Tighten CSP in `next.config.mjs` for production:
-  - Drop `'unsafe-eval'` and `vercel.live` domains in production
-  - Restrict `connect-src` to Supabase and required domains only
-  - Add `report-uri` for CSP violations
-- [ ] Keep `poweredByHeader=false`
+- Never commit test HTML files with hardcoded API keys
+- Always use environment variables for credentials
 
-#### Input Validation & Abuse Protection
+---
 
-- [x] Add Zod schemas to all `src/app/api/*` route handlers (completed for students, teachers, sessions, contact)
-- [x] Implement per-IP rate limits on API endpoints (in-memory store)
-- [ ] Migrate rate limiting to Redis (Upstash) for distributed/production use
-- [ ] Add per-user rate limits (requires user ID tracking)
-- [ ] Add CAPTCHA (hCaptcha) for signup/contact flows
-- [x] Return typed error responses (no stack traces to client)
+## Academic Standards Support
 
-#### Dependencies & Audit
+**Supported Educational Systems:**
 
-- [ ] Enable `npm audit` in CI pipeline
-- [ ] Configure GitHub Dependabot or weekly security alerts
-- [ ] Review and update dependencies regularly
+- **UK**: Year-based (Foundation to Year 13), National Curriculum
+- **US**: Grade-based (Pre-K to Grade 12), Common Core
+- **India**: Class-based (Nursery to Class 12), CBSE/ICSE
 
-#### Observability & Monitoring
+Each system has country-specific subjects, assessment methods, and learning outcomes.
 
-- [ ] Add Sentry for error tracking (frontend + backend)
-- [ ] Implement structured logging with request IDs (e.g., pino)
-- [ ] Redact PII from logs
-- [ ] Enable Vercel Analytics and Web Vitals monitoring
-- [ ] Set up synthetic health checks (Playwright cron or Vercel Cron)
+See `src/services/academic-standards.service.ts` for implementation.
 
-#### Error Handling
+---
 
-- [ ] Implement `src/app/error.tsx` and `src/app/not-found.tsx`
-- [ ] Add error boundaries for critical routes
-- [ ] Ensure `/api/health` endpoint with Supabase connectivity check exists
+## Quick Reference Links
 
-#### CI/CD Quality Gates
+**Architecture & Planning:**
 
-- [ ] Remove `ignoreBuildErrors` and `eslint.ignoreDuringBuilds` from `next.config.mjs` in CI
-- [ ] Enforce `tsc --noEmit` passes in CI
-- [ ] Require green checks (lint, type-check, unit, e2e) before Vercel deploy
-- [ ] Expand Playwright E2E: auth flows, QR flows, admin journeys
-- [ ] Add contract tests for API routes with mock Supabase
+- [ARCHITECTURE_REVIEW_REPORT.md](ARCHITECTURE_REVIEW_REPORT.md) - Critical architecture issues
+- [FLUTTER_DEVELOPMENT_PLAN.md](FLUTTER_DEVELOPMENT_PLAN.md) - 6-week mobile app roadmap
+- [AGENT_IMPLEMENTATION_STATUS.md](AGENT_IMPLEMENTATION_STATUS.md) - Agent usage guide
 
-#### Authentication & Authorization
+**Setup & Deployment:**
 
-- [ ] Centralize auth guards in reusable components (e.g., `AuthGuard.tsx`)
-- [ ] Ensure RLS policies mirror UI permission checks
-- [ ] Handle session refresh on server using `@supabase/ssr` cookies in `middleware.ts`
-- [ ] Split `src/lib/supabase.ts` into client/server modules with proper key scoping
+- [README.md](README.md) - Complete setup guide
+- [QUICK_START_MIGRATIONS.md](QUICK_START_MIGRATIONS.md) - Database migration steps
+- [VERCEL_ENV_VARS.txt](VERCEL_ENV_VARS.txt) - Production environment variables
 
-#### Performance & Cost Optimization
+**API & Testing:**
 
-- [ ] Prefer static/ISR for read-heavy pages; use SSR only where needed
-- [ ] Set `revalidate` on data-fetching components; cache Supabase reads
-- [ ] Move lightweight endpoints to Edge Runtime (keep service-key operations on Node runtime)
-- [ ] Enable Next.js Image optimization; audit large images
-- [ ] Run bundle analyzer; code-split large routes/components
+- [API_DOCUMENTATION.md](API_DOCUMENTATION.md) - Complete API reference
+- [QA_TEST_REPORT.md](QA_TEST_REPORT.md) - Test coverage report
+- [TESTING_FRAMEWORK.md](TESTING_FRAMEWORK.md) - Testing strategy
 
-#### Data Migrations & Versioning
+**Flutter Mobile App:**
 
-- [ ] Use SQL migrations in `supabase/migrations/` exclusively (no ad-hoc console edits)
-- [ ] Test migrations in staging before production
-- [ ] Document rollback procedures
-
-### Acceptance Criteria for Production Readiness
-
-- All CI gates pass with 0 TypeScript errors and acceptable ESLint warnings
-- Sentry captures errors; Vercel Web Vitals within budget (TTFB, LCP, CLS)
-- Auth and RLS verified via automated tests; no privileged data accessible unauthenticated
-- Rollback tested; migrations repeatable in staging and production
-- Incident response runbooks documented in `/docs`
-
-## Important Notes
-
-- **No Mock Data**: Never generate dummy/mock data in production code (per project requirements)
-- **Chomsky LLM**: Keep `chomsky--0.17.9/` directory for production deployments
-- **Environment Separation**: Local dev uses OpenAI API key; production uses Chomsky + OKTA + APIM
-- **Database Migrations**: Apply via Supabase Dashboard only - no CLI or programmatic migrations
-  - See `supabase/migrations/` for SQL files (001-006)
-  - Migrations must be applied in sequence
-  - See `QUICK_START_MIGRATIONS.md` for step-by-step guide
-- **API Documentation**: Complete API reference in `API_DOCUMENTATION.md` with cURL examples
-- **Testing Status**: QA report in `QA_TEST_REPORT.md` shows current test coverage and gaps
-- **Pre-commit Hooks**: Husky + lint-staged ensure code quality before commits (auto-installed in dev)
-- **Kluster.ai**: Automated code verification runs on all code changes; follow agent_todo_list for fixes
-- **Test Files with Credentials**: Never commit test HTML files containing hardcoded API keys or credentials
-
-## Key Architectural Decisions & Gotchas
-
-### Authentication Flow
-
-- API routes use **Bearer token authentication** (not session cookies)
-- Extract token from `Authorization` header → Create Supabase client with token → Call `getUser()`
-- Do NOT use `withCSRFProtection()` on API routes (Bearer tokens are already CSRF-safe)
-- RLS policies in Supabase enforce parent isolation at the database level
-
-### Rate Limiting
-
-- Current implementation uses **in-memory Map** (loses state on server restart)
-- Each route has its own bucket: `keyPrefix:route:ip:timeBucket`
-- **Limitation**: Does not work across multiple Vercel serverless instances
-- **TODO**: Migrate to Redis (Upstash) for distributed rate limiting in production
-
-### Validation Approach
-
-- All validation uses **Zod schemas** from `@/lib/validation.ts`
-- Never validate manually with `if` statements
-- Use `safeParse()` (returns result object) not `parse()` (throws error)
-- Format errors with `createValidationErrorResponse()` for consistent API responses
-
-### Session Store Singleton
-
-- `EnhancedSessionStore.getInstance()` returns singleton
-- **Important for tests**: Always call `clearAll()` in `beforeEach` to prevent test pollution
-- Sample data is loaded on first instantiation (for development only)
-
-### Environment Variables
-
-- Verification scripts in `scripts/` use **manual .env parsing** (no `dotenv` dependency)
-- This avoids adding `dotenv` to production dependencies
-- Scripts read `.env` file using `fs.readFileSync()` and parse key=value pairs manually
-
-### Supabase Client Configuration
-
-- `src/lib/supabase.ts` exports both:
-  - `supabase` - Client-side with anon key (safe for browser, protected by RLS)
-  - `getSupabaseAdmin()` - Server-side with service role key (bypasses RLS, server-only)
-- Never import service role key in client components
-- Use `@supabase/ssr` for server-side auth in middleware/SSR pages
-
-### Middleware Files (src/middleware/)
-
-- `csrf.ts`, `rate-limit.ts`, `security-headers.ts` are **NOT Next.js middleware**
-- They are utility modules, not `middleware.ts` file
-- Actual implementation: `withRateLimit()` and `withCSRFProtection()` wrappers in `src/lib/api-security.ts`
-- Security headers are set via `next.config.mjs` headers() function
-
-### Real-Time Communication
-
-- **Migration**: Migrated from WebSocket to **Supabase Realtime** (see recent commits)
-- Use Supabase Realtime subscriptions for live session updates
-- Connection via `wss://*.supabase.co` (configured in CSP headers)
-- Eliminates need for separate WebSocket server infrastructure
+- [FLUTTER_APP_SUCCESS.md](FLUTTER_APP_SUCCESS.md) - Mobile app status
+- [FLUTTER_INITIALIZATION_GUIDE.md](FLUTTER_INITIALIZATION_GUIDE.md) - Setup guide
+- `gurukool_teacher/README_TESTING.md` - Flutter testing guide

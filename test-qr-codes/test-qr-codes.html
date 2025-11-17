@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuruKool Test QR Codes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #2563EB 0%, #14B8A6 100%);
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card h2 {
+            color: #2563EB;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #DBEAFE;
+            padding-bottom: 10px;
+        }
+        .qr-container {
+            text-align: center;
+            margin: 20px 0;
+            background: #F9FAFB;
+            padding: 20px;
+            border-radius: 12px;
+        }
+        .qr-container img {
+            max-width: 100%;
+            height: auto;
+            border: 4px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .info {
+            background: #F0FDFA;
+            border-left: 4px solid #14B8A6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .info strong {
+            color: #0D9488;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .info code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #374151;
+            display: block;
+            margin-top: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .download-btn {
+            display: inline-block;
+            background: #2563EB;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            margin-top: 10px;
+        }
+        .download-btn:hover {
+            background: #1E40AF;
+        }
+        .instructions {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        .instructions h2 {
+            color: #2563EB;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        .instructions ol {
+            margin-left: 20px;
+            line-height: 2;
+        }
+        .instructions li {
+            margin-bottom: 10px;
+            color: #374151;
+        }
+        .warning {
+            background: #FEF3C7;
+            border-left: 4px solid #F59E0B;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .warning strong {
+            color: #D97706;
+        }
+        @media print {
+            body {
+                background: white;
+                padding: 20px;
+            }
+            .instructions {
+                display: none;
+            }
+            .card {
+                page-break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #E5E7EB;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 GuruKool Test QR Codes</h1>
+        <p class="subtitle">Scan these QR codes with the GuruKool Teacher mobile app to test check-in functionality</p>
+
+        <div class="instructions">
+            <h2>📱 How to Test</h2>
+            <ol>
+                <li><strong>Login to the mobile app</strong> with: <code>teacher@example.com</code> / <code>teacher123</code></li>
+                <li><strong>Navigate to "QR Scanner"</strong> from the home screen</li>
+                <li><strong>Grant camera permissions</strong> when prompted</li>
+                <li><strong>Point your camera</strong> at one of the QR codes below</li>
+                <li><strong>Verify</strong> the session is created successfully</li>
+            </ol>
+
+            <div class="warning">
+                <strong>⚠️ Testing on Web (Chrome)</strong><br>
+                QR scanning has limited support on web browsers. For best results, test on a real Android or iOS device.
+            </div>
+        </div>
+
+        <div class="grid">
+
+            <div class="card">
+                <h2>👨‍🎓 John Doe</h2>
+                <div class="qr-container">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22student_id%22%3A%22550e8400-e29b-41d4-a716-446655440000%22%2C%22parent_id%22%3A%22550e8400-e29b-41d4-a716-446655440001%22%2C%22qr_code_id%22%3A%22TEST-QR-STUDENT-001%22%7D" alt="QR Code for John Doe">
+                </div>
+                <div class="info">
+                    <strong>Student ID:</strong>
+                    <code>550e8400-e29b-41d4-a716-446655440000</code>
+                </div>
+                <div class="info">
+                    <strong>Parent ID:</strong>
+                    <code>550e8400-e29b-41d4-a716-446655440001</code>
+                </div>
+                <div class="info">
+                    <strong>QR Code ID:</strong>
+                    <code>TEST-QR-STUDENT-001</code>
+                </div>
+                <div class="info">
+                    <strong>Full JSON Data:</strong>
+                    <code>{"student_id":"550e8400-e29b-41d4-a716-446655440000","parent_id":"550e8400-e29b-41d4-a716-446655440001","qr_code_id":"TEST-QR-STUDENT-001"}</code>
+                </div>
+                <a href="https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=%7B%22student_id%22%3A%22550e8400-e29b-41d4-a716-446655440000%22%2C%22parent_id%22%3A%22550e8400-e29b-41d4-a716-446655440001%22%2C%22qr_code_id%22%3A%22TEST-QR-STUDENT-001%22%7D"
+                   download="qr-John-Doe.png"
+                   class="download-btn">
+                    ⬇️ Download High-Res QR Code
+                </a>
+            </div>
+
+            <div class="card">
+                <h2>👨‍🎓 Jane Smith</h2>
+                <div class="qr-container">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22student_id%22%3A%22550e8400-e29b-41d4-a716-446655440002%22%2C%22parent_id%22%3A%22550e8400-e29b-41d4-a716-446655440001%22%2C%22qr_code_id%22%3A%22TEST-QR-STUDENT-002%22%7D" alt="QR Code for Jane Smith">
+                </div>
+                <div class="info">
+                    <strong>Student ID:</strong>
+                    <code>550e8400-e29b-41d4-a716-446655440002</code>
+                </div>
+                <div class="info">
+                    <strong>Parent ID:</strong>
+                    <code>550e8400-e29b-41d4-a716-446655440001</code>
+                </div>
+                <div class="info">
+                    <strong>QR Code ID:</strong>
+                    <code>TEST-QR-STUDENT-002</code>
+                </div>
+                <div class="info">
+                    <strong>Full JSON Data:</strong>
+                    <code>{"student_id":"550e8400-e29b-41d4-a716-446655440002","parent_id":"550e8400-e29b-41d4-a716-446655440001","qr_code_id":"TEST-QR-STUDENT-002"}</code>
+                </div>
+                <a href="https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=%7B%22student_id%22%3A%22550e8400-e29b-41d4-a716-446655440002%22%2C%22parent_id%22%3A%22550e8400-e29b-41d4-a716-446655440001%22%2C%22qr_code_id%22%3A%22TEST-QR-STUDENT-002%22%7D"
+                   download="qr-Jane-Smith.png"
+                   class="download-btn">
+                    ⬇️ Download High-Res QR Code
+                </a>
+            </div>
+
+            <div class="card">
+                <h2>👨‍🎓 Bob Johnson</h2>
+                <div class="qr-container">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=%7B%22student_id%22%3A%22550e8400-e29b-41d4-a716-446655440003%22%2C%22parent_id%22%3A%22550e8400-e29b-41d4-a716-446655440001%22%2C%22qr_code_id%22%3A%22TEST-QR-STUDENT-003%22%7D" alt="QR Code for Bob Johnson">
+                </div>
+                <div class="info">
+                    <strong>Student ID:</strong>
+                    <code>550e8400-e29b-41d4-a716-446655440003</code>
+                </div>
+                <div class="info">
+                    <strong>Parent ID:</strong>
+                    <code>550e8400-e29b-41d4-a716-446655440001</code>
+                </div>
+                <div class="info">
+                    <strong>QR Code ID:</strong>
+                    <code>TEST-QR-STUDENT-003</code>
+                </div>
+                <div class="info">
+                    <strong>Full JSON Data:</strong>
+                    <code>{"student_id":"550e8400-e29b-41d4-a716-446655440003","parent_id":"550e8400-e29b-41d4-a716-446655440001","qr_code_id":"TEST-QR-STUDENT-003"}</code>
+                </div>
+                <a href="https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=%7B%22student_id%22%3A%22550e8400-e29b-41d4-a716-446655440003%22%2C%22parent_id%22%3A%22550e8400-e29b-41d4-a716-446655440001%22%2C%22qr_code_id%22%3A%22TEST-QR-STUDENT-003%22%7D"
+                   download="qr-Bob-Johnson.png"
+                   class="download-btn">
+                    ⬇️ Download High-Res QR Code
+                </a>
+            </div>
+
+        </div>
+
+        <div class="instructions">
+            <h2>✅ Expected Behavior</h2>
+            <ol>
+                <li>Camera preview loads with scan overlay</li>
+                <li>QR code is detected within 2-3 seconds</li>
+                <li>"Scanned: {data}" appears at top of screen</li>
+                <li>Location permissions requested (if first time)</li>
+                <li>GPS coordinates captured</li>
+                <li>Session created in Supabase <code>teacher_sessions</code> table</li>
+                <li>Success confirmation shown</li>
+            </ol>
+
+            <h2>🔧 Troubleshooting</h2>
+            <ul style="list-style-type: disc; margin-left: 20px; line-height: 2;">
+                <li><strong>Camera not working?</strong> Check app permissions in device settings</li>
+                <li><strong>QR not detected?</strong> Ensure good lighting and hold steady</li>
+                <li><strong>Session not created?</strong> Check network connection and Supabase status</li>
+                <li><strong>Web not working?</strong> Try on a real mobile device instead</li>
+            </ul>
+
+            <h2>📊 Verify in Supabase</h2>
+            <p style="margin-top: 10px; color: #374151;">After scanning, check the <code>teacher_sessions</code> table in Supabase to verify the session was created with:</p>
+            <ul style="list-style-type: disc; margin-left: 20px; margin-top: 10px; color: #374151;">
+                <li>Correct teacher_id (your user ID)</li>
+                <li>Correct student_id (from QR code)</li>
+                <li>session_start timestamp</li>
+                <li>GPS location coordinates</li>
+                <li>qr_code_used (full JSON data)</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
