@@ -1,17 +1,17 @@
 # GuruKool HomeSchool - Flutter Project Initialization Script
 # Run this in PowerShell from the project root
 
-Write-Host "🚀 GuruKool HomeSchool - Flutter Project Initialization" -ForegroundColor Cyan
+Write-Host "[START] GuruKool HomeSchool - Flutter Project Initialization" -ForegroundColor Cyan
 Write-Host "======================================================" -ForegroundColor Cyan
 Write-Host ""
 
 # Check if Flutter is available
-Write-Host "✓ Checking Flutter installation..." -ForegroundColor Yellow
+Write-Host "[*] Checking Flutter installation..." -ForegroundColor Yellow
 try {
     $flutterVersion = flutter --version 2>&1 | Select-String "Flutter" | Select-Object -First 1
     Write-Host "  Flutter found: $flutterVersion" -ForegroundColor Green
 } catch {
-    Write-Host "  ❌ Flutter not found in PATH" -ForegroundColor Red
+    Write-Host "  [ERROR] Flutter not found in PATH" -ForegroundColor Red
     Write-Host "  Please add C:\Users\abhis\develop\flutter\bin to your PATH" -ForegroundColor Red
     exit 1
 }
@@ -19,18 +19,18 @@ try {
 Write-Host ""
 
 # Step 1: Create Flutter project
-Write-Host "📦 Step 1: Creating Flutter project..." -ForegroundColor Yellow
+Write-Host "[STEP 1] Creating Flutter project..." -ForegroundColor Yellow
 if (Test-Path "gurukool_teacher") {
-    Write-Host "  ⚠️  Project folder already exists. Skipping creation." -ForegroundColor Yellow
+    Write-Host "  [WARNING] Project folder already exists. Skipping creation." -ForegroundColor Yellow
 } else {
     flutter create gurukool_teacher --org com.gurukool --platforms android,ios
-    Write-Host "  ✅ Flutter project created" -ForegroundColor Green
+    Write-Host "  [OK] Flutter project created" -ForegroundColor Green
 }
 
 Write-Host ""
 
 # Step 2: Create folder structure
-Write-Host "📁 Step 2: Creating folder structure..." -ForegroundColor Yellow
+Write-Host "[STEP 2] Creating folder structure..." -ForegroundColor Yellow
 cd gurukool_teacher
 
 $folders = @(
@@ -47,14 +47,14 @@ $folders = @(
 
 foreach ($folder in $folders) {
     New-Item -ItemType Directory -Force -Path $folder | Out-Null
-    Write-Host "  ✓ Created $folder" -ForegroundColor Gray
+    Write-Host "  [*] Created $folder" -ForegroundColor Gray
 }
 
-Write-Host "  ✅ Folder structure created" -ForegroundColor Green
+Write-Host "  [OK] Folder structure created" -ForegroundColor Green
 Write-Host ""
 
 # Step 3: Update pubspec.yaml
-Write-Host "📝 Step 3: Updating pubspec.yaml..." -ForegroundColor Yellow
+Write-Host "[STEP 3] Updating pubspec.yaml..." -ForegroundColor Yellow
 
 $pubspecContent = @"
 name: gurukool_teacher
@@ -116,18 +116,18 @@ flutter:
   uses-material-design: true
 "@
 
-Set-Content -Path "pubspec.yaml" -Value $pubspecContent
-Write-Host "  ✅ pubspec.yaml updated" -ForegroundColor Green
+Set-Content -Path 'pubspec.yaml' -Value $pubspecContent
+Write-Host "  [OK] pubspec.yaml updated" -ForegroundColor Green
 Write-Host ""
 
 # Step 4: Install dependencies
-Write-Host "📦 Step 4: Installing dependencies..." -ForegroundColor Yellow
+Write-Host "[STEP 4] Installing dependencies..." -ForegroundColor Yellow
 flutter pub get
-Write-Host "  ✅ Dependencies installed" -ForegroundColor Green
+Write-Host "  [OK] Dependencies installed" -ForegroundColor Green
 Write-Host ""
 
 # Step 5: Create env.dart
-Write-Host "⚙️  Step 5: Creating environment configuration..." -ForegroundColor Yellow
+Write-Host "[STEP 5] Creating environment configuration..." -ForegroundColor Yellow
 
 $envContent = @"
 class Env {
@@ -162,11 +162,11 @@ class Env {
 "@
 
 Set-Content -Path "lib/config/env.dart" -Value $envContent
-Write-Host "  ✅ lib/config/env.dart created" -ForegroundColor Green
+Write-Host "  [OK] lib/config/env.dart created" -ForegroundColor Green
 Write-Host ""
 
 # Step 6: Create main.dart
-Write-Host "🎯 Step 6: Creating main.dart..." -ForegroundColor Yellow
+Write-Host "[STEP 6] Creating main.dart..." -ForegroundColor Yellow
 
 $mainContent = @"
 import 'package:flutter/material.dart';
@@ -244,30 +244,30 @@ class PlaceholderScreen extends StatelessWidget {
 "@
 
 Set-Content -Path "lib/main.dart" -Value $mainContent
-Write-Host "  ✅ lib/main.dart created" -ForegroundColor Green
+Write-Host "  [OK] lib/main.dart created" -ForegroundColor Green
 Write-Host ""
 
 # Summary
 Write-Host "======================================================" -ForegroundColor Cyan
-Write-Host "✅ Flutter Project Initialization Complete!" -ForegroundColor Green
+Write-Host "[SUCCESS] Flutter Project Initialization Complete!" -ForegroundColor Green
 Write-Host "======================================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "📁 Project Location:" -ForegroundColor Yellow
+Write-Host "[INFO] Project Location:" -ForegroundColor Yellow
 Write-Host "   $(Get-Location)" -ForegroundColor White
 Write-Host ""
-Write-Host "🎯 Next Steps:" -ForegroundColor Yellow
+Write-Host "[NEXT STEPS]:" -ForegroundColor Yellow
 Write-Host "   1. Run the app: " -NoNewline -ForegroundColor White
 Write-Host "flutter run" -ForegroundColor Cyan
 Write-Host "   2. Use autonomous agents to generate code" -ForegroundColor White
 Write-Host "   3. See FLUTTER_INITIALIZATION_GUIDE.md for agent usage" -ForegroundColor White
 Write-Host ""
-Write-Host "🤖 Autonomous Agents Ready:" -ForegroundColor Yellow
-Write-Host "   • Orchestrator Agent - Project management" -ForegroundColor White
-Write-Host "   • UI Designer Agent - Design tokens & screens" -ForegroundColor White
-Write-Host "   • Backend Integration Agent - Supabase & auth" -ForegroundColor White
+Write-Host "[AGENTS] Autonomous Agents Ready:" -ForegroundColor Yellow
+Write-Host "   - Orchestrator Agent - Project management" -ForegroundColor White
+Write-Host "   - UI Designer Agent - Design tokens & screens" -ForegroundColor White
+Write-Host "   - Backend Integration Agent - Supabase & auth" -ForegroundColor White
 Write-Host ""
-Write-Host "📚 Documentation:" -ForegroundColor Yellow
-Write-Host "   • ../FLUTTER_INITIALIZATION_GUIDE.md" -ForegroundColor White
-Write-Host "   • ../agents/autonomous/AGENTS_COMPLETE_SUMMARY.md" -ForegroundColor White
-Write-Host "   • ../FLUTTER_DEVELOPMENT_PLAN.md" -ForegroundColor White
+Write-Host "[DOCS] Documentation:" -ForegroundColor Yellow
+Write-Host "   - ../FLUTTER_INITIALIZATION_GUIDE.md" -ForegroundColor White
+Write-Host "   - ../agents/autonomous/AGENTS_COMPLETE_SUMMARY.md" -ForegroundColor White
+Write-Host "   - ../FLUTTER_DEVELOPMENT_PLAN.md" -ForegroundColor White
 Write-Host ""
