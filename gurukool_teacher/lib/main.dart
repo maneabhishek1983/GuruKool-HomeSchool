@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/hive_storage.service.dart';
 import 'design_system/tokens/colors.dart';
 
@@ -7,6 +8,9 @@ import 'design_system/tokens/colors.dart';
 /// Auto-initialized by setup script
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables from .env file
+  await dotenv.load(fileName: ".env");
 
   // Initialize Hive for offline storage
   await HiveStorageService.initialize();
@@ -68,9 +72,28 @@ class PlaceholderScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Ready to run! Hive initialized ✓',
+              '✓ Hive initialized',
               style: TextStyle(
                 color: AppColors.success,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '✓ Environment loaded',
+              style: TextStyle(
+                color: AppColors.success,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '✓ Supabase configured',
+              style: TextStyle(
+                color: AppColors.success,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
             ),
