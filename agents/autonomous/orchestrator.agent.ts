@@ -512,13 +512,15 @@ export class OrchestratorAgent extends BaseAgent {
 
     if (status === 'completed') {
       task.completedAt = new Date();
-      task.actualHours = actualHours;
+      if (actualHours !== undefined) {
+        task.actualHours = actualHours;
+      }
 
       // Update agent status
       const agentStatus = this.agentStatuses.get(task.assignedAgent);
       if (agentStatus) {
         agentStatus.completedTasks++;
-        agentStatus.currentTask = undefined;
+        delete agentStatus.currentTask;
       }
 
       // Check if this unblocks other tasks
@@ -533,7 +535,7 @@ export class OrchestratorAgent extends BaseAgent {
         });
         if (allDepsMet) {
           t.status = 'pending';
-          t.blockers = undefined;
+          delete t.blockers;
           this.log(`✅ Task ${t.id} unblocked by completion of ${taskId}`);
         }
       });
@@ -582,7 +584,7 @@ export class OrchestratorAgent extends BaseAgent {
             `🔄 Reassigning task ${agent.currentTask.id} from ${agent.agentId}`
           );
           agent.currentTask.status = 'pending';
-          agent.currentTask = undefined;
+          delete agent.currentTask;
         }
       });
     }
@@ -819,7 +821,14 @@ export class OrchestratorAgent extends BaseAgent {
     ];
   }
 
-  protected validateContext(context: AgentContext): boolean {
-    return context.action !== undefined;
+  protected validateContext(context: AgentContext): AgentResult | null {
+    if (!context.action) {
+      return {
+        success: false,
+        message: 'Action is required for orchestrator',
+        errors: ['Missing required field: action'],
+      };
+    }
+    return null; // Validation passed
   }
 }

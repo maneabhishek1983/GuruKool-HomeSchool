@@ -716,7 +716,14 @@ class _LoginScreenState extends State<LoginScreen> {
     this.log(`📝 Written: ${filePath}`);
   }
 
-  protected validateContext(context: AgentContext): boolean {
-    return context.action !== undefined;
+  protected validateContext(context: AgentContext): AgentResult | null {
+    if (!context.action) {
+      return {
+        success: false,
+        message: 'Action is required for UI designer',
+        errors: ['Missing required field: action'],
+      };
+    }
+    return null; // Validation passed
   }
 }

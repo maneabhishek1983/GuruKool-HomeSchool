@@ -52,12 +52,15 @@ export abstract class BaseAgent {
     data?: any,
     artifacts?: string[]
   ): AgentResult {
-    return {
+    const result: AgentResult = {
       success: true,
       message,
       data,
-      artifacts,
     };
+    if (artifacts !== undefined) {
+      result.artifacts = artifacts;
+    }
+    return result;
   }
 
   /**

@@ -711,7 +711,14 @@ export const ${tableName}RealtimeService = {
     this.log(`📝 Written: ${filePath}`);
   }
 
-  protected validateContext(context: AgentContext): boolean {
-    return context.action !== undefined;
+  protected validateContext(context: AgentContext): AgentResult | null {
+    if (!context.action) {
+      return {
+        success: false,
+        message: 'Action is required for backend integration',
+        errors: ['Missing required field: action'],
+      };
+    }
+    return null; // Validation passed
   }
 }
