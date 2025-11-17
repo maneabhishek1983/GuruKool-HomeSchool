@@ -63,7 +63,9 @@
       "Bash(do)",
       "Bash([ -f \"$file\" ])",
       "Bash(done)",
-      "Bash(/dev/null echo \"\" echo \"📖 Documentation:\" find docs/ -name \"*.md\")"
+      "Bash(/dev/null echo \"\" echo \"📖 Documentation:\" find docs/ -name \"*.md\")",
+      "Bash(xcodebuild:*)",
+      "Read(//c/Users/abhis/**)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
