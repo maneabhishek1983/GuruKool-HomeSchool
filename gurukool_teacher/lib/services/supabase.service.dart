@@ -23,6 +23,10 @@ class SupabaseService {
   }
 
   static SupabaseClient get client => _client;
+  
+  /// For testing purposes only
+  static set client(SupabaseClient client) => _client = client;
+
   static User? get currentUser => _client.auth.currentUser;
   static Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
 }

@@ -6,6 +6,7 @@ import 'package:gurukool_teacher/design_system/tokens/colors.dart';
 import 'package:gurukool_teacher/design_system/tokens/spacing.dart';
 import 'package:gurukool_teacher/design_system/tokens/typography.dart';
 import 'package:gurukool_teacher/providers/auth_provider.dart';
+import 'package:gurukool_teacher/services/supabase.service.dart';
 import 'package:intl/intl.dart';
 
 /// Session History Screen - View past teaching sessions
@@ -38,21 +39,21 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
       late final List<Map<String, dynamic>> data;
 
       if (_filter == 'active') {
-        data = await Supabase.instance.client
+        data = await SupabaseService.client
             .from('teacher_sessions')
             .select('*, students(*)')
             .eq('teacher_id', user.id)
             .isFilter('session_end', null)
             .order('created_at', ascending: false);
       } else if (_filter == 'completed') {
-        data = await Supabase.instance.client
+        data = await SupabaseService.client
             .from('teacher_sessions')
             .select('*, students(*)')
             .eq('teacher_id', user.id)
             .not('session_end', 'is', null)
             .order('created_at', ascending: false);
       } else {
-        data = await Supabase.instance.client
+        data = await SupabaseService.client
             .from('teacher_sessions')
             .select('*, students(*)')
             .eq('teacher_id', user.id)
@@ -354,7 +355,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
 
   Future<void> _checkOut(String sessionId) async {
     try {
-      await Supabase.instance.client
+      await SupabaseService.client
           .from('teacher_sessions')
           .update({
             'session_end': DateTime.now().toIso8601String(),

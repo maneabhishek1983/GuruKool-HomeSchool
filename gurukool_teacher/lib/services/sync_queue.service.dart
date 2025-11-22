@@ -4,6 +4,9 @@ import 'package:hive_flutter/hive_flutter.dart';
 class SyncQueueService {
   static late Box _queueBox;
 
+  /// For testing purposes only
+  static set queueBox(Box box) => _queueBox = box;
+
   /// Initialize sync queue
   static Future<void> initialize() async {
     _queueBox = await Hive.openBox('sync_queue');

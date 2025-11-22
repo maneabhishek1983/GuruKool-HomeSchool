@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -19,16 +21,20 @@ class QRScannerScreen extends ConsumerStatefulWidget {
 
 class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
   MobileScannerController? _controller;
+  final TextEditingController _manualQRController = TextEditingController();
   bool _isProcessing = false;
   String? _scannedData;
 
   @override
   void initState() {
     super.initState();
-    _controller = MobileScannerController(
-      detectionSpeed: DetectionSpeed.normal,
-      facing: CameraFacing.back,
-    );
+    // Only initialize camera controller on mobile
+    if (!kIsWeb) {
+      _controller = MobileScannerController(
+        detectionSpeed: DetectionSpeed.normal,
+        facing: CameraFacing.back,
+      );
+    }
   }
 
   @override
@@ -58,9 +64,9 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
           ),
         ],
       ),
-      body: Stack(
+      body: kIsWeb ? _buildWebFallbackUI() : Stack(
         children: [
-          // Camera view
+          // Camera view (mobile only)
           MobileScanner(
             controller: _controller,
             onDetect: _handleQRCodeDetected,
@@ -170,6 +176,156 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
     );
   }
 
+  /// Web fallback UI - Manual QR code input
+  Widget _buildWebFallbackUI() {
+    return Container(
+      padding: const EdgeInsets.all(Spacing.xl),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Info card
+          Container(
+            padding: const EdgeInsets.all(Spacing.lg),
+            decoration: BoxDecoration(
+              color: AppColors.info50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.info),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: AppColors.info, size: 24),
+                const SizedBox(width: Spacing.md),
+                Expanded(
+                  child: Text(
+                    'Camera not available in web browser. Please paste QR code JSON data below.',
+                    style: AppTypography.textTheme.bodySmall?.copyWith(
+                      color: AppColors.info600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: Spacing.xxl),
+
+          // QR code icon
+          Icon(
+            Icons.qr_code_2,
+            size: 100,
+            color: AppColors.primary,
+          ),
+          const SizedBox(height: Spacing.xl),
+
+          // Title
+          Text(
+            'Manual QR Code Input',
+            style: AppTypography.textTheme.headlineMedium?.copyWith(
+              color: AppColors.gray900,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: Spacing.md),
+
+          // Instructions
+          Text(
+            'Paste the QR code JSON data generated from the web app.',
+            style: AppTypography.textTheme.bodyMedium?.copyWith(
+              color: AppColors.gray600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: Spacing.xxl),
+
+          // Text field
+          TextField(
+            controller: _manualQRController,
+            maxLines: 6,
+            decoration: InputDecoration(
+              labelText: 'QR Code JSON Data',
+              hintText: '{\n  "type": "teacher_auth",\n  "teacherId": "...",\n  ...\n}',
+              helperText: 'Expected format: JSON with type, teacherId, studentId, parentId',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: Spacing.xl),
+
+          // Submit button
+          ElevatedButton(
+            onPressed: _isProcessing ? null : () {
+              final qrData = _manualQRController.text.trim();
+              if (qrData.isNotEmpty) {
+                _handleManualQRInput(qrData);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Please paste QR code data'),
+                    backgroundColor: AppColors.warning,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: Spacing.md),
+            ),
+            child: _isProcessing
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      ),
+                      const SizedBox(width: Spacing.md),
+                      Text('Processing...'),
+                    ],
+                  )
+                : Text('Process QR Code'),
+          ),
+          const SizedBox(height: Spacing.md),
+
+          // Example button
+          TextButton(
+            onPressed: () {
+              // Fill with example QR code
+              _manualQRController.text = '''
+{
+  "type": "teacher_auth",
+  "teacherId": "example-teacher-uuid",
+  "studentId": "example-student-uuid",
+  "parentId": "example-parent-uuid",
+  "timestamp": ${DateTime.now().millisecondsSinceEpoch},
+  "signature": "example-signature"
+}''';
+            },
+            child: Text('Fill with Example Data'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Handle manual QR input (web fallback)
+  void _handleManualQRInput(String qrData) {
+    // Same processing as camera scan
+    if (_isProcessing) return;
+
+    setState(() {
+      _isProcessing = true;
+      _scannedData = qrData;
+    });
+
+    // Process QR code data (reuse existing logic)
+    _processQRCode(qrData);
+  }
+
   void _handleQRCodeDetected(BarcodeCapture capture) async {
     if (_isProcessing) return;
 
@@ -184,6 +340,11 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
       _scannedData = code;
     });
 
+    _processQRCode(code);
+  }
+
+  /// Shared QR code processing logic (used by both camera scan and manual input)
+  void _processQRCode(String code) async {
     try {
       // Get current location
       final position = await _getCurrentLocation();
@@ -234,15 +395,52 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
 
   Map<String, dynamic>? _parseQRCode(String code) {
     try {
-      // TODO: Implement actual QR code parsing
-      // Expected format from web app QR generation
-      // For now, return mock data for testing
+      // Parse JSON from QR code
+      // Expected format from web app (teacher-qr.service.ts):
+      // {
+      //   "type": "teacher_auth",
+      //   "teacherId": "...",
+      //   "studentId": "...",
+      //   "parentId": "...",
+      //   "timestamp": 1234567890,
+      //   "signature": "..."
+      // }
+      final Map<String, dynamic> qrData =
+          Map<String, dynamic>.from(jsonDecode(code) as Map);
+
+      // Validate QR code type
+      if (qrData['type'] != 'teacher_auth') {
+        throw Exception('Invalid QR code type: ${qrData['type']}');
+      }
+
+      // Validate required fields
+      final requiredFields = ['teacherId', 'studentId', 'parentId', 'signature'];
+      for (final field in requiredFields) {
+        if (!qrData.containsKey(field) || qrData[field] == null) {
+          throw Exception('Missing required field: $field');
+        }
+      }
+
+      // Check if QR code is expired (24 hours expiration)
+      if (qrData.containsKey('timestamp')) {
+        final timestamp = qrData['timestamp'] as int;
+        final qrDate = DateTime.fromMillisecondsSinceEpoch(timestamp);
+        final hoursSinceCreation = DateTime.now().difference(qrDate).inHours;
+
+        if (hoursSinceCreation > 24) {
+          throw Exception('QR code expired (${hoursSinceCreation} hours old)');
+        }
+      }
+
       return {
-        'student_id': 'student-123',
-        'parent_id': 'parent-456',
+        'student_id': qrData['studentId'],
+        'parent_id': qrData['parentId'],
+        'teacher_id': qrData['teacherId'],
+        'signature': qrData['signature'],
         'qr_code_id': code,
       };
     } catch (e) {
+      print('Error parsing QR code: $e');
       return null;
     }
   }
@@ -270,6 +468,7 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
   @override
   void dispose() {
     _controller?.dispose();
+    _manualQRController.dispose();
     super.dispose();
   }
 }

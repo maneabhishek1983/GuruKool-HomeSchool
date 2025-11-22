@@ -8,6 +8,7 @@ import 'package:gurukool_teacher/screens/forgot_password_screen.dart';
 import 'package:gurukool_teacher/screens/home_screen.dart';
 import 'package:gurukool_teacher/screens/qr_scanner_screen.dart';
 import 'package:gurukool_teacher/screens/session_history_screen.dart';
+import 'package:gurukool_teacher/screens/check_in_success_screen.dart';
 
 /// Router configuration with auth redirects
 final routerProvider = Provider<GoRouter>((ref) {
@@ -80,6 +81,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/sessions',
         name: 'sessions',
+        builder: (context, state) => const SessionHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/check-in-success',
+        name: 'check-in-success',
+        builder: (context, state) {
+          final sessionData = state.extra as Map<String, dynamic>?;
+          return CheckInSuccessScreen(sessionData: sessionData);
+        },
+      ),
+      GoRoute(
+        path: '/session-history',
+        name: 'session-history',
         builder: (context, state) => const SessionHistoryScreen(),
       ),
       // Redirect root to splash

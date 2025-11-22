@@ -5,6 +5,10 @@ class HiveStorageService {
   static late Box _sessionBox;
   static late Box _settingsBox;
 
+  /// For testing purposes only
+  static set sessionBox(Box box) => _sessionBox = box;
+  static set settingsBox(Box box) => _settingsBox = box;
+
   /// Initialize Hive
   static Future<void> initialize() async {
     await Hive.initFlutter();

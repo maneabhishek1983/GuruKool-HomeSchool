@@ -31,3 +31,4 @@ void setupMockSupabaseDefaults(MockSupabaseClient mockClient) {
   when(() => mockClient.auth.currentSession).thenReturn(null);
 }
 
+
