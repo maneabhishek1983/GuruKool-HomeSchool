@@ -11,8 +11,13 @@ import 'config/router.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables from .env file
-  await dotenv.load(fileName: ".env");
+  // Load environment variables
+  // Prioritize .env.test for local development/testing
+  try {
+    await dotenv.load(fileName: ".env.test");
+  } catch (e) {
+    await dotenv.load(fileName: ".env");
+  }
 
   // Initialize Supabase
   await Supabase.initialize(
@@ -27,7 +32,7 @@ void main() async {
 }
 
 class MyApp extends ConsumerWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,15 +54,15 @@ class MyApp extends ConsumerWidget {
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppColors.gray_300),
+            borderSide: const BorderSide(color: AppColors.gray_300),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppColors.primary, width: 2),
+            borderSide: const BorderSide(color: AppColors.primary, width: 2),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppColors.error),
+            borderSide: const BorderSide(color: AppColors.error),
           ),
         ),
         // Elevated button styling
