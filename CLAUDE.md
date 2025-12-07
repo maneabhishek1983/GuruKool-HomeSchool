@@ -11,258 +11,42 @@ GuruKool HomeSchool is a Next.js 14 application for managing homeschooling with 
 
 ---
 
-## ⚠️ CRITICAL ARCHITECTURE ISSUES (November 2025)
+## ✅ ARCHITECTURE FIXES COMPLETED (December 2025)
 
-**STATUS**: ✅ All 3 critical fixes implemented (see [FIXES_SUMMARY.md](FIXES_SUMMARY.md))
+**STATUS**: ✅ All 3 critical fixes implemented and verified
 
-Original analysis: [ARCHITECTURE_REVIEW_REPORT.md](ARCHITECTURE_REVIEW_REPORT.md)
+**Summary**: [FIXES_SUMMARY.md](FIXES_SUMMARY.md) | **Original Analysis**: [ARCHITECTURE_REVIEW_REPORT.md](ARCHITECTURE_REVIEW_REPORT.md)
 
-### Critical Findings
+### Completed Fixes
 
-1. **Data Fragmentation (P0 - Critical)**
-   - Parent timesheet view (`TimesheetView.tsx`) only reads `timesheet_entries` table
-   - Sessions created in `teacher_sessions` table are **invisible to parents**
-   - **Impact**: Parents cannot see sessions created via teacher QR check-in flow
-   - **File**: [src/components/shared/TimesheetView.tsx](src/components/shared/TimesheetView.tsx) lines 40-45
+| Fix | Status | Description |
+|-----|--------|-------------|
+| **1. Parent Timesheet View** | ✅ Done | `TimesheetView.tsx` now queries BOTH `timesheet_entries` and `teacher_sessions`, merges and deduplicates results |
+| **2. QRScanner Consolidation** | ✅ Done | Components renamed: `shared/QRScanner.tsx` (production), `demo/QRScannerSimulation.tsx` (mock), `shared/QRManualEntry.tsx` (fallback) |
+| **3. Database Sync Trigger** | ✅ Done | Migration 007 adds PostgreSQL trigger that auto-syncs `teacher_sessions` → `timesheet_entries` |
 
-2. **Component Duplication (P1 - High)**
-   - THREE different `QRScanner` components exist:
-     - `src/components/shared/QRScanner.tsx` ✅ Production scanner (html5-qrcode)
-     - `src/components/auth/QRScanner.tsx` ⚠️ Mock/simulation only (no real scanning)
-     - `src/components/QRScanner.tsx` ⚠️ Manual entry only (no real scanning)
-   - **Impact**: Developer confusion, maintenance burden, unclear which to use
+### QR Scanner Components (Clarified)
 
-3. **System Inconsistency (P0 - Critical)**
-   - Dual timesheet systems with NO synchronization:
-     - OLD: `timesheet_entries` + `parent_qr_codes` (uses btoa signatures ❌)
-     - NEW: `teacher_sessions` + `teacher_qr_codes` (uses HMAC-SHA256 ✅)
-   - **Impact**: Data stored in two places, no automatic sync, parent confusion
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| **QRScanner** | `src/components/shared/QRScanner.tsx` | ✅ **Production** - Uses html5-qrcode, real camera, iOS optimizations |
+| **QRScannerSimulation** | `src/components/demo/QRScannerSimulation.tsx` | Mock scanner for demos/testing |
+| **QRManualEntry** | `src/components/shared/QRManualEntry.tsx` | Text input fallback when camera unavailable |
 
-4. **QR Code Format Mismatch (P1 - High)**
-   - Two incompatible QR formats: `teacher_auth` vs `check_in`
-   - Runtime type detection in `QRCheckInOut.tsx` converts between formats
-   - **Impact**: Performance overhead, brittle field mapping, no type safety
+### Recent QR Scanner Improvements (December 2025)
 
-### Immediate Actions Required (Est. 7-11 hours total)
+- **Mobile Safari Fixes**: DOM ready delays, enhanced error handling for iOS
+- **Visual Debug Overlay**: Real-time scanning logs visible on-screen
+- **Better Detection**: Improved fps, qrbox, and aspect ratio settings
+- **Format Compatibility**: Supports both OLD (`check_in`) and NEW (`teacher_auth`) QR formats
 
-#### 1. Fix Parent Timesheet View (2-3 hours) - **DO THIS FIRST**
+### Long-Term Architecture Roadmap
 
-**Problem**: Parents can't see sessions from `teacher_sessions` table.
+See [ARCHITECTURE_REVIEW_REPORT.md](ARCHITECTURE_REVIEW_REPORT.md) for future phases:
 
-**Solution**: Update `TimesheetView.tsx` to read from BOTH tables and merge results.
-
-```typescript
-// src/components/shared/TimesheetView.tsx (lines 34-46)
-const loadTimesheet = async () => {
-  const { startDate, endDate } = getDateRange();
-
-  // Query OLD system
-  const oldEntries = await timesheetService.getParentTimesheet(
-    userId,
-    startDate,
-    endDate
-  );
-
-  // Query NEW system
-  const newSessions = await TeacherQRService.getParentTeacherSessions(userId);
-  const newEntriesConverted = newSessions
-    .filter(s => isWithinDateRange(s.session_start, startDate, endDate))
-    .map(s => convertTeacherSessionToTimesheetEntry(s));
-
-  // Merge and deduplicate by session ID
-  const allEntries = [...oldEntries, ...newEntriesConverted];
-  const uniqueEntries = deduplicateById(allEntries);
-
-  setEntries(uniqueEntries);
-};
-```
-
-**Files to modify**:
-
-- [src/components/shared/TimesheetView.tsx](src/components/shared/TimesheetView.tsx)
-- Add helper: `convertTeacherSessionToTimesheetEntry()` function
-
-**Acceptance criteria**:
-
-- [ ] Parents see sessions from BOTH `timesheet_entries` and `teacher_sessions`
-- [ ] No duplicate sessions displayed
-- [ ] Date range filtering works correctly
-- [ ] Manual test: Create session via teacher QR check-in, verify parent sees it
-
----
-
-#### 2. Consolidate QRScanner Components (1-2 hours)
-
-**Problem**: Three components named `QRScanner` with different capabilities.
-
-**Solution**: Keep production scanner, rename/move others.
-
-**Actions**:
-
-1. **Keep**: `src/components/shared/QRScanner.tsx` (production scanner with html5-qrcode)
-2. **Rename**: `src/components/QRScanner.tsx` → `src/components/shared/QRManualEntry.tsx`
-3. **Move**: `src/components/auth/QRScanner.tsx` → `src/components/demo/QRScannerSimulation.tsx`
-4. **Update imports**: Search codebase for `import.*QRScanner` and update to use correct component
-
-**Files to modify**:
-
-- Rename/move 2 component files
-- Update imports in [src/components/teacher/QRCheckInOut.tsx](src/components/teacher/QRCheckInOut.tsx)
-- Update any other files importing QRScanner (use global search)
-
-**Acceptance criteria**:
-
-- [ ] Only ONE component named `QRScanner.tsx` (the production one)
-- [ ] No import errors
-- [ ] All QR scanning functionality still works
-- [ ] Manual test: Teacher can scan QR code for check-in
-
----
-
-#### 3. Add Synchronization Mechanism (4-6 hours) - **✅ IMPLEMENTED**
-
-**Problem**: Data in `teacher_sessions` and `timesheet_entries` never syncs.
-
-**Solution**: Database trigger automatically syncs teacher_sessions → timesheet_entries on INSERT/UPDATE.
-
-**Implementation**: See [supabase/migrations/007_sync_teacher_sessions_to_timesheet.sql](supabase/migrations/007_sync_teacher_sessions_to_timesheet.sql)
-
-**Option A: Database Trigger (Recommended)**
-
-```sql
--- Create function to sync teacher_sessions → timesheet_entries
-CREATE OR REPLACE FUNCTION sync_teacher_session_to_timesheet()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- On INSERT or UPDATE of teacher_sessions
-  INSERT INTO timesheet_entries (
-    teacher_id, student_id, parent_id,
-    check_in_time, check_out_time, duration_minutes,
-    location, notes, status, qr_code_id, created_at
-  )
-  VALUES (
-    NEW.teacher_id, NEW.student_id, NEW.parent_id,
-    COALESCE(NEW.check_in_time, NEW.session_start),
-    COALESCE(NEW.check_out_time, NEW.session_end),
-    NEW.duration_minutes,
-    NEW.location,
-    NEW.notes,
-    CASE WHEN NEW.session_end IS NOT NULL THEN 'checked_out' ELSE 'checked_in' END,
-    NEW.qr_code_used::text,
-    NEW.created_at
-  )
-  ON CONFLICT (teacher_id, student_id, check_in_time) DO UPDATE
-  SET
-    check_out_time = EXCLUDED.check_out_time,
-    duration_minutes = EXCLUDED.duration_minutes,
-    notes = EXCLUDED.notes,
-    status = EXCLUDED.status;
-
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Create trigger
-CREATE TRIGGER sync_teacher_session_after_insert_update
-AFTER INSERT OR UPDATE ON teacher_sessions
-FOR EACH ROW
-EXECUTE FUNCTION sync_teacher_session_to_timesheet();
-```
-
-**Option B: Service Layer Sync (Alternative)**
-
-```typescript
-// src/services/session-sync.service.ts
-export class SessionSyncService {
-  static async syncTeacherSessionToTimesheet(teacherSessionId: string) {
-    const { data: session } = await supabase
-      .from('teacher_sessions')
-      .select('*')
-      .eq('id', teacherSessionId)
-      .single();
-
-    if (!session) return;
-
-    await supabase.from('timesheet_entries').upsert({
-      teacher_id: session.teacher_id,
-      student_id: session.student_id,
-      parent_id: session.parent_id,
-      check_in_time: session.check_in_time || session.session_start,
-      check_out_time: session.check_out_time || session.session_end,
-      duration_minutes: session.duration_minutes,
-      location: session.location,
-      notes: session.notes,
-      status: session.session_end ? 'checked_out' : 'checked_in',
-      qr_code_id: session.qr_code_used,
-    });
-  }
-
-  // Call this after every teacher check-in/check-out
-  static async backfillExistingSessions() {
-    const { data: sessions } = await supabase
-      .from('teacher_sessions')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    for (const session of sessions || []) {
-      await this.syncTeacherSessionToTimesheet(session.id);
-    }
-  }
-}
-```
-
-**Files to create/modify**:
-
-- **Option A**: Create migration file `supabase/migrations/013_sync_teacher_sessions_to_timesheet.sql`
-- **Option B**: Create `src/services/session-sync.service.ts`
-- Update [src/services/teacher-qr.service.ts](src/services/teacher-qr.service.ts) to call sync after session creation
-
-**Acceptance criteria**:
-
-- [ ] New sessions in `teacher_sessions` automatically appear in `timesheet_entries`
-- [ ] Session updates (check-out) sync correctly
-- [ ] Backfill script successfully syncs existing data
-- [ ] Manual test: Check-in via teacher QR, verify both tables have data
-- [ ] Manual test: Parent timesheet shows session immediately
-
----
-
-### Testing Checklist for Immediate Fixes
-
-After implementing all three fixes, verify:
-
-- [ ] **Parent Timesheet View**
-  - [ ] Parent dashboard loads without errors
-  - [ ] Sessions from OLD system (`timesheet_entries`) visible
-  - [ ] Sessions from NEW system (`teacher_sessions`) visible
-  - [ ] No duplicate sessions shown
-  - [ ] Date range filtering works (This Week, This Month, All Time)
-
-- [ ] **QRScanner Consolidation**
-  - [ ] Teacher check-in page loads QR scanner correctly
-  - [ ] QR scanner detects and scans real QR codes (test with phone camera)
-  - [ ] No import errors in console
-  - [ ] TypeScript compilation passes (`npm run type-check`)
-
-- [ ] **Synchronization**
-  - [ ] Teacher checks in → session appears in BOTH tables
-  - [ ] Teacher checks out → both tables update with duration
-  - [ ] Backfill script runs without errors
-  - [ ] Existing `teacher_sessions` data now in `timesheet_entries`
-
----
-
-### Long-Term Architecture Improvements (See Full Report)
-
-After completing immediate fixes, see [ARCHITECTURE_REVIEW_REPORT.md](ARCHITECTURE_REVIEW_REPORT.md) for:
-
-- **Phase 1 (Week 1)**: Fix security vulnerability (btoa → HMAC-SHA256)
-- **Phase 2 (Weeks 2-3)**: Rename QR scanner components properly
-- **Phase 3 (Weeks 4-6)**: Create unified `QRAuthenticationService`
-- **Phase 4 (Weeks 7-10)**: Migrate to unified database schema
-- **Phase 5 (Weeks 11-12)**: Clean up deprecated code
-
-**Total effort**: 12 weeks with phased rollout and rollback procedures.
+- **Phase 1**: Migrate btoa → HMAC-SHA256 (security)
+- **Phase 2-3**: Unified `QRAuthenticationService`
+- **Phase 4-5**: Database schema unification, deprecated code cleanup
 
 ---
 
@@ -358,8 +142,8 @@ src/
 │   │   ├── health/        # Health check endpoint
 │   │   ├── metrics/       # Prometheus metrics endpoint
 │   │   ├── invitations/   # Teacher invitation endpoints
-│   │   │   ├── send/     # Send invitation to teacher
-│   │   │   └── accept/   # Accept teacher invitation
+│   │   │   ├── send/     # POST: Send email invitation to teacher
+│   │   │   └── accept/   # POST: Accept invitation with token
 │   │   └── teacher-sessions/ # Teacher session management
 │   └── *-demo/            # Feature demo pages
 ├── components/            # React components
@@ -422,6 +206,25 @@ Multi-layered authentication approach:
 3. **Supabase Auth**: Primary authentication backend
 4. **AI-Enhanced Auth**: Risk scoring and behavioral analysis
 5. **Fallback Auth**: Manual authentication when QR fails
+6. **Teacher Invitation System**: Email-based invitation flow for onboarding teachers
+
+### Teacher Invitation System
+
+Parents can invite teachers to join the platform:
+
+1. **Send Invitation** (`POST /api/invitations/send`)
+   - Parent provides teacher's email and optional message
+   - System generates secure token (stored in `teacher_invitation_tokens` table)
+   - Email sent with invitation link containing token
+   - Token expires after 7 days
+
+2. **Accept Invitation** (`POST /api/invitations/accept`)
+   - Teacher clicks link, creates account or logs in
+   - Token validated and marked as used
+   - Teacher linked to parent's account
+
+**Database**: `teacher_invitation_tokens` table (migration 011)
+**Service**: `src/services/invitation.service.ts`
 
 ### Database Schema
 
@@ -463,8 +266,20 @@ Key tables in Supabase:
 - All database operations and authentication flow through Supabase
 - Row Level Security (RLS) must be enforced on all tables
 - Use `supabase/migrations/` for version-controlled schema changes
-  - Existing migrations: initial schema, data sheets, timesheet, teachers, QR codes, RLS policies
-  - All migrations are numbered sequentially (001, 002, 003, etc.)
+  - Migrations are numbered sequentially (001, 002, etc.)
+  - **Current migrations**:
+    - `001` - Initial schema
+    - `002` - Data sheets, timesheet tables
+    - `003` - Teachers table
+    - `004` - Teacher QR codes
+    - `005` - Timesheet schema updates
+    - `006` - RLS policies fix
+    - `007` - Sync trigger (teacher_sessions → timesheet_entries)
+    - `008` - Make teachers.user_id nullable
+    - `009` - Fix teacher_rates foreign key
+    - `010` - Fix teachers RLS insert policy
+    - `011` - Teacher invitation tokens
+    - `012` - Fix teacher_sessions RLS
 
 ### Environment Configuration
 
@@ -676,11 +491,24 @@ Use design system components instead of raw Tailwind classes when possible.
 
 The `scripts/` directory contains utility scripts:
 
-- `verify-supabase-connection.js` - Verify Supabase connectivity and schema (no external dependencies)
+**Database & Migration**:
+- `verify-supabase-connection.js` - Verify Supabase connectivity and schema
 - `verify-rls-policies.js` - Verify Row Level Security policies
+- `apply-migration-007.js` - Apply sync trigger migration via REST API
+- `verify-sync-mechanism.js` - Test teacher_sessions → timesheet_entries sync
+- `check-migration-007-status.js` - Check if migration 007 is applied
+
+**Testing**:
 - `comprehensive-testing.js` - Run comprehensive test suite
 - `performance-testing.js` - Run performance benchmarks
 - `security-verification.js` - Verify security implementation
+- `comprehensive-qr-test.js` - End-to-end QR code testing
+- `test-qr-validation.js` - QR code format validation tests
+
+**Utilities**:
+- `check-implementation-status.js` - Check overall implementation status
+- `track-progress.js` - Track development progress
+- `fix-typescript-errors.js` - Auto-fix common TypeScript issues
 
 These scripts use manual `.env` file parsing (no `dotenv` dependency required).
 
@@ -863,7 +691,7 @@ At the end of ANY conversation where kluster tools were used, ALWAYS provide:
 - **Chomsky LLM**: Keep `chomsky--0.17.9/` directory for production deployments
 - **Environment Separation**: Local dev uses OpenAI API key; production uses Chomsky + OKTA + APIM
 - **Database Migrations**: Apply via Supabase Dashboard only - no CLI or programmatic migrations
-  - See `supabase/migrations/` for SQL files (001-006)
+  - See `supabase/migrations/` for SQL files (001-012)
   - Migrations must be applied in sequence
   - See `QUICK_START_MIGRATIONS.md` for step-by-step guide
 - **API Documentation**: Complete API reference in `API_DOCUMENTATION.md` with cURL examples
