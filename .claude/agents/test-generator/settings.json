@@ -1,0 +1,10 @@
+{
+  "tools": [
+    "Read",
+    "Write",
+    "Grep",
+    "Glob",
+    "Bash(npm test:*)",
+    "Bash(flutter:*)"
+  ]
+}

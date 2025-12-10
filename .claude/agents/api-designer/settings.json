@@ -1,0 +1,11 @@
+{
+  "tools": [
+    "Read",
+    "Write",
+    "Edit",
+    "Grep",
+    "Glob",
+    "Bash(npm run type-check:*)",
+    "Bash(npm test:*)"
+  ]
+}

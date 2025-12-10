@@ -1,0 +1,10 @@
+{
+  "tools": [
+    "Read",
+    "Grep",
+    "Glob",
+    "Bash(npm run test:security:*)",
+    "Bash(npm run verify:rls)",
+    "Bash(npm run verify:supabase)"
+  ]
+}
