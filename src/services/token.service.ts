@@ -13,11 +13,20 @@ export interface TokenPayload {
 
 export class TokenService {
   private static instance: TokenService;
-  private readonly JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
+  private readonly JWT_SECRET: string;
   private readonly ACCESS_TOKEN_EXPIRY = '24h';
   private readonly REFRESH_TOKEN_EXPIRY = '7d';
 
-  private constructor() {}
+  private constructor() {
+    const secret = process.env.JWT_SECRET;
+    if (!secret || secret.length < 32) {
+      throw new Error(
+        'JWT_SECRET environment variable must be configured with at least 32 characters. ' +
+          'Token signing requires a secure secret.'
+      );
+    }
+    this.JWT_SECRET = secret;
+  }
 
   public static getInstance(): TokenService {
     if (!TokenService.instance) {

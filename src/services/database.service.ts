@@ -196,7 +196,8 @@ export class DatabaseService {
 
   static async updateStudent(
     studentId: string,
-    updates: Partial<StudentProfile>
+    updates: Partial<StudentProfile>,
+    parentId?: string
   ): Promise<StudentProfile | null> {
     try {
       const dbUpdates: any = {};
@@ -230,12 +231,15 @@ export class DatabaseService {
         dbUpdates.teacher_notes = updates.teacherNotes;
       }
 
-      const { data, error } = await supabase
-        .from('students')
-        .update(dbUpdates)
-        .eq('id', studentId)
-        .select()
-        .single();
+      // Build query with parent isolation if parentId provided
+      let query = supabase.from('students').update(dbUpdates).eq('id', studentId);
+
+      // SECURITY: Add parent isolation to prevent unauthorized updates
+      if (parentId) {
+        query = query.eq('parent_id', parentId);
+      }
+
+      const { data, error } = await query.select().single();
 
       if (error) {
         throw error;
@@ -248,12 +252,20 @@ export class DatabaseService {
     }
   }
 
-  static async deleteStudent(studentId: string): Promise<boolean> {
+  static async deleteStudent(
+    studentId: string,
+    parentId?: string
+  ): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from('students')
-        .delete()
-        .eq('id', studentId);
+      // Build query with parent isolation if parentId provided
+      let query = supabase.from('students').delete().eq('id', studentId);
+
+      // SECURITY: Add parent isolation to prevent unauthorized deletions
+      if (parentId) {
+        query = query.eq('parent_id', parentId);
+      }
+
+      const { error } = await query;
 
       if (error) {
         throw error;
@@ -359,7 +371,8 @@ export class DatabaseService {
 
   static async updateTeacher(
     teacherId: string,
-    updates: Partial<TeacherProfile>
+    updates: Partial<TeacherProfile>,
+    parentId?: string
   ): Promise<TeacherProfile | null> {
     try {
       const dbUpdates: any = {};
@@ -383,12 +396,15 @@ export class DatabaseService {
         dbUpdates.bio = updates.bio;
       }
 
-      const { data, error } = await supabase
-        .from('teachers')
-        .update(dbUpdates)
-        .eq('id', teacherId)
-        .select()
-        .single();
+      // Build query with parent isolation if parentId provided
+      let query = supabase.from('teachers').update(dbUpdates).eq('id', teacherId);
+
+      // SECURITY: Add parent isolation to prevent unauthorized updates
+      if (parentId) {
+        query = query.eq('parent_id', parentId);
+      }
+
+      const { data, error } = await query.select().single();
 
       if (error) {
         throw error;
@@ -401,12 +417,20 @@ export class DatabaseService {
     }
   }
 
-  static async deleteTeacher(teacherId: string): Promise<boolean> {
+  static async deleteTeacher(
+    teacherId: string,
+    parentId?: string
+  ): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from('teachers')
-        .delete()
-        .eq('id', teacherId);
+      // Build query with parent isolation if parentId provided
+      let query = supabase.from('teachers').delete().eq('id', teacherId);
+
+      // SECURITY: Add parent isolation to prevent unauthorized deletions
+      if (parentId) {
+        query = query.eq('parent_id', parentId);
+      }
+
+      const { error } = await query;
 
       if (error) {
         throw error;

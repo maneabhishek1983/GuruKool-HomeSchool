@@ -70,7 +70,6 @@
     "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "express-rate-limit": "^8.0.1",
     "framer-motion": "^12.23.12",
     "html5-qrcode": "^2.3.8",
     "jsonwebtoken": "^9.0.2",
@@ -84,12 +83,10 @@
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.62.0",
     "recharts": "^3.1.2",
-    "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.3.3",
     "uuid": "^11.1.0",
-    "ws": "^8.18.3",
     "zod": "^3.25.76"
   },
   "devDependencies": {
@@ -106,7 +103,6 @@
     "@types/qrcode": "^1.5.5",
     "@types/qrcode-generator": "^0.0.16",
     "@types/uuid": "^10.0.0",
-    "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.39.1",
     "@typescript-eslint/parser": "^8.39.1",
     "@vitest/browser": "^3.2.4",

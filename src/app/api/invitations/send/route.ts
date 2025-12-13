@@ -2,13 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { InvitationService } from '@/services/invitation.service';
 import { withRateLimit } from '@/lib/api-security';
-import { z } from 'zod';
-
-// Validation schema
-const sendInvitationSchema = z.object({
-  teacherId: z.string().uuid('Invalid teacher ID'),
-  resend: z.boolean().optional().default(false),
-});
+import { sendInvitationSchema } from '@/lib/validation';
 
 /**
  * POST /api/invitations/send

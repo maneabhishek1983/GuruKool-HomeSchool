@@ -1,23 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
+import { createClient } from '@supabase/supabase-js';
 import { withRateLimit } from '@/lib/api-security';
+import { teacherSessionScanSchema } from '@/lib/validation';
 import { TeacherQRService } from '@/services/teacher-qr.service';
-
-// Validation schema for QR code scanning
-const scanQRSchema = z.object({
-  qrData: z.string().min(10, 'QR code data is required'),
-  sessionType: z.enum(['sign_in', 'sign_out'], {
-    errorMap: () => ({ message: 'Session type must be sign_in or sign_out' }),
-  }),
-  location: z
-    .object({
-      latitude: z.number().optional(),
-      longitude: z.number().optional(),
-      address: z.string().optional(),
-    })
-    .optional(),
-  notes: z.string().optional(),
-});
 
 /**
  * POST /api/teacher-sessions/scan
@@ -48,11 +33,52 @@ export const POST = withRateLimit({
   max: 20, // 20 scans per minute
 })(async (request: NextRequest) => {
   try {
+    // ========== AUTHENTICATION CHECK ==========
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Unauthorized', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
+
+    // Verify the user with Supabase
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Supabase configuration missing');
+      return NextResponse.json(
+        { error: 'Server configuration error', code: 'CONFIG_ERROR' },
+        { status: 500 }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Invalid authentication', code: 'AUTH_INVALID' },
+        { status: 401 }
+      );
+    }
+
+    // Verify user is a teacher (optional: stricter role check)
+    // For now, any authenticated user can scan QR codes
+    // ========== END AUTHENTICATION CHECK ==========
+
     // Parse request body
     const body = await request.json();
 
     // Validate request body
-    const validation = scanQRSchema.safeParse(body);
+    const validation = teacherSessionScanSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
         {

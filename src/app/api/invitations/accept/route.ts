@@ -1,18 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { InvitationService } from '@/services/invitation.service';
 import { withRateLimit } from '@/lib/api-security';
-import { z } from 'zod';
-
-// Validation schema
-const acceptInvitationSchema = z.object({
-  token: z.string().min(1, 'Token is required'),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number'),
-});
+import { acceptInvitationSchema } from '@/lib/validation';
 
 /**
  * GET /api/invitations/accept?token=xxx

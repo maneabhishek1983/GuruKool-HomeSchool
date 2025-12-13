@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SessionRecord } from '@/types/session.types';
 import { User, Location } from '@/types';
@@ -74,6 +74,19 @@ export default function TeacherLocationTracker({
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Ref to store timeout ID for cleanup (prevents memory leak)
+  const locationUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timeout on unmount to prevent memory leak
+  useEffect(() => {
+    return () => {
+      if (locationUpdateTimeoutRef.current) {
+        clearTimeout(locationUpdateTimeoutRef.current);
+        locationUpdateTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Fetch session if not provided
   useEffect(() => {
@@ -175,6 +188,11 @@ export default function TeacherLocationTracker({
 
   const stopLocationTracking = () => {
     setIsTracking(false);
+    // Clear any pending timeout to stop the update chain
+    if (locationUpdateTimeoutRef.current) {
+      clearTimeout(locationUpdateTimeoutRef.current);
+      locationUpdateTimeoutRef.current = null;
+    }
   };
 
   const simulateLocationUpdates = () => {
@@ -218,8 +236,11 @@ export default function TeacherLocationTracker({
         verified: true,
       });
 
-      // Schedule next update
-      setTimeout(updateLocation, 10000 + Math.random() * 20000); // 10-30 seconds
+      // Schedule next update and store timeout ID for cleanup
+      locationUpdateTimeoutRef.current = setTimeout(
+        updateLocation,
+        10000 + Math.random() * 20000
+      ); // 10-30 seconds
     };
 
     updateLocation();

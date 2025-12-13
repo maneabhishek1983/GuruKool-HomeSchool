@@ -65,6 +65,10 @@ export const LocationAwareSessionManager: React.FC<
     }
   }, [currentLocation, sessions]);
 
+  // Store permission reference for cleanup
+  const [permissionRef, setPermissionRef] =
+    useState<PermissionStatus | null>(null);
+
   const checkLocationPermission = async () => {
     if ('geolocation' in navigator) {
       try {
@@ -72,10 +76,9 @@ export const LocationAwareSessionManager: React.FC<
           name: 'geolocation',
         });
         setLocationPermission(permission.state);
+        setPermissionRef(permission);
 
-        permission.addEventListener('change', () => {
-          setLocationPermission(permission.state);
-        });
+        // Event listener will be added in useEffect with proper cleanup
 
         if (permission.state === 'granted') {
           getCurrentLocation();
@@ -85,6 +88,22 @@ export const LocationAwareSessionManager: React.FC<
       }
     }
   };
+
+  // Handle permission change events with proper cleanup
+  useEffect(() => {
+    if (!permissionRef) return;
+
+    const handlePermissionChange = () => {
+      setLocationPermission(permissionRef.state);
+    };
+
+    permissionRef.addEventListener('change', handlePermissionChange);
+
+    // Cleanup: remove event listener on unmount
+    return () => {
+      permissionRef.removeEventListener('change', handlePermissionChange);
+    };
+  }, [permissionRef]);
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
