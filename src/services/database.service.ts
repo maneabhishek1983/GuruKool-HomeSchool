@@ -232,7 +232,10 @@ export class DatabaseService {
       }
 
       // Build query with parent isolation if parentId provided
-      let query = supabase.from('students').update(dbUpdates).eq('id', studentId);
+      let query = supabase
+        .from('students')
+        .update(dbUpdates)
+        .eq('id', studentId);
 
       // SECURITY: Add parent isolation to prevent unauthorized updates
       if (parentId) {
@@ -397,7 +400,10 @@ export class DatabaseService {
       }
 
       // Build query with parent isolation if parentId provided
-      let query = supabase.from('teachers').update(dbUpdates).eq('id', teacherId);
+      let query = supabase
+        .from('teachers')
+        .update(dbUpdates)
+        .eq('id', teacherId);
 
       // SECURITY: Add parent isolation to prevent unauthorized updates
       if (parentId) {
@@ -660,6 +666,140 @@ export class DatabaseService {
     } catch (error) {
       console.error('Error getting teacher assignments:', error);
       return [];
+    }
+  }
+
+  // Session Operations (for sync-manager)
+  static async createSession(sessionData: {
+    teacher_id: string;
+    student_id: string;
+    parent_id: string;
+    scheduled_start: string;
+    scheduled_end: string;
+    status?: string;
+    location?: any;
+    notes?: string;
+  }): Promise<any | null> {
+    try {
+      const { data, error } = await supabase
+        .from('sessions')
+        .insert({
+          ...sessionData,
+          status: sessionData.status || 'scheduled',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error creating session:', error);
+      return null;
+    }
+  }
+
+  static async getSessionById(sessionId: string): Promise<any | null> {
+    try {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('id', sessionId)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error getting session:', error);
+      return null;
+    }
+  }
+
+  static async updateSession(
+    sessionId: string,
+    updates: Partial<{
+      status: string;
+      actual_start: string;
+      actual_end: string;
+      notes: string;
+      location: any;
+    }>,
+    parentId?: string
+  ): Promise<any | null> {
+    try {
+      let query = supabase
+        .from('sessions')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', sessionId);
+
+      // SECURITY: Add parent isolation if parentId provided
+      if (parentId) {
+        query = query.eq('parent_id', parentId);
+      }
+
+      const { data, error } = await query.select().single();
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error updating session:', error);
+      return null;
+    }
+  }
+
+  static async deleteSession(
+    sessionId: string,
+    parentId?: string
+  ): Promise<boolean> {
+    try {
+      let query = supabase.from('sessions').delete().eq('id', sessionId);
+
+      // SECURITY: Add parent isolation if parentId provided
+      if (parentId) {
+        query = query.eq('parent_id', parentId);
+      }
+
+      const { error } = await query;
+
+      if (error) {
+        throw error;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      return false;
+    }
+  }
+
+  // User Operations (for sync-manager)
+  static async deleteUser(userId: string): Promise<boolean> {
+    try {
+      // Note: This only deletes from the users table
+      // Supabase Auth user must be deleted separately via admin API
+      const { error } = await supabase.from('users').delete().eq('id', userId);
+
+      if (error) {
+        throw error;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      return false;
     }
   }
 }

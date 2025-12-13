@@ -8,7 +8,7 @@ import {
   offlineStorageManager,
   OfflineAction,
 } from './offline-storage.service';
-import { databaseService } from './database.service';
+import { databaseService, DatabaseService } from './database.service';
 import { SessionRecord, User, AIInsight } from '@/types';
 
 export interface SyncResult {
@@ -261,8 +261,7 @@ export class SyncManager {
 
       switch (entity) {
         case 'session':
-          // TODO: Implement createSession method in databaseService
-          result = null; // Placeholder - session creation not yet implemented
+          result = await DatabaseService.createSession(data as any);
           break;
         case 'user':
           result = await databaseService.upsertUserProfile(data as any);
@@ -313,8 +312,7 @@ export class SyncManager {
 
       switch (entity) {
         case 'session':
-          // Use available method - would need session ID from data
-          serverData = null; // TODO: Implement getSessionById or use listUpcomingSessions
+          serverData = await DatabaseService.getSessionById(data.id);
           break;
         case 'user':
           serverData = await databaseService.getUserProfile(data.id);
@@ -324,7 +322,8 @@ export class SyncManager {
       }
 
       if (!serverData) {
-        return { success: false, action, error: 'Entity not found on server' };
+        // Entity doesn't exist on server - create it instead
+        return this.processCreate({ ...action, type: 'create' });
       }
 
       // Check for conflicts (simplified version comparison)
@@ -340,8 +339,7 @@ export class SyncManager {
 
       switch (entity) {
         case 'session':
-          // TODO: Implement updateSession method in databaseService
-          result = null; // Placeholder - session update not yet implemented
+          result = await DatabaseService.updateSession(data.id, data);
           break;
         case 'user':
           result = await databaseService.upsertUserProfile(data as any);
@@ -382,12 +380,10 @@ export class SyncManager {
 
       switch (entity) {
         case 'session':
-          // TODO: Implement deleteSession method in databaseService
-          result = false; // Placeholder - session deletion not yet implemented
+          result = await DatabaseService.deleteSession(data.id);
           break;
         case 'user':
-          // TODO: Implement deleteUser method in databaseService
-          result = false; // Placeholder - user deletion not yet implemented
+          result = await DatabaseService.deleteUser(data.id);
           break;
         default:
           throw new Error(`Unsupported entity type for delete: ${entity}`);
@@ -606,8 +602,7 @@ export class SyncManager {
   private async updateServer(entity: string, data: any): Promise<void> {
     switch (entity) {
       case 'session':
-        // TODO: Implement updateSession method in databaseService
-        // Placeholder - session update not yet implemented
+        await DatabaseService.updateSession(data.id, data);
         break;
       case 'user':
         await databaseService.upsertUserProfile(data);

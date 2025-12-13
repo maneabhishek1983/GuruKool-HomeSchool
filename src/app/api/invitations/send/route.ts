@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { InvitationService } from '@/services/invitation.service';
+import { emailService } from '@/services/email.service';
 import { withRateLimit } from '@/lib/api-security';
 import { sendInvitationSchema } from '@/lib/validation';
 
@@ -127,15 +128,25 @@ export const POST = withRateLimit({
       baseUrl
     );
 
-    // TODO: Send email with invitation URL
-    // For now, return the URL so it can be sent manually or displayed in UI
-    // In production, integrate with email service (SendGrid, AWS SES, etc.)
+    // Send email with invitation URL
+    const emailResult = await emailService.sendTeacherInvitation({
+      teacherEmail: teacher.email,
+      teacherName: teacher.name,
+      parentName: parent.name,
+      invitationUrl,
+      expiresAt: new Date(invitation.expires_at),
+      message: body.message, // Optional custom message from parent
+    });
 
     console.log('Teacher Invitation Created:');
     console.log('  Teacher:', teacher.name, `(${teacher.email})`);
     console.log('  Parent:', parent.name);
     console.log('  Invitation URL:', invitationUrl);
     console.log('  Expires:', new Date(invitation.expires_at).toLocaleString());
+    console.log('  Email sent:', emailResult.success ? 'Yes' : 'No');
+    if (!emailResult.success) {
+      console.log('  Email error:', emailResult.error);
+    }
 
     return NextResponse.json(
       {
@@ -146,6 +157,8 @@ export const POST = withRateLimit({
           expiresAt: invitation.expires_at,
           teacherEmail: teacher.email,
           teacherName: teacher.name,
+          emailSent: emailResult.success,
+          emailMessageId: emailResult.messageId,
         },
         message: resend
           ? 'Invitation resent successfully'

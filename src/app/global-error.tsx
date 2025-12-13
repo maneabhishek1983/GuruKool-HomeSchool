@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 
 /**
  * Global Error Boundary for Root Layout
- * 
+ *
  * This catches errors that occur in the root layout and provides
  * a fallback UI. It must be a Client Component.
- * 
+ *
  * Note: This only catches errors in production. In development,
  * Next.js shows the error overlay instead.
  */
@@ -19,11 +20,16 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log error to monitoring service (Sentry when implemented)
-    if (process.env.NODE_ENV === 'production') {
-      // TODO: Send to Sentry
-      // Sentry.captureException(error);
-    }
+    // Send error to Sentry for monitoring
+    Sentry.captureException(error, {
+      tags: {
+        errorType: 'global',
+        digest: error.digest || 'unknown',
+      },
+      extra: {
+        componentStack: error.stack,
+      },
+    });
     console.error('Global error caught:', error);
   }, [error]);
 
@@ -111,10 +117,10 @@ export default function GlobalError({
                   cursor: 'pointer',
                   transition: 'background 0.2s',
                 }}
-                onMouseOver={(e) => {
+                onMouseOver={e => {
                   e.currentTarget.style.background = '#1d4ed8';
                 }}
-                onMouseOut={(e) => {
+                onMouseOut={e => {
                   e.currentTarget.style.background = '#2563eb';
                 }}
               >
@@ -133,10 +139,10 @@ export default function GlobalError({
                   cursor: 'pointer',
                   transition: 'background 0.2s',
                 }}
-                onMouseOver={(e) => {
+                onMouseOver={e => {
                   e.currentTarget.style.background = '#f9fafb';
                 }}
-                onMouseOut={(e) => {
+                onMouseOut={e => {
                   e.currentTarget.style.background = 'white';
                 }}
               >
