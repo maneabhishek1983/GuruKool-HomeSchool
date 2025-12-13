@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { csrfProtectionMiddleware } from '@/middleware/csrf';
-import { applyRateLimit } from '@/middleware/rate-limit';
 import { checkRateLimit as checkRedisRateLimit } from '@/lib/rate-limit-redis';
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Main middleware function that applies all security measures
@@ -17,8 +15,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Generate request ID for correlation
-  const requestId = uuidv4();
+  // Generate request ID for correlation (simple implementation)
+  const requestId = crypto.randomUUID();
 
   // Create response first
   const response = NextResponse.next();
@@ -34,35 +32,36 @@ export async function middleware(request: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
-  // Apply rate limiting for API routes (prefer Redis limiter)
+  // Apply rate limiting for API routes (Redis-only)
   if (pathname.startsWith('/api/')) {
-    const redisCheck = await checkRedisRateLimit(request, {
-      windowMs: 60000,
-      max: 120,
-      keyPrefix: 'api',
-    });
-    if (redisCheck.limited) {
-      const response = NextResponse.json(
-        {
-          error: 'Too many requests',
-          code: 'RATE_LIMIT_EXCEEDED',
-          retryAfter: Math.ceil(
-            (redisCheck.resetAt.getTime() - Date.now()) / 1000
-          ),
-        },
-        { status: 429 }
-      );
-      response.headers.set('X-Request-ID', requestId);
-      response.headers.set(
-        'Retry-After',
-        String(Math.ceil((redisCheck.resetAt.getTime() - Date.now()) / 1000))
-      );
-      return response;
-    }
-    const rateLimitResponse = applyRateLimit(request);
-    if (rateLimitResponse.status !== 200) {
-      rateLimitResponse.headers.set('X-Request-ID', requestId);
-      return rateLimitResponse;
+    try {
+      const redisCheck = await checkRedisRateLimit(request, {
+        windowMs: 60000,
+        max: 120,
+        keyPrefix: 'api',
+      });
+      if (redisCheck.limited) {
+        const rateLimitResponse = NextResponse.json(
+          {
+            error: 'Too many requests',
+            code: 'RATE_LIMIT_EXCEEDED',
+            retryAfter: Math.ceil(
+              (redisCheck.resetAt.getTime() - Date.now()) / 1000
+            ),
+          },
+          { status: 429 }
+        );
+        rateLimitResponse.headers.set('X-Request-ID', requestId);
+        rateLimitResponse.headers.set(
+          'Retry-After',
+          String(Math.ceil((redisCheck.resetAt.getTime() - Date.now()) / 1000))
+        );
+        return rateLimitResponse;
+      }
+    } catch (error) {
+      // If Redis is unavailable, continue without rate limiting
+      // This prevents the app from breaking if Redis is down
+      console.warn('Rate limiting unavailable:', error);
     }
   }
 

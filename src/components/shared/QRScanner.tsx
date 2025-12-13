@@ -56,7 +56,7 @@ export function QRScanner({
           );
           const selectedCamera = backCamera || devices[0];
 
-          addDebugLog(`Using: ${selectedCamera.label || 'Default camera'}`);
+          addDebugLog(`Using: ${selectedCamera?.label || 'Default camera'}`);
 
           if (selectedCamera?.id) {
             startScanning(selectedCamera.id);
