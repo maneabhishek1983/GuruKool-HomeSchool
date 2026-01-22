@@ -34,26 +34,30 @@ export interface TeacherSession {
 
 export class TeacherQRService {
   // Generate QR code data for teacher-student authentication
+  // Now uses server-side API to protect QR secret
   static async generateQRCodeData(
     teacherId: string,
     studentId: string,
     parentId: string
   ): Promise<string> {
-    const signature = await this.generateSignature(
-      teacherId,
-      studentId,
-      parentId
-    );
-    const data = {
-      type: 'teacher_auth',
-      teacherId,
-      studentId,
-      parentId,
-      timestamp: Date.now(),
-      signature,
-    };
+    try {
+      const response = await fetch('/api/qr/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teacherId, studentId, parentId }),
+      });
 
-    return JSON.stringify(data);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to generate QR code');
+      }
+
+      const { qrData } = await response.json();
+      return qrData;
+    } catch (error) {
+      console.error('Error generating QR code data:', error);
+      throw new Error('Failed to generate QR code');
+    }
   }
 
   // Generate a cryptographically secure signature for QR code validation
@@ -215,14 +219,21 @@ export class TeacherQRService {
         throw new Error('Invalid QR code type');
       }
 
-      // Verify signature
-      const expectedSignature = await this.generateSignature(
-        parsedData.teacherId,
-        parsedData.studentId,
-        parsedData.parentId
-      );
-      if (parsedData.signature !== expectedSignature) {
-        throw new Error('Invalid QR code signature');
+      // Check expiration
+      if (parsedData.expiresAt && Date.now() > parsedData.expiresAt) {
+        throw new Error('QR code has expired. Please request a new one from the parent.');
+      }
+
+      // Verify signature using server-side API
+      const validationResponse = await fetch('/api/qr/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qrData }),
+      });
+
+      if (!validationResponse.ok) {
+        const error = await validationResponse.json();
+        throw new Error(error.error || 'Invalid QR code');
       }
 
       // Check if QR code exists and is active

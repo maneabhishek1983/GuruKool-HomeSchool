@@ -1,0 +1,61 @@
+{
+  "name": "GuruKool HomeSchool",
+  "short_name": "GuruKool",
+  "description": "AI-Enhanced Homeschooling Management Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#E50914",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Teacher Check-In",
+      "short_name": "Check-In",
+      "description": "Quick access to teacher check-in",
+      "url": "/teacher/dashboard?tab=checkin",
+      "icons": [
+        {
+          "src": "/icon-checkin.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Parent Dashboard",
+      "short_name": "Dashboard",
+      "description": "View parent dashboard",
+      "url": "/parent/dashboard",
+      "icons": [
+        {
+          "src": "/icon-dashboard.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

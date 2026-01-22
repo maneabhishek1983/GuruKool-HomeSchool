@@ -44,7 +44,7 @@
         },
         {
           "key": "Permissions-Policy",
-          "value": "geolocation=(self)"
+          "value": "camera=(self), geolocation=(self)"
         }
       ]
     }
