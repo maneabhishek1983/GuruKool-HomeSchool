@@ -118,20 +118,39 @@ export default function ParentDashboard() {
         interests: formData.interests,
       };
 
-      const newStudent = await DatabaseService.createStudent(
-        studentData,
-        user.id
-      );
+      // Check if we're editing an existing student
+      if (selectedStudent) {
+        const updatedStudent = await DatabaseService.updateStudent(
+          selectedStudent.id,
+          studentData
+        );
 
-      if (newStudent) {
-        setStudents(prev => [newStudent, ...prev]);
-        setShowCreateStudentModal(false);
+        if (updatedStudent) {
+          setStudents(prev =>
+            prev.map(s => (s.id === selectedStudent.id ? updatedStudent : s))
+          );
+          setShowCreateStudentModal(false);
+          setSelectedStudent(null);
+        } else {
+          setError('Failed to update student. Please try again.');
+        }
       } else {
-        setError('Failed to create student. Please try again.');
+        // Creating a new student
+        const newStudent = await DatabaseService.createStudent(
+          studentData,
+          user.id
+        );
+
+        if (newStudent) {
+          setStudents(prev => [newStudent, ...prev]);
+          setShowCreateStudentModal(false);
+        } else {
+          setError('Failed to create student. Please try again.');
+        }
       }
     } catch (err) {
-      console.error('Error creating student:', err);
-      setError('Failed to create student. Please try again.');
+      console.error('Error saving student:', err);
+      setError('Failed to save student. Please try again.');
     }
   };
 
@@ -674,6 +693,10 @@ export default function ParentDashboard() {
                       setSelectedStudent(student);
                       setShowDataSheetsModal(true);
                     }}
+                    onAssignTeacher={() => {
+                      setSelectedStudent(student);
+                      setShowAssignmentModal(true);
+                    }}
                   />
                 </motion.div>
               ))}
@@ -873,6 +896,7 @@ export default function ParentDashboard() {
                     setShowCreateStudentModal(false);
                     setSelectedStudent(null);
                   }}
+                  initialData={selectedStudent}
                 />
               </div>
             </motion.div>
