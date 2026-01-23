@@ -497,11 +497,22 @@ export class DatabaseService {
   }
 
   // Student-Teacher Assignment Methods
+  // Result type for assignment operations
+  static readonly AssignmentResultType = {
+    SUCCESS_WITH_QR: 'success_with_qr',
+    SUCCESS_WITHOUT_QR: 'success_without_qr',
+    FAILURE: 'failure',
+  } as const;
+
   static async assignTeacherToStudent(
     teacherId: string,
     studentId: string,
     parentId: string
-  ): Promise<boolean> {
+  ): Promise<{
+    success: boolean;
+    qrCodeCreated: boolean;
+    message?: string;
+  }> {
     try {
       // Update student's assigned teachers
       const { data: student, error: studentError } = await supabase
@@ -531,6 +542,7 @@ export class DatabaseService {
 
       // Create QR code for this teacher-student pair
       let qrCodeCreated = false;
+      let qrErrorMessage: string | undefined;
       try {
         await TeacherQRService.createTeacherQRCodes(
           teacherId,
@@ -540,6 +552,10 @@ export class DatabaseService {
         qrCodeCreated = true;
       } catch (qrError) {
         console.error('Error creating QR code for assignment:', qrError);
+        qrErrorMessage =
+          qrError instanceof Error
+            ? qrError.message
+            : 'QR code creation failed';
         // Don't fail the assignment if QR code creation fails
         // QR codes can be generated later when QR_SECRET is configured
       }
@@ -553,10 +569,23 @@ export class DatabaseService {
         );
       }
 
-      return true;
+      return {
+        success: true,
+        qrCodeCreated,
+        message: qrCodeCreated
+          ? 'Teacher assigned and QR code created successfully'
+          : `Teacher assigned but QR code was not created: ${qrErrorMessage || 'Unknown error'}. Please check server configuration.`,
+      };
     } catch (error) {
       console.error('Error assigning teacher to student:', error);
-      return false;
+      return {
+        success: false,
+        qrCodeCreated: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to assign teacher to student',
+      };
     }
   }
 
