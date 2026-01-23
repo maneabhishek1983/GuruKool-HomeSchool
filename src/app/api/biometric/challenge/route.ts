@@ -80,7 +80,7 @@ export const POST = withRateLimit({
           );
         }
 
-        credentialIds = credentials.map(c => c.credential_id);
+        credentialIds = credentials.map((c: any) => c.credential_id);
       }
 
       // Store challenge temporarily (you might want to use Redis for this in production)

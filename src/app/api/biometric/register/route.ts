@@ -103,7 +103,7 @@ export const POST = withRateLimit({
         .select()
         .single();
 
-      if (insertError) {
+      if (insertError || !newCredential) {
         console.error('Error inserting credential:', insertError);
         return NextResponse.json(
           { error: 'Failed to register biometric credential' },
@@ -113,8 +113,8 @@ export const POST = withRateLimit({
 
       return NextResponse.json({
         success: true,
-        credentialId: newCredential.credential_id,
-        deviceName: newCredential.device_name,
+        credentialId: (newCredential as any).credential_id,
+        deviceName: (newCredential as any).device_name,
         message: 'Biometric credential registered successfully',
       });
     } catch (error) {

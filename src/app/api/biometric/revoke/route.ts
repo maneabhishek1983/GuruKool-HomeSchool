@@ -51,7 +51,7 @@ export const POST = withRateLimit({
         );
       }
 
-      if (credential.teacher_id !== user.id) {
+      if ((credential as any).teacher_id !== user.id) {
         return NextResponse.json(
           { error: 'Unauthorized' },
           { status: 403 }
