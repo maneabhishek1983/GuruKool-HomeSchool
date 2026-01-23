@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import LiquidButton from '@/components/ui/LiquidButton';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 
 interface ActiveSessionCardProps {
   teacherName: string;
@@ -104,7 +104,7 @@ export default function ActiveSessionCard({
               <p className="text-sm text-green-100">In Progress</p>
             </div>
           </div>
-          
+
           {/* Elapsed Time */}
           <motion.div
             className="backdrop-blur-xl bg-white/10 rounded-2xl px-4 py-2 border border-white/20"
@@ -146,7 +146,12 @@ export default function ActiveSessionCard({
               <div className="text-xs text-green-100 mb-1">Started</div>
               <div className="text-white font-semibold flex items-center gap-2">
                 <span>🕐</span>
-                <span>{new Date(startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <span>
+                  {new Date(startTime).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
               </div>
             </div>
           </div>
@@ -167,7 +172,7 @@ export default function ActiveSessionCard({
           {onEndSession && (
             <LiquidButton
               variant="primary"
-              size="large"
+              size="lg"
               onClick={onEndSession}
               className="flex-1 bg-white text-green-900 hover:bg-green-50"
             >
@@ -176,8 +181,8 @@ export default function ActiveSessionCard({
           )}
           {onViewDetails && (
             <LiquidButton
-              variant="outline"
-              size="large"
+              variant="ghost"
+              size="lg"
               onClick={onViewDetails}
               className="border-white text-white hover:bg-white/10"
             >
@@ -197,9 +202,7 @@ export default function ActiveSessionCard({
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
             <span>Session active and tracking</span>
           </div>
-          <div>
-            {location && '✓ Location verified'}
-          </div>
+          <div>{location && '✓ Location verified'}</div>
         </motion.div>
       </div>
 

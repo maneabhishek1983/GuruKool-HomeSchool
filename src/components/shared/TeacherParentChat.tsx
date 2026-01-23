@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useState } from 'react';
-import LiquidButton from '@/components/ui/LiquidButton';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 
 interface Message {
   id: string;
@@ -108,7 +108,7 @@ export default function TeacherParentChat({
                 <p className="text-sm text-cyan-100">About {studentName}</p>
               </div>
             </div>
-            
+
             {onClose && (
               <button
                 onClick={onClose}
@@ -149,9 +149,7 @@ export default function TeacherParentChat({
                 <div className="flex items-center justify-between mt-2">
                   <span className="text-xs opacity-70">{msg.timestamp}</span>
                   {msg.sender === 'parent' && (
-                    <span className="text-xs">
-                      {msg.read ? '✓✓' : '✓'}
-                    </span>
+                    <span className="text-xs">{msg.read ? '✓✓' : '✓'}</span>
                   )}
                 </div>
               </div>
@@ -167,7 +165,7 @@ export default function TeacherParentChat({
             >
               <div className="backdrop-blur-xl bg-white/20 rounded-2xl p-4 border border-white/20">
                 <div className="flex gap-1">
-                  {[0, 1, 2].map((i) => (
+                  {[0, 1, 2].map(i => (
                     <motion.div
                       key={i}
                       className="w-2 h-2 rounded-full bg-white"
@@ -193,7 +191,7 @@ export default function TeacherParentChat({
           <div className="flex gap-3">
             <textarea
               value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
+              onChange={e => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
               rows={2}
@@ -208,7 +206,7 @@ export default function TeacherParentChat({
               </button>
               <LiquidButton
                 variant="primary"
-                size="small"
+                size="sm"
                 onClick={handleSend}
                 disabled={!newMessage.trim()}
                 className="w-10 h-10 rounded-full bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"

@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import LiquidButton from '@/components/ui/LiquidButton';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 
 interface FeedbackCardProps {
   teacherName: string;
@@ -36,16 +36,28 @@ export default function FeedbackCard({
   className = '',
 }: FeedbackCardProps) {
   const getRatingColor = (rating: number) => {
-    if (rating >= 4.5) return 'text-green-300';
-    if (rating >= 3.5) return 'text-blue-300';
-    if (rating >= 2.5) return 'text-yellow-300';
+    if (rating >= 4.5) {
+      return 'text-green-300';
+    }
+    if (rating >= 3.5) {
+      return 'text-blue-300';
+    }
+    if (rating >= 2.5) {
+      return 'text-yellow-300';
+    }
     return 'text-orange-300';
   };
 
   const getRatingText = (rating: number) => {
-    if (rating >= 4.5) return 'Excellent Progress!';
-    if (rating >= 3.5) return 'Good Work!';
-    if (rating >= 2.5) return 'Making Progress';
+    if (rating >= 4.5) {
+      return 'Excellent Progress!';
+    }
+    if (rating >= 3.5) {
+      return 'Good Work!';
+    }
+    if (rating >= 2.5) {
+      return 'Making Progress';
+    }
     return 'Needs Attention';
   };
 
@@ -100,12 +112,17 @@ export default function FeedbackCard({
             {/* Teacher Avatar */}
             <div className="w-14 h-14 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white font-bold text-xl border-2 border-white/40">
               {teacherAvatar ? (
-                <Image src={teacherAvatar} alt={teacherName} fill className="rounded-full" />
+                <Image
+                  src={teacherAvatar}
+                  alt={teacherName}
+                  fill
+                  className="rounded-full"
+                />
               ) : (
                 teacherName.charAt(0)
               )}
             </div>
-            
+
             <div>
               <h3 className="text-lg font-bold text-white">{teacherName}</h3>
               <p className="text-sm text-yellow-100">Teacher Feedback</p>
@@ -124,7 +141,12 @@ export default function FeedbackCard({
             </div>
             <div className="flex gap-0.5 mt-1">
               {[...Array(5)].map((_, i) => (
-                <span key={i} className={i < Math.floor(rating) ? 'text-yellow-300' : 'text-white/30'}>
+                <span
+                  key={i}
+                  className={
+                    i < Math.floor(rating) ? 'text-yellow-300' : 'text-white/30'
+                  }
+                >
                   ⭐
                 </span>
               ))}
@@ -137,7 +159,9 @@ export default function FeedbackCard({
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-xs text-yellow-100 mb-1">Student</div>
-              <div className="text-sm font-semibold text-white">{studentName}</div>
+              <div className="text-sm font-semibold text-white">
+                {studentName}
+              </div>
             </div>
             <div>
               <div className="text-xs text-yellow-100 mb-1">Subject</div>
@@ -176,7 +200,10 @@ export default function FeedbackCard({
             </div>
             <ul className="space-y-2">
               {strengths.map((strength, index) => (
-                <li key={index} className="flex items-start gap-2 text-sm text-white">
+                <li
+                  key={index}
+                  className="flex items-start gap-2 text-sm text-white"
+                >
                   <span className="text-green-300 mt-0.5">✓</span>
                   <span>{strength}</span>
                 </li>
@@ -195,11 +222,16 @@ export default function FeedbackCard({
           >
             <div className="flex items-center gap-2 mb-3">
               <span className="text-2xl">🎯</span>
-              <h4 className="text-sm font-semibold text-white">Areas for Improvement</h4>
+              <h4 className="text-sm font-semibold text-white">
+                Areas for Improvement
+              </h4>
             </div>
             <ul className="space-y-2">
               {improvements.map((improvement, index) => (
-                <li key={index} className="flex items-start gap-2 text-sm text-white">
+                <li
+                  key={index}
+                  className="flex items-start gap-2 text-sm text-white"
+                >
                   <span className="text-orange-300 mt-0.5">→</span>
                   <span>{improvement}</span>
                 </li>
@@ -217,9 +249,13 @@ export default function FeedbackCard({
         >
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">💬</span>
-            <h4 className="text-sm font-semibold text-white">Overall Feedback</h4>
+            <h4 className="text-sm font-semibold text-white">
+              Overall Feedback
+            </h4>
           </div>
-          <p className="text-sm text-white leading-relaxed">{overallFeedback}</p>
+          <p className="text-sm text-white leading-relaxed">
+            {overallFeedback}
+          </p>
         </motion.div>
 
         {/* Next Steps */}
@@ -243,7 +279,7 @@ export default function FeedbackCard({
           {onReply && (
             <LiquidButton
               variant="primary"
-              size="large"
+              size="lg"
               onClick={onReply}
               className="flex-1 bg-white text-orange-900 hover:bg-yellow-50"
             >
@@ -254,7 +290,7 @@ export default function FeedbackCard({
           {onViewDetails && (
             <LiquidButton
               variant="secondary"
-              size="large"
+              size="lg"
               onClick={onViewDetails}
               className="flex-1 bg-white/10 text-white hover:bg-white/20 border border-white/20"
             >

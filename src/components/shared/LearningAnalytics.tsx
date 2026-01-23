@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import LiquidButton from '@/components/ui/LiquidButton';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 
 interface SubjectStat {
   subject: string;
@@ -59,9 +59,15 @@ export default function LearningAnalytics({
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-300';
-    if (score >= 70) return 'text-blue-300';
-    if (score >= 50) return 'text-yellow-300';
+    if (score >= 90) {
+      return 'text-green-300';
+    }
+    if (score >= 70) {
+      return 'text-blue-300';
+    }
+    if (score >= 50) {
+      return 'text-yellow-300';
+    }
     return 'text-orange-300';
   };
 
@@ -128,7 +134,9 @@ export default function LearningAnalytics({
             transition={{ delay: 0.1 }}
             className="backdrop-blur-xl bg-white/10 rounded-2xl p-4 border border-white/20 text-center"
           >
-            <div className="text-3xl font-bold text-white mb-1">{totalHours}</div>
+            <div className="text-3xl font-bold text-white mb-1">
+              {totalHours}
+            </div>
             <div className="text-xs text-blue-100">Hours</div>
           </motion.div>
 
@@ -138,7 +146,9 @@ export default function LearningAnalytics({
             transition={{ delay: 0.2 }}
             className="backdrop-blur-xl bg-white/10 rounded-2xl p-4 border border-white/20 text-center"
           >
-            <div className="text-3xl font-bold text-white mb-1">{totalSessions}</div>
+            <div className="text-3xl font-bold text-white mb-1">
+              {totalSessions}
+            </div>
             <div className="text-xs text-blue-100">Sessions</div>
           </motion.div>
 
@@ -148,7 +158,9 @@ export default function LearningAnalytics({
             transition={{ delay: 0.3 }}
             className="backdrop-blur-xl bg-white/10 rounded-2xl p-4 border border-white/20 text-center"
           >
-            <div className={`text-3xl font-bold mb-1 ${getScoreColor(averageScore)}`}>
+            <div
+              className={`text-3xl font-bold mb-1 ${getScoreColor(averageScore)}`}
+            >
               {averageScore}%
             </div>
             <div className="text-xs text-blue-100">Avg Score</div>
@@ -191,8 +203,8 @@ export default function LearningAnalytics({
                         stat.score >= 90
                           ? 'bg-gradient-to-r from-green-400 to-emerald-500'
                           : stat.score >= 70
-                          ? 'bg-gradient-to-r from-blue-400 to-cyan-500'
-                          : 'bg-gradient-to-r from-yellow-400 to-orange-500'
+                            ? 'bg-gradient-to-r from-blue-400 to-cyan-500'
+                            : 'bg-gradient-to-r from-yellow-400 to-orange-500'
                       }`}
                     />
                   </div>
@@ -200,7 +212,9 @@ export default function LearningAnalytics({
 
                 {/* Score & Trend */}
                 <div className="flex items-center gap-2">
-                  <span className={`text-sm font-bold ${getScoreColor(stat.score)}`}>
+                  <span
+                    className={`text-sm font-bold ${getScoreColor(stat.score)}`}
+                  >
                     {stat.score}%
                   </span>
                   <span className={`text-lg ${getTrendColor(stat.trend)}`}>
@@ -223,9 +237,13 @@ export default function LearningAnalytics({
             >
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">💪</span>
-                <span className="text-xs font-semibold text-green-100">Strongest</span>
+                <span className="text-xs font-semibold text-green-100">
+                  Strongest
+                </span>
               </div>
-              <div className="text-lg font-bold text-white">{strongestSubject}</div>
+              <div className="text-lg font-bold text-white">
+                {strongestSubject}
+              </div>
             </motion.div>
           )}
 
@@ -238,9 +256,13 @@ export default function LearningAnalytics({
             >
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">🎯</span>
-                <span className="text-xs font-semibold text-orange-100">Focus On</span>
+                <span className="text-xs font-semibold text-orange-100">
+                  Focus On
+                </span>
               </div>
-              <div className="text-lg font-bold text-white">{needsImprovement}</div>
+              <div className="text-lg font-bold text-white">
+                {needsImprovement}
+              </div>
             </motion.div>
           )}
         </div>
@@ -255,13 +277,15 @@ export default function LearningAnalytics({
           <div className="flex items-start gap-3">
             <span className="text-2xl">🤖</span>
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-white mb-2">AI Insights</h4>
+              <h4 className="text-sm font-semibold text-white mb-2">
+                AI Insights
+              </h4>
               <p className="text-sm text-blue-100 leading-relaxed">
                 {averageScore >= 85
                   ? `${studentName} is performing exceptionally well! Continue the current learning pace and consider advancing to more challenging material.`
                   : averageScore >= 70
-                  ? `${studentName} shows solid understanding. Focus on ${needsImprovement || 'weaker areas'} to achieve even better results.`
-                  : `${studentName} would benefit from additional practice in ${needsImprovement || 'key subjects'}. Consider shorter, more frequent study sessions.`}
+                    ? `${studentName} shows solid understanding. Focus on ${needsImprovement || 'weaker areas'} to achieve even better results.`
+                    : `${studentName} would benefit from additional practice in ${needsImprovement || 'key subjects'}. Consider shorter, more frequent study sessions.`}
               </p>
             </div>
           </div>
@@ -271,7 +295,7 @@ export default function LearningAnalytics({
         {onViewFullReport && (
           <LiquidButton
             variant="primary"
-            size="large"
+            size="lg"
             onClick={onViewFullReport}
             className="w-full bg-white text-indigo-900 hover:bg-blue-50"
           >

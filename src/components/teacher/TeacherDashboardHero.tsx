@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import LiquidButton from '@/components/ui/LiquidButton';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 
 interface TeacherDashboardHeroProps {
   teacherName?: string;
@@ -105,9 +105,7 @@ export default function TeacherDashboardHero({
                 <div className="text-3xl font-bold text-white mb-1">
                   {totalHours}h
                 </div>
-                <div className="text-sm text-emerald-100">
-                  This Week
-                </div>
+                <div className="text-sm text-emerald-100">This Week</div>
               </div>
             </motion.div>
 
@@ -121,7 +119,7 @@ export default function TeacherDashboardHero({
               {onCheckIn && (
                 <LiquidButton
                   variant="primary"
-                  size="large"
+                  size="lg"
                   onClick={onCheckIn}
                   className="bg-white text-emerald-900 hover:bg-emerald-50"
                 >
@@ -130,8 +128,8 @@ export default function TeacherDashboardHero({
               )}
               {onViewSchedule && (
                 <LiquidButton
-                  variant="outline"
-                  size="large"
+                  variant="ghost"
+                  size="lg"
                   onClick={onViewSchedule}
                   className="border-white text-white hover:bg-white/10"
                 >
@@ -158,7 +156,9 @@ export default function TeacherDashboardHero({
                     Upcoming Session
                   </h3>
                   <p className="text-emerald-100 mb-1">
-                    <span className="font-medium">{upcomingSession.studentName}</span>
+                    <span className="font-medium">
+                      {upcomingSession.studentName}
+                    </span>
                   </p>
                   <p className="text-sm text-emerald-200">
                     {upcomingSession.time}

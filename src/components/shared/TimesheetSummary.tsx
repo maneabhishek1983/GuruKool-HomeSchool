@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import LiquidButton from '@/components/ui/LiquidButton';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 
 interface DayEntry {
   day: string;
@@ -84,7 +84,7 @@ export default function TimesheetSummary({
             </h3>
             <p className="text-blue-100">{weekOf}</p>
           </div>
-          
+
           {/* Total Hours Badge */}
           <motion.div
             className="backdrop-blur-xl bg-white/10 rounded-2xl px-4 py-3 border border-white/20 text-center"
@@ -108,7 +108,9 @@ export default function TimesheetSummary({
                 <span className="text-2xl">📅</span>
               </div>
               <div>
-                <div className="text-2xl font-bold text-white">{totalSessions}</div>
+                <div className="text-2xl font-bold text-white">
+                  {totalSessions}
+                </div>
                 <div className="text-sm text-blue-100">Sessions</div>
               </div>
             </div>
@@ -136,7 +138,9 @@ export default function TimesheetSummary({
 
         {/* Daily Breakdown */}
         <div className="backdrop-blur-xl bg-white/10 rounded-2xl p-4 border border-white/20 mb-4">
-          <h4 className="text-sm font-semibold text-white mb-3">Daily Breakdown</h4>
+          <h4 className="text-sm font-semibold text-white mb-3">
+            Daily Breakdown
+          </h4>
           <div className="space-y-3">
             {weeklyEntries.map((entry, index) => (
               <motion.div
@@ -161,8 +165,8 @@ export default function TimesheetSummary({
                       entry.status === 'complete'
                         ? 'bg-gradient-to-r from-green-400 to-emerald-500'
                         : entry.status === 'partial'
-                        ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
-                        : 'bg-gradient-to-r from-gray-400 to-gray-500'
+                          ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
+                          : 'bg-gradient-to-r from-gray-400 to-gray-500'
                     }`}
                   />
                   <div className="absolute inset-0 flex items-center px-3">
@@ -174,9 +178,15 @@ export default function TimesheetSummary({
 
                 {/* Status Icon */}
                 <div className="w-6">
-                  {entry.status === 'complete' && <span className="text-green-400">✓</span>}
-                  {entry.status === 'partial' && <span className="text-yellow-400">○</span>}
-                  {entry.status === 'none' && <span className="text-gray-400">−</span>}
+                  {entry.status === 'complete' && (
+                    <span className="text-green-400">✓</span>
+                  )}
+                  {entry.status === 'partial' && (
+                    <span className="text-yellow-400">○</span>
+                  )}
+                  {entry.status === 'none' && (
+                    <span className="text-gray-400">−</span>
+                  )}
                 </div>
               </motion.div>
             ))}
@@ -188,7 +198,7 @@ export default function TimesheetSummary({
           {onViewFullReport && (
             <LiquidButton
               variant="primary"
-              size="large"
+              size="lg"
               onClick={onViewFullReport}
               className="flex-1 bg-white text-indigo-900 hover:bg-blue-50"
             >
@@ -197,8 +207,8 @@ export default function TimesheetSummary({
           )}
           {onExport && (
             <LiquidButton
-              variant="outline"
-              size="large"
+              variant="ghost"
+              size="lg"
               onClick={onExport}
               className="border-white text-white hover:bg-white/10"
             >

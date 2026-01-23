@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import LiquidButton from '@/components/ui/LiquidButton';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 
 interface QRScanGuideProps {
   type?: 'check-in' | 'check-out';
@@ -107,7 +107,7 @@ export default function QRScanGuide({
               </span>
             </div>
           </motion.div>
-          
+
           <h3 className="text-2xl font-bold text-white mb-2">
             {type === 'check-in' ? 'Check-In' : 'Check-Out'} with QR Code
           </h3>
@@ -148,7 +148,8 @@ export default function QRScanGuide({
               />
             </div>
             <p className="text-sm text-gray-600 mt-3">
-              Scan this code to {type === 'check-in' ? 'start' : 'end'} your session
+              Scan this code to {type === 'check-in' ? 'start' : 'end'} your
+              session
             </p>
           </motion.div>
         )}
@@ -159,7 +160,7 @@ export default function QRScanGuide({
             <span>📖</span>
             <span>How to Scan</span>
           </h4>
-          
+
           <div className="space-y-3">
             {steps.map((step, index) => (
               <motion.div
@@ -173,7 +174,7 @@ export default function QRScanGuide({
                 <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
                   {step.number}
                 </div>
-                
+
                 {/* Step Content */}
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
@@ -182,9 +183,7 @@ export default function QRScanGuide({
                       {step.title}
                     </span>
                   </div>
-                  <p className="text-xs text-cyan-100">
-                    {step.description}
-                  </p>
+                  <p className="text-xs text-cyan-100">{step.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -203,8 +202,9 @@ export default function QRScanGuide({
             <div>
               <h5 className="text-white font-semibold text-sm mb-1">Pro Tip</h5>
               <p className="text-xs text-cyan-100">
-                Make sure you're at the student's home location for biometric verification. 
-                The QR code works best in good lighting conditions.
+                Make sure you're at the student's home location for biometric
+                verification. The QR code works best in good lighting
+                conditions.
               </p>
             </div>
           </div>
@@ -215,7 +215,7 @@ export default function QRScanGuide({
           {onScanComplete && (
             <LiquidButton
               variant="primary"
-              size="large"
+              size="lg"
               onClick={onScanComplete}
               className="flex-1 bg-white text-cyan-900 hover:bg-cyan-50"
             >
@@ -224,8 +224,8 @@ export default function QRScanGuide({
           )}
           {onCancel && (
             <LiquidButton
-              variant="outline"
-              size="large"
+              variant="ghost"
+              size="lg"
               onClick={onCancel}
               className="border-white text-white hover:bg-white/10"
             >
