@@ -167,7 +167,7 @@ export default function EmptyState({
             >
               <LiquidButton
                 variant="primary"
-                size="large"
+                size="lg"
                 onClick={onAction}
               >
                 {displayAction}
