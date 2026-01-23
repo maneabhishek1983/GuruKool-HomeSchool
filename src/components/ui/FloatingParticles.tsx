@@ -16,9 +16,12 @@ export default function FloatingParticles({ theme }: FloatingParticlesProps) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Store canvas reference for use in class (TypeScript strict null checks)
+    const canvasEl = canvas;
+
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvasEl.width = window.innerWidth;
+      canvasEl.height = window.innerHeight;
     };
     resize();
     window.addEventListener('resize', resize);
@@ -32,8 +35,8 @@ export default function FloatingParticles({ theme }: FloatingParticlesProps) {
       opacity: number;
 
       constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
+        this.x = Math.random() * canvasEl.width;
+        this.y = Math.random() * canvasEl.height;
         this.size = Math.random() * 3 + 1;
         this.speedX = (Math.random() - 0.5) * 0.5;
         this.speedY = (Math.random() - 0.5) * 0.5;
@@ -44,10 +47,10 @@ export default function FloatingParticles({ theme }: FloatingParticlesProps) {
         this.x += this.speedX;
         this.y += this.speedY;
 
-        if (this.x < 0) this.x = canvas.width;
-        if (this.x > canvas.width) this.x = 0;
-        if (this.y < 0) this.y = canvas.height;
-        if (this.y > canvas.height) this.y = 0;
+        if (this.x < 0) this.x = canvasEl.width;
+        if (this.x > canvasEl.width) this.x = 0;
+        if (this.y < 0) this.y = canvasEl.height;
+        if (this.y > canvasEl.height) this.y = 0;
       }
 
       draw() {
@@ -69,7 +72,7 @@ export default function FloatingParticles({ theme }: FloatingParticlesProps) {
     let animationId: number;
 
     const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
 
       particles.forEach(particle => {
         particle.update();

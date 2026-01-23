@@ -15,7 +15,7 @@ export default function RoleIcon({ role, size = 120 }: RoleIconProps) {
       rotate: 0,
       opacity: 1,
       transition: {
-        type: 'spring',
+        type: 'spring' as const,
         stiffness: 200,
         damping: 15,
         delay: 0.2,
@@ -23,7 +23,7 @@ export default function RoleIcon({ role, size = 120 }: RoleIconProps) {
     },
     hover: {
       scale: 1.1,
-      rotate: [0, -10, 10, -10, 0],
+      rotate: [0, -10, 10, -10, 0] as number[],
       transition: {
         duration: 0.5,
       },
