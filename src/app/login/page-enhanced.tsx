@@ -199,11 +199,10 @@ function EnhancedLoginForm() {
                         key={r}
                         type="button"
                         onClick={() => setRole(r)}
-                        className={`p-4 rounded-xl border-2 transition-all ${
-                          role === r
+                        className={`p-4 rounded-xl border-2 transition-all ${role === r
                             ? `${roleThemes[r].button} border-transparent text-white shadow-lg`
                             : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20'
-                        }`}
+                          }`}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         initial={{ opacity: 0, y: 20 }}

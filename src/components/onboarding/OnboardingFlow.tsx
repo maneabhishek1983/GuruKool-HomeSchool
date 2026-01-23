@@ -53,6 +53,8 @@ export default function OnboardingFlow({
   const step = onboardingSteps[currentStep];
   const isLastStep = currentStep === onboardingSteps.length - 1;
 
+  if (!step) return null;
+
   const handleNext = () => {
     if (isLastStep) {
       // Celebrate completion
@@ -94,10 +96,10 @@ export default function OnboardingFlow({
             <motion.div
               key={index}
               className={`h-2 rounded-full transition-all duration-300 ${index === currentStep
-                  ? `w-12 bg-gradient-to-r ${step.gradient}`
-                  : index < currentStep
-                    ? 'w-8 bg-green-500'
-                    : 'w-8 bg-gray-300 dark:bg-gray-600'
+                ? `w-12 bg-gradient-to-r ${step.gradient}`
+                : index < currentStep
+                  ? 'w-8 bg-green-500'
+                  : 'w-8 bg-gray-300 dark:bg-gray-600'
                 }`}
               initial={{ scale: 0.8 }}
               animate={{ scale: index === currentStep ? 1.1 : 1 }}
@@ -212,8 +214,8 @@ export default function OnboardingFlow({
                   >
                     {currentStep > 0 && (
                       <LiquidButton
-                        variant="outline"
-                        size="large"
+                        variant="secondary"
+                        size="lg"
                         onClick={handlePrevious}
                       >
                         ← Previous
@@ -222,7 +224,7 @@ export default function OnboardingFlow({
 
                     <LiquidButton
                       variant="primary"
-                      size="large"
+                      size="lg"
                       onClick={handleNext}
                       className="flex-1"
                     >

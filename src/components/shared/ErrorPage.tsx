@@ -165,7 +165,7 @@ export default function ErrorPage({
               >
                 {showHomeButton && (
                   <Link href="/">
-                    <LiquidButton variant="primary" size="large">
+                    <LiquidButton variant="primary" size="lg">
                       🏠 Go Home
                     </LiquidButton>
                   </Link>
@@ -174,7 +174,7 @@ export default function ErrorPage({
                 {showRetryButton && onRetry && (
                   <LiquidButton
                     variant="secondary"
-                    size="large"
+                    size="lg"
                     onClick={onRetry}
                   >
                     🔄 Try Again
@@ -183,7 +183,7 @@ export default function ErrorPage({
 
                 {type === '404' && (
                   <Link href="/search">
-                    <LiquidButton variant="outline" size="large">
+                    <LiquidButton variant="secondary" size="lg">
                       🔍 Search
                     </LiquidButton>
                   </Link>
