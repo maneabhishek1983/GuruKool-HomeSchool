@@ -268,6 +268,13 @@ export default function CreateStudentForm({
     e.preventDefault();
     if (validateForm()) {
       onSubmit(formData);
+    } else {
+      // If validation fails and we're on the last step, go back to the first step with errors
+      if (errors.name || errors.age || errors.country || errors.gradeLevel) {
+        setCurrentStep(1);
+      } else if (errors.subjects) {
+        setCurrentStep(2);
+      }
     }
   };
 
@@ -982,8 +989,27 @@ export default function CreateStudentForm({
     </div>
   );
 
-  const renderTeacherAssignment = () => (
+  const renderTeacherAssignment = () => {
+    // Check if there are validation issues from previous steps
+    const hasBasicInfoIssues = !formData.name.trim() || !formData.age.trim() || !formData.country || !formData.gradeLevel;
+    const hasSubjectIssues = formData.selectedSubjects.length === 0;
+
+    return (
     <div className="space-y-6">
+      {/* Validation Summary */}
+      {(hasBasicInfoIssues || hasSubjectIssues) && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h4 className="font-medium text-yellow-800 mb-2">Please complete required fields:</h4>
+          <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
+            {!formData.name.trim() && <li>Student name (Step 1)</li>}
+            {!formData.age.trim() && <li>Student age (Step 1)</li>}
+            {!formData.country && <li>Country (Step 1)</li>}
+            {!formData.gradeLevel && <li>Grade level (Step 1)</li>}
+            {hasSubjectIssues && <li>At least one subject (Step 2)</li>}
+          </ul>
+        </div>
+      )}
+
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
@@ -1093,6 +1119,7 @@ export default function CreateStudentForm({
       </div>
     </div>
   );
+  };
 
   const renderDataSheetActivities = () => (
     <div className="space-y-6">
