@@ -679,4 +679,145 @@ export class DatabaseService {
       return [];
     }
   }
+
+  // Analytics Methods
+
+  /**
+   * Get session statistics for a parent's students
+   */
+  static async getParentSessionStats(parentId: string): Promise<{
+    totalSessions: number;
+    monthlyHours: number;
+    weeklyHours: number;
+    activeSessions: number;
+  }> {
+    try {
+      // Get all students for this parent
+      const students = await this.getStudents(parentId);
+      const studentIds = students.map(s => s.id);
+
+      if (studentIds.length === 0) {
+        return {
+          totalSessions: 0,
+          monthlyHours: 0,
+          weeklyHours: 0,
+          activeSessions: 0,
+        };
+      }
+
+      // Calculate date ranges
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      // Fetch all sessions for these students
+      const { data: sessions, error } = await supabase
+        .from('teacher_sessions')
+        .select('checked_in_at, checked_out_at')
+        .in('student_id', studentIds);
+
+      if (error) {
+        console.error('Error fetching sessions:', error);
+        return {
+          totalSessions: 0,
+          monthlyHours: 0,
+          weeklyHours: 0,
+          activeSessions: 0,
+        };
+      }
+
+      let totalSessions = 0;
+      let monthlyMinutes = 0;
+      let weeklyMinutes = 0;
+      let activeSessions = 0;
+
+      for (const session of sessions || []) {
+        const checkedIn = new Date(session.checked_in_at);
+        const checkedOut = session.checked_out_at
+          ? new Date(session.checked_out_at)
+          : null;
+
+        // Count active sessions (no checkout)
+        if (!checkedOut) {
+          activeSessions++;
+        }
+
+        // Calculate duration in minutes
+        const endTime = checkedOut || now;
+        const durationMinutes = Math.round(
+          (endTime.getTime() - checkedIn.getTime()) / 60000
+        );
+
+        totalSessions++;
+
+        // Check if session is in current month
+        if (checkedIn >= startOfMonth) {
+          monthlyMinutes += durationMinutes;
+        }
+
+        // Check if session is in current week
+        if (checkedIn >= startOfWeek) {
+          weeklyMinutes += durationMinutes;
+        }
+      }
+
+      return {
+        totalSessions,
+        monthlyHours: Math.round((monthlyMinutes / 60) * 10) / 10, // Round to 1 decimal
+        weeklyHours: Math.round((weeklyMinutes / 60) * 10) / 10,
+        activeSessions,
+      };
+    } catch (error) {
+      console.error('Error getting parent session stats:', error);
+      return {
+        totalSessions: 0,
+        monthlyHours: 0,
+        weeklyHours: 0,
+        activeSessions: 0,
+      };
+    }
+  }
+
+  /**
+   * Get active session status for each student
+   */
+  static async getStudentActiveSessionStatus(
+    studentIds: string[]
+  ): Promise<Map<string, boolean>> {
+    const statusMap = new Map<string, boolean>();
+
+    if (studentIds.length === 0) {
+      return statusMap;
+    }
+
+    try {
+      const { data: activeSessions, error } = await supabase
+        .from('teacher_sessions')
+        .select('student_id')
+        .in('student_id', studentIds)
+        .is('checked_out_at', null);
+
+      if (error) {
+        console.error('Error fetching active sessions:', error);
+        return statusMap;
+      }
+
+      // Initialize all as false
+      for (const id of studentIds) {
+        statusMap.set(id, false);
+      }
+
+      // Set active ones to true
+      for (const session of activeSessions || []) {
+        statusMap.set(session.student_id, true);
+      }
+
+      return statusMap;
+    } catch (error) {
+      console.error('Error getting student active session status:', error);
+      return statusMap;
+    }
+  }
 }

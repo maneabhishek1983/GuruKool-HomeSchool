@@ -44,6 +44,17 @@ export default function ParentDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Analytics state
+  const [sessionStats, setSessionStats] = useState({
+    totalSessions: 0,
+    monthlyHours: 0,
+    weeklyHours: 0,
+    activeSessions: 0,
+  });
+  const [studentActiveStatus, setStudentActiveStatus] = useState<
+    Map<string, boolean>
+  >(new Map());
+
   const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
   const [showCreateTeacherModal, setShowCreateTeacherModal] = useState(false);
   const [showDataSheetsModal, setShowDataSheetsModal] = useState(false);
@@ -70,13 +81,23 @@ export default function ParentDashboard() {
     setError(null);
 
     try {
-      const [studentsData, teachersData] = await Promise.all([
+      const [studentsData, teachersData, stats] = await Promise.all([
         DatabaseService.getStudents(user.id),
         DatabaseService.getTeachers(user.id),
+        DatabaseService.getParentSessionStats(user.id),
       ]);
 
       setStudents(studentsData);
       setTeachers(teachersData);
+      setSessionStats(stats);
+
+      // Get active session status for each student
+      if (studentsData.length > 0) {
+        const studentIds = studentsData.map(s => s.id);
+        const activeStatus =
+          await DatabaseService.getStudentActiveSessionStatus(studentIds);
+        setStudentActiveStatus(activeStatus);
+      }
     } catch (err) {
       console.error('Error loading data:', err);
       setError('Failed to load data. Please try refreshing the page.');
@@ -448,10 +469,10 @@ export default function ParentDashboard() {
             id: s.id,
             name: s.name,
             progress: 0, // Progress tracking not yet implemented
-            activeSession: false,
+            activeSession: studentActiveStatus.get(s.id) || false,
           }))}
           totalStudents={students.length}
-          weeklyHours={0}
+          weeklyHours={sessionStats.weeklyHours}
           onAddStudent={() => setShowCreateStudentModal(true)}
           onViewProgress={() => {}}
           className="mb-8"
@@ -558,7 +579,7 @@ export default function ParentDashboard() {
           <motion.div variants={itemVariants}>
             <GlassStatCard
               title="This Month"
-              value="24h"
+              value={`${sessionStats.monthlyHours}h`}
               color="success"
               icon={
                 <svg
@@ -579,11 +600,12 @@ export default function ParentDashboard() {
           </motion.div>
           <motion.div variants={itemVariants}>
             <GlassStatCard
-              title="Avg Progress"
-              value={`${students.length > 0 ? 85 : 0}%`}
+              title="Active Sessions"
+              value={sessionStats.activeSessions}
               color="warning"
-              trend="up"
-              trendValue="+5% this week"
+              {...(sessionStats.activeSessions > 0
+                ? { trend: 'up' as const, trendValue: 'In progress' }
+                : {})}
               icon={
                 <svg
                   className="w-6 h-6"

@@ -63,12 +63,18 @@ export const POST = withRateLimit({
 
       const supabase = getSupabaseAdmin();
 
+      // Get authorization header to forward to internal API calls
+      const authHeader = request.headers.get('authorization') || '';
+
       // Step 1: Verify biometric authentication
       const verifyResponse = await fetch(
         `${request.nextUrl.origin}/api/biometric/verify`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: authHeader,
+          },
           body: JSON.stringify({
             teacherId: user.id,
             credentialId,
@@ -80,8 +86,13 @@ export const POST = withRateLimit({
       );
 
       if (!verifyResponse.ok) {
+        const errorData = await verifyResponse.json().catch(() => ({}));
+        console.error('Biometric verification failed:', errorData);
         return NextResponse.json(
-          { error: 'Biometric authentication failed' },
+          {
+            error: 'Biometric authentication failed',
+            details: errorData.error || 'Unknown error',
+          },
           { status: 401 }
         );
       }
@@ -99,7 +110,10 @@ export const POST = withRateLimit({
         `${request.nextUrl.origin}/api/location/verify`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: authHeader,
+          },
           body: JSON.stringify({
             studentId,
             latitude,
@@ -110,8 +124,13 @@ export const POST = withRateLimit({
       );
 
       if (!locationResponse.ok) {
+        const errorData = await locationResponse.json().catch(() => ({}));
+        console.error('Location verification failed:', errorData);
         return NextResponse.json(
-          { error: 'Location verification failed' },
+          {
+            error: 'Location verification failed',
+            details: errorData.error || 'Unknown error',
+          },
           { status: 400 }
         );
       }
