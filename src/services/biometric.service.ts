@@ -1,6 +1,6 @@
 /**
  * Biometric Authentication Service
- * 
+ *
  * Handles WebAuthn biometric authentication (Face ID, Touch ID, Fingerprint)
  * for secure teacher check-in/out
  */
@@ -52,7 +52,7 @@ export class BiometricService {
    */
   private static getDeviceType(): 'ios' | 'android' | 'web' | 'other' {
     const userAgent = navigator.userAgent.toLowerCase();
-    
+
     if (/iphone|ipad|ipod/.test(userAgent)) {
       return 'ios';
     } else if (/android/.test(userAgent)) {
@@ -60,7 +60,7 @@ export class BiometricService {
     } else if (/mobile/.test(userAgent)) {
       return 'other';
     }
-    
+
     return 'web';
   }
 
@@ -70,7 +70,7 @@ export class BiometricService {
   private static getDeviceName(): string {
     const userAgent = navigator.userAgent;
     const deviceType = this.getDeviceType();
-    
+
     switch (deviceType) {
       case 'ios':
         if (/ipad/.test(userAgent.toLowerCase())) {
@@ -91,12 +91,16 @@ export class BiometricService {
    */
   static async register(teacherId: string): Promise<BiometricCredential> {
     if (!this.isSupported()) {
-      throw new Error('Biometric authentication is not supported on this device');
+      throw new Error(
+        'Biometric authentication is not supported on this device'
+      );
     }
 
     const available = await this.isPlatformAuthenticatorAvailable();
     if (!available) {
-      throw new Error('Device biometrics (Face ID, Touch ID, Fingerprint) are not available');
+      throw new Error(
+        'Device biometrics (Face ID, Touch ID, Fingerprint) are not available'
+      );
     }
 
     try {
@@ -114,7 +118,7 @@ export class BiometricService {
       const { challenge } = await challengeResponse.json();
 
       // Create credential
-      const credential = await navigator.credentials.create({
+      const credential = (await navigator.credentials.create({
         publicKey: {
           challenge: this.base64ToArrayBuffer(challenge),
           rp: {
@@ -138,7 +142,7 @@ export class BiometricService {
           timeout: 60000, // 60 seconds
           attestation: 'none', // No attestation needed for our use case
         },
-      }) as PublicKeyCredential;
+      })) as PublicKeyCredential;
 
       if (!credential) {
         throw new Error('Failed to create biometric credential');
@@ -161,7 +165,9 @@ export class BiometricService {
 
       if (!registrationResponse.ok) {
         const error = await registrationResponse.json();
-        throw new Error(error.error || 'Failed to register biometric credential');
+        throw new Error(
+          error.error || 'Failed to register biometric credential'
+        );
       }
 
       const result = await registrationResponse.json();
@@ -174,7 +180,7 @@ export class BiometricService {
       };
     } catch (error) {
       console.error('Biometric registration error:', error);
-      
+
       if (error instanceof Error) {
         if (error.name === 'NotAllowedError') {
           throw new Error('Biometric registration was cancelled');
@@ -182,7 +188,7 @@ export class BiometricService {
           throw new Error('This device is already registered');
         }
       }
-      
+
       throw error;
     }
   }
@@ -192,7 +198,9 @@ export class BiometricService {
    */
   static async authenticate(teacherId: string): Promise<BiometricAuthResult> {
     if (!this.isSupported()) {
-      throw new Error('Biometric authentication is not supported on this device');
+      throw new Error(
+        'Biometric authentication is not supported on this device'
+      );
     }
 
     try {
@@ -210,11 +218,13 @@ export class BiometricService {
       const { challenge, credentialIds } = await challengeResponse.json();
 
       if (!credentialIds || credentialIds.length === 0) {
-        throw new Error('No biometric credentials registered. Please register first.');
+        throw new Error(
+          'No biometric credentials registered. Please register first.'
+        );
       }
 
       // Request authentication
-      const assertion = await navigator.credentials.get({
+      const assertion = (await navigator.credentials.get({
         publicKey: {
           challenge: this.base64ToArrayBuffer(challenge),
           allowCredentials: credentialIds.map((id: string) => ({
@@ -224,7 +234,7 @@ export class BiometricService {
           userVerification: 'required', // Require biometric verification
           timeout: 60000, // 60 seconds
         },
-      }) as PublicKeyCredential;
+      })) as PublicKeyCredential;
 
       if (!assertion) {
         throw new Error('Biometric authentication failed');
@@ -241,15 +251,17 @@ export class BiometricService {
       };
     } catch (error) {
       console.error('Biometric authentication error:', error);
-      
+
       if (error instanceof Error) {
         if (error.name === 'NotAllowedError') {
           throw new Error('Biometric authentication was cancelled');
         } else if (error.name === 'InvalidStateError') {
-          throw new Error('No biometric credentials found. Please register first.');
+          throw new Error(
+            'No biometric credentials found. Please register first.'
+          );
         }
       }
-      
+
       throw error;
     }
   }
@@ -290,10 +302,14 @@ export class BiometricService {
   /**
    * List registered credentials
    */
-  static async listCredentials(teacherId: string): Promise<BiometricCredential[]> {
+  static async listCredentials(
+    teacherId: string
+  ): Promise<BiometricCredential[]> {
     try {
-      const response = await fetch(`/api/biometric/credentials?teacherId=${teacherId}`);
-      
+      const response = await fetch(
+        `/api/biometric/credentials?teacherId=${teacherId}`
+      );
+
       if (!response.ok) {
         throw new Error('Failed to fetch credentials');
       }
@@ -331,7 +347,7 @@ export class BiometricService {
    */
   static getBiometricTypeDescription(): string {
     const deviceType = this.getDeviceType();
-    
+
     switch (deviceType) {
       case 'ios':
         return 'Face ID or Touch ID';
@@ -349,7 +365,7 @@ export class BiometricService {
     const bytes = new Uint8Array(buffer);
     let binary = '';
     for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
+      binary += String.fromCharCode(bytes[i]!);
     }
     return btoa(binary);
   }
