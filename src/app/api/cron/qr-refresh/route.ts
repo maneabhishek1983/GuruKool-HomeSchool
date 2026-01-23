@@ -103,6 +103,9 @@ export async function GET(request: NextRequest) {
       errors: [] as string[],
     };
 
+    // Get today's date for daily secret derivation
+    const todayDate = getTodayDateString();
+
     for (const qrCode of expiringQRCodes) {
       try {
         // Generate new QR data using server-side API
@@ -111,22 +114,31 @@ export async function GET(request: NextRequest) {
           throw new Error('QR_SECRET not configured');
         }
 
-        // Generate new signature
+        // Derive daily secret for mandatory daily rotation
+        const dailySecret = await deriveDailySecret(qrSecret, todayDate);
+
+        // Generate new signature using daily secret
         const signature = await generateSignature(
           qrCode.teacher_id,
           qrCode.student_id,
           qrCode.parent_id,
-          qrSecret
+          dailySecret
         );
 
-        // Create new QR code data with fresh expiration
+        // Calculate expiration: end of today (23:59:59 UTC)
+        const today = new Date(todayDate);
+        const endOfDay = new Date(today);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+
+        // Create new QR code data with fresh expiration (valid until end of today)
         const newQRData = {
           type: 'teacher_auth',
           teacherId: qrCode.teacher_id,
           studentId: qrCode.student_id,
           parentId: qrCode.parent_id,
           timestamp: Date.now(),
-          expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+          generatedDate: todayDate, // Include for daily validation
+          expiresAt: endOfDay.getTime(), // Expires at end of today (UTC)
           signature,
         };
 
@@ -179,6 +191,39 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * Get today's date string in YYYY-MM-DD format (UTC)
+ */
+function getTodayDateString(): string {
+  const now = new Date();
+  return now.toISOString().split('T')[0] as string;
+}
+
+/**
+ * Derive a daily secret from the base QR_SECRET
+ * This ensures QR codes are only valid for the day they were created
+ */
+async function deriveDailySecret(
+  baseSecret: string,
+  dateString: string
+): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(baseSecret);
+  const dateData = encoder.encode(`daily-qr-secret-${dateString}`);
+
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+
+  const derivedKey = await crypto.subtle.sign('HMAC', cryptoKey, dateData);
+  const derivedArray = Array.from(new Uint8Array(derivedKey));
+  return btoa(String.fromCharCode(...derivedArray));
 }
 
 /**

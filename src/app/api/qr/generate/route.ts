@@ -10,10 +10,46 @@ const schema = z.object({
 });
 
 /**
+ * Get today's date string in YYYY-MM-DD format (UTC)
+ */
+function getTodayDateString(): string {
+  const now = new Date();
+  return now.toISOString().split('T')[0] as string;
+}
+
+/**
+ * Derive a daily secret from the base QR_SECRET
+ * This ensures QR codes are only valid for the day they were created
+ */
+async function deriveDailySecret(
+  baseSecret: string,
+  dateString: string
+): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(baseSecret);
+  const dateData = encoder.encode(`daily-qr-secret-${dateString}`);
+
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+
+  const derivedKey = await crypto.subtle.sign('HMAC', cryptoKey, dateData);
+  const derivedArray = Array.from(new Uint8Array(derivedKey));
+  return btoa(String.fromCharCode(...derivedArray));
+}
+
+/**
  * POST /api/qr/generate
- * 
+ *
  * Generate secure QR code data for teacher authentication
  * Server-side only to protect QR secret
+ *
+ * SECURITY: Uses daily rotating secret derived from base QR_SECRET
+ * QR codes are only valid for the day they are generated
  */
 export const POST = withRateLimit({
   keyPrefix: 'api:qr:generate',
@@ -36,8 +72,8 @@ export const POST = withRateLimit({
     const { teacherId, studentId, parentId } = validation.data;
 
     // Get secret from server-side environment variable
-    const secret = process.env.QR_SECRET;
-    if (!secret || secret.length < 32) {
+    const baseSecret = process.env.QR_SECRET;
+    if (!baseSecret || baseSecret.length < 32) {
       console.error('QR_SECRET not configured or too short');
       return NextResponse.json(
         { error: 'Server configuration error' },
@@ -45,8 +81,22 @@ export const POST = withRateLimit({
       );
     }
 
-    // Generate signature
-    const signature = await generateSignature(teacherId, studentId, parentId, secret);
+    // Derive daily secret for mandatory daily rotation
+    const todayDate = getTodayDateString();
+    const dailySecret = await deriveDailySecret(baseSecret, todayDate);
+
+    // Generate signature using daily secret
+    const signature = await generateSignature(
+      teacherId,
+      studentId,
+      parentId,
+      dailySecret
+    );
+
+    // Calculate expiration: end of today (23:59:59 UTC)
+    const today = new Date(todayDate);
+    const endOfDay = new Date(today);
+    endOfDay.setUTCHours(23, 59, 59, 999);
 
     // Create QR code data with expiration
     const data = {
@@ -55,13 +105,16 @@ export const POST = withRateLimit({
       studentId,
       parentId,
       timestamp: Date.now(),
-      expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
+      generatedDate: todayDate, // Include generation date for validation
+      expiresAt: endOfDay.getTime(), // Expires at end of today (UTC)
       signature,
     };
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       qrData: JSON.stringify(data),
       expiresAt: data.expiresAt,
+      generatedDate: todayDate,
+      note: 'QR code valid until end of day (UTC). Daily rotation is mandatory.',
     });
   } catch (error) {
     console.error('Error generating QR code:', error);
@@ -100,7 +153,7 @@ async function generateSignature(
 
 /**
  * GET /api/qr/generate
- * 
+ *
  * Test endpoint to verify API is working
  */
 export async function GET() {
