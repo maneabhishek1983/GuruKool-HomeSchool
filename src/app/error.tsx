@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import ErrorPage from '@/components/shared/ErrorPage';
 
-export default function GlobalError({
+export default function Error({
   error,
   reset,
 }: {
@@ -10,42 +10,11 @@ export default function GlobalError({
   reset: () => void;
 }) {
   return (
-    <html>
-      <body>
-        <div
-          style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'column',
-            padding: '2rem',
-            gap: '1rem',
-            background: '#f9fafb',
-            color: '#111827',
-          }}
-        >
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>
-            Something went wrong
-          </h2>
-          <p style={{ color: '#6b7280' }}>
-            {process.env.NODE_ENV === 'production'
-              ? 'An unexpected error occurred.'
-              : error.message}
-          </p>
-          <button
-            onClick={() => reset()}
-            style={{
-              background: '#2563eb',
-              color: 'white',
-              padding: '0.5rem 1rem',
-              borderRadius: '0.5rem',
-            }}
-          >
-            Try again
-          </button>
-        </div>
-      </body>
-    </html>
+    <ErrorPage
+      type="500"
+      description={`${error.message || 'Something went wrong on our end. Our team has been notified and is working to fix it.'}`}
+      showRetryButton
+      onRetry={reset}
+    />
   );
 }
