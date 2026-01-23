@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import LiquidButton from '@/components/ui/LiquidButton';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 
 export type ErrorType = '404' | '500' | 'offline' | '403';
 
@@ -97,7 +97,7 @@ export default function ErrorPage({
                 className="w-full h-auto object-contain"
                 priority
               />
-              
+
               {/* Floating particles */}
               <div className="absolute inset-0 -z-10">
                 {[...Array(12)].map((_, i) => (

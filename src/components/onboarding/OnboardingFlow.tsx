@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import LiquidButton from '@/components/ui/LiquidButton';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 import confetti from 'canvas-confetti';
 
 interface OnboardingStep {
@@ -93,13 +93,12 @@ export default function OnboardingFlow({
           {onboardingSteps.map((_, index) => (
             <motion.div
               key={index}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                index === currentStep
+              className={`h-2 rounded-full transition-all duration-300 ${index === currentStep
                   ? `w-12 bg-gradient-to-r ${step.gradient}`
                   : index < currentStep
-                  ? 'w-8 bg-green-500'
-                  : 'w-8 bg-gray-300 dark:bg-gray-600'
-              }`}
+                    ? 'w-8 bg-green-500'
+                    : 'w-8 bg-gray-300 dark:bg-gray-600'
+                }`}
               initial={{ scale: 0.8 }}
               animate={{ scale: index === currentStep ? 1.1 : 1 }}
             />
@@ -137,7 +136,7 @@ export default function OnboardingFlow({
                     className="w-full h-auto object-contain"
                     priority
                   />
-                  
+
                   {/* Floating particles */}
                   <div className="absolute inset-0 -z-10">
                     {[...Array(10)].map((_, i) => (

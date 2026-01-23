@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import LiquidButton from '@/components/ui/LiquidButton';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 
 export type EmptyStateType = 'no-data' | 'no-results' | 'welcome' | 'no-students' | 'no-teachers' | 'no-sessions';
 
@@ -113,7 +113,7 @@ export default function EmptyState({
               className="w-64 h-64 object-contain"
               priority
             />
-            
+
             {/* Floating particles around image */}
             <div className="absolute inset-0 -z-10">
               {[...Array(8)].map((_, i) => (
