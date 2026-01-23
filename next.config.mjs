@@ -42,9 +42,9 @@ const nextConfig = {
       "connect-src 'self' https://*.supabase.co https://api.openai.com https://vercel.live http://localhost:* https://localhost:* wss://*.supabase.co",
     ];
 
-    const frameSrc = isProd
-      ? ["frame-src 'self'"]
-      : ["frame-src 'self' https://vercel.live https://*.vercel.app"];
+    const frameSrc = [
+      "frame-src 'self' https://vercel.live https://*.vercel.app",
+    ];
 
     const cspDirectives = [
       "default-src 'self'",
