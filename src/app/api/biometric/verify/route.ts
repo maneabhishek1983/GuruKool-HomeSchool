@@ -5,6 +5,20 @@ import { withRateLimit } from '@/lib/api-security';
 import { requireTeacher } from '@/lib/api-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 
+// Type for biometric credential (not in generated Supabase types yet)
+interface BiometricCredential {
+  id: string;
+  teacher_id: string;
+  credential_id: string;
+  public_key: string;
+  device_name: string;
+  device_type: string;
+  counter: number;
+  is_active: boolean;
+  created_at: string;
+  last_used_at: string | null;
+}
+
 const schema = z.object({
   teacherId: z.string().uuid(),
   credentialId: z.string().min(1),
@@ -15,9 +29,9 @@ const schema = z.object({
 
 /**
  * POST /api/biometric/verify
- * 
+ *
  * Verify a biometric authentication signature
- * 
+ *
  * Note: This is a simplified implementation. In production, you should use
  * a proper WebAuthn library like @simplewebauthn/server for full verification.
  */
@@ -40,26 +54,29 @@ export const POST = withRateLimit({
         );
       }
 
-      const { teacherId, credentialId, signature, authenticatorData, clientDataJSON } = validation.data;
+      const {
+        teacherId,
+        credentialId,
+        signature,
+        authenticatorData,
+        clientDataJSON,
+      } = validation.data;
 
       // Verify teacher ID matches authenticated user
       if (teacherId !== user.id) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 
       const supabase = getSupabaseAdmin();
 
       // Fetch credential from database
-      const { data: credential, error: fetchError } = await supabase
+      const { data: credential, error: fetchError } = (await supabase
         .from('teacher_biometric_credentials')
         .select('*')
         .eq('credential_id', credentialId)
         .eq('teacher_id', teacherId)
         .eq('is_active', true)
-        .single();
+        .single()) as { data: BiometricCredential | null; error: Error | null };
 
       if (fetchError || !credential) {
         return NextResponse.json(
@@ -73,12 +90,12 @@ export const POST = withRateLimit({
       // 2. Check the authenticator data
       // 3. Verify the client data JSON
       // 4. Check and increment the counter to prevent replay attacks
-      // 
+      //
       // For now, we'll do a simplified verification:
       // - Check that all required fields are present
       // - Update last_used_at timestamp
       // - Increment counter
-      
+
       // Basic validation: ensure signature and data are not empty
       if (!signature || !authenticatorData || !clientDataJSON) {
         return NextResponse.json(
@@ -90,7 +107,7 @@ export const POST = withRateLimit({
       // TODO: Implement proper WebAuthn signature verification
       // For now, we'll accept the signature as valid if the credential exists
       // This is NOT secure for production - you MUST implement proper verification
-      
+
       // Update credential usage
       const { error: updateError } = await supabase
         .from('teacher_biometric_credentials')
@@ -123,14 +140,15 @@ export const POST = withRateLimit({
 
 /**
  * GET /api/biometric/verify
- * 
+ *
  * Test endpoint to verify API is working
  */
 export async function GET() {
   return NextResponse.json({
     message: 'Biometric Verification API',
     version: '1.0',
-    warning: 'This is a simplified implementation. Production use requires proper WebAuthn verification.',
+    warning:
+      'This is a simplified implementation. Production use requires proper WebAuthn verification.',
     endpoints: {
       POST: {
         description: 'Verify biometric authentication signature',

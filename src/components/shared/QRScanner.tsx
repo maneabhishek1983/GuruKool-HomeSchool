@@ -56,10 +56,12 @@ export function QRScanner({
           );
           const selectedCamera = backCamera || devices[0];
 
-          addDebugLog(`Using: ${selectedCamera.label || 'Default camera'}`);
+          if (selectedCamera) {
+            addDebugLog(`Using: ${selectedCamera.label || 'Default camera'}`);
 
-          if (selectedCamera?.id) {
-            startScanning(selectedCamera.id);
+            if (selectedCamera.id) {
+              startScanning(selectedCamera.id);
+            }
           }
         } else {
           addDebugLog('ERROR: No cameras found');

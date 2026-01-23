@@ -5,6 +5,14 @@ import { withRateLimit } from '@/lib/api-security';
 import { requireTeacher } from '@/lib/api-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 
+// Type for student location data
+interface StudentLocation {
+  home_latitude: number | null;
+  home_longitude: number | null;
+  geofence_radius_meters: number | null;
+  home_address: string | null;
+}
+
 const schema = z.object({
   studentId: z.string().uuid(),
   latitude: z.number().min(-90).max(90),
@@ -14,7 +22,7 @@ const schema = z.object({
 
 /**
  * POST /api/location/verify
- * 
+ *
  * Verify if teacher's location is within student's geofence
  */
 export const POST = withRateLimit({
@@ -42,11 +50,13 @@ export const POST = withRateLimit({
       const supabase = getSupabaseAdmin();
 
       // Get student's home location
-      const { data: student, error: studentError } = await supabase
+      const { data: student, error: studentError } = (await supabase
         .from('students')
-        .select('home_latitude, home_longitude, geofence_radius_meters, home_address')
+        .select(
+          'home_latitude, home_longitude, geofence_radius_meters, home_address'
+        )
         .eq('id', studentId)
-        .single();
+        .single()) as { data: StudentLocation | null; error: Error | null };
 
       if (studentError || !student) {
         return NextResponse.json(
@@ -60,7 +70,8 @@ export const POST = withRateLimit({
         return NextResponse.json(
           {
             error: 'Student home location not configured',
-            message: 'Please ask the parent to set up the home address in student settings.',
+            message:
+              'Please ask the parent to set up the home address in student settings.',
           },
           { status: 400 }
         );
@@ -139,7 +150,7 @@ function calculateDistance(
 
 /**
  * GET /api/location/verify
- * 
+ *
  * Test endpoint to verify API is working
  */
 export async function GET() {

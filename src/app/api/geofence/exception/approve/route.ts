@@ -5,6 +5,21 @@ import { withRateLimit } from '@/lib/api-security';
 import { requireParent } from '@/lib/api-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 
+// Type for geofence exception with student relation
+interface GeofenceExceptionWithStudent {
+  id: string;
+  status: 'pending' | 'approved' | 'denied';
+  students: { parent_id: string };
+  [key: string]: unknown;
+}
+
+// Type for updated geofence exception
+interface GeofenceExceptionUpdated {
+  id: string;
+  status: 'pending' | 'approved' | 'denied';
+  [key: string]: unknown;
+}
+
 const schema = z.object({
   exceptionId: z.string().uuid(),
   approved: z.boolean(),
@@ -13,7 +28,7 @@ const schema = z.object({
 
 /**
  * POST /api/geofence/exception/approve
- * 
+ *
  * Approve or deny a geofence exception request (parent only)
  */
 export const POST = withRateLimit({
@@ -40,11 +55,14 @@ export const POST = withRateLimit({
       const supabase = getSupabaseAdmin();
 
       // Verify exception exists and belongs to parent's student
-      const { data: exception, error: fetchError } = await supabase
+      const { data: exception, error: fetchError } = (await supabase
         .from('geofence_exceptions')
         .select('*, students(parent_id)')
         .eq('id', exceptionId)
-        .single();
+        .single()) as {
+        data: GeofenceExceptionWithStudent | null;
+        error: Error | null;
+      };
 
       if (fetchError || !exception) {
         return NextResponse.json(
@@ -54,10 +72,7 @@ export const POST = withRateLimit({
       }
 
       if (exception.students.parent_id !== user.id) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 
       if (exception.status !== 'pending') {
@@ -68,7 +83,7 @@ export const POST = withRateLimit({
       }
 
       // Update exception status
-      const { data: updated, error: updateError } = await supabase
+      const { data: updated, error: updateError } = (await supabase
         .from('geofence_exceptions')
         .update({
           status: approved ? 'approved' : 'denied',
@@ -79,7 +94,10 @@ export const POST = withRateLimit({
         })
         .eq('id', exceptionId)
         .select()
-        .single();
+        .single()) as {
+        data: GeofenceExceptionUpdated | null;
+        error: Error | null;
+      };
 
       if (updateError || !updated) {
         console.error('Error updating exception:', updateError);
@@ -112,7 +130,7 @@ export const POST = withRateLimit({
 
 /**
  * GET /api/geofence/exception/approve
- * 
+ *
  * List exception requests for the authenticated parent
  */
 export const GET = withRateLimit({
