@@ -55,7 +55,7 @@ const nextConfig = {
       "manifest-src 'self'",
       ...connectSrc,
       ...frameSrc,
-      "frame-ancestors 'self'",
+      "frame-ancestors 'self' https://vercel.live https://*.vercel.app",
       "base-uri 'self'",
       "form-action 'self'",
       "object-src 'none'",
