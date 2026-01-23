@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 
 interface RoleIconProps {
   role: 'parent' | 'teacher' | 'student' | 'admin';
@@ -8,7 +8,7 @@ interface RoleIconProps {
 }
 
 export default function RoleIcon({ role, size = 120 }: RoleIconProps) {
-  const iconVariants = {
+  const iconVariants: Variants = {
     hidden: { scale: 0, rotate: -180, opacity: 0 },
     visible: {
       scale: 1,

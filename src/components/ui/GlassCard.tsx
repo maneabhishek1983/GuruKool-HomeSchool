@@ -8,24 +8,48 @@ interface GlassCardProps {
   children: React.ReactNode;
   className?: string;
   variant?: 'default' | 'light' | 'dark' | 'frosted';
+  blur?: 'sm' | 'md' | 'lg' | 'xl';
   hover?: boolean;
   gradient?: boolean;
-  blur?: 'sm' | 'md' | 'lg';
 }
 
 export function GlassCard({
   children,
   className,
   variant = 'default',
+  blur,
   hover = true,
   gradient = false,
-  blur,
 }: GlassCardProps) {
   const variants = {
-    default: 'bg-white/70 backdrop-blur-md border-white/20',
-    light: 'bg-white/50 backdrop-blur-sm border-white/10',
-    dark: 'bg-white/30 backdrop-blur-lg border-white/30',
-    frosted: 'bg-white/10 backdrop-blur-xl border-white/20',
+    default: 'bg-white/70 border-white/20',
+    light: 'bg-white/50 border-white/10',
+    dark: 'bg-white/30 border-white/30',
+    frosted: 'bg-white/10 border-white/20',
+  };
+
+  const blurVariants = {
+    sm: 'backdrop-blur-sm',
+    md: 'backdrop-blur-md',
+    lg: 'backdrop-blur-lg',
+    xl: 'backdrop-blur-xl',
+  };
+
+  // Determine blur class: use explicit blur prop if provided, otherwise use variant defaults
+  const getBlurClass = () => {
+    if (blur) {
+      return blurVariants[blur];
+    }
+    switch (variant) {
+      case 'light':
+        return 'backdrop-blur-sm';
+      case 'dark':
+        return 'backdrop-blur-lg';
+      case 'frosted':
+        return 'backdrop-blur-xl';
+      default:
+        return 'backdrop-blur-md';
+    }
   };
 
   return (
@@ -33,6 +57,7 @@ export function GlassCard({
       className={cn(
         'relative rounded-2xl border shadow-xl overflow-hidden',
         variants[variant],
+        getBlurClass(),
         className
       )}
       initial={{ opacity: 0, y: 20 }}
@@ -42,9 +67,9 @@ export function GlassCard({
       whileHover={
         hover
           ? {
-            y: -4,
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          }
+              y: -4,
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            }
           : {}
       }
     >

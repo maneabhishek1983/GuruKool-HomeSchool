@@ -106,7 +106,8 @@ export function celebrateWithEmoji(emoji: string = '🎉') {
 }
 
 /**
- * Trigger confetti based on type
+ * Unified confetti trigger function
+ * @param type - 'success' | 'fireworks' | 'continuous' | 'emoji'
  */
 export function triggerConfetti(
   type: 'success' | 'fireworks' | 'continuous' | 'emoji' = 'success'

@@ -213,7 +213,9 @@ function EnhancedLoginForm() {
                         <div className="text-2xl mb-1">
                           {roleThemes[r].icon}
                         </div>
-                        <div className="text-sm font-medium capitalize">{r}</div>
+                        <div className="text-sm font-medium capitalize">
+                          {r}
+                        </div>
                       </motion.button>
                     )
                   )}
