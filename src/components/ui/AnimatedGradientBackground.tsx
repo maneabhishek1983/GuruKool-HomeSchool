@@ -47,10 +47,13 @@ export default function AnimatedGradientBackground({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Store canvas reference for use in class (TypeScript strict null checks)
+    const canvasEl = canvas;
+
     // Set canvas size
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvasEl.width = window.innerWidth;
+      canvasEl.height = window.innerHeight;
     };
     resize();
     window.addEventListener('resize', resize);
@@ -65,8 +68,8 @@ export default function AnimatedGradientBackground({
       color: string;
 
       constructor(color: string) {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
+        this.x = Math.random() * canvasEl.width;
+        this.y = Math.random() * canvasEl.height;
         this.radius = Math.random() * 200 + 100;
         this.vx = (Math.random() - 0.5) * 0.5;
         this.vy = (Math.random() - 0.5) * 0.5;
@@ -77,10 +80,10 @@ export default function AnimatedGradientBackground({
         this.x += this.vx;
         this.y += this.vy;
 
-        if (this.x < -this.radius) this.x = canvas.width + this.radius;
-        if (this.x > canvas.width + this.radius) this.x = -this.radius;
-        if (this.y < -this.radius) this.y = canvas.height + this.radius;
-        if (this.y > canvas.height + this.radius) this.y = -this.radius;
+        if (this.x < -this.radius) this.x = canvasEl.width + this.radius;
+        if (this.x > canvasEl.width + this.radius) this.x = -this.radius;
+        if (this.y < -this.radius) this.y = canvasEl.height + this.radius;
+        if (this.y > canvasEl.height + this.radius) this.y = -this.radius;
       }
 
       draw() {
@@ -114,7 +117,7 @@ export default function AnimatedGradientBackground({
 
     const animate = () => {
       ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
 
       blobs.forEach(blob => {
         blob.update();

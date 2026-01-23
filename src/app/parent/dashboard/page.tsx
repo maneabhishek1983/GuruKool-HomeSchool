@@ -3,7 +3,7 @@
 import { useAuthContext } from '@/lib/authContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import CreateStudentForm from '@/components/parent/CreateStudentForm';
 import StudentProfileCard from '@/components/parent/StudentProfileCard';
 import { DataSheetsViewer } from '@/components/parent/DataSheetsViewer';
@@ -13,30 +13,27 @@ import StudentTeacherAssignment from '@/components/parent/StudentTeacherAssignme
 import { StudentProfile, Country, TeacherProfile } from '@/types';
 import { academicStandardsService } from '@/services/academic-standards.service';
 import { DatabaseService } from '@/services/database.service';
+import {
+  LiquidLearningLayout,
+  GlassHeader,
+  GlassStatCard,
+  LiquidButton,
+  SectionTitle,
+} from '@/components/layouts/LiquidLearningLayout';
+import { FloatingActionButton } from '@/design-system/components/interactive/FloatingActionButton';
 
-// Modern, Light Parent Dashboard with improved UX/UI
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 },
+  },
+};
 
-interface TimesheetEntry {
-  id: string;
-  teacherId: string;
-  teacherName: string;
-  studentId: string;
-  studentName: string;
-  subject: string;
-  date: Date;
-  startTime: string;
-  endTime: string;
-  hours: number;
-  description: string;
-  status: 'completed' | 'scheduled' | 'cancelled';
-}
-
-interface TimesheetSummary {
-  daily: { [date: string]: number };
-  weekly: { [week: string]: number };
-  monthly: { [month: string]: number };
-  total: number;
-}
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
 
 export default function ParentDashboard() {
   const { user, logout } = useAuthContext();
@@ -57,7 +54,6 @@ export default function ParentDashboard() {
     null
   );
 
-  // Load data from database on component mount
   useEffect(() => {
     if (user?.id) {
       loadData();
@@ -73,7 +69,6 @@ export default function ParentDashboard() {
     setError(null);
 
     try {
-      // Load students and teachers in parallel
       const [studentsData, teachersData] = await Promise.all([
         DatabaseService.getStudents(user.id),
         DatabaseService.getTeachers(user.id),
@@ -145,7 +140,6 @@ export default function ParentDashboard() {
     }
 
     try {
-      // Transform form data to match API schema
       const teacherData = {
         ...formData,
         experience_years: parseInt(formData.experience) || 0,
@@ -221,68 +215,85 @@ export default function ParentDashboard() {
     setShowCreateStudentModal(true);
   };
 
-  const getCountryFlag = (country: Country) => {
-    const flags = {
-      UK: '🇬🇧',
-      US: '🇺🇸',
-      India: '🇮🇳',
-    };
-    return flags[country] || '🌍';
-  };
+  // FAB actions
+  const fabActions = [
+    {
+      id: 'add-student',
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+          />
+        </svg>
+      ),
+      label: 'Add Student',
+      onClick: () => setShowCreateStudentModal(true),
+      color: 'primary' as const,
+    },
+    {
+      id: 'add-teacher',
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+          />
+        </svg>
+      ),
+      label: 'Add Teacher',
+      onClick: () => setShowCreateTeacherModal(true),
+      color: 'secondary' as const,
+    },
+    {
+      id: 'manage-assignments',
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      ),
+      label: 'Manage Assignments',
+      onClick: () => setShowAssignmentModal(true),
+      color: 'success' as const,
+    },
+  ];
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center bg-white rounded-2xl shadow-xl p-8"
-        >
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-red-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Access Denied
-          </h1>
-          <p className="text-gray-600">
-            Please log in to access the parent dashboard.
-          </p>
-          <button
-            onClick={() => router.push('/login')}
-            className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+      <LiquidLearningLayout variant="default" gradientTheme="primary">
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-8 border border-slate-200/50"
           >
-            Go to Login
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center"
-        >
-          <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-6 h-6 text-blue-600"
+                className="w-8 h-8 text-red-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -291,26 +302,86 @@ export default function ParentDashboard() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                 />
               </svg>
             </div>
-          </div>
-          <p className="text-gray-600 font-medium">Loading your dashboard...</p>
-          <p className="text-sm text-gray-500 mt-2">Please wait a moment</p>
-        </motion.div>
-      </div>
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">
+              Access Denied
+            </h1>
+            <p className="text-slate-600 mb-6">
+              Please log in to access the parent dashboard.
+            </p>
+            <LiquidButton
+              variant="primary"
+              onClick={() => router.push('/login')}
+            >
+              Go to Login
+            </LiquidButton>
+          </motion.div>
+        </div>
+      </LiquidLearningLayout>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <LiquidLearningLayout variant="default" gradientTheme="primary">
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center"
+          >
+            <div className="relative">
+              <div className="w-20 h-20 rounded-full border-4 border-sky-200 border-t-sky-500 animate-spin mx-auto" />
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                <svg
+                  className="w-8 h-8 text-sky-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                </svg>
+              </motion.div>
+            </div>
+            <p className="mt-6 text-slate-600 font-medium">
+              Loading your dashboard...
+            </p>
+            <p className="text-sm text-slate-500 mt-2">Please wait a moment</p>
+          </motion.div>
+        </div>
+      </LiquidLearningLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Modern Header with Glass Morphism */}
-      <div className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-40">
+    <LiquidLearningLayout
+      variant="default"
+      gradientTheme="primary"
+      showMeshBackground
+    >
+      {/* Glass Header */}
+      <GlassHeader>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 200 }}
+                className="w-12 h-12 bg-gradient-to-br from-sky-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/25"
+              >
                 <svg
                   className="w-7 h-7 text-white"
                   fill="none"
@@ -324,12 +395,12 @@ export default function ParentDashboard() {
                     d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
                   />
                 </svg>
-              </div>
+              </motion.div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
                   Parent Dashboard
                 </h1>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-600">
                   Welcome back, {user.name}!
                 </p>
               </div>
@@ -337,50 +408,31 @@ export default function ParentDashboard() {
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => router.push('/')}
-                className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                className="px-4 py-2 text-slate-600 hover:text-slate-900 font-medium transition-colors"
               >
                 Home
               </button>
-              <button
-                onClick={() => logout()}
-                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 font-medium"
-              >
+              <LiquidButton variant="primary" onClick={() => logout()}>
                 Logout
-              </button>
+              </LiquidButton>
             </div>
           </div>
         </div>
-      </div>
+      </GlassHeader>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Error Display */}
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 bg-red-50 border-l-4 border-red-500 rounded-lg p-4 shadow-sm"
-          >
-            <div className="flex items-center">
-              <svg
-                className="w-5 h-5 text-red-500 mr-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <p className="text-red-700 font-medium flex-1">{error}</p>
-              <button
-                onClick={() => setError(null)}
-                className="text-red-500 hover:text-red-700 transition-colors"
-              >
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="mb-6 bg-red-50/90 backdrop-blur-sm border border-red-200/50 rounded-xl p-4 shadow-lg"
+            >
+              <div className="flex items-center">
                 <svg
-                  className="w-5 h-5"
+                  className="w-5 h-5 text-red-500 mr-3"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -389,133 +441,48 @@ export default function ParentDashboard() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Quick Action Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <motion.button
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            whileHover={{ scale: 1.02, y: -4 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setShowCreateStudentModal(true)}
-            className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300"
-          >
-            <div className="flex items-center space-x-4">
-              <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                <p className="text-red-700 font-medium flex-1">{error}</p>
+                <button
+                  onClick={() => setError(null)}
+                  className="text-red-500 hover:text-red-700"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                  />
-                </svg>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
               </div>
-              <div className="text-left">
-                <p className="text-lg font-semibold">Add Student</p>
-                <p className="text-sm text-blue-100">Create new profile</p>
-              </div>
-            </div>
-          </motion.button>
-
-          <motion.button
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            whileHover={{ scale: 1.02, y: -4 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setShowCreateTeacherModal(true)}
-            className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300"
-          >
-            <div className="flex items-center space-x-4">
-              <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-              </div>
-              <div className="text-left">
-                <p className="text-lg font-semibold">Add Teacher</p>
-                <p className="text-sm text-purple-100">Hire an educator</p>
-              </div>
-            </div>
-          </motion.button>
-
-          <motion.button
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            whileHover={{ scale: 1.02, y: -4 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setShowAssignmentModal(true)}
-            className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300"
-          >
-            <div className="flex items-center space-x-4">
-              <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div className="text-left">
-                <p className="text-lg font-semibold">Manage Assignments</p>
-                <p className="text-sm text-green-100">Assign teachers</p>
-              </div>
-            </div>
-          </motion.button>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">
-                  Total Students
-                </p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {students.length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+        >
+          <motion.div variants={itemVariants}>
+            <GlassStatCard
+              title="Total Students"
+              value={students.length}
+              color="primary"
+              icon={
                 <svg
-                  className="w-6 h-6 text-blue-600"
+                  className="w-6 h-6"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -527,28 +494,17 @@ export default function ParentDashboard() {
                     d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
                   />
                 </svg>
-              </div>
-            </div>
+              }
+            />
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">
-                  Active Teachers
-                </p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {teachers.length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+          <motion.div variants={itemVariants}>
+            <GlassStatCard
+              title="Active Teachers"
+              value={teachers.length}
+              color="secondary"
+              icon={
                 <svg
-                  className="w-6 h-6 text-purple-600"
+                  className="w-6 h-6"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -560,26 +516,17 @@ export default function ParentDashboard() {
                     d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                   />
                 </svg>
-              </div>
-            </div>
+              }
+            />
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">
-                  This Month
-                </p>
-                <p className="text-3xl font-bold text-gray-900">24h</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+          <motion.div variants={itemVariants}>
+            <GlassStatCard
+              title="This Month"
+              value="24h"
+              color="success"
+              icon={
                 <svg
-                  className="w-6 h-6 text-green-600"
+                  className="w-6 h-6"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -591,28 +538,19 @@ export default function ParentDashboard() {
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-              </div>
-            </div>
+              }
+            />
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">
-                  Avg Progress
-                </p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {students.length > 0 ? 85 : 0}%
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+          <motion.div variants={itemVariants}>
+            <GlassStatCard
+              title="Avg Progress"
+              value={`${students.length > 0 ? 85 : 0}%`}
+              color="warning"
+              trend="up"
+              trendValue="+5% this week"
+              icon={
                 <svg
-                  className="w-6 h-6 text-orange-600"
+                  className="w-6 h-6"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -624,40 +562,45 @@ export default function ParentDashboard() {
                     d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                   />
                 </svg>
-              </div>
-            </div>
+              }
+            />
           </motion.div>
-        </div>
+        </motion.div>
 
-        {/* Student Profiles Section */}
+        {/* Students Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 0.3 }}
           className="mb-8"
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Your Students</h2>
+            <SectionTitle subtitle="Manage your children's learning profiles">
+              Your Students
+            </SectionTitle>
             {students.length > 0 && (
-              <button
+              <LiquidButton
+                variant="primary"
+                size="sm"
+                icon={
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                }
                 onClick={() => setShowCreateStudentModal(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-                <span>Add Student</span>
-              </button>
+                Add Student
+              </LiquidButton>
             )}
           </div>
 
@@ -665,11 +608,11 @@ export default function ParentDashboard() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white rounded-2xl shadow-md p-12 text-center"
+              className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-12 text-center border border-slate-200/50"
             >
-              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-20 h-20 bg-gradient-to-br from-sky-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg
-                  className="w-10 h-10 text-blue-600"
+                  className="w-10 h-10 text-sky-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -682,30 +625,30 @@ export default function ParentDashboard() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-slate-900 mb-2">
                 No Students Yet
               </h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              <p className="text-slate-600 mb-6 max-w-md mx-auto">
                 Get started by creating your first student profile. You'll be
-                able to track their progress, assign teachers, and manage their
-                learning journey.
+                able to track their progress and manage their learning journey.
               </p>
-              <button
+              <LiquidButton
+                variant="primary"
+                size="lg"
                 onClick={() => setShowCreateStudentModal(true)}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 font-medium"
               >
                 Create Your First Student
-              </button>
+              </LiquidButton>
             </motion.div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+            >
               {students.map((student, index) => (
-                <motion.div
-                  key={student.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                >
+                <motion.div key={student.id} variants={itemVariants}>
                   <StudentProfileCard
                     student={student}
                     onEdit={() => handleEditStudent(student)}
@@ -717,7 +660,7 @@ export default function ParentDashboard() {
                   />
                 </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
         </motion.div>
 
@@ -725,31 +668,36 @@ export default function ParentDashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9 }}
+          transition={{ delay: 0.4 }}
           className="mb-8"
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Your Teachers</h2>
+            <SectionTitle subtitle="Manage your teaching team">
+              Your Teachers
+            </SectionTitle>
             {teachers.length > 0 && (
-              <button
+              <LiquidButton
+                variant="secondary"
+                size="sm"
+                icon={
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                }
                 onClick={() => setShowCreateTeacherModal(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-md"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-                <span>Add Teacher</span>
-              </button>
+                Add Teacher
+              </LiquidButton>
             )}
           </div>
 
@@ -757,11 +705,11 @@ export default function ParentDashboard() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white rounded-2xl shadow-md p-12 text-center"
+              className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-12 text-center border border-slate-200/50"
             >
-              <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-20 h-20 bg-gradient-to-br from-violet-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg
-                  className="w-10 h-10 text-purple-600"
+                  className="w-10 h-10 text-violet-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -774,54 +722,61 @@ export default function ParentDashboard() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-slate-900 mb-2">
                 No Teachers Yet
               </h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              <p className="text-slate-600 mb-6 max-w-md mx-auto">
                 Add teacher profiles to provide specialized instruction for your
-                students. You can manage assignments and track their sessions.
+                students.
               </p>
-              <button
+              <LiquidButton
+                variant="secondary"
+                size="lg"
                 onClick={() => setShowCreateTeacherModal(true)}
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 font-medium"
               >
                 Add Your First Teacher
-              </button>
+              </LiquidButton>
             </motion.div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
               {teachers.map((teacher, index) => (
                 <motion.div
                   key={teacher.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow"
+                  variants={itemVariants}
+                  whileHover={{ y: -4 }}
+                  className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200/50"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                      <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-violet-500/25">
                         {teacher.name.charAt(0)}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">
+                        <h3 className="font-semibold text-slate-900">
                           {teacher.name}
                         </h3>
-                        <p className="text-sm text-gray-600">{teacher.email}</p>
+                        <p className="text-sm text-slate-600">
+                          {teacher.email}
+                        </p>
                       </div>
                     </div>
                   </div>
                   <div className="space-y-2 mb-4">
                     <div className="text-sm">
-                      <p className="text-gray-600 font-medium">Subjects:</p>
-                      <p className="text-gray-900">
+                      <p className="text-slate-600 font-medium">Subjects:</p>
+                      <p className="text-slate-900">
                         {teacher.subjects.join(', ')}
                       </p>
                     </div>
                     {teacher.hourlyRate && (
                       <div className="text-sm">
-                        <p className="text-gray-600 font-medium">Rate:</p>
-                        <p className="text-gray-900">
+                        <p className="text-slate-600 font-medium">Rate:</p>
+                        <p className="text-slate-900">
                           ${teacher.hourlyRate}/hour
                         </p>
                       </div>
@@ -830,7 +785,7 @@ export default function ParentDashboard() {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleViewTeacherQRCodes(teacher)}
-                      className="flex-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
+                      className="flex-1 px-3 py-2 bg-sky-50 text-sky-600 rounded-lg hover:bg-sky-100 transition-colors text-sm font-medium"
                     >
                       View QR
                     </button>
@@ -843,192 +798,206 @@ export default function ParentDashboard() {
                   </div>
                 </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
         </motion.div>
       </div>
 
-      {/* Modals (keeping existing modal code) */}
-      {showCreateStudentModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
-          >
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {selectedStudent
-                    ? 'Edit Student Profile'
-                    : 'Create Student Profile'}
-                </h2>
-                <button
-                  onClick={() => {
+      {/* Floating Action Button */}
+      <FloatingActionButton
+        actions={fabActions}
+        position="bottom-right"
+        variant="solid"
+        color="primary"
+      />
+
+      {/* Modals */}
+      <AnimatePresence>
+        {showCreateStudentModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            >
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
+                    {selectedStudent
+                      ? 'Edit Student Profile'
+                      : 'Create Student Profile'}
+                  </h2>
+                  <button
+                    onClick={() => {
+                      setShowCreateStudentModal(false);
+                      setSelectedStudent(null);
+                    }}
+                    className="text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <CreateStudentForm
+                  onSubmit={handleCreateStudent}
+                  onCancel={() => {
                     setShowCreateStudentModal(false);
                     setSelectedStudent(null);
                   }}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
+                />
               </div>
-              <CreateStudentForm
-                onSubmit={handleCreateStudent}
-                onCancel={() => {
-                  setShowCreateStudentModal(false);
-                  setSelectedStudent(null);
-                }}
-              />
-            </div>
-          </motion.div>
-        </div>
-      )}
+            </motion.div>
+          </div>
+        )}
 
-      {showCreateTeacherModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
-          >
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Create Teacher Profile
-                </h2>
-                <button
-                  onClick={() => setShowCreateTeacherModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+        {showCreateTeacherModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            >
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+                    Create Teacher Profile
+                  </h2>
+                  <button
+                    onClick={() => setShowCreateTeacherModal(false)}
+                    className="text-slate-400 hover:text-slate-600 transition-colors"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <TeacherCreationForm
+                  onSubmit={handleCreateTeacher}
+                  onCancel={() => setShowCreateTeacherModal(false)}
+                />
               </div>
-              <TeacherCreationForm
-                onSubmit={handleCreateTeacher}
-                onCancel={() => setShowCreateTeacherModal(false)}
-              />
-            </div>
-          </motion.div>
-        </div>
-      )}
+            </motion.div>
+          </div>
+        )}
 
-      {showDataSheetsModal && selectedStudent && (
-        <DataSheetsViewer
-          studentId={selectedStudent.id}
-          studentName={selectedStudent.name}
-          onClose={() => {
-            setShowDataSheetsModal(false);
-            setSelectedStudent(null);
-          }}
-        />
-      )}
+        {showDataSheetsModal && selectedStudent && (
+          <DataSheetsViewer
+            studentId={selectedStudent.id}
+            studentName={selectedStudent.name}
+            onClose={() => {
+              setShowDataSheetsModal(false);
+              setSelectedStudent(null);
+            }}
+          />
+        )}
 
-      {showTeacherQRModal && selectedTeacherForQR && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">
-                  QR Codes for {selectedTeacherForQR.name}
-                </h2>
-                <button
-                  onClick={() => setShowTeacherQRModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+        {showTeacherQRModal && selectedTeacherForQR && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-slate-900">
+                    QR Codes for {selectedTeacherForQR.name}
+                  </h2>
+                  <button
+                    onClick={() => setShowTeacherQRModal(false)}
+                    className="text-slate-400 hover:text-slate-600 transition-colors"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <TeacherQRCodes
+                  teacherId={selectedTeacherForQR.id}
+                  parentId={user?.id || ''}
+                />
               </div>
-              <TeacherQRCodes
-                teacherId={selectedTeacherForQR.id}
-                parentId={user?.id || ''}
-              />
-            </div>
-          </motion.div>
-        </div>
-      )}
+            </motion.div>
+          </div>
+        )}
 
-      {showAssignmentModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">
-                  Student-Teacher Assignments
-                </h2>
-                <button
-                  onClick={() => setShowAssignmentModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+        {showAssignmentModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                    Student-Teacher Assignments
+                  </h2>
+                  <button
+                    onClick={() => setShowAssignmentModal(false)}
+                    className="text-slate-400 hover:text-slate-600 transition-colors"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <StudentTeacherAssignment
+                  parentId={user?.id || ''}
+                  students={students}
+                  teachers={teachers}
+                  onAssignmentChange={handleAssignmentChange}
+                />
               </div>
-              <StudentTeacherAssignment
-                parentId={user?.id || ''}
-                students={students}
-                teachers={teachers}
-                onAssignmentChange={handleAssignmentChange}
-              />
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </LiquidLearningLayout>
   );
 }

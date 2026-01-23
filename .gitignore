@@ -128,6 +128,10 @@ SECURITY_VULNERABILITY_REPORT.md
 FINAL_IMPLEMENTATION_SUMMARY.md
 scripts/setup-supabase-cli.md
 
+# Service worker files (auto-generated)
+public/sw.js
+public/workbox-*.js
+
 # Build/test outputs (dev artifacts)
 build-output.txt
 type-check-output.txt

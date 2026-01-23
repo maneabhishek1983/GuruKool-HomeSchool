@@ -3,28 +3,46 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthContext } from '@/lib/authContext';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import {
-  NetflixBackground,
-  NetflixButton,
-  NetflixCard,
-} from '@/components/NetflixBackground';
+import { motion, AnimatePresence } from 'framer-motion';
 import { DataSheetsManager } from '@/components/teacher/DataSheetsManager';
 import { TimesheetManager } from '@/components/teacher/TimesheetManager';
 import { QRCheckInOut } from '@/components/teacher/QRCheckInOut';
 import { MonthlyTimesheetReport } from '@/components/teacher/MonthlyTimesheetReport';
+import {
+  LiquidLearningLayout,
+  GlassHeader,
+  GlassStatCard,
+  LiquidButton,
+  SectionTitle,
+} from '@/components/layouts/LiquidLearningLayout';
+import { FloatingActionButton } from '@/design-system/components/interactive/FloatingActionButton';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
+
+type TabId = 'checkin' | 'timesheet' | 'overview' | 'data-sheets' | 'sessions';
+
+const tabs = [
+  { id: 'checkin' as TabId, label: 'Check-In/Out', icon: '📍' },
+  { id: 'timesheet' as TabId, label: 'Timesheet Report', icon: '📊' },
+  { id: 'overview' as TabId, label: 'Overview', icon: '📈' },
+  { id: 'sessions' as TabId, label: 'Sessions', icon: '📅' },
+];
 
 export default function TeacherDashboard() {
   const { user, logout } = useAuthContext();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<
-    | 'checkin'
-    | 'timesheet'
-    | 'overview'
-    | 'data-sheets'
-    | 'students'
-    | 'sessions'
-  >('checkin');
+  const [activeTab, setActiveTab] = useState<TabId>('checkin');
   const [dashboardStats, setDashboardStats] = useState({
     assignedStudents: 0,
     activeLessons: 0,
@@ -41,7 +59,7 @@ export default function TeacherDashboard() {
   const loadDashboardStats = async () => {
     try {
       // Load real stats from API
-      // For now using mock data
+      // For now using placeholder data
       setDashboardStats({
         assignedStudents: 12,
         activeLessons: 8,
@@ -53,69 +71,134 @@ export default function TeacherDashboard() {
     }
   };
 
+  // FAB actions for teacher
+  const fabActions = [
+    {
+      id: 'quick-checkin',
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      ),
+      label: 'Quick Check-In',
+      onClick: () => setActiveTab('checkin'),
+      color: 'success' as const,
+    },
+    {
+      id: 'view-timesheet',
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+          />
+        </svg>
+      ),
+      label: 'View Timesheet',
+      onClick: () => setActiveTab('timesheet'),
+      color: 'primary' as const,
+    },
+    {
+      id: 'manage-sessions',
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
+      ),
+      label: 'Manage Sessions',
+      onClick: () => setActiveTab('sessions'),
+      color: 'secondary' as const,
+    },
+  ];
+
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Access Denied
-          </h1>
-          <p className="text-gray-600">
-            Please log in to access the teacher dashboard.
-          </p>
+      <LiquidLearningLayout variant="default" gradientTheme="ocean">
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-8 border border-slate-200/50"
+          >
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-8 h-8 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">
+              Access Denied
+            </h1>
+            <p className="text-slate-600 mb-6">
+              Please log in to access the teacher dashboard.
+            </p>
+            <LiquidButton
+              variant="primary"
+              onClick={() => router.push('/login')}
+            >
+              Go to Login
+            </LiquidButton>
+          </motion.div>
         </div>
-      </div>
+      </LiquidLearningLayout>
     );
   }
 
   return (
-    <NetflixBackground variant="dashboard">
-      <div className="container mx-auto px-4 py-8">
-        <motion.div
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <h1 className="text-4xl font-bold mb-4">Teacher Dashboard</h1>
-          <p className="text-xl max-w-2xl mx-auto">Welcome back, {user.name}</p>
-        </motion.div>
-
-        {/* Header with Navigation */}
-        <div className="bg-white rounded-lg shadow-sm border mb-8">
-          <div className="px-6 py-4">
+    <LiquidLearningLayout
+      variant="default"
+      gradientTheme="ocean"
+      showMeshBackground
+    >
+      {/* Glass Header */}
+      <GlassHeader>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
             <div className="flex items-center space-x-4">
-              {/* Navigation Tabs */}
-              <div className="flex space-x-2">
-                {[
-                  { id: 'checkin', label: 'Check-In/Out', icon: '📍' },
-                  { id: 'timesheet', label: 'Timesheet Report', icon: '📊' },
-                  { id: 'overview', label: 'Overview', icon: '📈' },
-                  { id: 'sessions', label: 'Sessions', icon: '📅' },
-                ].map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center space-x-1 ${
-                      activeTab === tab.id
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <span>{tab.icon}</span>
-                    <span>{tab.label}</span>
-                  </button>
-                ))}
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">
-                  {user.email}
-                </p>
-                <p className="text-xs text-gray-500">Teacher</p>
-              </div>
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 200 }}
+                className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/25"
+              >
                 <svg
-                  className="w-5 h-5 text-blue-600"
+                  className="w-7 h-7 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -127,480 +210,436 @@ export default function TeacherDashboard() {
                     d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                   />
                 </svg>
+              </motion.div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                  Teacher Dashboard
+                </h1>
+                <p className="text-sm text-slate-600">
+                  Welcome back, {user.name}!
+                </p>
               </div>
-              <button
+            </div>
+            <div className="flex items-center space-x-4">
+              {/* Navigation Tabs */}
+              <div className="hidden md:flex bg-white/50 backdrop-blur-sm rounded-xl p-1 border border-slate-200/50">
+                {tabs.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${
+                      activeTab === tab.id
+                        ? 'bg-white text-cyan-700 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <span>{tab.icon}</span>
+                    <span>{tab.label}</span>
+                  </button>
+                ))}
+              </div>
+              <LiquidButton
+                variant="primary"
                 onClick={() => {
                   logout();
                   router.push('/login');
                 }}
-                className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
-                </svg>
-                <span>Logout</span>
-              </button>
+                Logout
+              </LiquidButton>
             </div>
           </div>
+        </div>
+      </GlassHeader>
+
+      {/* Mobile Tabs */}
+      <div className="md:hidden px-4 py-3 bg-white/50 backdrop-blur-sm border-b border-slate-200/50">
+        <div className="flex space-x-2 overflow-x-auto">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${
+                activeTab === tab.id
+                  ? 'bg-cyan-100 text-cyan-700'
+                  : 'text-slate-600 hover:text-slate-900 bg-white/50'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Check-In/Out Tab - PRIORITY FEATURE FOR PRODUCTION */}
-        {activeTab === 'checkin' && (
-          <QRCheckInOut
-            onSuccess={entry => {
-              console.log('Check-in/out successful:', entry);
-              // Refresh stats
-              loadDashboardStats();
-            }}
-            onError={error => {
-              console.error('Check-in/out error:', error);
-            }}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          {/* Check-In/Out Tab */}
+          {activeTab === 'checkin' && (
+            <motion.div
+              key="checkin"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <QRCheckInOut
+                onSuccess={entry => {
+                  console.log('Check-in/out successful:', entry);
+                  loadDashboardStats();
+                }}
+                onError={error => {
+                  console.error('Check-in/out error:', error);
+                }}
+              />
+            </motion.div>
+          )}
 
-        {/* Timesheet Report Tab - PRIORITY FEATURE FOR PRODUCTION */}
-        {activeTab === 'timesheet' && (
-          <MonthlyTimesheetReport
-            teacherId={user?.id || ''}
-            teacherName={user?.name || ''}
-          />
-        )}
+          {/* Timesheet Report Tab */}
+          {activeTab === 'timesheet' && (
+            <motion.div
+              key="timesheet"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <MonthlyTimesheetReport
+                teacherId={user?.id || ''}
+                teacherName={user?.name || ''}
+              />
+            </motion.div>
+          )}
 
-        {activeTab === 'overview' && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Quick Stats */}
+          {/* Overview Tab */}
+          {activeTab === 'overview' && (
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              {/* Stats Grid */}
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+              >
+                <motion.div variants={itemVariants}>
+                  <GlassStatCard
+                    title="Assigned Students"
+                    value={dashboardStats.assignedStudents}
+                    color="primary"
+                    icon={
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
+                      </svg>
+                    }
+                  />
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                  <GlassStatCard
+                    title="Active Lessons"
+                    value={dashboardStats.activeLessons}
+                    color="success"
+                    icon={
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                        />
+                      </svg>
+                    }
+                  />
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                  <GlassStatCard
+                    title="Average Progress"
+                    value={`${dashboardStats.averageProgress}%`}
+                    color="secondary"
+                    trend="up"
+                    trendValue="+3% this week"
+                    icon={
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        />
+                      </svg>
+                    }
+                  />
+                </motion.div>
+              </motion.div>
+
+              {/* Recent Students & Quick Actions Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Recent Students */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-200/50 overflow-hidden"
+                >
+                  <div className="px-6 py-4 border-b border-slate-200/50 bg-gradient-to-r from-slate-50 to-white">
+                    <h2 className="text-lg font-semibold text-slate-900">
+                      Recent Students
+                    </h2>
+                  </div>
+                  <div className="p-6">
+                    <div className="space-y-4">
+                      {[
+                        {
+                          name: 'Emma Johnson',
+                          grade: 'Year 3',
+                          country: 'UK',
+                          progress: 92,
+                        },
+                        {
+                          name: 'Alex Chen',
+                          grade: 'Grade 4',
+                          country: 'US',
+                          progress: 88,
+                        },
+                        {
+                          name: 'Priya Patel',
+                          grade: 'Class 5',
+                          country: 'India',
+                          progress: 85,
+                        },
+                        {
+                          name: 'Lucas Smith',
+                          grade: 'Year 2',
+                          country: 'UK',
+                          progress: 90,
+                        },
+                      ].map((student, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl border border-slate-100 hover:border-cyan-200 hover:shadow-md transition-all duration-200"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-white font-medium shadow-lg shadow-cyan-500/20">
+                              {student.name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="font-medium text-slate-900">
+                                {student.name}
+                              </p>
+                              <p className="text-sm text-slate-600">
+                                {student.grade} • {student.country}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-semibold text-slate-900">
+                              {student.progress}%
+                            </p>
+                            <div className="w-16 h-1.5 bg-slate-200 rounded-full mt-1 overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
+                                style={{ width: `${student.progress}%` }}
+                              />
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Quick Actions */}
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-200/50 overflow-hidden"
+                >
+                  <div className="px-6 py-4 border-b border-slate-200/50 bg-gradient-to-r from-slate-50 to-white">
+                    <h2 className="text-lg font-semibold text-slate-900">
+                      Quick Actions
+                    </h2>
+                  </div>
+                  <div className="p-6">
+                    <div className="space-y-3">
+                      {[
+                        {
+                          label: 'Create Lesson Plan',
+                          icon: '📚',
+                          color: 'from-sky-500 to-blue-600',
+                        },
+                        {
+                          label: 'Track Progress',
+                          icon: '📊',
+                          color: 'from-green-500 to-emerald-600',
+                        },
+                        {
+                          label: 'Send Feedback',
+                          icon: '💬',
+                          color: 'from-violet-500 to-purple-600',
+                        },
+                        {
+                          label: 'Schedule Session',
+                          icon: '📅',
+                          color: 'from-amber-500 to-orange-600',
+                        },
+                      ].map((action, index) => (
+                        <motion.button
+                          key={index}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1 * index }}
+                          whileHover={{ scale: 1.02, x: 4 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-md transition-all duration-200 group"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div
+                              className={`w-10 h-10 bg-gradient-to-br ${action.color} rounded-lg flex items-center justify-center text-white shadow-lg`}
+                            >
+                              <span className="text-lg">{action.icon}</span>
+                            </div>
+                            <span className="font-medium text-slate-900">
+                              {action.label}
+                            </span>
+                          </div>
+                          <svg
+                            className="w-5 h-5 text-slate-400 group-hover:text-slate-600 group-hover:translate-x-1 transition-all"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Academic Standards Support */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="bg-white rounded-lg shadow-sm border p-6"
+                transition={{ delay: 0.5 }}
+                className="mt-8 bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-200/50 overflow-hidden"
               >
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="w-6 h-6 text-blue-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">
-                      Assigned Students
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {dashboardStats.assignedStudents}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="bg-white rounded-lg shadow-sm border p-6"
-              >
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="w-6 h-6 text-green-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">
-                      Active Lessons
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {dashboardStats.activeLessons}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-white rounded-lg shadow-sm border p-6"
-              >
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="w-6 h-6 text-purple-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">
-                      Average Progress
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {dashboardStats.averageProgress}%
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Main Sections */}
-            <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Recent Students */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="bg-white rounded-lg shadow-sm border"
-              >
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Recent Students
+                <div className="px-6 py-4 border-b border-slate-200/50 bg-gradient-to-r from-slate-50 to-white">
+                  <h2 className="text-lg font-semibold text-slate-900">
+                    Academic Standards Support
                   </h2>
                 </div>
                 <div className="p-6">
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {[
                       {
-                        name: 'Emma Johnson',
-                        grade: 'Year 3',
-                        country: 'UK',
-                        progress: 92,
+                        flag: '🇬🇧',
+                        title: 'UK Curriculum',
+                        desc: 'National Curriculum for England with Reception through Year 11',
                       },
                       {
-                        name: 'Alex Chen',
-                        grade: 'Grade 4',
-                        country: 'US',
-                        progress: 88,
+                        flag: '🇺🇸',
+                        title: 'US Standards',
+                        desc: 'Common Core State Standards with Kindergarten through Grade 12',
                       },
                       {
-                        name: 'Priya Patel',
-                        grade: 'Class 5',
-                        country: 'India',
-                        progress: 85,
+                        flag: '🇮🇳',
+                        title: 'India NEP 2020',
+                        desc: 'National Education Policy with Foundation through Higher Secondary',
                       },
-                      {
-                        name: 'Lucas Smith',
-                        grade: 'Year 2',
-                        country: 'UK',
-                        progress: 90,
-                      },
-                    ].map((student, index) => (
-                      <div
+                    ].map((standard, index) => (
+                      <motion.div
                         key={index}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.1 * index }}
+                        className="text-center p-6 bg-gradient-to-b from-white to-slate-50 rounded-xl border border-slate-100 hover:border-cyan-200 hover:shadow-lg transition-all duration-300"
                       >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-sm font-medium text-blue-600">
-                              {student.name.charAt(0)}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {student.name}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {student.grade} • {student.country}
-                            </p>
-                          </div>
+                        <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                          <span className="text-2xl">{standard.flag}</span>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-gray-900">
-                            {student.progress}%
-                          </p>
-                          <p className="text-xs text-gray-500">Progress</p>
-                        </div>
-                      </div>
+                        <h3 className="font-medium text-slate-900 mb-2">
+                          {standard.title}
+                        </h3>
+                        <p className="text-sm text-slate-600">
+                          {standard.desc}
+                        </p>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
               </motion.div>
+            </motion.div>
+          )}
 
-              {/* Quick Actions */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                className="bg-white rounded-lg shadow-sm border"
-              >
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Quick Actions
-                  </h2>
-                </div>
-                <div className="p-6">
-                  <div className="space-y-4">
-                    <button className="w-full flex items-center justify-between p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <svg
-                            className="w-5 h-5 text-blue-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                            />
-                          </svg>
-                        </div>
-                        <span className="font-medium text-gray-900">
-                          Create Lesson Plan
-                        </span>
-                      </div>
-                      <svg
-                        className="w-5 h-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </button>
-
-                    <button className="w-full flex items-center justify-between p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                          <svg
-                            className="w-5 h-5 text-green-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                            />
-                          </svg>
-                        </div>
-                        <span className="font-medium text-gray-900">
-                          Track Progress
-                        </span>
-                      </div>
-                      <svg
-                        className="w-5 h-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </button>
-
-                    <button className="w-full flex items-center justify-between p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                          <svg
-                            className="w-5 h-5 text-purple-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                            />
-                          </svg>
-                        </div>
-                        <span className="font-medium text-gray-900">
-                          Send Feedback
-                        </span>
-                      </div>
-                      <svg
-                        className="w-5 h-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </button>
-
-                    <button className="w-full flex items-center justify-between p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                          <svg
-                            className="w-5 h-5 text-orange-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                        </div>
-                        <span className="font-medium text-gray-900">
-                          Schedule Session
-                        </span>
-                      </div>
-                      <svg
-                        className="w-5 h-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Academic Standards Info */}
+          {/* Data Sheets Tab */}
+          {activeTab === 'data-sheets' && (
             <motion.div
+              key="data-sheets"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              className="mt-8 bg-white rounded-lg shadow-sm border"
+              exit={{ opacity: 0, y: -20 }}
             >
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Academic Standards Support
-                </h2>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <span className="text-2xl">🇬🇧</span>
-                    </div>
-                    <h3 className="font-medium text-gray-900 mb-2">
-                      UK Curriculum
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      National Curriculum for England with Reception through
-                      Year 11
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <span className="text-2xl">🇺🇸</span>
-                    </div>
-                    <h3 className="font-medium text-gray-900 mb-2">
-                      US Standards
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      Common Core State Standards with Kindergarten through
-                      Grade 12
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <span className="text-2xl">🇮🇳</span>
-                    </div>
-                    <h3 className="font-medium text-gray-900 mb-2">
-                      India NEP 2020
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      National Education Policy with Foundation through Higher
-                      Secondary
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <DataSheetsManager
+                teacherId={user?.id || 'teacher-1'}
+                selectedDate={new Date().toISOString().split('T')[0] || ''}
+              />
             </motion.div>
-          </>
-        )}
+          )}
 
-        {activeTab === 'data-sheets' && (
-          <DataSheetsManager
-            teacherId={user?.id || 'teacher-1'}
-            selectedDate={new Date().toISOString().split('T')[0] || ''}
-          />
-        )}
-
-        {activeTab === 'students' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="bg-white rounded-lg shadow-sm border p-6"
-          >
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              My Students
-            </h2>
-            <p className="text-gray-600">
-              Student management interface coming soon...
-            </p>
-          </motion.div>
-        )}
-
-        {activeTab === 'sessions' && (
-          <TimesheetManager teacherId={user?.id || 'teacher-1'} />
-        )}
+          {/* Sessions Tab */}
+          {activeTab === 'sessions' && (
+            <motion.div
+              key="sessions"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <TimesheetManager teacherId={user?.id || 'teacher-1'} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </NetflixBackground>
+
+      {/* Floating Action Button */}
+      <FloatingActionButton
+        actions={fabActions}
+        position="bottom-right"
+        variant="solid"
+        color="primary"
+      />
+    </LiquidLearningLayout>
   );
 }
