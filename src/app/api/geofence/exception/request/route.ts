@@ -5,6 +5,17 @@ import { withRateLimit } from '@/lib/api-security';
 import { requireTeacher } from '@/lib/api-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 
+// Type for student lookup
+interface StudentLookup {
+  parent_id: string;
+}
+
+// Type for geofence exception
+interface GeofenceException {
+  id: string;
+  [key: string]: unknown;
+}
+
 const schema = z.object({
   studentId: z.string().uuid(),
   reason: z.string().min(10).max(500),
@@ -17,7 +28,7 @@ const schema = z.object({
 
 /**
  * POST /api/geofence/exception/request
- * 
+ *
  * Request an exception to check in outside the geofence
  */
 export const POST = withRateLimit({
@@ -52,11 +63,11 @@ export const POST = withRateLimit({
       const supabase = getSupabaseAdmin();
 
       // Verify student exists and get parent ID
-      const { data: student, error: studentError } = await supabase
+      const { data: student, error: studentError } = (await supabase
         .from('students')
         .select('parent_id')
         .eq('id', studentId)
-        .single();
+        .single()) as { data: StudentLookup | null; error: Error | null };
 
       if (studentError || !student) {
         return NextResponse.json(
@@ -93,14 +104,15 @@ export const POST = withRateLimit({
       if (existing && existing.length > 0) {
         return NextResponse.json(
           {
-            error: 'You already have a pending or approved exception for this time period',
+            error:
+              'You already have a pending or approved exception for this time period',
           },
           { status: 409 }
         );
       }
 
       // Create exception request
-      const { data: exception, error: insertError } = await supabase
+      const { data: exception, error: insertError } = (await supabase
         .from('geofence_exceptions')
         .insert({
           teacher_id: user.id,
@@ -116,7 +128,7 @@ export const POST = withRateLimit({
           created_at: new Date().toISOString(),
         })
         .select()
-        .single();
+        .single()) as { data: GeofenceException | null; error: Error | null };
 
       if (insertError || !exception) {
         console.error('Error creating exception:', insertError);
@@ -147,7 +159,7 @@ export const POST = withRateLimit({
 
 /**
  * GET /api/geofence/exception/request
- * 
+ *
  * List exception requests for the authenticated teacher
  */
 export const GET = withRateLimit({

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 interface GlassCardProps {
   children: React.ReactNode;
   className?: string;
-  variant?: 'default' | 'light' | 'dark';
+  variant?: 'default' | 'light' | 'dark' | 'frosted';
   blur?: 'sm' | 'md' | 'lg' | 'xl';
   hover?: boolean;
   gradient?: boolean;
@@ -25,6 +25,7 @@ export function GlassCard({
     default: 'bg-white/70 border-white/20',
     light: 'bg-white/50 border-white/10',
     dark: 'bg-white/30 border-white/30',
+    frosted: 'bg-white/10 border-white/20',
   };
 
   const blurVariants = {
@@ -44,6 +45,8 @@ export function GlassCard({
         return 'backdrop-blur-sm';
       case 'dark':
         return 'backdrop-blur-lg';
+      case 'frosted':
+        return 'backdrop-blur-xl';
       default:
         return 'backdrop-blur-md';
     }

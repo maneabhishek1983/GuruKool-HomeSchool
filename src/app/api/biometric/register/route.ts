@@ -5,6 +5,20 @@ import { withRateLimit } from '@/lib/api-security';
 import { requireTeacher } from '@/lib/api-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 
+// Type for biometric credential (not in generated Supabase types yet)
+interface BiometricCredential {
+  id: string;
+  teacher_id: string;
+  credential_id: string;
+  public_key: string;
+  device_name: string;
+  device_type: string;
+  counter: number;
+  is_active: boolean;
+  created_at: string;
+  last_used_at: string | null;
+}
+
 const schema = z.object({
   teacherId: z.string().uuid(),
   credentialId: z.string().min(1),
@@ -15,7 +29,7 @@ const schema = z.object({
 
 /**
  * POST /api/biometric/register
- * 
+ *
  * Register a new biometric credential for a teacher
  */
 export const POST = withRateLimit({
@@ -37,14 +51,12 @@ export const POST = withRateLimit({
         );
       }
 
-      const { teacherId, credentialId, publicKey, deviceName, deviceType } = validation.data;
+      const { teacherId, credentialId, publicKey, deviceName, deviceType } =
+        validation.data;
 
       // Verify teacher ID matches authenticated user
       if (teacherId !== user.id) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 
       const supabase = getSupabaseAdmin();
@@ -81,14 +93,15 @@ export const POST = withRateLimit({
       if (credentials && credentials.length >= 5) {
         return NextResponse.json(
           {
-            error: 'Maximum of 5 devices allowed. Please remove an old device first.',
+            error:
+              'Maximum of 5 devices allowed. Please remove an old device first.',
           },
           { status: 400 }
         );
       }
 
       // Insert new credential
-      const { data: newCredential, error: insertError } = await supabase
+      const { data: newCredential, error: insertError } = (await supabase
         .from('teacher_biometric_credentials')
         .insert({
           teacher_id: teacherId,
@@ -101,7 +114,7 @@ export const POST = withRateLimit({
           created_at: new Date().toISOString(),
         })
         .select()
-        .single();
+        .single()) as { data: BiometricCredential | null; error: Error | null };
 
       if (insertError || !newCredential) {
         console.error('Error inserting credential:', insertError);
@@ -129,7 +142,7 @@ export const POST = withRateLimit({
 
 /**
  * GET /api/biometric/register
- * 
+ *
  * Test endpoint to verify API is working
  */
 export async function GET() {

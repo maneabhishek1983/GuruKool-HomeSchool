@@ -20,7 +20,7 @@ export default function FloatingParticles({ theme }: FloatingParticlesProps) {
       return;
     }
 
-    // Store canvas dimensions for particle class access
+    // Store canvas dimensions for particle class access (avoids null checks)
     let canvasWidth = window.innerWidth;
     let canvasHeight = window.innerHeight;
 

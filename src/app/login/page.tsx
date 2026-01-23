@@ -136,7 +136,7 @@ function EnhancedLoginForm() {
         transition={{ duration: 0.6 }}
         className="relative z-10 w-full max-w-md"
       >
-        <GlassCard blur="xl" className="p-8">
+        <GlassCard variant="dark" className="p-8">
           {/* Role Icon */}
           <motion.div
             className="flex justify-center mb-6"

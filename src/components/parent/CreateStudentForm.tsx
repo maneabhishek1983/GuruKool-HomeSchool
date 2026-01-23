@@ -268,6 +268,13 @@ export default function CreateStudentForm({
     e.preventDefault();
     if (validateForm()) {
       onSubmit(formData);
+    } else {
+      // If validation fails and we're on the last step, go back to the first step with errors
+      if (errors.name || errors.age || errors.country || errors.gradeLevel) {
+        setCurrentStep(1);
+      } else if (errors.subjects) {
+        setCurrentStep(2);
+      }
     }
   };
 
@@ -982,117 +989,143 @@ export default function CreateStudentForm({
     </div>
   );
 
-  const renderTeacherAssignment = () => (
-    <div className="space-y-6">
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Teacher Assignment
-          </h3>
+  const renderTeacherAssignment = () => {
+    // Check if there are validation issues from previous steps
+    const hasBasicInfoIssues =
+      !formData.name.trim() ||
+      !formData.age.trim() ||
+      !formData.country ||
+      !formData.gradeLevel;
+    const hasSubjectIssues = formData.selectedSubjects.length === 0;
+
+    return (
+      <div className="space-y-6">
+        {/* Validation Summary */}
+        {(hasBasicInfoIssues || hasSubjectIssues) && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <h4 className="font-medium text-yellow-800 mb-2">
+              Please complete required fields:
+            </h4>
+            <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
+              {!formData.name.trim() && <li>Student name (Step 1)</li>}
+              {!formData.age.trim() && <li>Student age (Step 1)</li>}
+              {!formData.country && <li>Country (Step 1)</li>}
+              {!formData.gradeLevel && <li>Grade level (Step 1)</li>}
+              {hasSubjectIssues && <li>At least one subject (Step 2)</li>}
+            </ul>
+          </div>
+        )}
+
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Teacher Assignment
+            </h3>
+            <button
+              type="button"
+              onClick={() => {
+                // Clear teacher assignments and move to next step
+                setFormData(prev => ({
+                  ...prev,
+                  assignedTeachers: [],
+                  teacherNotes: '',
+                }));
+                setCurrentStep(currentStep + 1);
+              }}
+              className="text-sm text-gray-500 hover:text-gray-700 underline"
+            >
+              Skip this section
+            </button>
+          </div>
+          <p className="text-sm text-gray-600 mb-6">
+            Assign teachers to your student. You can create new teacher profiles
+            or select from existing ones.
+          </p>
+        </div>
+
+        <div className="bg-blue-50 p-4 rounded-lg mb-6">
+          <h4 className="font-medium text-blue-900 mb-2">Teacher Management</h4>
+          <p className="text-sm text-blue-700 mb-4">
+            You can create teacher profiles and assign them to your students.
+            Teachers will be able to access the platform and manage sessions.
+          </p>
           <button
             type="button"
             onClick={() => {
-              // Clear teacher assignments and move to next step
-              setFormData(prev => ({
-                ...prev,
-                assignedTeachers: [],
-                teacherNotes: '',
-              }));
-              setCurrentStep(currentStep + 1);
+              // This will be handled by the parent component
+              // For now, we'll just show a message
+              alert(
+                'Teacher creation feature will be available in the parent dashboard'
+              );
             }}
-            className="text-sm text-gray-500 hover:text-gray-700 underline"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
           >
-            Skip this section
+            Create New Teacher Profile
           </button>
         </div>
-        <p className="text-sm text-gray-600 mb-6">
-          Assign teachers to your student. You can create new teacher profiles
-          or select from existing ones.
-        </p>
-      </div>
 
-      <div className="bg-blue-50 p-4 rounded-lg mb-6">
-        <h4 className="font-medium text-blue-900 mb-2">Teacher Management</h4>
-        <p className="text-sm text-blue-700 mb-4">
-          You can create teacher profiles and assign them to your students.
-          Teachers will be able to access the platform and manage sessions.
-        </p>
-        <button
-          type="button"
-          onClick={() => {
-            // This will be handled by the parent component
-            // For now, we'll just show a message
-            alert(
-              'Teacher creation feature will be available in the parent dashboard'
-            );
-          }}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-        >
-          Create New Teacher Profile
-        </button>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Assigned Teachers
-        </label>
-        <div className="border border-gray-300 rounded-md p-4 min-h-[100px]">
-          {formData.assignedTeachers.length === 0 ? (
-            <p className="text-gray-500 text-sm">
-              No teachers assigned yet. Create teacher profiles to assign them
-              to your student.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {formData.assignedTeachers.map((teacherId, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between bg-gray-50 p-3 rounded"
-                >
-                  <span className="text-sm text-gray-700">
-                    Teacher {index + 1} (ID: {teacherId})
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData(prev => ({
-                        ...prev,
-                        assignedTeachers: prev.assignedTeachers.filter(
-                          (_, i) => i !== index
-                        ),
-                      }))
-                    }
-                    className="text-red-600 hover:text-red-800 text-sm"
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Assigned Teachers
+          </label>
+          <div className="border border-gray-300 rounded-md p-4 min-h-[100px]">
+            {formData.assignedTeachers.length === 0 ? (
+              <p className="text-gray-500 text-sm">
+                No teachers assigned yet. Create teacher profiles to assign them
+                to your student.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {formData.assignedTeachers.map((teacherId, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between bg-gray-50 p-3 rounded"
                   >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+                    <span className="text-sm text-gray-700">
+                      Teacher {index + 1} (ID: {teacherId})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData(prev => ({
+                          ...prev,
+                          assignedTeachers: prev.assignedTeachers.filter(
+                            (_, i) => i !== index
+                          ),
+                        }))
+                      }
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor="teacherNotes"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Teacher Notes (Optional)
+          </label>
+          <textarea
+            id="teacherNotes"
+            rows={3}
+            value={formData.teacherNotes}
+            onChange={e =>
+              setFormData(prev => ({ ...prev, teacherNotes: e.target.value }))
+            }
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+            placeholder="Any specific notes or instructions for teachers..."
+          />
         </div>
       </div>
-
-      <div>
-        <label
-          htmlFor="teacherNotes"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Teacher Notes (Optional)
-        </label>
-        <textarea
-          id="teacherNotes"
-          rows={3}
-          value={formData.teacherNotes}
-          onChange={e =>
-            setFormData(prev => ({ ...prev, teacherNotes: e.target.value }))
-          }
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-          placeholder="Any specific notes or instructions for teachers..."
-        />
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderDataSheetActivities = () => (
     <div className="space-y-6">

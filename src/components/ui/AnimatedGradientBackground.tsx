@@ -51,6 +51,10 @@ export default function AnimatedGradientBackground({
       return;
     }
 
+    // Store canvas dimensions for blob class access (avoids null checks)
+    let canvasWidth = window.innerWidth;
+    let canvasHeight = window.innerHeight;
+
     // Set canvas size
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -60,10 +64,6 @@ export default function AnimatedGradientBackground({
     };
     resize();
     window.addEventListener('resize', resize);
-
-    // Store canvas dimensions for blob class access
-    let canvasWidth = canvas.width;
-    let canvasHeight = canvas.height;
 
     // Animated blobs
     class Blob {
