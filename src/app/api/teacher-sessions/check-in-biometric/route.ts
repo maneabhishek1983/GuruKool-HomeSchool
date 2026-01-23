@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { withRateLimit } from '@/lib/api-security';
 import { requireTeacher } from '@/lib/api-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
+import type { TeacherSessionRow } from '@/types/supabase';
 
 const schema = z.object({
   studentId: z.string().uuid(),
@@ -18,7 +19,7 @@ const schema = z.object({
 
 /**
  * POST /api/teacher-sessions/check-in-biometric
- * 
+ *
  * Check in with biometric authentication and location verification
  */
 export const POST = withRateLimit({
@@ -54,17 +55,20 @@ export const POST = withRateLimit({
       const supabase = getSupabaseAdmin();
 
       // Step 1: Verify biometric authentication
-      const verifyResponse = await fetch(`${request.nextUrl.origin}/api/biometric/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          teacherId: user.id,
-          credentialId,
-          signature,
-          authenticatorData,
-          clientDataJSON,
-        }),
-      });
+      const verifyResponse = await fetch(
+        `${request.nextUrl.origin}/api/biometric/verify`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            teacherId: user.id,
+            credentialId,
+            signature,
+            authenticatorData,
+            clientDataJSON,
+          }),
+        }
+      );
 
       if (!verifyResponse.ok) {
         return NextResponse.json(
@@ -82,16 +86,19 @@ export const POST = withRateLimit({
       }
 
       // Step 2: Verify location
-      const locationResponse = await fetch(`${request.nextUrl.origin}/api/location/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          studentId,
-          latitude,
-          longitude,
-          accuracy,
-        }),
-      });
+      const locationResponse = await fetch(
+        `${request.nextUrl.origin}/api/location/verify`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            studentId,
+            latitude,
+            longitude,
+            accuracy,
+          }),
+        }
+      );
 
       if (!locationResponse.ok) {
         return NextResponse.json(
@@ -154,11 +161,14 @@ export const POST = withRateLimit({
         );
       }
 
+      // Type assertion for session
+      const typedSession = session as TeacherSessionRow;
+
       // Step 5: Log verification
       await supabase.from('location_verification_log').insert({
         teacher_id: user.id,
         student_id: studentId,
-        session_id: (session as any).id,
+        session_id: typedSession.id,
         latitude,
         longitude,
         accuracy_meters: accuracy,
@@ -171,12 +181,13 @@ export const POST = withRateLimit({
 
       return NextResponse.json({
         success: true,
-        sessionId: (session as any).id,
-        checkedInAt: (session as any).checked_in_at,
+        sessionId: typedSession.id,
+        checkedInAt: typedSession.checked_in_at,
         locationVerified: true,
         biometricVerified: true,
         distance: locationResult.distance,
-        message: 'Checked in successfully with biometric and location verification',
+        message:
+          'Checked in successfully with biometric and location verification',
       });
     } catch (error) {
       console.error('Check-in error:', error);
@@ -190,7 +201,7 @@ export const POST = withRateLimit({
 
 /**
  * GET /api/teacher-sessions/check-in-biometric
- * 
+ *
  * Test endpoint to verify API is working
  */
 export async function GET() {
@@ -199,7 +210,8 @@ export async function GET() {
     version: '1.0',
     endpoints: {
       POST: {
-        description: 'Check in with biometric authentication and location verification',
+        description:
+          'Check in with biometric authentication and location verification',
         body: {
           studentId: 'string (UUID, required)',
           latitude: 'number (required, -90 to 90)',

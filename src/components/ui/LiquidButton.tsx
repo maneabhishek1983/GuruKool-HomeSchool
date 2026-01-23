@@ -4,12 +4,19 @@ import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-interface LiquidButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface LiquidButtonProps {
   variant?: 'primary' | 'secondary' | 'ghost' | 'success';
   size?: 'sm' | 'md' | 'lg';
   icon?: React.ReactNode;
   loading?: boolean;
   children: React.ReactNode;
+  className?: string;
+  disabled?: boolean;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  type?: 'button' | 'submit' | 'reset';
+  form?: string;
+  name?: string;
+  value?: string | number | readonly string[];
 }
 
 export function LiquidButton({
@@ -20,35 +27,48 @@ export function LiquidButton({
   children,
   className,
   disabled,
-  ...props
+  onClick,
+  type = 'button',
+  form,
+  name,
+  value,
 }: LiquidButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const [ripples, setRipples] = useState<Array<{ x: number; y: number; id: number }>>([]);
+  const [ripples, setRipples] = useState<
+    Array<{ x: number; y: number; id: number }>
+  >([]);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (disabled || loading) return;
+    if (disabled || loading) {
+      return;
+    }
 
     const rect = buttonRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    if (!rect) {
+      return;
+    }
 
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     const id = Date.now();
 
-    setRipples((prev) => [...prev, { x, y, id }]);
+    setRipples(prev => [...prev, { x, y, id }]);
 
     setTimeout(() => {
-      setRipples((prev) => prev.filter((ripple) => ripple.id !== id));
+      setRipples(prev => prev.filter(ripple => ripple.id !== id));
     }, 600);
 
-    props.onClick?.(e);
+    onClick?.(e);
   };
 
   const variants = {
-    primary: 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/60',
-    secondary: 'bg-white/70 backdrop-blur-md text-gray-900 border border-gray-200 shadow-md hover:bg-white/90',
+    primary:
+      'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/60',
+    secondary:
+      'bg-white/70 backdrop-blur-md text-gray-900 border border-gray-200 shadow-md hover:bg-white/90',
     ghost: 'bg-transparent text-gray-700 hover:bg-gray-100/80',
-    success: 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/60',
+    success:
+      'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/60',
   };
 
   const sizes = {
@@ -78,10 +98,13 @@ export function LiquidButton({
         stiffness: 400,
         damping: 17,
       }}
-      {...props}
+      type={type}
+      form={form}
+      name={name}
+      value={value}
     >
       {/* Ripple effect */}
-      {ripples.map((ripple) => (
+      {ripples.map(ripple => (
         <motion.span
           key={ripple.id}
           className="absolute rounded-full bg-white/30"

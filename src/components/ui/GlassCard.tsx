@@ -25,6 +25,13 @@ export function GlassCard({
     dark: 'bg-white/30 backdrop-blur-lg border-white/30',
   };
 
+  const hoverAnimation = hover
+    ? {
+        y: -4,
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+      }
+    : {};
+
   return (
     <motion.div
       className={cn(
@@ -36,14 +43,7 @@ export function GlassCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-50px' }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      whileHover={
-        hover
-          ? {
-              y: -4,
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            }
-          : undefined
-      }
+      whileHover={hoverAnimation}
     >
       {/* Gradient border glow */}
       {gradient && (

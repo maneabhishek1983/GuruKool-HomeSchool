@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { withRateLimit } from '@/lib/api-security';
 import { requireTeacher } from '@/lib/api-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
+import type { StudentRow } from '@/types/supabase';
 
 const schema = z.object({
   studentId: z.string().uuid(),
@@ -14,7 +15,7 @@ const schema = z.object({
 
 /**
  * POST /api/location/verify
- * 
+ *
  * Verify if teacher's location is within student's geofence
  */
 export const POST = withRateLimit({
@@ -44,7 +45,9 @@ export const POST = withRateLimit({
       // Get student's home location
       const { data: student, error: studentError } = await supabase
         .from('students')
-        .select('home_latitude, home_longitude, geofence_radius_meters, home_address')
+        .select(
+          'home_latitude, home_longitude, geofence_radius_meters, home_address'
+        )
         .eq('id', studentId)
         .single();
 
@@ -55,12 +58,22 @@ export const POST = withRateLimit({
         );
       }
 
+      // Type assertion for student
+      const typedStudent = student as Pick<
+        StudentRow,
+        | 'home_latitude'
+        | 'home_longitude'
+        | 'geofence_radius_meters'
+        | 'home_address'
+      >;
+
       // Check if student has location set
-      if (!(student as any).home_latitude || !(student as any).home_longitude) {
+      if (!typedStudent.home_latitude || !typedStudent.home_longitude) {
         return NextResponse.json(
           {
             error: 'Student home location not configured',
-            message: 'Please ask the parent to set up the home address in student settings.',
+            message:
+              'Please ask the parent to set up the home address in student settings.',
           },
           { status: 400 }
         );
@@ -70,11 +83,11 @@ export const POST = withRateLimit({
       const distance = calculateDistance(
         latitude,
         longitude,
-        (student as any).home_latitude,
-        (student as any).home_longitude
+        typedStudent.home_latitude,
+        typedStudent.home_longitude
       );
 
-      const allowedRadius = (student as any).geofence_radius_meters || 100;
+      const allowedRadius = typedStudent.geofence_radius_meters || 100;
       const withinGeofence = distance <= allowedRadius;
 
       // Log verification attempt
@@ -98,7 +111,7 @@ export const POST = withRateLimit({
         distance: Math.round(distance),
         allowedRadius,
         accuracy: Math.round(accuracy),
-        studentAddress: (student as any).home_address,
+        studentAddress: typedStudent.home_address,
         message: withinGeofence
           ? `You are within the allowed area (${Math.round(distance)}m from home)`
           : `You are ${Math.round(distance - allowedRadius)}m too far from the student's home`,
@@ -139,7 +152,7 @@ function calculateDistance(
 
 /**
  * GET /api/location/verify
- * 
+ *
  * Test endpoint to verify API is working
  */
 export async function GET() {

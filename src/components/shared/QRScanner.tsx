@@ -46,7 +46,7 @@ export function QRScanner({
       .then(devices => {
         addDebugLog(`Found ${devices.length} cameras`);
 
-        if (devices && devices.length) {
+        if (devices && devices.length > 0) {
           setCameras(devices);
           // Auto-start with back camera on mobile, or first camera
           const backCamera = devices.find(
@@ -54,12 +54,18 @@ export function QRScanner({
               device.label.toLowerCase().includes('back') ||
               device.label.toLowerCase().includes('environment')
           );
-          const selectedCamera = backCamera || devices[0];
+          const firstCamera = devices[0];
+          const selectedCamera = backCamera ?? firstCamera;
 
-          addDebugLog(`Using: ${selectedCamera.label || 'Default camera'}`);
-
-          if (selectedCamera?.id) {
-            startScanning(selectedCamera.id);
+          if (selectedCamera) {
+            addDebugLog(`Using: ${selectedCamera.label || 'Default camera'}`);
+            if (selectedCamera.id) {
+              startScanning(selectedCamera.id);
+            }
+          } else {
+            addDebugLog('ERROR: No valid camera found');
+            setError('No valid cameras found on this device.');
+            onError?.('No valid cameras found');
           }
         } else {
           addDebugLog('ERROR: No cameras found');

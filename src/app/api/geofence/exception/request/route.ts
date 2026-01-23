@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { withRateLimit } from '@/lib/api-security';
 import { requireTeacher } from '@/lib/api-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
+import type { StudentRow, GeofenceExceptionRow } from '@/types/supabase';
 
 const schema = z.object({
   studentId: z.string().uuid(),
@@ -17,7 +18,7 @@ const schema = z.object({
 
 /**
  * POST /api/geofence/exception/request
- * 
+ *
  * Request an exception to check in outside the geofence
  */
 export const POST = withRateLimit({
@@ -65,6 +66,9 @@ export const POST = withRateLimit({
         );
       }
 
+      // Type assertion for student
+      const typedStudent = student as Pick<StudentRow, 'parent_id'>;
+
       // Verify teacher is assigned to this student
       const { data: assignment } = await supabase
         .from('teacher_assignments')
@@ -93,7 +97,8 @@ export const POST = withRateLimit({
       if (existing && existing.length > 0) {
         return NextResponse.json(
           {
-            error: 'You already have a pending or approved exception for this time period',
+            error:
+              'You already have a pending or approved exception for this time period',
           },
           { status: 409 }
         );
@@ -105,7 +110,7 @@ export const POST = withRateLimit({
         .insert({
           teacher_id: user.id,
           student_id: studentId,
-          parent_id: (student as any).parent_id,
+          parent_id: typedStudent.parent_id,
           reason,
           alternate_location: alternateLocation,
           alternate_latitude: alternateLatitude,
@@ -126,12 +131,15 @@ export const POST = withRateLimit({
         );
       }
 
+      // Type assertion for exception
+      const typedException = exception as GeofenceExceptionRow;
+
       // TODO: Send notification to parent
       // This would integrate with your notification system
 
       return NextResponse.json({
         success: true,
-        exceptionId: (exception as any).id,
+        exceptionId: typedException.id,
         status: 'pending',
         message: 'Exception request submitted. Waiting for parent approval.',
       });
@@ -147,7 +155,7 @@ export const POST = withRateLimit({
 
 /**
  * GET /api/geofence/exception/request
- * 
+ *
  * List exception requests for the authenticated teacher
  */
 export const GET = withRateLimit({

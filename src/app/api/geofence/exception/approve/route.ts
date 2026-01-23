@@ -4,6 +4,10 @@ import { z } from 'zod';
 import { withRateLimit } from '@/lib/api-security';
 import { requireParent } from '@/lib/api-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
+import type {
+  GeofenceExceptionRow,
+  GeofenceExceptionWithStudent,
+} from '@/types/supabase';
 
 const schema = z.object({
   exceptionId: z.string().uuid(),
@@ -13,7 +17,7 @@ const schema = z.object({
 
 /**
  * POST /api/geofence/exception/approve
- * 
+ *
  * Approve or deny a geofence exception request (parent only)
  */
 export const POST = withRateLimit({
@@ -53,16 +57,16 @@ export const POST = withRateLimit({
         );
       }
 
-      if ((exception as any).students.parent_id !== user.id) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 403 }
-        );
+      // Type assertion for the exception with student relation
+      const typedException = exception as GeofenceExceptionWithStudent;
+
+      if (typedException.students.parent_id !== user.id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 
-      if ((exception as any).status !== 'pending') {
+      if (typedException.status !== 'pending') {
         return NextResponse.json(
-          { error: `Exception already ${(exception as any).status}` },
+          { error: `Exception already ${typedException.status}` },
           { status: 400 }
         );
       }
@@ -89,13 +93,16 @@ export const POST = withRateLimit({
         );
       }
 
+      // Type assertion for the updated exception
+      const typedUpdated = updated as GeofenceExceptionRow;
+
       // TODO: Send notification to teacher
       // This would integrate with your notification system
 
       return NextResponse.json({
         success: true,
-        exceptionId: (updated as any).id,
-        status: (updated as any).status,
+        exceptionId: typedUpdated.id,
+        status: typedUpdated.status,
         message: approved
           ? 'Exception request approved'
           : 'Exception request denied',
@@ -112,7 +119,7 @@ export const POST = withRateLimit({
 
 /**
  * GET /api/geofence/exception/approve
- * 
+ *
  * List exception requests for the authenticated parent
  */
 export const GET = withRateLimit({
