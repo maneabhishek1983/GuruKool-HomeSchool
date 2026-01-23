@@ -38,6 +38,8 @@ export default function StudentTeacherAssignment({
   }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     loadAssignments();
@@ -53,6 +55,8 @@ export default function StudentTeacherAssignment({
   const loadAssignments = async () => {
     setIsLoading(true);
     setError(null);
+    setWarning(null);
+    setSuccess(null);
 
     try {
       const assignments: { [studentId: string]: string[] } = {};
@@ -81,21 +85,37 @@ export default function StudentTeacherAssignment({
 
     setIsLoading(true);
     setError(null);
+    setWarning(null);
+    setSuccess(null);
 
     try {
-      const success = await DatabaseService.assignTeacherToStudent(
+      const result = await DatabaseService.assignTeacherToStudent(
         selectedTeacher,
         selectedStudent,
         parentId
       );
 
-      if (success) {
+      if (result.success) {
         await loadAssignments();
         onAssignmentChange();
         setSelectedStudent('');
         setSelectedTeacher('');
+
+        if (result.qrCodeCreated) {
+          setSuccess(
+            'Teacher assigned successfully! QR code is ready for check-in.'
+          );
+        } else {
+          // Assignment succeeded but QR code failed
+          setWarning(
+            'Teacher assigned, but the QR code could not be generated. ' +
+              'The teacher can be used for sessions, but check-in via QR scanning ' +
+              'may not work until the server is properly configured. ' +
+              'Please contact your administrator if this persists.'
+          );
+        }
       } else {
-        setError('Failed to assign teacher to student');
+        setError(result.message || 'Failed to assign teacher to student');
       }
     } catch (err) {
       console.error('Error assigning teacher:', err);
@@ -192,7 +212,69 @@ export default function StudentTeacherAssignment({
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-700 text-sm">{error}</p>
+          <div className="flex items-start">
+            <svg
+              className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p className="text-red-700 text-sm">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {warning && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <svg
+              className="w-5 h-5 text-yellow-600 mr-2 flex-shrink-0 mt-0.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <div>
+              <p className="text-yellow-800 text-sm font-medium">
+                QR Code Not Generated
+              </p>
+              <p className="text-yellow-700 text-sm mt-1">{warning}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <svg
+              className="w-5 h-5 text-green-600 mr-2 flex-shrink-0 mt-0.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p className="text-green-700 text-sm">{success}</p>
+          </div>
         </div>
       )}
 

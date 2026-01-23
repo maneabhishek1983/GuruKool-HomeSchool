@@ -8,10 +8,46 @@ const schema = z.object({
 });
 
 /**
+ * Get today's date string in YYYY-MM-DD format (UTC)
+ */
+function getTodayDateString(): string {
+  const now = new Date();
+  return now.toISOString().split('T')[0] as string;
+}
+
+/**
+ * Derive a daily secret from the base QR_SECRET
+ * This ensures QR codes are only valid for the day they were created
+ */
+async function deriveDailySecret(
+  baseSecret: string,
+  dateString: string
+): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(baseSecret);
+  const dateData = encoder.encode(`daily-qr-secret-${dateString}`);
+
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+
+  const derivedKey = await crypto.subtle.sign('HMAC', cryptoKey, dateData);
+  const derivedArray = Array.from(new Uint8Array(derivedKey));
+  return btoa(String.fromCharCode(...derivedArray));
+}
+
+/**
  * POST /api/qr/validate
- * 
+ *
  * Validate QR code signature and expiration
  * Server-side only to protect QR secret
+ *
+ * SECURITY: Uses daily rotating secret derived from base QR_SECRET
+ * QR codes are only valid for the day they were generated
  */
 export const POST = withRateLimit({
   keyPrefix: 'api:qr:validate',
@@ -55,14 +91,17 @@ export const POST = withRateLimit({
     // Check expiration
     if (parsedData.expiresAt && Date.now() > parsedData.expiresAt) {
       return NextResponse.json(
-        { error: 'QR code has expired. Please request a new one from the parent.' },
+        {
+          error:
+            'QR code has expired. Daily rotation requires a fresh code each day.',
+        },
         { status: 401 }
       );
     }
 
-    // Verify signature
-    const secret = process.env.QR_SECRET;
-    if (!secret || secret.length < 32) {
+    // Verify signature with daily secret rotation
+    const baseSecret = process.env.QR_SECRET;
+    if (!baseSecret || baseSecret.length < 32) {
       console.error('QR_SECRET not configured');
       return NextResponse.json(
         { error: 'Server configuration error' },
@@ -70,11 +109,30 @@ export const POST = withRateLimit({
       );
     }
 
+    // Get the generation date from QR data, or use today as fallback for legacy codes
+    const generatedDate = parsedData.generatedDate || getTodayDateString();
+
+    // Verify the QR was generated today (mandatory daily rotation)
+    const today = getTodayDateString();
+    if (generatedDate !== today) {
+      return NextResponse.json(
+        {
+          error: `QR code was generated on ${generatedDate} but today is ${today}. Daily rotation requires a fresh code each day.`,
+          generatedDate,
+          currentDate: today,
+        },
+        { status: 401 }
+      );
+    }
+
+    // Derive the daily secret for the generation date
+    const dailySecret = await deriveDailySecret(baseSecret, generatedDate);
+
     const expectedSignature = await generateSignature(
       parsedData.teacherId,
       parsedData.studentId,
       parsedData.parentId,
-      secret
+      dailySecret
     );
 
     if (parsedData.signature !== expectedSignature) {
@@ -92,6 +150,7 @@ export const POST = withRateLimit({
         studentId: parsedData.studentId,
         parentId: parsedData.parentId,
         expiresAt: parsedData.expiresAt,
+        generatedDate,
       },
     });
   } catch (error) {
