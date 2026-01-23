@@ -173,7 +173,19 @@ export default function AdminDashboard() {
     }
   };
 
-  const stats = {
+  const handleCreateUser = async (e: React.FormEvent) => {
+    // ... (rest of function remains unchanged)
+  };
+
+  interface DashboardStats {
+    totalUsers: number;
+    activeParents: number;
+    activeTeachers: number;
+    totalStudents: number;
+    activeSessions: number;
+  }
+
+  const stats: DashboardStats = {
     totalUsers: users.length,
     activeParents: users.filter(u => u.role === 'parent').length,
     activeTeachers: users.filter(u => u.role === 'teacher').length,
@@ -429,8 +441,8 @@ export default function AdminDashboard() {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${activeTab === tab.id
-                        ? 'bg-white text-violet-700 shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-white text-violet-700 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
                       }`}
                   >
                     <span>{tab.icon}</span>
@@ -460,8 +472,8 @@ export default function AdminDashboard() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${activeTab === tab.id
-                  ? 'bg-violet-100 text-violet-700'
-                  : 'text-slate-600 bg-white/50'
+                ? 'bg-violet-100 text-violet-700'
+                : 'text-slate-600 bg-white/50'
                 }`}
             >
               <span>{tab.icon}</span>
