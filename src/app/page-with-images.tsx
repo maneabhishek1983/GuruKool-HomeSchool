@@ -30,7 +30,7 @@ export default function EnhancedHomePage() {
           className="absolute inset-0 z-0"
         >
           <Image
-            src="/images/optimized/hero/mentor-student.webp"
+            src="/images/hero/mentor-student.jpg"
             alt="Mentor and student learning together outdoors"
             fill
             className="object-cover"
@@ -123,7 +123,7 @@ export default function EnhancedHomePage() {
             >
               <div className="relative h-full min-h-[400px]">
                 <Image
-                  src="/images/optimized/features/mentorship.webp"
+                  src="/images/features/mentorship.jpg"
                   alt="One-on-one mentorship session"
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -155,7 +155,7 @@ export default function EnhancedHomePage() {
             >
               <div className="relative h-full min-h-[250px]">
                 <Image
-                  src="/images/optimized/features/tablet-learning.webp"
+                  src="/images/features/tablet-learning.jpg"
                   alt="Children learning with tablets outdoors"
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -217,7 +217,7 @@ export default function EnhancedHomePage() {
             >
               <div className="relative h-full min-h-[250px]">
                 <Image
-                  src="/images/optimized/features/collaborative-space.webp"
+                  src="/images/features/collaborative-space.jpg"
                   alt="Modern collaborative learning space"
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
