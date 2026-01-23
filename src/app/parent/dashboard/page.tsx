@@ -428,8 +428,8 @@ export default function ParentDashboard() {
           students={students.map(s => ({
             id: s.id,
             name: s.name,
-            progress: Math.round((s.completedLessons / Math.max(s.totalLessons, 1)) * 100),
-            activeSession: false
+            progress: 0, // Progress tracking not yet implemented
+            activeSession: false,
           }))}
           totalStudents={students.length}
           weeklyHours={0}

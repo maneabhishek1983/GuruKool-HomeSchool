@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import LiquidButton from '@/components/ui/LiquidButton';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 
 interface SystemMetric {
   label: string;
@@ -21,9 +21,27 @@ interface AdminDashboardHeroProps {
 }
 
 const defaultMetrics: SystemMetric[] = [
-  { label: 'Total Users', value: 0, icon: '👥', trend: 'up', trendValue: '+0%' },
-  { label: 'Active Sessions', value: 0, icon: '📚', trend: 'neutral', trendValue: '0' },
-  { label: 'System Health', value: '100%', icon: '💚', trend: 'up', trendValue: 'Optimal' },
+  {
+    label: 'Total Users',
+    value: 0,
+    icon: '👥',
+    trend: 'up',
+    trendValue: '+0%',
+  },
+  {
+    label: 'Active Sessions',
+    value: 0,
+    icon: '📚',
+    trend: 'neutral',
+    trendValue: '0',
+  },
+  {
+    label: 'System Health',
+    value: '100%',
+    icon: '💚',
+    trend: 'up',
+    trendValue: 'Optimal',
+  },
   { label: 'Revenue', value: '$0', icon: '💰', trend: 'up', trendValue: '+0%' },
 ];
 
@@ -114,8 +132,8 @@ export default function AdminDashboardHero({
                       metric.trend === 'up'
                         ? 'bg-green-500/20 text-green-300'
                         : metric.trend === 'down'
-                        ? 'bg-red-500/20 text-red-300'
-                        : 'bg-gray-500/20 text-gray-300'
+                          ? 'bg-red-500/20 text-red-300'
+                          : 'bg-gray-500/20 text-gray-300'
                     }`}
                   >
                     {metric.trendValue}
@@ -125,9 +143,7 @@ export default function AdminDashboardHero({
               <div className="text-3xl font-bold text-white mb-1">
                 {metric.value}
               </div>
-              <div className="text-sm text-blue-100">
-                {metric.label}
-              </div>
+              <div className="text-sm text-blue-100">{metric.label}</div>
             </motion.div>
           ))}
         </motion.div>
@@ -142,7 +158,7 @@ export default function AdminDashboardHero({
           {onViewReports && (
             <LiquidButton
               variant="primary"
-              size="large"
+              size="lg"
               onClick={onViewReports}
               className="bg-white text-blue-900 hover:bg-blue-50"
             >
@@ -151,8 +167,8 @@ export default function AdminDashboardHero({
           )}
           {onManageUsers && (
             <LiquidButton
-              variant="outline"
-              size="large"
+              variant="ghost"
+              size="lg"
               onClick={onManageUsers}
               className="border-white text-white hover:bg-white/10"
             >
@@ -160,8 +176,8 @@ export default function AdminDashboardHero({
             </LiquidButton>
           )}
           <LiquidButton
-            variant="outline"
-            size="large"
+            variant="ghost"
+            size="lg"
             className="border-white text-white hover:bg-white/10"
           >
             ⚙️ Settings
@@ -178,17 +194,21 @@ export default function AdminDashboardHero({
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
-              <span className="text-white font-medium">All Systems Operational</span>
+              <span className="text-white font-medium">
+                All Systems Operational
+              </span>
             </div>
             <div className="flex items-center gap-6 text-sm text-blue-100">
               <div>
                 <span className="text-white font-medium">Uptime:</span> 99.9%
               </div>
               <div>
-                <span className="text-white font-medium">Response Time:</span> 45ms
+                <span className="text-white font-medium">Response Time:</span>{' '}
+                45ms
               </div>
               <div>
-                <span className="text-white font-medium">Last Update:</span> Just now
+                <span className="text-white font-medium">Last Update:</span>{' '}
+                Just now
               </div>
             </div>
           </div>

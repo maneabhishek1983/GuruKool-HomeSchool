@@ -2,7 +2,11 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { NetflixBackground, NetflixCard, NetflixButton } from './NetflixBackground';
+import {
+  NetflixBackground,
+  NetflixCard,
+  NetflixButton,
+} from './NetflixBackground';
 
 interface NetflixDashboardProps {
   children: React.ReactNode;
@@ -11,17 +15,17 @@ interface NetflixDashboardProps {
   className?: string;
 }
 
-export function NetflixDashboard({ 
-  children, 
-  title, 
-  subtitle, 
-  className = '' 
+export function NetflixDashboard({
+  children,
+  title,
+  subtitle,
+  className = '',
 }: NetflixDashboardProps) {
   return (
     <NetflixBackground variant="dashboard" className={className}>
       <div className="container mx-auto px-4 py-8">
         {(title || subtitle) && (
-          <motion.div 
+          <motion.div
             className="text-center mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -39,7 +43,7 @@ export function NetflixDashboard({
             )}
           </motion.div>
         )}
-        
+
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -53,13 +57,13 @@ export function NetflixDashboard({
 }
 
 // Netflix-style stats card
-export function NetflixStatsCard({ 
-  title, 
-  value, 
-  subtitle, 
+export function NetflixStatsCard({
+  title,
+  value,
+  subtitle,
   icon,
   trend,
-  className = '' 
+  className = '',
 }: {
   title: string;
   value: string | number;
@@ -70,9 +74,12 @@ export function NetflixStatsCard({
 }) {
   const getTrendColor = () => {
     switch (trend) {
-      case 'up': return 'text-green-400';
-      case 'down': return 'text-red-400';
-      default: return 'text-netflix-text-gray';
+      case 'up':
+        return 'text-green-400';
+      case 'down':
+        return 'text-red-400';
+      default:
+        return 'text-netflix-text-gray';
     }
   };
 
@@ -85,7 +92,9 @@ export function NetflixStatsCard({
               {icon}
             </div>
           )}
-          <h3 className="text-sm font-medium text-netflix-text-gray">{title}</h3>
+          <h3 className="text-sm font-medium text-netflix-text-gray">
+            {title}
+          </h3>
         </div>
         {trend && (
           <div className={`text-sm ${getTrendColor()}`}>
@@ -95,7 +104,7 @@ export function NetflixStatsCard({
           </div>
         )}
       </div>
-      
+
       <div className="space-y-1">
         <p className="text-3xl font-bold text-white">{value}</p>
         {subtitle && (
@@ -107,9 +116,9 @@ export function NetflixStatsCard({
 }
 
 // Netflix-style feature grid
-export function NetflixFeatureGrid({ 
-  features, 
-  className = '' 
+export function NetflixFeatureGrid({
+  features,
+  className = '',
 }: {
   features: Array<{
     title: string;
@@ -140,8 +149,8 @@ export function NetflixFeatureGrid({
                 {feature.description}
               </p>
               {feature.href && (
-                <NetflixButton 
-                  as="a" 
+                <NetflixButton
+                  as="a"
                   href={feature.href}
                   variant="outline"
                   size="sm"
@@ -158,9 +167,9 @@ export function NetflixFeatureGrid({
 }
 
 // Netflix-style loading skeleton
-export function NetflixSkeleton({ 
+export function NetflixSkeleton({
   className = '',
-  lines = 3 
+  lines = 3,
 }: {
   className?: string;
   lines?: number;
@@ -181,9 +190,9 @@ export function NetflixSkeleton({
 }
 
 // Netflix-style navigation
-export function NetflixNavigation({ 
-  items, 
-  className = '' 
+export function NetflixNavigation({
+  items,
+  className = '',
 }: {
   items: Array<{
     label: string;

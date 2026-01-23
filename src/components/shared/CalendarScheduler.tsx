@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useState } from 'react';
-import LiquidButton from '@/components/ui/LiquidButton';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 
 interface CalendarEvent {
   id: string;
@@ -71,7 +71,7 @@ export default function CalendarScheduler({
 
   // Get events for a specific date
   const getEventsForDate = (date: string) => {
-    return events.filter((event) => event.date === date);
+    return events.filter(event => event.date === date);
   };
 
   // Generate calendar days for current month
@@ -84,23 +84,26 @@ export default function CalendarScheduler({
     const startingDayOfWeek = firstDay.getDay();
 
     const days = [];
-    
+
     // Add empty slots for days before the month starts
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
-    
+
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       days.push({ day, dateStr, events: getEventsForDate(dateStr) });
     }
-    
+
     return days;
   };
 
   const calendarDays = generateCalendarDays();
-  const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const monthName = currentDate.toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  });
 
   return (
     <motion.div
@@ -159,7 +162,7 @@ export default function CalendarScheduler({
           {onAddEvent && (
             <LiquidButton
               variant="primary"
-              size="small"
+              size="sm"
               onClick={onAddEvent}
               className="bg-white text-purple-900 hover:bg-pink-50"
             >
@@ -172,8 +175,11 @@ export default function CalendarScheduler({
         <div className="backdrop-blur-xl bg-white/10 rounded-2xl p-4 border border-white/20 mb-4">
           {/* Day Headers */}
           <div className="grid grid-cols-7 gap-2 mb-3">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div key={day} className="text-center text-xs font-semibold text-pink-100">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <div
+                key={day}
+                className="text-center text-xs font-semibold text-pink-100"
+              >
                 {day}
               </div>
             ))}
@@ -232,7 +238,9 @@ export default function CalendarScheduler({
                 className="backdrop-blur-xl bg-white/10 rounded-xl p-3 border border-white/20 hover:bg-white/20 transition-colors"
               >
                 <div className="flex items-start gap-3">
-                  <div className={`w-10 h-10 rounded-lg ${getEventTypeColor(event.type)} flex items-center justify-center text-xl flex-shrink-0`}>
+                  <div
+                    className={`w-10 h-10 rounded-lg ${getEventTypeColor(event.type)} flex items-center justify-center text-xl flex-shrink-0`}
+                  >
                     {getEventTypeIcon(event.type)}
                   </div>
 
@@ -293,12 +301,14 @@ export default function CalendarScheduler({
             { type: 'meeting', label: 'Meetings' },
             { type: 'assessment', label: 'Assessments' },
             { type: 'holiday', label: 'Holidays' },
-          ].map((item) => (
+          ].map(item => (
             <div
               key={item.type}
               className="backdrop-blur-xl bg-white/10 rounded-lg p-2 border border-white/20 flex items-center gap-2"
             >
-              <div className={`w-3 h-3 rounded-full ${getEventTypeColor(item.type)}`} />
+              <div
+                className={`w-3 h-3 rounded-full ${getEventTypeColor(item.type)}`}
+              />
               <span className="text-xs text-white">{item.label}</span>
             </div>
           ))}

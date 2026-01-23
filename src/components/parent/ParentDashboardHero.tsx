@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import LiquidButton from '@/components/ui/LiquidButton';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 
 interface Student {
   id: string;
@@ -110,9 +110,7 @@ export default function ParentDashboardHero({
                 <div className="text-3xl font-bold text-white mb-1">
                   {weeklyHours}h
                 </div>
-                <div className="text-sm text-indigo-100">
-                  This Week
-                </div>
+                <div className="text-sm text-indigo-100">This Week</div>
               </div>
             </motion.div>
 
@@ -126,7 +124,7 @@ export default function ParentDashboardHero({
               {onAddStudent && (
                 <LiquidButton
                   variant="primary"
-                  size="large"
+                  size="lg"
                   onClick={onAddStudent}
                   className="bg-white text-indigo-900 hover:bg-indigo-50"
                 >
@@ -135,8 +133,8 @@ export default function ParentDashboardHero({
               )}
               {onViewProgress && (
                 <LiquidButton
-                  variant="outline"
-                  size="large"
+                  variant="ghost"
+                  size="lg"
                   onClick={onViewProgress}
                   className="border-white text-white hover:bg-white/10"
                 >
@@ -189,7 +187,10 @@ export default function ParentDashboardHero({
                             className="h-full bg-gradient-to-r from-indigo-400 to-purple-400"
                             initial={{ width: 0 }}
                             animate={{ width: `${student.progress}%` }}
-                            transition={{ delay: 0.8 + index * 0.1, duration: 1 }}
+                            transition={{
+                              delay: 0.8 + index * 0.1,
+                              duration: 1,
+                            }}
                           />
                         </div>
                         <span className="text-xs text-indigo-200 font-medium">
@@ -203,7 +204,8 @@ export default function ParentDashboardHero({
 
               {students.length > 3 && (
                 <div className="text-center text-indigo-200 text-sm">
-                  +{students.length - 3} more {students.length - 3 === 1 ? 'student' : 'students'}
+                  +{students.length - 3} more{' '}
+                  {students.length - 3 === 1 ? 'student' : 'students'}
                 </div>
               )}
             </motion.div>

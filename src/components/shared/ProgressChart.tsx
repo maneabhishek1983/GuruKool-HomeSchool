@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import LiquidButton from '@/components/ui/LiquidButton';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 
 interface ProgressDataPoint {
   label: string; // e.g., "Week 1", "Jan", "Q1"
@@ -85,14 +85,12 @@ export default function ProgressChart({
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h3 className="text-2xl font-bold text-white mb-1">
-              📈 {title}
-            </h3>
+            <h3 className="text-2xl font-bold text-white mb-1">📈 {title}</h3>
             <p className="text-green-100">
               {studentName} • {subject}
             </p>
           </div>
-          
+
           {/* Current Score Badge */}
           <motion.div
             className="backdrop-blur-xl bg-white/10 rounded-2xl px-4 py-3 border border-white/20 text-center"
@@ -106,8 +104,12 @@ export default function ProgressChart({
         {/* Progress Bar */}
         <div className="backdrop-blur-xl bg-white/10 rounded-2xl p-4 border border-white/20 mb-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-white">Progress to Goal</span>
-            <span className="text-sm font-bold text-white">{progressPercentage.toFixed(0)}%</span>
+            <span className="text-sm font-semibold text-white">
+              Progress to Goal
+            </span>
+            <span className="text-sm font-bold text-white">
+              {progressPercentage.toFixed(0)}%
+            </span>
           </div>
           <div className="h-4 bg-white/10 rounded-full overflow-hidden relative">
             <motion.div
@@ -138,8 +140,10 @@ export default function ProgressChart({
 
         {/* Chart Visualization */}
         <div className="backdrop-blur-xl bg-white/10 rounded-2xl p-4 border border-white/20 mb-4">
-          <h4 className="text-sm font-semibold text-white mb-3">Trend Over Time</h4>
-          
+          <h4 className="text-sm font-semibold text-white mb-3">
+            Trend Over Time
+          </h4>
+
           {/* Simple Bar Chart */}
           <div className="flex items-end justify-between gap-2 h-32">
             {data.map((point, index) => (
@@ -163,14 +167,18 @@ export default function ProgressChart({
                   {/* Tooltip */}
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <div className="backdrop-blur-xl bg-white/95 rounded-lg px-3 py-2 shadow-xl whitespace-nowrap">
-                      <div className="text-xs font-bold text-gray-900">{point.value}%</div>
+                      <div className="text-xs font-bold text-gray-900">
+                        {point.value}%
+                      </div>
                       {point.date && (
-                        <div className="text-xs text-gray-600">{point.date}</div>
+                        <div className="text-xs text-gray-600">
+                          {point.date}
+                        </div>
                       )}
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Label */}
                 <div className="text-xs text-green-100 font-medium">
                   {point.label}
@@ -191,16 +199,25 @@ export default function ProgressChart({
             >
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-2xl">
-                  {improvementPercentage > 0 ? '📈' : improvementPercentage < 0 ? '📉' : '➡️'}
+                  {improvementPercentage > 0
+                    ? '📈'
+                    : improvementPercentage < 0
+                      ? '📉'
+                      : '➡️'}
                 </span>
                 <span className="text-xs text-green-100">Improvement</span>
               </div>
-              <div className={`text-2xl font-bold ${
-                improvementPercentage > 0 ? 'text-green-300' : 
-                improvementPercentage < 0 ? 'text-orange-300' : 
-                'text-white'
-              }`}>
-                {improvementPercentage > 0 ? '+' : ''}{improvementPercentage}%
+              <div
+                className={`text-2xl font-bold ${
+                  improvementPercentage > 0
+                    ? 'text-green-300'
+                    : improvementPercentage < 0
+                      ? 'text-orange-300'
+                      : 'text-white'
+                }`}
+              >
+                {improvementPercentage > 0 ? '+' : ''}
+                {improvementPercentage}%
               </div>
             </motion.div>
           )}
@@ -225,7 +242,7 @@ export default function ProgressChart({
         {onViewDetails && (
           <LiquidButton
             variant="primary"
-            size="large"
+            size="lg"
             onClick={onViewDetails}
             className="w-full bg-white text-green-900 hover:bg-green-50"
           >
@@ -240,7 +257,7 @@ export default function ProgressChart({
           transition={{ delay: 1 }}
           className="mt-4 text-xs text-green-100 text-center"
         >
-          {isOnTrack 
+          {isOnTrack
             ? '🎉 Great progress! Keep up the excellent work!'
             : '💪 Focus on consistent practice to reach your goal!'}
         </motion.div>

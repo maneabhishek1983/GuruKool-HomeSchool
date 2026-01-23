@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useEffect } from 'react';
-import LiquidButton from '@/components/ui/LiquidButton';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 import { triggerConfetti } from '@/lib/confetti';
 
 interface AchievementCelebrationProps {
@@ -41,6 +41,7 @@ export default function AchievementCelebration({
       }, 300);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [autoConfetti]);
 
   return (
@@ -144,7 +145,7 @@ export default function AchievementCelebration({
               }}
               className="absolute inset-0 rounded-full bg-yellow-400 blur-xl"
             />
-            
+
             {/* Icon Container */}
             <div className="relative backdrop-blur-xl bg-white/20 rounded-full w-32 h-32 flex items-center justify-center border-4 border-white/40 shadow-2xl">
               <span className="text-7xl">{icon}</span>
@@ -187,7 +188,9 @@ export default function AchievementCelebration({
           className="text-center mb-6"
         >
           <div className="inline-block backdrop-blur-xl bg-white/10 rounded-full px-6 py-2 border border-white/20">
-            <span className="text-lg font-semibold text-white">{studentName}</span>
+            <span className="text-lg font-semibold text-white">
+              {studentName}
+            </span>
           </div>
         </motion.div>
 
@@ -220,9 +223,7 @@ export default function AchievementCelebration({
           )}
 
           <div className="backdrop-blur-xl bg-white/10 rounded-2xl p-4 border border-white/20 text-center">
-            <div className="text-lg font-bold text-white mb-1">
-              {date}
-            </div>
+            <div className="text-lg font-bold text-white mb-1">{date}</div>
             <div className="text-sm text-yellow-100">Achievement Date</div>
           </div>
         </motion.div>
@@ -237,7 +238,7 @@ export default function AchievementCelebration({
           {onShare && (
             <LiquidButton
               variant="primary"
-              size="large"
+              size="lg"
               onClick={onShare}
               className="flex-1 bg-white text-orange-900 hover:bg-yellow-50"
             >
@@ -248,7 +249,7 @@ export default function AchievementCelebration({
           {onClose && (
             <LiquidButton
               variant="secondary"
-              size="large"
+              size="lg"
               onClick={onClose}
               className="flex-1 bg-white/10 text-white hover:bg-white/20 border border-white/20"
             >
