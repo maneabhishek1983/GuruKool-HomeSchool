@@ -21,6 +21,7 @@ import {
   SectionTitle,
 } from '@/components/layouts/LiquidLearningLayout';
 import { FloatingActionButton } from '@/design-system/components/interactive/FloatingActionButton';
+import ParentDashboardHero from '@/components/parent/ParentDashboardHero';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -421,6 +422,22 @@ export default function ParentDashboard() {
       </GlassHeader>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Dashboard Hero */}
+        <ParentDashboardHero
+          parentName={user?.name}
+          students={students.map(s => ({
+            id: s.id,
+            name: s.name,
+            progress: Math.round((s.completedLessons / Math.max(s.totalLessons, 1)) * 100),
+            activeSession: false
+          }))}
+          totalStudents={students.length}
+          weeklyHours={0}
+          onAddStudent={() => setShowCreateStudentModal(true)}
+          onViewProgress={() => {}}
+          className="mb-8"
+        />
+
         {/* Error Display */}
         <AnimatePresence>
           {error && (

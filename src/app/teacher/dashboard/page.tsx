@@ -16,6 +16,7 @@ import {
   SectionTitle,
 } from '@/components/layouts/LiquidLearningLayout';
 import { FloatingActionButton } from '@/design-system/components/interactive/FloatingActionButton';
+import TeacherDashboardHero from '@/components/teacher/TeacherDashboardHero';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -274,6 +275,20 @@ export default function TeacherDashboard() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Dashboard Hero */}
+        <TeacherDashboardHero
+          teacherName={user.name}
+          activeSessions={dashboardStats.activeLessons}
+          totalHours={Math.round(dashboardStats.averageProgress)}
+          upcomingSession={{
+            studentName: 'Next Student',
+            time: 'In 30 minutes'
+          }}
+          onCheckIn={() => setActiveTab('checkin')}
+          onViewSchedule={() => setActiveTab('sessions')}
+          className="mb-8"
+        />
+
         <AnimatePresence mode="wait">
           {/* Check-In/Out Tab */}
           {activeTab === 'checkin' && (

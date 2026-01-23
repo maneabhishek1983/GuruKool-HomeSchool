@@ -12,6 +12,7 @@ import {
   SectionTitle,
 } from '@/components/layouts/LiquidLearningLayout';
 import { FloatingActionButton } from '@/design-system/components/interactive/FloatingActionButton';
+import AdminDashboardHero from '@/components/admin/AdminDashboardHero';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -473,6 +474,20 @@ export default function AdminDashboard() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Dashboard Hero */}
+        <AdminDashboardHero
+          adminName={user?.name}
+          metrics={[
+            { label: 'Total Users', value: stats.totalUsers, icon: '👥', trend: 'up', trendValue: '+12%' },
+            { label: 'Active Sessions', value: stats.activeSessions, icon: '📚', trend: 'neutral', trendValue: String(stats.activeSessions) },
+            { label: 'System Health', value: '99.9%', icon: '💚', trend: 'up', trendValue: 'Optimal' },
+            { label: 'Total Parents', value: stats.totalParents, icon: '👨‍👩‍👧', trend: 'up', trendValue: '+8%' },
+          ]}
+          onViewReports={() => setActiveTab('reports')}
+          onManageUsers={() => setActiveTab('users')}
+          className="mb-8"
+        />
+
         <AnimatePresence mode="wait">
           {activeTab === 'overview' && (
             <motion.div
