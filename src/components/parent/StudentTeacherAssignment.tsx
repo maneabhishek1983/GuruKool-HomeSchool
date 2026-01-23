@@ -10,6 +10,7 @@ interface StudentTeacherAssignmentProps {
   students: StudentProfile[];
   teachers: TeacherProfile[];
   onAssignmentChange: () => void;
+  preSelectedStudentId?: string | undefined;
 }
 
 interface Teacher {
@@ -26,8 +27,11 @@ export default function StudentTeacherAssignment({
   students,
   teachers,
   onAssignmentChange,
+  preSelectedStudentId,
 }: StudentTeacherAssignmentProps) {
-  const [selectedStudent, setSelectedStudent] = useState<string>('');
+  const [selectedStudent, setSelectedStudent] = useState<string>(
+    preSelectedStudentId || ''
+  );
   const [selectedTeacher, setSelectedTeacher] = useState<string>('');
   const [studentAssignments, setStudentAssignments] = useState<{
     [studentId: string]: string[];
@@ -38,6 +42,13 @@ export default function StudentTeacherAssignment({
   useEffect(() => {
     loadAssignments();
   }, [students]);
+
+  // Update selected student when preSelectedStudentId changes
+  useEffect(() => {
+    if (preSelectedStudentId) {
+      setSelectedStudent(preSelectedStudentId);
+    }
+  }, [preSelectedStudentId]);
 
   const loadAssignments = async () => {
     setIsLoading(true);

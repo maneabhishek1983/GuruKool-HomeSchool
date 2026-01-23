@@ -530,15 +530,27 @@ export class DatabaseService {
       }
 
       // Create QR code for this teacher-student pair
+      let qrCodeCreated = false;
       try {
         await TeacherQRService.createTeacherQRCodes(
           teacherId,
           [studentId],
           parentId
         );
+        qrCodeCreated = true;
       } catch (qrError) {
         console.error('Error creating QR code for assignment:', qrError);
         // Don't fail the assignment if QR code creation fails
+        // QR codes can be generated later when QR_SECRET is configured
+      }
+
+      // Log warning if QR code wasn't created
+      if (!qrCodeCreated) {
+        console.warn(
+          'Teacher assigned but QR code was not created. ' +
+            'Ensure QR_SECRET environment variable is configured. ' +
+            'QR codes can be regenerated from the teacher profile.'
+        );
       }
 
       return true;

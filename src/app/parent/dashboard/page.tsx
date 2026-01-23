@@ -1010,7 +1010,10 @@ export default function ParentDashboard() {
                     Student-Teacher Assignments
                   </h2>
                   <button
-                    onClick={() => setShowAssignmentModal(false)}
+                    onClick={() => {
+                      setShowAssignmentModal(false);
+                      setSelectedStudent(null);
+                    }}
                     className="text-slate-400 hover:text-slate-600 transition-colors"
                   >
                     <svg
@@ -1033,6 +1036,7 @@ export default function ParentDashboard() {
                   students={students}
                   teachers={teachers}
                   onAssignmentChange={handleAssignmentChange}
+                  preSelectedStudentId={selectedStudent?.id}
                 />
               </div>
             </motion.div>

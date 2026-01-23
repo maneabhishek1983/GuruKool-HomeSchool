@@ -23,6 +23,7 @@ export class TaskAutomationAgent extends BaseAIAgent {
     'scheduling-automation',
     'conflict-detection',
     'session-dependent',
+    'qr-code-automation',
   ];
   public readonly priority = 7; // Medium-high priority
 
@@ -54,6 +55,8 @@ export class TaskAutomationAgent extends BaseAIAgent {
           return await this.optimizeScheduling(context);
         case 'conflict_detection':
           return await this.detectAndResolveConflicts(context);
+        case 'qr_code_refresh':
+          return await this.automateQRCodeRefresh(context);
         default:
           return await this.performGeneralAutomation(context);
       }
@@ -75,6 +78,9 @@ export class TaskAutomationAgent extends BaseAIAgent {
     }
     if (context.eventType === 'session_completed') {
       return 'session_completed';
+    }
+    if (context.eventType === 'qr_code_refresh') {
+      return 'qr_code_refresh';
     }
     if (
       context.eventType === 'conflict_detected' ||
@@ -1764,6 +1770,187 @@ export class TaskAutomationAgent extends BaseAIAgent {
     const overlapEnd = Math.min(end1, end2);
 
     return Math.max(0, overlapEnd - overlapStart);
+  }
+
+  /**
+   * Automate QR code refresh for expiring codes
+   * This method is triggered by scheduled tasks (Vercel Cron) to refresh
+   * QR codes that are expiring within the next 24 hours
+   */
+  private async automateQRCodeRefresh(
+    context: AgentContext
+  ): Promise<AgentResult> {
+    const insights: AIInsight[] = [];
+    const actions: RecommendedAction[] = [];
+    const automatedTasks: Array<{
+      task: string;
+      status: 'completed' | 'failed' | 'partial';
+      data: any;
+      error?: string;
+    }> = [];
+
+    try {
+      this.log('info', 'Starting automated QR code refresh', {
+        eventType: context.eventType,
+      });
+
+      // Get expiring QR codes from context (populated by cron endpoint)
+      const expiringQRCodes = context.eventData?.expiringQRCodes || [];
+
+      if (expiringQRCodes.length === 0) {
+        this.log('info', 'No QR codes expiring within refresh window');
+        return this.createSuccessResult(
+          {
+            message: 'No QR codes need refresh',
+            refreshed: 0,
+            timestamp: Date.now(),
+          },
+          [
+            this.createInsight(
+              'system',
+              'progress',
+              'QR code refresh check completed - no codes expiring',
+              0.95,
+              { checkedAt: new Date().toISOString() }
+            ),
+          ],
+          []
+        );
+      }
+
+      this.log('info', `Found ${expiringQRCodes.length} QR codes to refresh`);
+
+      // Track refresh results
+      const refreshResults = {
+        successful: 0,
+        failed: 0,
+        errors: [] as string[],
+      };
+
+      // Process each expiring QR code
+      for (const qrCode of expiringQRCodes) {
+        try {
+          // Call regenerate API for each QR code
+          const response = await fetch('/api/qr/regenerate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ qrCodeId: qrCode.id }),
+          });
+
+          if (response.ok) {
+            refreshResults.successful++;
+            automatedTasks.push({
+              task: `qr_refresh_${qrCode.id}`,
+              status: 'completed',
+              data: {
+                qrCodeId: qrCode.id,
+                teacherId: qrCode.teacher_id,
+                studentId: qrCode.student_id,
+                refreshedAt: new Date().toISOString(),
+              },
+            });
+          } else {
+            const error = await response.json();
+            refreshResults.failed++;
+            refreshResults.errors.push(
+              `${qrCode.id}: ${error.error || 'Unknown error'}`
+            );
+            automatedTasks.push({
+              task: `qr_refresh_${qrCode.id}`,
+              status: 'failed',
+              data: { qrCodeId: qrCode.id },
+              error: error.error || 'Failed to regenerate QR code',
+            });
+          }
+        } catch (error) {
+          refreshResults.failed++;
+          const errorMsg =
+            error instanceof Error ? error.message : 'Unknown error';
+          refreshResults.errors.push(`${qrCode.id}: ${errorMsg}`);
+          automatedTasks.push({
+            task: `qr_refresh_${qrCode.id}`,
+            status: 'failed',
+            data: { qrCodeId: qrCode.id },
+            error: errorMsg,
+          });
+        }
+      }
+
+      // Generate insights based on results
+      const successRate = refreshResults.successful / expiringQRCodes.length;
+
+      insights.push(
+        this.createInsight(
+          'system',
+          successRate >= 0.9 ? 'progress' : 'alert',
+          `QR code auto-refresh completed: ${refreshResults.successful}/${expiringQRCodes.length} codes refreshed successfully`,
+          successRate,
+          {
+            totalProcessed: expiringQRCodes.length,
+            successful: refreshResults.successful,
+            failed: refreshResults.failed,
+            errors: refreshResults.errors.slice(0, 5), // Limit error list
+            refreshedAt: new Date().toISOString(),
+          }
+        )
+      );
+
+      // If there were failures, create action items
+      if (refreshResults.failed > 0) {
+        actions.push({
+          id: `qr-refresh-failures-${Date.now()}`,
+          type: 'review',
+          description: `Review ${refreshResults.failed} failed QR code refresh attempts`,
+          priority: 7,
+          automated: false,
+        });
+      }
+
+      // Send notifications for successful refresh
+      if (refreshResults.successful > 0) {
+        insights.push(
+          this.createInsight(
+            'system',
+            'recommendation',
+            'QR codes have been automatically refreshed for continued teacher authentication',
+            0.9,
+            {
+              affectedTeachers: [
+                ...new Set(expiringQRCodes.map((qr: any) => qr.teacher_id)),
+              ].length,
+              affectedStudents: [
+                ...new Set(expiringQRCodes.map((qr: any) => qr.student_id)),
+              ].length,
+              nextRefreshScheduled: new Date(
+                Date.now() + 24 * 60 * 60 * 1000
+              ).toISOString(),
+            }
+          )
+        );
+      }
+
+      return this.createSuccessResult(
+        {
+          automatedTasks,
+          refreshResults,
+          timestamp: Date.now(),
+          summary: {
+            totalProcessed: expiringQRCodes.length,
+            successful: refreshResults.successful,
+            failed: refreshResults.failed,
+            successRate,
+          },
+        },
+        insights,
+        actions
+      );
+    } catch (error) {
+      this.log('error', 'QR code auto-refresh failed', { error });
+      return this.createErrorResult(
+        `QR code auto-refresh failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { partialTasks: automatedTasks }
+      );
+    }
   }
 
   // Enhanced existing methods
