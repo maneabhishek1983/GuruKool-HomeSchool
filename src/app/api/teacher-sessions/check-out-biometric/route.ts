@@ -104,7 +104,7 @@ export const POST = withRateLimit({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          studentId: session.student_id,
+          studentId: (session as any).student_id,
           latitude,
           longitude,
           accuracy,
@@ -132,7 +132,7 @@ export const POST = withRateLimit({
       }
 
       // Step 4: Calculate session duration
-      const checkedInAt = new Date(session.checked_in_at);
+      const checkedInAt = new Date((session as any).checked_in_at);
       const checkedOutAt = new Date();
       const durationMinutes = Math.round((checkedOutAt.getTime() - checkedInAt.getTime()) / 60000);
 
@@ -145,7 +145,7 @@ export const POST = withRateLimit({
           check_out_longitude: longitude,
           check_out_accuracy_meters: accuracy,
           check_out_distance_meters: locationResult.distance,
-          notes: notes || session.notes,
+          notes: notes || (session as any).notes,
         })
         .eq('id', sessionId)
         .select()
@@ -162,7 +162,7 @@ export const POST = withRateLimit({
       // Step 6: Log verification
       await supabase.from('location_verification_log').insert({
         teacher_id: user.id,
-        student_id: session.student_id,
+        student_id: (session as any).student_id,
         session_id: sessionId,
         latitude,
         longitude,
@@ -176,9 +176,9 @@ export const POST = withRateLimit({
 
       return NextResponse.json({
         success: true,
-        sessionId: updatedSession.id,
-        checkedInAt: updatedSession.checked_in_at,
-        checkedOutAt: updatedSession.checked_out_at,
+        sessionId: (updatedSession as any).id,
+        checkedInAt: (updatedSession as any).checked_in_at,
+        checkedOutAt: (updatedSession as any).checked_out_at,
         durationMinutes,
         locationVerified: true,
         biometricVerified: true,

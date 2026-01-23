@@ -96,9 +96,9 @@ export const POST = withRateLimit({
         .from('teacher_biometric_credentials')
         .update({
           last_used_at: new Date().toISOString(),
-          counter: credential.counter + 1,
+          counter: (credential as any).counter + 1,
         })
-        .eq('id', credential.id);
+        .eq('id', (credential as any).id);
 
       if (updateError) {
         console.error('Error updating credential:', updateError);

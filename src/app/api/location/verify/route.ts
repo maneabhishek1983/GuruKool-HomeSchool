@@ -56,7 +56,7 @@ export const POST = withRateLimit({
       }
 
       // Check if student has location set
-      if (!student.home_latitude || !student.home_longitude) {
+      if (!(student as any).home_latitude || !(student as any).home_longitude) {
         return NextResponse.json(
           {
             error: 'Student home location not configured',
@@ -70,11 +70,11 @@ export const POST = withRateLimit({
       const distance = calculateDistance(
         latitude,
         longitude,
-        student.home_latitude,
-        student.home_longitude
+        (student as any).home_latitude,
+        (student as any).home_longitude
       );
 
-      const allowedRadius = student.geofence_radius_meters || 100;
+      const allowedRadius = (student as any).geofence_radius_meters || 100;
       const withinGeofence = distance <= allowedRadius;
 
       // Log verification attempt
@@ -98,7 +98,7 @@ export const POST = withRateLimit({
         distance: Math.round(distance),
         allowedRadius,
         accuracy: Math.round(accuracy),
-        studentAddress: student.home_address,
+        studentAddress: (student as any).home_address,
         message: withinGeofence
           ? `You are within the allowed area (${Math.round(distance)}m from home)`
           : `You are ${Math.round(distance - allowedRadius)}m too far from the student's home`,

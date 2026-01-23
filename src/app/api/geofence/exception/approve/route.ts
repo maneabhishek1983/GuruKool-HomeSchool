@@ -53,16 +53,16 @@ export const POST = withRateLimit({
         );
       }
 
-      if (exception.students.parent_id !== user.id) {
+      if ((exception as any).students.parent_id !== user.id) {
         return NextResponse.json(
           { error: 'Unauthorized' },
           { status: 403 }
         );
       }
 
-      if (exception.status !== 'pending') {
+      if ((exception as any).status !== 'pending') {
         return NextResponse.json(
-          { error: `Exception already ${exception.status}` },
+          { error: `Exception already ${(exception as any).status}` },
           { status: 400 }
         );
       }
@@ -94,8 +94,8 @@ export const POST = withRateLimit({
 
       return NextResponse.json({
         success: true,
-        exceptionId: updated.id,
-        status: updated.status,
+        exceptionId: (updated as any).id,
+        status: (updated as any).status,
         message: approved
           ? 'Exception request approved'
           : 'Exception request denied',

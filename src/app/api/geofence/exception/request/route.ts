@@ -105,7 +105,7 @@ export const POST = withRateLimit({
         .insert({
           teacher_id: user.id,
           student_id: studentId,
-          parent_id: student.parent_id,
+          parent_id: (student as any).parent_id,
           reason,
           alternate_location: alternateLocation,
           alternate_latitude: alternateLatitude,
@@ -131,7 +131,7 @@ export const POST = withRateLimit({
 
       return NextResponse.json({
         success: true,
-        exceptionId: exception.id,
+        exceptionId: (exception as any).id,
         status: 'pending',
         message: 'Exception request submitted. Waiting for parent approval.',
       });
