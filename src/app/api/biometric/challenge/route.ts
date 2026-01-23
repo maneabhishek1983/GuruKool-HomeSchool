@@ -13,7 +13,7 @@ const schema = z.object({
 
 /**
  * POST /api/biometric/challenge
- * 
+ *
  * Generate a WebAuthn challenge for biometric registration or authentication
  */
 export const POST = withRateLimit({
@@ -39,10 +39,7 @@ export const POST = withRateLimit({
 
       // Verify teacher ID matches authenticated user
       if (teacherId !== user.id) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 
       // Generate cryptographically secure random challenge
@@ -54,13 +51,16 @@ export const POST = withRateLimit({
 
       // For authentication, also fetch existing credential IDs
       let credentialIds: string[] = [];
-      
+
       if (action === 'authenticate') {
-        const { data: credentials, error } = await supabase
+        const { data: credentials, error } = (await supabase
           .from('teacher_biometric_credentials')
           .select('credential_id')
           .eq('teacher_id', teacherId)
-          .eq('is_active', true);
+          .eq('is_active', true)) as {
+          data: { credential_id: string }[] | null;
+          error: unknown;
+        };
 
         if (error) {
           console.error('Error fetching credentials:', error);
@@ -72,17 +72,20 @@ export const POST = withRateLimit({
 
         if (!credentials || credentials.length === 0) {
           return NextResponse.json(
-            { error: 'No biometric credentials registered. Please register first.' },
+            {
+              error:
+                'No biometric credentials registered. Please register first.',
+            },
             { status: 400 }
           );
         }
 
-        credentialIds = credentials.map((c) => c.credential_id);
+        credentialIds = credentials.map(c => c.credential_id);
       }
 
       // Store challenge temporarily (you might want to use Redis for this in production)
       // For now, we'll just return it and rely on signature verification
-      
+
       return NextResponse.json({
         challenge,
         credentialIds: action === 'authenticate' ? credentialIds : undefined,
@@ -100,7 +103,7 @@ export const POST = withRateLimit({
 
 /**
  * GET /api/biometric/challenge
- * 
+ *
  * Test endpoint to verify API is working
  */
 export async function GET() {
