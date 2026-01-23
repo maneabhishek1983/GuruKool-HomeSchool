@@ -7,8 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedGradientBackground from '@/components/ui/AnimatedGradientBackground';
 import FloatingParticles from '@/components/ui/FloatingParticles';
 import RoleIcon from '@/components/ui/RoleIcon';
-import GlassCard from '@/components/ui/GlassCard';
-import LiquidButton from '@/components/ui/LiquidButton';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 import { triggerConfetti } from '@/lib/confetti';
 
 function EnhancedLoginForm() {
@@ -213,7 +213,9 @@ function EnhancedLoginForm() {
                         <div className="text-2xl mb-1">
                           {roleThemes[r].icon}
                         </div>
-                        <div className="text-sm font-medium capitalize">{r}</div>
+                        <div className="text-sm font-medium capitalize">
+                          {r}
+                        </div>
                       </motion.button>
                     )
                   )}

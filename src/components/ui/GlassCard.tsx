@@ -8,6 +8,7 @@ interface GlassCardProps {
   children: React.ReactNode;
   className?: string;
   variant?: 'default' | 'light' | 'dark';
+  blur?: 'sm' | 'md' | 'lg' | 'xl';
   hover?: boolean;
   gradient?: boolean;
 }
@@ -16,13 +17,36 @@ export function GlassCard({
   children,
   className,
   variant = 'default',
+  blur,
   hover = true,
   gradient = false,
 }: GlassCardProps) {
   const variants = {
-    default: 'bg-white/70 backdrop-blur-md border-white/20',
-    light: 'bg-white/50 backdrop-blur-sm border-white/10',
-    dark: 'bg-white/30 backdrop-blur-lg border-white/30',
+    default: 'bg-white/70 border-white/20',
+    light: 'bg-white/50 border-white/10',
+    dark: 'bg-white/30 border-white/30',
+  };
+
+  const blurVariants = {
+    sm: 'backdrop-blur-sm',
+    md: 'backdrop-blur-md',
+    lg: 'backdrop-blur-lg',
+    xl: 'backdrop-blur-xl',
+  };
+
+  // Determine blur class: use explicit blur prop if provided, otherwise use variant defaults
+  const getBlurClass = () => {
+    if (blur) {
+      return blurVariants[blur];
+    }
+    switch (variant) {
+      case 'light':
+        return 'backdrop-blur-sm';
+      case 'dark':
+        return 'backdrop-blur-lg';
+      default:
+        return 'backdrop-blur-md';
+    }
   };
 
   return (
@@ -30,6 +54,7 @@ export function GlassCard({
       className={cn(
         'relative rounded-2xl border shadow-xl overflow-hidden',
         variants[variant],
+        getBlurClass(),
         className
       )}
       initial={{ opacity: 0, y: 20 }}

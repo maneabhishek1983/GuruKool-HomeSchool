@@ -42,18 +42,28 @@ export default function AnimatedGradientBackground({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      return;
+    }
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      return;
+    }
 
     // Set canvas size
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      canvasWidth = canvas.width;
+      canvasHeight = canvas.height;
     };
     resize();
     window.addEventListener('resize', resize);
+
+    // Store canvas dimensions for blob class access
+    let canvasWidth = canvas.width;
+    let canvasHeight = canvas.height;
 
     // Animated blobs
     class Blob {
@@ -65,8 +75,8 @@ export default function AnimatedGradientBackground({
       color: string;
 
       constructor(color: string) {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
+        this.x = Math.random() * canvasWidth;
+        this.y = Math.random() * canvasHeight;
         this.radius = Math.random() * 200 + 100;
         this.vx = (Math.random() - 0.5) * 0.5;
         this.vy = (Math.random() - 0.5) * 0.5;
@@ -77,14 +87,24 @@ export default function AnimatedGradientBackground({
         this.x += this.vx;
         this.y += this.vy;
 
-        if (this.x < -this.radius) this.x = canvas.width + this.radius;
-        if (this.x > canvas.width + this.radius) this.x = -this.radius;
-        if (this.y < -this.radius) this.y = canvas.height + this.radius;
-        if (this.y > canvas.height + this.radius) this.y = -this.radius;
+        if (this.x < -this.radius) {
+          this.x = canvasWidth + this.radius;
+        }
+        if (this.x > canvasWidth + this.radius) {
+          this.x = -this.radius;
+        }
+        if (this.y < -this.radius) {
+          this.y = canvasHeight + this.radius;
+        }
+        if (this.y > canvasHeight + this.radius) {
+          this.y = -this.radius;
+        }
       }
 
       draw() {
-        if (!ctx) return;
+        if (!ctx) {
+          return;
+        }
         const gradient = ctx.createRadialGradient(
           this.x,
           this.y,
@@ -114,7 +134,7 @@ export default function AnimatedGradientBackground({
 
     const animate = () => {
       ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
       blobs.forEach(blob => {
         blob.update();

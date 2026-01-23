@@ -4,8 +4,8 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import LiquidButton from '@/components/ui/LiquidButton';
-import GlassCard from '@/components/ui/GlassCard';
+import { LiquidButton } from '@/components/ui/LiquidButton';
+import { GlassCard } from '@/components/ui/GlassCard';
 
 export default function EnhancedHomePage() {
   const heroRef = useRef(null);
@@ -98,8 +98,7 @@ export default function EnhancedHomePage() {
           className="text-center mb-16"
         >
           <h2 className="text-5xl font-bold text-gray-900 mb-4">
-            Why Parents Love{' '}
-            <span className="text-teal-600">GuruKool</span>
+            Why Parents Love <span className="text-teal-600">GuruKool</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Modern tools, personalized learning, and real-world skills for your
@@ -317,14 +316,14 @@ export default function EnhancedHomePage() {
               role: 'Parent of 2',
               avatar: '👩',
               color: 'from-teal-500 to-cyan-500',
-              text: "GuruKool transformed our homeschool experience. My kids are more engaged than ever!",
+              text: 'GuruKool transformed our homeschool experience. My kids are more engaged than ever!',
             },
             {
               name: 'Michael Chen',
               role: 'Parent of 3',
               avatar: '👨',
               color: 'from-orange-500 to-red-500',
-              text: 'The mentors are incredible. They truly understand each child\'s unique needs.',
+              text: "The mentors are incredible. They truly understand each child's unique needs.",
             },
             {
               name: 'Emily Rodriguez',
