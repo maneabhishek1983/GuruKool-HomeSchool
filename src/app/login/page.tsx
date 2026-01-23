@@ -36,9 +36,20 @@ function LoginForm() {
     setSuccessMessage('');
 
     try {
+      console.log('Starting login submission...', { isSignupMode, email, role });
+
+      // Safety timeout - force stop loading after 15 seconds
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Login timed out')), 15000)
+      );
+
       if (isSignupMode) {
         // Sign up new user
-        const result = await signup(email, password, name, role);
+        const result = await Promise.race([
+          signup(email, password, name, role),
+          timeoutPromise
+        ]) as any;
+
         if (result.success) {
           setSuccessMessage('Account created successfully! Redirecting...');
           setTimeout(() => {
@@ -58,8 +69,16 @@ function LoginForm() {
         }
       } else {
         // Login existing user
-        const result = await login(email, password);
+        console.log('Calling login function...');
+        const result = await Promise.race([
+          login(email, password),
+          timeoutPromise
+        ]) as any;
+
+        console.log('Login result:', result);
+
         if (result.success) {
+          console.log('Login success, redirecting to role:', result.user?.role);
           // Redirect based on role
           if (result.user?.role === 'admin') {
             router.push('/admin/dashboard');
@@ -71,12 +90,15 @@ function LoginForm() {
             router.push('/parent/dashboard');
           }
         } else {
+          console.error('Login failed with error:', result.error);
           setError(result.error || 'Login failed');
         }
       }
-    } catch (err) {
-      setError('An unexpected error occurred');
+    } catch (err: any) {
+      console.error('Login form exception:', err);
+      setError(err.message || 'An unexpected error occurred');
     } finally {
+      console.log('Login process finished, resetting loading state');
       setIsLoading(false);
     }
   };
