@@ -4,8 +4,8 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import LiquidButton from '@/components/ui/LiquidButton';
-import GlassCard from '@/components/ui/GlassCard';
+import { LiquidButton } from '@/components/ui/LiquidButton';
+import { GlassCard } from '@/components/ui/GlassCard';
 
 export default function EnhancedHomePage() {
   const heroRef = useRef(null);
