@@ -38,7 +38,7 @@ interface LocalUser {
   qrCode?: string;
 }
 
-type TabId = 'overview' | 'users' | 'analytics' | 'settings';
+type TabId = 'overview' | 'users' | 'analytics' | 'settings' | 'reports';
 
 export default function AdminDashboard() {
   const { user, logout, createUser, getAllUsers } = useAuthContext();
