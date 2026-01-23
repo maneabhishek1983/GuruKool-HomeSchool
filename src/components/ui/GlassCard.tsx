@@ -7,9 +7,10 @@ import { cn } from '@/lib/utils';
 interface GlassCardProps {
   children: React.ReactNode;
   className?: string;
-  variant?: 'default' | 'light' | 'dark';
+  variant?: 'default' | 'light' | 'dark' | 'frosted';
   hover?: boolean;
   gradient?: boolean;
+  blur?: 'sm' | 'md' | 'lg';
 }
 
 export function GlassCard({
@@ -18,11 +19,13 @@ export function GlassCard({
   variant = 'default',
   hover = true,
   gradient = false,
+  blur,
 }: GlassCardProps) {
   const variants = {
     default: 'bg-white/70 backdrop-blur-md border-white/20',
     light: 'bg-white/50 backdrop-blur-sm border-white/10',
     dark: 'bg-white/30 backdrop-blur-lg border-white/30',
+    frosted: 'bg-white/10 backdrop-blur-xl border-white/20',
   };
 
   return (
@@ -39,9 +42,9 @@ export function GlassCard({
       whileHover={
         hover
           ? {
-              y: -4,
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            }
+            y: -4,
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          }
           : {}
       }
     >
