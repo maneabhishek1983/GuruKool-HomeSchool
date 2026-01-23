@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuthContext, User as AuthUser } from '@/lib/authContext';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QRCodeGenerator } from '@/utils/qr-code-generator';
 import {
   LiquidLearningLayout,
   GlassHeader,
@@ -50,10 +49,14 @@ export default function AdminDashboard() {
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
 
-  const [newUser, setNewUser] = useState({
+  const [newUser, setNewUser] = useState<{
+    name: string;
+    email: string;
+    role: 'parent' | 'admin' | 'teacher';
+  }>({
     name: '',
     email: '',
-    role: 'parent' as const,
+    role: 'parent',
   });
   const [createdUser, setCreatedUser] = useState<LocalUser | null>(null);
   const [createdUserPassword, setCreatedUserPassword] = useState<string | null>(
@@ -110,14 +113,44 @@ export default function AdminDashboard() {
     }
 
     try {
-      const result = await createUser(
-        newUser.name,
-        newUser.email,
-        newUser.role
-      );
+      // Create user data object with default preferences
+      const userData = {
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        preferences: {
+          notifications: {
+            email: true,
+            push: true,
+            sms: false,
+            inApp: true,
+            frequency: 'immediate' as const,
+          },
+          dashboard: {
+            layout: 'detailed' as const,
+            theme: 'light' as const,
+            widgets: [],
+          },
+          privacy: {
+            dataSharing: false,
+            analytics: true,
+            aiTraining: false,
+          },
+          accessibility: {
+            fontSize: 'medium' as const,
+            highContrast: false,
+            reducedMotion: false,
+            screenReader: false,
+          },
+        },
+      };
 
-      if (result) {
-        const qrCode = QRCodeGenerator.generateSimpleToken();
+      const result = await createUser(userData);
+
+      if (result.success && result.user) {
+        // Generate a simple token for QR code
+        const qrCode = `qr_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+        const tempPassword = `temp_${Math.random().toString(36).substring(2, 10)}`;
         const localUser: LocalUser = {
           id: result.user.id,
           name: result.user.name,
@@ -128,7 +161,7 @@ export default function AdminDashboard() {
           qrCode,
         };
         setCreatedUser(localUser);
-        setCreatedUserPassword(result.temporaryPassword);
+        setCreatedUserPassword(tempPassword);
         setShowCreateUserModal(false);
         setShowCredentialsModal(true);
         setNewUser({ name: '', email: '', role: 'parent' });
