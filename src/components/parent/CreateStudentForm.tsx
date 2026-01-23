@@ -39,9 +39,34 @@ interface StudentFormData {
   teacherNotes?: string;
 }
 
+interface InitialStudentData {
+  id?: string;
+  name?: string;
+  age?: number;
+  country?: Country;
+  grade?: string;
+  selectedSubjects?: Subject[];
+  selectedSocialization?: SocializationOption[];
+  selectedPhysicalEducation?: PhysicalEducationOption[];
+  selectedExtracurricular?: ExtracurricularOption[];
+  selectedCommunityInvolvement?: CommunityInvolvementOption[];
+  selectedSensoryActivities?: string[];
+  selectedWritingActivities?: string[];
+  selectedCommunicationActivities?: string[];
+  selectedSocialActivities?: string[];
+  selectedMotorActivities?: string[];
+  selectedAcademicActivities?: string[];
+  learningStyle?: string;
+  specialNeeds?: string;
+  interests?: string;
+  assignedTeachers?: string[];
+  teacherNotes?: string;
+}
+
 interface CreateStudentFormProps {
   onSubmit: (data: StudentFormData) => void;
   onCancel: () => void;
+  initialData?: InitialStudentData | null;
 }
 
 const learningStyles = ['Visual', 'Auditory', 'Kinesthetic', 'Reading/Writing'];
@@ -158,29 +183,32 @@ const academicActivities = [
 export default function CreateStudentForm({
   onSubmit,
   onCancel,
+  initialData,
 }: CreateStudentFormProps) {
   const [formData, setFormData] = useState<StudentFormData>({
-    name: '',
-    age: '',
-    country: 'US',
-    gradeLevel: '',
-    selectedSubjects: [],
-    selectedSocialization: [],
-    selectedPhysicalEducation: [],
-    selectedExtracurricular: [],
-    selectedCommunityInvolvement: [],
+    name: initialData?.name || '',
+    age: initialData?.age?.toString() || '',
+    country: initialData?.country || 'US',
+    gradeLevel: initialData?.grade || '',
+    selectedSubjects: initialData?.selectedSubjects || [],
+    selectedSocialization: initialData?.selectedSocialization || [],
+    selectedPhysicalEducation: initialData?.selectedPhysicalEducation || [],
+    selectedExtracurricular: initialData?.selectedExtracurricular || [],
+    selectedCommunityInvolvement:
+      initialData?.selectedCommunityInvolvement || [],
     // Data Sheet Activity Categories
-    selectedSensoryActivities: [],
-    selectedWritingActivities: [],
-    selectedCommunicationActivities: [],
-    selectedSocialActivities: [],
-    selectedMotorActivities: [],
-    selectedAcademicActivities: [],
-    learningStyle: '',
-    specialNeeds: '',
-    interests: '',
-    assignedTeachers: [],
-    teacherNotes: '',
+    selectedSensoryActivities: initialData?.selectedSensoryActivities || [],
+    selectedWritingActivities: initialData?.selectedWritingActivities || [],
+    selectedCommunicationActivities:
+      initialData?.selectedCommunicationActivities || [],
+    selectedSocialActivities: initialData?.selectedSocialActivities || [],
+    selectedMotorActivities: initialData?.selectedMotorActivities || [],
+    selectedAcademicActivities: initialData?.selectedAcademicActivities || [],
+    learningStyle: initialData?.learningStyle || '',
+    specialNeeds: initialData?.specialNeeds || '',
+    interests: initialData?.interests || '',
+    assignedTeachers: initialData?.assignedTeachers || [],
+    teacherNotes: initialData?.teacherNotes || '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
