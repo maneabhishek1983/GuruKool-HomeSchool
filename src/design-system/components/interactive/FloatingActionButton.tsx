@@ -13,8 +13,8 @@ export interface FABAction {
   disabled?: boolean;
 }
 
-interface FloatingActionButtonProps {
-  icon: React.ReactNode;
+export interface FloatingActionButtonProps {
+  icon?: React.ReactNode;
   expandedIcon?: React.ReactNode;
   actions?: FABAction[];
   position?:
@@ -339,7 +339,23 @@ export function FloatingActionButton({
             animate={isExpanded ? 'open' : 'closed'}
             transition={{ duration: 0.2 }}
           >
-            {isExpanded && expandedIcon ? expandedIcon : icon}
+            {isExpanded && expandedIcon
+              ? expandedIcon
+              : icon || (
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                )}
           </motion.span>
 
           {showLabel && label && (
