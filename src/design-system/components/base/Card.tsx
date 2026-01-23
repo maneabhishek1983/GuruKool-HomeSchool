@@ -46,10 +46,8 @@ export function Card({
   style,
   ...props
 }: CardProps) {
-  const MotionComponent = interactive ? motion.div : motion.div;
-
   return (
-    <MotionComponent
+    <motion.div
       className={cn(
         // Base styles
         'rounded-xl overflow-hidden',
@@ -66,10 +64,10 @@ export function Card({
 
         className
       )}
-      initial="initial"
-      animate="animate"
       {...(interactive
         ? {
+            initial: 'initial',
+            animate: 'animate',
             whileHover: 'hover',
             whileTap: 'tap',
             variants: cardVariants,
@@ -80,7 +78,7 @@ export function Card({
       {...(props as any)}
     >
       {children}
-    </MotionComponent>
+    </motion.div>
   );
 }
 

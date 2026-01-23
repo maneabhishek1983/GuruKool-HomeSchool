@@ -126,8 +126,8 @@ export const POST = withRateLimit({
 
       return NextResponse.json({
         success: true,
-        credentialId: newCredential.credential_id,
-        deviceName: newCredential.device_name,
+        credentialId: (newCredential as any).credential_id,
+        deviceName: (newCredential as any).device_name,
         message: 'Biometric credential registered successfully',
       });
     } catch (error) {

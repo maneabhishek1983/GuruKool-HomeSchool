@@ -174,7 +174,7 @@ export const POST = withRateLimit({
       await supabase.from('location_verification_log').insert({
         teacher_id: user.id,
         student_id: studentId,
-        session_id: session.id,
+        session_id: (session as any).id,
         latitude,
         longitude,
         accuracy_meters: accuracy,
@@ -187,8 +187,8 @@ export const POST = withRateLimit({
 
       return NextResponse.json({
         success: true,
-        sessionId: session.id,
-        checkedInAt: session.checked_in_at,
+        sessionId: (session as any).id,
+        checkedInAt: (session as any).checked_in_at,
         locationVerified: true,
         biometricVerified: true,
         distance: locationResult.distance,

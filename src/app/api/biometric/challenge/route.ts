@@ -5,31 +5,16 @@ import { withRateLimit } from '@/lib/api-security';
 import { requireTeacher } from '@/lib/api-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 import crypto from 'crypto';
-import {
-  getWebAuthnService,
-  storeChallenge,
-} from '@/services/webauthn.service';
-
-// Type for credential with transports
-interface StoredCredential {
-  credential_id: string;
-  public_key: string;
-  counter: number;
-  transports?: string | null;
-}
 
 const schema = z.object({
   teacherId: z.string().uuid(),
   action: z.enum(['register', 'authenticate']),
-  userName: z.string().optional(),
-  userDisplayName: z.string().optional(),
 });
 
 /**
  * POST /api/biometric/challenge
  *
  * Generate a WebAuthn challenge for biometric registration or authentication
- * using @simplewebauthn/server
  */
 export const POST = withRateLimit({
   keyPrefix: 'api:biometric:challenge',
@@ -50,69 +35,30 @@ export const POST = withRateLimit({
         );
       }
 
-      const { teacherId, action, userName, userDisplayName } = validation.data;
+      const { teacherId, action } = validation.data;
 
       // Verify teacher ID matches authenticated user
       if (teacherId !== user.id) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 
-      const supabase = getSupabaseAdmin();
-      const webauthnService = getWebAuthnService();
+      // Generate cryptographically secure random challenge
+      const challenge = crypto.randomBytes(32).toString('base64');
 
-      // Generate unique challenge ID for tracking
-      const challengeId = crypto.randomBytes(16).toString('hex');
+      // Store challenge in database with expiration (5 minutes)
+      const supabase = getSupabaseAdmin();
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-      if (action === 'register') {
-        // Get existing credentials to exclude from registration
-        const { data: existingCredentials } = (await supabase
-          .from('teacher_biometric_credentials')
-          .select('credential_id, transports')
-          .eq('teacher_id', teacherId)
-          .eq('is_active', true)) as {
-          data: { credential_id: string; transports?: string | null }[] | null;
-        };
+      // For authentication, also fetch existing credential IDs
+      let credentialIds: string[] = [];
 
-        const excludeCredentials =
-          existingCredentials?.map(cred => ({
-            credentialId: cred.credential_id,
-            credentialPublicKey: '', // Not needed for exclusion
-            counter: 0,
-            transports: cred.transports
-              ? JSON.parse(cred.transports)
-              : undefined,
-          })) || [];
-
-        // Generate registration options using @simplewebauthn/server
-        const options = await webauthnService.generateRegistrationOptions({
-          userId: teacherId,
-          userName: userName || user.email || teacherId,
-          userDisplayName: userDisplayName || 'Teacher',
-          excludeCredentials,
-        });
-
-        // Store challenge for later verification
-        storeChallenge({
-          challengeId,
-          challenge: options.challenge,
-          userId: teacherId,
-          action: 'register',
-        });
-
-        return NextResponse.json({
-          challengeId,
-          options,
-          expiresAt: expiresAt.toISOString(),
-        });
-      } else {
-        // Authenticate: fetch existing credential IDs
+      if (action === 'authenticate') {
         const { data: credentials, error } = (await supabase
           .from('teacher_biometric_credentials')
-          .select('credential_id, public_key, counter, transports')
+          .select('credential_id')
           .eq('teacher_id', teacherId)
           .eq('is_active', true)) as {
-          data: StoredCredential[] | null;
+          data: { credential_id: string }[] | null;
           error: unknown;
         };
 
@@ -134,39 +80,17 @@ export const POST = withRateLimit({
           );
         }
 
-        // Convert to format expected by webauthn service
-        const allowCredentials = credentials.map(cred => ({
-          credentialId: cred.credential_id,
-          credentialPublicKey: cred.public_key,
-          counter: cred.counter,
-          transports: cred.transports ? JSON.parse(cred.transports) : undefined,
-        }));
-
-        // Generate authentication options using @simplewebauthn/server
-        const options = await webauthnService.generateAuthenticationOptions({
-          allowCredentials,
-        });
-
-        // Store challenge for later verification
-        storeChallenge({
-          challengeId,
-          challenge: options.challenge,
-          userId: teacherId,
-          action: 'authenticate',
-        });
-
-        // Also include legacy format for backwards compatibility
-        const credentialIds = credentials.map(c => c.credential_id);
-
-        return NextResponse.json({
-          challengeId,
-          options,
-          // Legacy fields for backwards compatibility
-          challenge: options.challenge,
-          credentialIds,
-          expiresAt: expiresAt.toISOString(),
-        });
+        credentialIds = credentials.map((c: any) => c.credential_id);
       }
+
+      // Store challenge temporarily (you might want to use Redis for this in production)
+      // For now, we'll just return it and rely on signature verification
+
+      return NextResponse.json({
+        challenge,
+        credentialIds: action === 'authenticate' ? credentialIds : undefined,
+        expiresAt: expiresAt.toISOString(),
+      });
     } catch (error) {
       console.error('Challenge generation error:', error);
       return NextResponse.json(
@@ -180,45 +104,18 @@ export const POST = withRateLimit({
 /**
  * GET /api/biometric/challenge
  *
- * API documentation endpoint
+ * Test endpoint to verify API is working
  */
 export async function GET() {
-  const webauthnService = getWebAuthnService();
-
   return NextResponse.json({
     message: 'Biometric Challenge API',
-    version: '2.0',
-    features: [
-      'Uses @simplewebauthn/server for proper WebAuthn challenge generation',
-      'Challenge-based authentication with 5-minute expiry',
-      'Supports both registration and authentication flows',
-    ],
-    configuration: {
-      rpId: webauthnService.getRpId(),
-      origin: webauthnService.getOrigin(),
-    },
+    version: '1.0',
     endpoints: {
       POST: {
         description: 'Generate WebAuthn challenge for biometric authentication',
         body: {
           teacherId: 'string (UUID, required)',
           action: 'string (required, "register" or "authenticate")',
-          userName: 'string (optional, for registration)',
-          userDisplayName: 'string (optional, for registration)',
-        },
-        response: {
-          registration: {
-            challengeId: 'string (use for verification)',
-            options: 'PublicKeyCredentialCreationOptions',
-            expiresAt: 'ISO timestamp',
-          },
-          authentication: {
-            challengeId: 'string (use for verification)',
-            options: 'PublicKeyCredentialRequestOptions',
-            challenge: 'string (legacy compatibility)',
-            credentialIds: 'string[] (legacy compatibility)',
-            expiresAt: 'ISO timestamp',
-          },
         },
       },
     },

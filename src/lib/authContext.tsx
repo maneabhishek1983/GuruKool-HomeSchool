@@ -261,13 +261,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string
   ): Promise<{ success: boolean; user?: User; error?: string }> => {
     try {
+      console.log('Attempting login for:', email);
+
       // Sign in with Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log('Supabase auth response:', {
+        hasUser: !!data?.user,
+        error: error?.message
+      });
+
       if (error) {
+        console.error('Login error from Supabase:', error);
         return {
           success: false,
           error: error.message,
@@ -275,6 +283,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (!data.user) {
+        console.error('No user returned from Supabase auth');
         return {
           success: false,
           error: 'Login failed. Please try again.',
@@ -282,13 +291,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Fetch user profile
+      console.log('Fetching user profile for ID:', data.user.id);
       const userProfile = await fetchUserProfile(data.user);
+
       if (!userProfile) {
+        console.error('User profile not found in database');
         return {
           success: false,
           error: 'User profile not found.',
         };
       }
+
+      console.log('User profile loaded:', userProfile.role);
 
       // Update last active
       await supabase
@@ -300,7 +314,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthMethod('traditional');
       return { success: true, user: userProfile };
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login exception:', error);
       return {
         success: false,
         error: 'An error occurred during login. Please try again.',

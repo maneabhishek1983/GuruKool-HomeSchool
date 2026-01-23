@@ -122,6 +122,21 @@ export default function TeacherCreationForm({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Scroll to error when errors change
+  React.useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      console.log('Validation errors:', errors);
+      const firstError = document.querySelector('[data-error="true"]');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        // Fallback: scroll to top of form
+        const form = document.querySelector('form');
+        if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }, [errors]);
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -143,8 +158,9 @@ export default function TeacherCreationForm({
       newErrors.experience = 'Experience is required';
     }
 
+    // Strict validation for rates
     if (!formData.rates.length) {
-      newErrors.rates = 'At least one rate is required';
+      newErrors.rates = 'Please add at least one rate by selecting a subject and rate amount';
     } else {
       // Validate each rate
       const invalidRates = formData.rates.filter(
@@ -165,8 +181,13 @@ export default function TeacherCreationForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Submitting teacher form:', formData);
+
     if (validateForm()) {
+      console.log('Form validation passed');
       onSubmit(formData);
+    } else {
+      console.error('Form validation failed');
     }
   };
 
@@ -227,13 +248,12 @@ export default function TeacherCreationForm({
                 onChange={e =>
                   setFormData(prev => ({ ...prev, name: e.target.value }))
                 }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
-                  errors.name ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${errors.name ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="Enter teacher's full name"
               />
               {errors.name && (
-                <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+                <p data-error="true" className="text-red-500 text-xs mt-1">{errors.name}</p>
               )}
             </div>
 
@@ -251,13 +271,12 @@ export default function TeacherCreationForm({
                 onChange={e =>
                   setFormData(prev => ({ ...prev, email: e.target.value }))
                 }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${errors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="Enter teacher's email"
               />
               {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                <p data-error="true" className="text-red-500 text-xs mt-1">{errors.email}</p>
               )}
             </div>
 
@@ -296,13 +315,12 @@ export default function TeacherCreationForm({
                 onChange={e =>
                   setFormData(prev => ({ ...prev, experience: e.target.value }))
                 }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
-                  errors.experience ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${errors.experience ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="Years of experience"
               />
               {errors.experience && (
-                <p className="text-red-500 text-xs mt-1">{errors.experience}</p>
+                <p data-error="true" className="text-red-500 text-xs mt-1">{errors.experience}</p>
               )}
             </div>
 
@@ -314,7 +332,7 @@ export default function TeacherCreationForm({
                 onChange={rates => setFormData(prev => ({ ...prev, rates }))}
               />
               {errors.rates && (
-                <p className="text-red-500 text-xs mt-1">{errors.rates}</p>
+                <p data-error="true" className="text-red-500 text-xs mt-1 font-medium bg-red-50 p-2 rounded">{errors.rates}</p>
               )}
               {formData.subjects.length === 0 && (
                 <p className="text-amber-600 text-sm mt-2">
@@ -340,13 +358,12 @@ export default function TeacherCreationForm({
                     location: { ...prev.location, address: e.target.value },
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${
-                  errors.address ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white ${errors.address ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="Enter address"
               />
               {errors.address && (
-                <p className="text-red-500 text-xs mt-1">{errors.address}</p>
+                <p data-error="true" className="text-red-500 text-xs mt-1">{errors.address}</p>
               )}
             </div>
           </div>
@@ -373,7 +390,7 @@ export default function TeacherCreationForm({
               ))}
             </div>
             {errors.subjects && (
-              <p className="text-red-500 text-xs mt-1">{errors.subjects}</p>
+              <p data-error="true" className="text-red-500 text-xs mt-1">{errors.subjects}</p>
             )}
           </div>
 
@@ -497,6 +514,31 @@ export default function TeacherCreationForm({
               placeholder="Tell us about the teacher's background, teaching style, and approach..."
             />
           </div>
+
+          {/* Global Error Message */}
+          {Object.keys(errors).length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    Please correct the errors above
+                  </h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <ul className="list-disc pl-5 space-y-1">
+                      {Object.values(errors).map((error, idx) => (
+                        <li key={idx}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">

@@ -5,18 +5,13 @@ import { withRateLimit } from '@/lib/api-security';
 import { requireTeacher } from '@/lib/api-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
 
-// Type for biometric credential lookup (partial)
-interface BiometricCredentialLookup {
-  teacher_id: string;
-}
-
 const schema = z.object({
   credentialId: z.string().min(1),
 });
 
 /**
  * POST /api/biometric/revoke
- *
+ * 
  * Revoke (deactivate) a biometric credential
  */
 export const POST = withRateLimit({
@@ -43,14 +38,11 @@ export const POST = withRateLimit({
       const supabase = getSupabaseAdmin();
 
       // Verify credential belongs to the authenticated teacher
-      const { data: credential, error: fetchError } = (await supabase
+      const { data: credential, error: fetchError } = await supabase
         .from('teacher_biometric_credentials')
         .select('teacher_id')
         .eq('credential_id', credentialId)
-        .single()) as {
-        data: BiometricCredentialLookup | null;
-        error: Error | null;
-      };
+        .single();
 
       if (fetchError || !credential) {
         return NextResponse.json(
@@ -59,8 +51,11 @@ export const POST = withRateLimit({
         );
       }
 
-      if (credential.teacher_id !== user.id) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      if ((credential as any).teacher_id !== user.id) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 403 }
+        );
       }
 
       // Deactivate the credential (soft delete)
@@ -93,7 +88,7 @@ export const POST = withRateLimit({
 
 /**
  * GET /api/biometric/revoke
- *
+ * 
  * Test endpoint to verify API is working
  */
 export async function GET() {

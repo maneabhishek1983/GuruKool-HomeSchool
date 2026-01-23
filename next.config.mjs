@@ -13,7 +13,7 @@ const nextConfig = {
   webpack: (config, { isServer }) => {
     // Add webpack alias for @/ path resolution
     config.resolve.alias['@'] = path.join(__dirname, 'src');
-    
+
     // Add fallback for missing modules
     config.resolve.fallback = {
       ...config.resolve.fallback,
@@ -34,21 +34,13 @@ const nextConfig = {
   async headers() {
     const isProd = process.env.NODE_ENV === 'production';
 
-    const scriptSrc = isProd
-      ? [
-          "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
-        ]
-      : [
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel.app https://cdn.jsdelivr.net",
-        ];
+    const scriptSrc = [
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel.app https://cdn.jsdelivr.net",
+    ];
 
-    const connectSrc = isProd
-      ? [
-          "connect-src 'self' https://*.supabase.co https://api.openai.com wss://*.supabase.co",
-        ]
-      : [
-          "connect-src 'self' https://*.supabase.co https://api.openai.com https://vercel.live http://localhost:* https://localhost:* wss://*.supabase.co",
-        ];
+    const connectSrc = [
+      "connect-src 'self' https://*.supabase.co https://api.openai.com https://vercel.live http://localhost:* https://localhost:* wss://*.supabase.co",
+    ];
 
     const frameSrc = isProd
       ? ["frame-src 'self'"]
