@@ -24,7 +24,12 @@ describe('AutoCompleteInput', () => {
   const mockOnSuggestionsFetch = jest.fn();
 
   beforeEach(() => {
+    jest.useFakeTimers();
     mockOnSuggestionsFetch.mockClear();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('renders input with label', () => {
@@ -40,18 +45,17 @@ describe('AutoCompleteInput', () => {
     );
 
     expect(screen.getByLabelText('Select Fruit')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Type to search...')).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('Type to search...')
+    ).toBeInTheDocument();
   });
 
   it('shows suggestions when typing', async () => {
     const user = userEvent.setup();
-    
+
     render(
       <TestWrapper>
-        <AutoCompleteInput
-          name="fruit"
-          suggestions={mockSuggestions}
-        />
+        <AutoCompleteInput name="fruit" suggestions={mockSuggestions} />
       </TestWrapper>
     );
 
@@ -68,13 +72,10 @@ describe('AutoCompleteInput', () => {
 
   it('filters suggestions based on input', async () => {
     const user = userEvent.setup();
-    
+
     render(
       <TestWrapper>
-        <AutoCompleteInput
-          name="fruit"
-          suggestions={mockSuggestions}
-        />
+        <AutoCompleteInput name="fruit" suggestions={mockSuggestions} />
       </TestWrapper>
     );
 
@@ -91,13 +92,10 @@ describe('AutoCompleteInput', () => {
 
   it('selects suggestion on click', async () => {
     const user = userEvent.setup();
-    
+
     render(
       <TestWrapper>
-        <AutoCompleteInput
-          name="fruit"
-          suggestions={mockSuggestions}
-        />
+        <AutoCompleteInput name="fruit" suggestions={mockSuggestions} />
       </TestWrapper>
     );
 
@@ -116,13 +114,10 @@ describe('AutoCompleteInput', () => {
 
   it('handles keyboard navigation', async () => {
     const user = userEvent.setup();
-    
+
     render(
       <TestWrapper>
-        <AutoCompleteInput
-          name="fruit"
-          suggestions={mockSuggestions}
-        />
+        <AutoCompleteInput name="fruit" suggestions={mockSuggestions} />
       </TestWrapper>
     );
 
@@ -148,22 +143,22 @@ describe('AutoCompleteInput', () => {
 
   it('closes suggestions on Escape', async () => {
     const user = userEvent.setup();
-    
+
     render(
       <TestWrapper>
-        <AutoCompleteInput
-          name="fruit"
-          suggestions={mockSuggestions}
-        />
+        <AutoCompleteInput name="fruit" suggestions={mockSuggestions} />
       </TestWrapper>
     );
 
     const input = screen.getByRole('textbox');
     await user.type(input, 'a');
 
-    await waitFor(() => {
-      expect(screen.getByText('Apple')).toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Apple')).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
 
     await user.keyboard('{Escape}');
     expect(screen.queryByText('Apple')).not.toBeInTheDocument();
@@ -171,8 +166,11 @@ describe('AutoCompleteInput', () => {
 
   it('fetches AI suggestions when enabled', async () => {
     const user = userEvent.setup();
-    mockOnSuggestionsFetch.mockResolvedValue(['AI Suggestion 1', 'AI Suggestion 2']);
-    
+    mockOnSuggestionsFetch.mockResolvedValue([
+      'AI Suggestion 1',
+      'AI Suggestion 2',
+    ]);
+
     render(
       <TestWrapper>
         <AutoCompleteInput
@@ -186,22 +184,29 @@ describe('AutoCompleteInput', () => {
     const input = screen.getByRole('textbox');
     await user.type(input, 'test');
 
-    await waitFor(() => {
-      expect(mockOnSuggestionsFetch).toHaveBeenCalledWith('test');
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(mockOnSuggestionsFetch).toHaveBeenCalledWith('test');
+      },
+      { timeout: 3000 }
+    );
 
-    await waitFor(() => {
-      expect(screen.getByText('AI Suggestion 1')).toBeInTheDocument();
-      expect(screen.getByText('AI Suggestion 2')).toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('AI Suggestion 1')).toBeInTheDocument();
+        expect(screen.getByText('AI Suggestion 2')).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
   }, 10000);
 
   it('shows loading indicator during AI fetch', async () => {
     const user = userEvent.setup();
     mockOnSuggestionsFetch.mockImplementation(
-      () => new Promise(resolve => setTimeout(() => resolve(['AI Result']), 100))
+      () =>
+        new Promise(resolve => setTimeout(() => resolve(['AI Result']), 100))
     );
-    
+
     render(
       <TestWrapper>
         <AutoCompleteInput
@@ -216,21 +221,25 @@ describe('AutoCompleteInput', () => {
     await user.type(input, 'test');
 
     // Should show loading spinner
-    expect(screen.getByRole('textbox').parentElement?.querySelector('.animate-spin')).toBeInTheDocument();
+    expect(
+      screen.getByRole('textbox').parentElement?.querySelector('.animate-spin')
+    ).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText('AI Result')).toBeInTheDocument();
     });
 
     // Loading spinner should be gone
-    expect(screen.getByRole('textbox').parentElement?.querySelector('.animate-spin')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('textbox').parentElement?.querySelector('.animate-spin')
+    ).not.toBeInTheDocument();
   }, 10000);
 
   it('falls back to local suggestions when AI fetch fails', async () => {
     const user = userEvent.setup();
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
     mockOnSuggestionsFetch.mockRejectedValue(new Error('AI fetch failed'));
-    
+
     render(
       <TestWrapper>
         <AutoCompleteInput
@@ -245,14 +254,23 @@ describe('AutoCompleteInput', () => {
     const input = screen.getByRole('textbox');
     await user.type(input, 'a');
 
-    await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to fetch AI suggestions:', expect.any(Error));
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Failed to fetch AI suggestions:',
+          expect.any(Error)
+        );
+      },
+      { timeout: 3000 }
+    );
 
-    await waitFor(() => {
-      expect(screen.getByText('Apple')).toBeInTheDocument();
-      expect(screen.getByText('Banana')).toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Apple')).toBeInTheDocument();
+        expect(screen.getByText('Banana')).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
 
     consoleSpy.mockRestore();
   }, 10000);
@@ -260,11 +278,7 @@ describe('AutoCompleteInput', () => {
   it('shows required indicator when required', () => {
     render(
       <TestWrapper>
-        <AutoCompleteInput
-          name="fruit"
-          label="Select Fruit"
-          required={true}
-        />
+        <AutoCompleteInput name="fruit" label="Select Fruit" required={true} />
       </TestWrapper>
     );
 
@@ -274,11 +288,7 @@ describe('AutoCompleteInput', () => {
   it('shows AI badge when AI powered', () => {
     render(
       <TestWrapper>
-        <AutoCompleteInput
-          name="fruit"
-          label="Select Fruit"
-          aiPowered={true}
-        />
+        <AutoCompleteInput name="fruit" label="Select Fruit" aiPowered={true} />
       </TestWrapper>
     );
 
@@ -288,10 +298,7 @@ describe('AutoCompleteInput', () => {
   it('is disabled when disabled prop is true', () => {
     render(
       <TestWrapper>
-        <AutoCompleteInput
-          name="fruit"
-          disabled={true}
-        />
+        <AutoCompleteInput name="fruit" disabled={true} />
       </TestWrapper>
     );
 
@@ -301,7 +308,7 @@ describe('AutoCompleteInput', () => {
   it('debounces AI suggestions fetch', async () => {
     const user = userEvent.setup();
     mockOnSuggestionsFetch.mockResolvedValue(['Result']);
-    
+
     render(
       <TestWrapper>
         <AutoCompleteInput
@@ -313,13 +320,16 @@ describe('AutoCompleteInput', () => {
     );
 
     const input = screen.getByRole('textbox');
-    
+
     // Type multiple characters quickly
     await user.type(input, 'test');
 
     // Should only call once after debounce
-    await waitFor(() => {
-      expect(mockOnSuggestionsFetch).toHaveBeenCalledTimes(1);
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(mockOnSuggestionsFetch).toHaveBeenCalledTimes(1);
+      },
+      { timeout: 3000 }
+    );
   }, 10000);
 });

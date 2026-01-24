@@ -11,7 +11,7 @@ global.console = {
   // log: jest.fn(),
   // warn: jest.fn(),
   // error: jest.fn(),
-}
+};
 
 // Mock WebSocket for tests
 global.WebSocket = jest.fn(() => ({
@@ -19,10 +19,10 @@ global.WebSocket = jest.fn(() => ({
   send: jest.fn(),
   addEventListener: jest.fn(),
   removeEventListener: jest.fn(),
-}))
+}));
 
 // Mock fetch for tests
-global.fetch = jest.fn()
+global.fetch = jest.fn();
 
 // Mock timers
-jest.useFakeTimers()
+// jest.useFakeTimers() - Removed to prevent global timeouts. Enable explicitly in tests if needed.
