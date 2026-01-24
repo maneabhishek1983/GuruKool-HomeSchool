@@ -152,7 +152,7 @@ function FloatingInput({
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
   required?: boolean;
-  minLength?: number;
+  minLength?: number | undefined;
   delay?: number;
   icon?: React.ReactNode;
   showToggle?: boolean;
