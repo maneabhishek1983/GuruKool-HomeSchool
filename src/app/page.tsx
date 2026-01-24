@@ -30,8 +30,8 @@ export default function EnhancedHomePage() {
           className="absolute inset-0 z-0"
         >
           <Image
-            src="/images/optimized/hero/mentor-student.webp"
-            alt="Mentor and student learning together outdoors"
+            src="/images/optimized/hero/home-tutoring-young-kids.webp"
+            alt="Young child learning at home with parent and teacher"
             fill
             className="object-cover"
             priority
