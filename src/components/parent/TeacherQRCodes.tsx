@@ -296,6 +296,30 @@ export default function TeacherQRCodes({
               </div>
 
               <div className="mt-6 space-y-2">
+                {/* Primary action - Copy code for teacher */}
+                <button
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(selectedQRCode.qr_code_data);
+                      alert('✅ Code copied!\n\nShare this with the teacher to paste in the manual entry form.');
+                    } catch (err) {
+                      // Fallback for older browsers
+                      const textArea = document.createElement('textarea');
+                      textArea.value = selectedQRCode.qr_code_data;
+                      document.body.appendChild(textArea);
+                      textArea.select();
+                      document.execCommand('copy');
+                      document.body.removeChild(textArea);
+                      alert('✅ Code copied!\n\nShare this with the teacher to paste in the manual entry form.');
+                    }
+                  }}
+                  className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors font-medium"
+                >
+                  📋 Copy Code for Teacher
+                </button>
+                <p className="text-xs text-gray-500 text-center">
+                  If camera scanning doesn't work, copy this code and share it with the teacher
+                </p>
                 <button
                   onClick={() => {
                     // Download QR code as image
@@ -323,7 +347,7 @@ export default function TeacherQRCodes({
                       alert('❌ Invalid QR code format');
                     }
                   }}
-                  className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+                  className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors"
                 >
                   🧪 Test QR Code Format
                 </button>
