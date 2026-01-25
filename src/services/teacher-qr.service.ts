@@ -224,16 +224,55 @@ export class TeacherQRService {
         throw new Error('QR code has expired. Please request a new one from the parent.');
       }
 
-      // Verify signature using server-side API
-      const validationResponse = await fetch('/api/qr/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ qrData }),
-      });
+      // Verify signature inline (server-side validation)
+      // Get the QR_SECRET from environment
+      const baseSecret = process.env.QR_SECRET || process.env.NEXT_PUBLIC_QR_SECRET;
+      if (!baseSecret) {
+        console.error('QR_SECRET not configured');
+        throw new Error('Server configuration error');
+      }
 
-      if (!validationResponse.ok) {
-        const error = await validationResponse.json();
-        throw new Error(error.error || 'Invalid QR code');
+      // Derive daily secret for validation
+      const generatedDate = parsedData.generatedDate || new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0];
+
+      // Check if QR code was generated today (daily rotation)
+      if (generatedDate !== today) {
+        throw new Error(`QR code was generated on ${generatedDate}. Please regenerate the QR code for today.`);
+      }
+
+      // Derive daily secret
+      const encoder = new TextEncoder();
+      const keyData = encoder.encode(baseSecret);
+      const dateData = encoder.encode(`daily-qr-secret-${generatedDate}`);
+
+      const dailyCryptoKey = await crypto.subtle.importKey(
+        'raw',
+        keyData,
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+      );
+
+      const derivedKey = await crypto.subtle.sign('HMAC', dailyCryptoKey, dateData);
+      const derivedArray = Array.from(new Uint8Array(derivedKey));
+      const dailySecret = btoa(String.fromCharCode(...derivedArray));
+
+      // Generate expected signature
+      const messageData = encoder.encode(`${parsedData.teacherId}-${parsedData.studentId}-${parsedData.parentId}`);
+      const sigCryptoKey = await crypto.subtle.importKey(
+        'raw',
+        encoder.encode(dailySecret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+      );
+      const signature = await crypto.subtle.sign('HMAC', sigCryptoKey, messageData);
+      const signatureArray = Array.from(new Uint8Array(signature));
+      const expectedSignature = btoa(String.fromCharCode(...signatureArray)).slice(0, 32);
+
+      if (parsedData.signature !== expectedSignature) {
+        throw new Error('Invalid QR code signature');
       }
 
       // Check if QR code exists and is active
