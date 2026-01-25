@@ -25,6 +25,8 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualCode, setManualCode] = useState('');
 
   // Check for active check-in on mount
   useEffect(() => {
@@ -166,6 +168,8 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
     setAction(null);
     setNotes('');
     setError(null);
+    setShowManualInput(false);
+    setManualCode('');
   };
 
   // Mock QR scan function removed for production security
@@ -238,7 +242,7 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
               exit={{ opacity: 0, scale: 0.95 }}
               className="text-center space-y-6"
             >
-              {!showScanner ? (
+              {!showScanner && !showManualInput ? (
                 <>
                   <div className="w-64 h-64 mx-auto bg-neutral-100 rounded-2xl flex items-center justify-center">
                     <div className="text-center">
@@ -247,19 +251,27 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => setShowScanner(true)}
-                    className="w-full px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-xl transition-colors"
-                  >
-                    📷 Open Camera Scanner
-                  </button>
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => setShowScanner(true)}
+                      className="w-full px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-xl transition-colors"
+                    >
+                      📷 Open Camera Scanner
+                    </button>
+
+                    <button
+                      onClick={() => setShowManualInput(true)}
+                      className="w-full px-6 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-xl transition-colors"
+                    >
+                      📝 Enter Code Manually
+                    </button>
+                  </div>
 
                   <p className="text-xs text-neutral-500">
-                    Point your camera at the parent's QR code displayed in their
-                    portal
+                    Ask the parent to show their QR code, or have them copy the code for you
                   </p>
                 </>
-              ) : (
+              ) : showScanner ? (
                 <>
                   <div className="space-y-4">
                     <QRScanner
@@ -288,6 +300,64 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
                     Position the QR code within the camera frame
                   </p>
                 </>
+              ) : (
+                /* Manual Code Entry Form */
+                <div className="space-y-4">
+                  <div className="text-center mb-4">
+                    <div className="text-4xl mb-2">📝</div>
+                    <h3 className="text-lg font-semibold text-neutral-900">
+                      Enter Code Manually
+                    </h3>
+                    <p className="text-sm text-neutral-600">
+                      Paste the code from the parent's QR code screen
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">
+                      QR Code Data:
+                    </label>
+                    <textarea
+                      value={manualCode}
+                      onChange={e => setManualCode(e.target.value)}
+                      className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm font-mono"
+                      rows={4}
+                      placeholder='Paste the code here (starts with {"type":"teacher_auth"...})'
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => {
+                        if (manualCode.trim()) {
+                          handleQRScan(manualCode.trim());
+                          setManualCode('');
+                          setShowManualInput(false);
+                        }
+                      }}
+                      disabled={!manualCode.trim()}
+                      className="flex-1 px-6 py-3 bg-primary-600 hover:bg-primary-700 disabled:bg-neutral-300 text-white font-medium rounded-xl transition-colors"
+                    >
+                      Submit Code
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowManualInput(false);
+                        setManualCode('');
+                      }}
+                      className="px-6 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-xl transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                    <p className="text-xs text-blue-700">
+                      <strong>Tip:</strong> Ask the parent to click "Copy Code for Teacher" on their QR code screen, then paste it here.
+                    </p>
+                  </div>
+                </div>
               )}
             </motion.div>
           )}
