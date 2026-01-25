@@ -86,7 +86,7 @@ export default function DashboardStats({
         <GlassStatCard
           title="Sessions"
           value={totalSessions}
-          color="info"
+          color="secondary"
           icon={
             <svg
               className="w-6 h-6"
