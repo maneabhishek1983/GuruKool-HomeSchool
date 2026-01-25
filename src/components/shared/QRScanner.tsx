@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 
 interface QRScannerProps {
   onScan: (data: string) => void;
@@ -30,6 +30,9 @@ export function QRScanner({
   const [cameras, setCameras] = useState<any[]>([]);
   const [cameraStarted, setCameraStarted] = useState(false);
   const [debugLog, setDebugLog] = useState<string[]>([]);
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [manualCode, setManualCode] = useState('');
+  const [scanAttempts, setScanAttempts] = useState(0);
 
   const addDebugLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -90,19 +93,19 @@ export function QRScanner({
     try {
       addDebugLog('Starting scanner...');
 
-      // Create Html5Qrcode instance
+      // Create Html5Qrcode instance with multiple format support
       html5QrCodeRef.current = new Html5Qrcode('qr-scanner-container', {
-        formatsToSupport: [0], // 0 = QR_CODE format only
-        verbose: false, // Disable verbose to reduce console noise
+        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+        verbose: false,
       });
 
       await html5QrCodeRef.current.start(
         cameraId,
         {
-          fps: 10, // Keep FPS at 10 for better detection
+          fps: 15, // Higher FPS for better screen scanning
           qrbox: function (viewfinderWidth, viewfinderHeight) {
-            // Make qrbox 70% of the smaller dimension for better detection
-            const minEdgePercentage = 0.7;
+            // Make qrbox 80% of the smaller dimension for better detection from screens
+            const minEdgePercentage = 0.8;
             const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
             const qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
             return {
@@ -110,13 +113,16 @@ export function QRScanner({
               height: qrboxSize,
             };
           },
-          aspectRatio,
-          disableFlip: false, // Enable flip for better detection
-          // Advanced camera settings for better QR detection
+          aspectRatio: 1.0,
+          disableFlip: false,
           videoConstraints: {
-            facingMode: { ideal: 'environment' }, // Back camera preferred
-            width: { ideal: 1280 }, // Higher resolution for better QR detection
-            height: { ideal: 720 },
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1920, min: 640 },
+            height: { ideal: 1080, min: 480 },
+            // Request autofocus for better screen scanning
+            advanced: [
+              { focusMode: 'continuous' } as MediaTrackConstraintSet,
+            ],
           },
         },
         decodedText => {
@@ -134,7 +140,8 @@ export function QRScanner({
           }
         },
         errorMessage => {
-          // Silently ignore routine scanning errors
+          // Track scan attempts for user feedback
+          setScanAttempts(prev => prev + 1);
         }
       );
 
@@ -168,43 +175,114 @@ export function QRScanner({
     }
   };
 
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (manualCode.trim()) {
+      addDebugLog(`Manual entry: ${manualCode.substring(0, 30)}...`);
+      onScan(manualCode.trim());
+      setManualCode('');
+      setShowManualEntry(false);
+    }
+  };
+
   return (
     <div className="qr-scanner-wrapper">
-      <div
-        id="qr-scanner-container"
-        style={{
-          width: '100%',
-          maxWidth: `${width}px`,
-          margin: '0 auto',
-        }}
-      />
+      {!showManualEntry ? (
+        <>
+          <div
+            id="qr-scanner-container"
+            style={{
+              width: '100%',
+              maxWidth: `${width}px`,
+              margin: '0 auto',
+            }}
+          />
 
-      {isScanning && (
-        <div className="mt-4 text-center text-sm text-gray-600">
-          <p>📱 Position QR code in the camera view</p>
-          <p className="text-xs mt-2">Ensure good lighting for best results</p>
-        </div>
-      )}
-
-      {error && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-          {error}
-        </div>
-      )}
-
-      {/* Debug Log Overlay */}
-      {debugLog.length > 0 && (
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-xs font-semibold text-blue-900 mb-2">
-            📋 Scanner Debug Log:
-          </p>
-          <div className="space-y-1">
-            {debugLog.map((log, index) => (
-              <p key={index} className="text-xs text-blue-700 font-mono">
-                {log}
+          {isScanning && (
+            <div className="mt-4 text-center text-sm text-gray-600">
+              <p>📱 Position QR code in the camera view</p>
+              <p className="text-xs mt-2">
+                {scanAttempts > 50
+                  ? '⚠️ Having trouble? Try the manual entry option below'
+                  : 'Hold steady - scanning from screen may take a moment'}
               </p>
-            ))}
-          </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Debug Log Overlay */}
+          {debugLog.length > 0 && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs font-semibold text-blue-900 mb-2">
+                📋 Scanner Debug Log:
+              </p>
+              <div className="space-y-1">
+                {debugLog.map((log, index) => (
+                  <p key={index} className="text-xs text-blue-700 font-mono">
+                    {log}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Manual Entry Fallback Button */}
+          {isScanning && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => setShowManualEntry(true)}
+                className="text-sm text-blue-600 hover:text-blue-800 underline"
+              >
+                📝 Camera not working? Enter code manually
+              </button>
+            </div>
+          )}
+        </>
+      ) : (
+        /* Manual Entry Form */
+        <div className="p-4 bg-white rounded-lg border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            📝 Manual Code Entry
+          </h3>
+          <form onSubmit={handleManualSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Paste or type the QR code data:
+              </label>
+              <textarea
+                value={manualCode}
+                onChange={e => setManualCode(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+                rows={4}
+                placeholder='{"type":"teacher_auth","teacherId":"...","studentId":"...","parentId":"...","timestamp":...,"signature":"..."}'
+                autoFocus
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Click "Test QR Code Format" on the QR code modal, then copy the JSON data
+              </p>
+            </div>
+            <div className="flex space-x-3">
+              <button
+                type="submit"
+                disabled={!manualCode.trim()}
+                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              >
+                Submit Code
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowManualEntry(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
+              >
+                Back to Camera
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
