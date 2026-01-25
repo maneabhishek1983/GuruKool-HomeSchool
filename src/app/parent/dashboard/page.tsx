@@ -71,7 +71,7 @@ export default function ParentDashboard() {
       const [studentsData, teachersData, sessionsData] = await Promise.all([
         DatabaseService.getStudents(user.id),
         DatabaseService.getTeachers(user.id),
-        TimesheetService.getTimesheetEntries({ parentId: user.id }),
+        TimesheetService.getParentTimesheet(user.id),
       ]);
 
       setStudents(studentsData);

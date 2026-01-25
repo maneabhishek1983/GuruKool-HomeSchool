@@ -45,28 +45,28 @@ export default function SessionsList({
     setError(null);
 
     try {
-      const filters: {
-        parentId: string;
-        studentId?: string;
-        onlyActive?: boolean;
-      } = {
-        parentId,
-      };
+      // Fetch all sessions for this parent
+      const entries = await TimesheetService.getParentTimesheet(parentId);
 
-      if (selectedStudent !== 'all') {
-        filters.studentId = selectedStudent;
-      }
-
-      if (filter === 'active') {
-        filters.onlyActive = true;
-      }
-
-      const entries = await TimesheetService.getTimesheetEntries(filters);
-
-      // Filter completed if needed
+      // Apply client-side filters
       let filteredEntries = entries;
-      if (filter === 'completed') {
-        filteredEntries = entries.filter((e) => e.status === 'checked_out');
+
+      // Filter by student if selected
+      if (selectedStudent !== 'all') {
+        filteredEntries = filteredEntries.filter(
+          (e) => e.student_id === selectedStudent
+        );
+      }
+
+      // Filter by status
+      if (filter === 'active') {
+        filteredEntries = filteredEntries.filter(
+          (e) => e.status === 'checked_in'
+        );
+      } else if (filter === 'completed') {
+        filteredEntries = filteredEntries.filter(
+          (e) => e.status === 'checked_out'
+        );
       }
 
       // Sort by check-in time (most recent first)
