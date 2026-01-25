@@ -205,6 +205,7 @@ export class TeacherQRService {
   }
 
   // Validate QR code and create session
+  // Supports both simple format (GK:{id}) and legacy JSON format
   static async validateQRCodeAndCreateSession(
     qrData: string,
     sessionType: 'sign_in' | 'sign_out',
@@ -212,88 +213,57 @@ export class TeacherQRService {
     notes?: string
   ): Promise<TeacherSession | null> {
     try {
-      // Parse QR code data
-      const parsedData = JSON.parse(qrData);
+      let qrCode;
 
-      if (parsedData.type !== 'teacher_auth') {
-        throw new Error('Invalid QR code type');
+      // Check if it's the new simple format: GK:{uuid}
+      if (qrData.startsWith('GK:')) {
+        const qrCodeId = qrData.substring(3); // Remove 'GK:' prefix
+
+        // Look up QR code by ID
+        const { data, error } = await supabase
+          .from('teacher_qr_codes')
+          .select('*')
+          .eq('id', qrCodeId)
+          .eq('is_active', true)
+          .single();
+
+        if (error || !data) {
+          throw new Error('QR code not found or inactive');
+        }
+        qrCode = data;
+      } else {
+        // Legacy JSON format - try to parse
+        try {
+          const parsedData = JSON.parse(qrData);
+
+          if (parsedData.type !== 'teacher_auth') {
+            throw new Error('Invalid QR code type');
+          }
+
+          // Look up QR code by teacher/student/parent IDs
+          const { data, error } = await supabase
+            .from('teacher_qr_codes')
+            .select('*')
+            .eq('teacher_id', parsedData.teacherId)
+            .eq('student_id', parsedData.studentId)
+            .eq('parent_id', parsedData.parentId)
+            .eq('is_active', true)
+            .single();
+
+          if (error || !data) {
+            throw new Error('QR code not found or inactive');
+          }
+          qrCode = data;
+        } catch (parseError) {
+          throw new Error('Invalid QR code format. Expected GK:{id} or valid JSON.');
+        }
       }
 
-      // Check expiration
-      if (parsedData.expiresAt && Date.now() > parsedData.expiresAt) {
-        throw new Error('QR code has expired. Please request a new one from the parent.');
-      }
-
-      // Verify signature inline (server-side validation)
-      // Get the QR_SECRET from environment
-      const baseSecret = process.env.QR_SECRET || process.env.NEXT_PUBLIC_QR_SECRET;
-      if (!baseSecret) {
-        console.error('QR_SECRET not configured');
-        throw new Error('Server configuration error');
-      }
-
-      // Derive daily secret for validation
-      const generatedDate = parsedData.generatedDate || new Date().toISOString().split('T')[0];
-      const today = new Date().toISOString().split('T')[0];
-
-      // Check if QR code was generated today (daily rotation)
-      if (generatedDate !== today) {
-        throw new Error(`QR code was generated on ${generatedDate}. Please regenerate the QR code for today.`);
-      }
-
-      // Derive daily secret
-      const encoder = new TextEncoder();
-      const keyData = encoder.encode(baseSecret);
-      const dateData = encoder.encode(`daily-qr-secret-${generatedDate}`);
-
-      const dailyCryptoKey = await crypto.subtle.importKey(
-        'raw',
-        keyData,
-        { name: 'HMAC', hash: 'SHA-256' },
-        false,
-        ['sign']
-      );
-
-      const derivedKey = await crypto.subtle.sign('HMAC', dailyCryptoKey, dateData);
-      const derivedArray = Array.from(new Uint8Array(derivedKey));
-      const dailySecret = btoa(String.fromCharCode(...derivedArray));
-
-      // Generate expected signature
-      const messageData = encoder.encode(`${parsedData.teacherId}-${parsedData.studentId}-${parsedData.parentId}`);
-      const sigCryptoKey = await crypto.subtle.importKey(
-        'raw',
-        encoder.encode(dailySecret),
-        { name: 'HMAC', hash: 'SHA-256' },
-        false,
-        ['sign']
-      );
-      const signature = await crypto.subtle.sign('HMAC', sigCryptoKey, messageData);
-      const signatureArray = Array.from(new Uint8Array(signature));
-      const expectedSignature = btoa(String.fromCharCode(...signatureArray)).slice(0, 32);
-
-      if (parsedData.signature !== expectedSignature) {
-        throw new Error('Invalid QR code signature');
-      }
-
-      // Check if QR code exists and is active
-      const { data: qrCode, error: qrError } = await supabase
-        .from('teacher_qr_codes')
-        .select('*')
-        .eq('teacher_id', parsedData.teacherId)
-        .eq('student_id', parsedData.studentId)
-        .eq('parent_id', parsedData.parentId)
-        .eq('is_active', true)
-        .single();
-
-      if (qrError || !qrCode) {
-        throw new Error('QR code not found or inactive');
-      }
-
-      // Create session
+      // Create session using data from database
       const sessionData = {
-        teacher_id: parsedData.teacherId,
-        student_id: parsedData.studentId,
-        parent_id: parsedData.parentId,
+        teacher_id: qrCode.teacher_id,
+        student_id: qrCode.student_id,
+        parent_id: qrCode.parent_id,
         session_type: sessionType,
         location: location || {},
         notes: notes || '',
