@@ -89,17 +89,30 @@ export const POST = withRateLimit({
 
       // Handle sign_in vs sign_out
       if (sessionType === 'sign_in') {
-        // Check for active sessions
+        // Check if teacher has ANY active session (prevent concurrent sessions)
         const { data: activeSessions } = await supabase
           .from('teacher_sessions')
-          .select('id')
+          .select('id, student_id, students:student_id(name)')
           .eq('teacher_id', user.id)
-          .eq('student_id', studentId)
           .is('session_end', null);
 
         if (activeSessions && activeSessions.length > 0) {
+          // Get student name from the active session
+          const activeSession = activeSessions[0];
+          const studentData = activeSession?.students as unknown;
+          const studentInfo = Array.isArray(studentData)
+            ? (studentData[0] as { name: string } | undefined)
+            : (studentData as { name: string } | null);
+          const studentName = studentInfo?.name || 'another student';
+
           return NextResponse.json(
-            { error: 'You already have an active session with this student' },
+            {
+              error: `You already have an active session with ${studentName}. Please end that session before starting a new one.`,
+              existingSession: {
+                id: activeSession?.id,
+                studentId: activeSession?.student_id,
+              },
+            },
             { status: 409 }
           );
         }
