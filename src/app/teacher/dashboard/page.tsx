@@ -218,7 +218,7 @@ export default function TeacherDashboard() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200 }}
-                className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/25"
+                className="w-12 h-12 bg-gradient-to-br from-blue-600 to-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25"
               >
                 <svg
                   className="w-7 h-7 text-white"
@@ -235,7 +235,7 @@ export default function TeacherDashboard() {
                 </svg>
               </motion.div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
                   Teacher Dashboard
                 </h1>
                 <p className="text-sm text-slate-600">
@@ -252,7 +252,7 @@ export default function TeacherDashboard() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${
                       activeTab === tab.id
-                        ? 'bg-white text-cyan-700 shadow-sm'
+                        ? 'bg-white text-blue-700 shadow-sm'
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
@@ -284,7 +284,7 @@ export default function TeacherDashboard() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${
                 activeTab === tab.id
-                  ? 'bg-cyan-100 text-cyan-700'
+                  ? 'bg-blue-100 text-blue-700'
                   : 'text-slate-600 hover:text-slate-900 bg-white/50'
               }`}
             >
@@ -444,7 +444,7 @@ export default function TeacherDashboard() {
                   <div className="p-6">
                     {isLoadingStats ? (
                       <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                       </div>
                     ) : assignedStudents.length === 0 ? (
                       <div className="text-center py-8">
@@ -464,10 +464,10 @@ export default function TeacherDashboard() {
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.1 }}
-                            className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl border border-slate-100 hover:border-cyan-200 hover:shadow-md transition-all duration-200"
+                            className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all duration-200"
                           >
                             <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-white font-medium shadow-lg shadow-cyan-500/20">
+                              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-teal-500 rounded-full flex items-center justify-center text-white font-medium shadow-lg shadow-blue-500/20">
                                 {student.name.charAt(0)}
                               </div>
                               <div>
@@ -485,7 +485,7 @@ export default function TeacherDashboard() {
                               </p>
                               <div className="w-16 h-1.5 bg-slate-200 rounded-full mt-1 overflow-hidden">
                                 <div
-                                  className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
+                                  className="h-full bg-gradient-to-r from-blue-500 to-teal-500 rounded-full"
                                   style={{ width: `${student.progress}%` }}
                                 />
                               </div>
@@ -521,7 +521,7 @@ export default function TeacherDashboard() {
                         {
                           label: 'View Timesheet',
                           icon: '📊',
-                          color: 'from-sky-500 to-blue-600',
+                          color: 'from-blue-500 to-blue-600',
                           action: () => setActiveTab('timesheet'),
                         },
                         {
@@ -533,7 +533,7 @@ export default function TeacherDashboard() {
                         {
                           label: 'Refresh Data',
                           icon: '🔄',
-                          color: 'from-violet-500 to-purple-600',
+                          color: 'from-teal-500 to-teal-600',
                           action: () => loadDashboardStats(),
                         },
                       ].map((action, index) => (
@@ -613,7 +613,7 @@ export default function TeacherDashboard() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.1 * index }}
-                        className="text-center p-6 bg-gradient-to-b from-white to-slate-50 rounded-xl border border-slate-100 hover:border-cyan-200 hover:shadow-lg transition-all duration-300"
+                        className="text-center p-6 bg-gradient-to-b from-white to-slate-50 rounded-xl border border-slate-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300"
                       >
                         <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mx-auto mb-3">
                           <span className="text-2xl">{standard.flag}</span>

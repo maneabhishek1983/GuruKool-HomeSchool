@@ -444,7 +444,7 @@ export default function ParentDashboard() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200 }}
-                className="w-12 h-12 bg-gradient-to-br from-sky-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/25"
+                className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/25"
               >
                 <svg
                   className="w-7 h-7 text-white"
@@ -461,7 +461,7 @@ export default function ParentDashboard() {
                 </svg>
               </motion.div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
                   Parent Dashboard
                 </h1>
                 <p className="text-sm text-slate-600">
@@ -654,7 +654,7 @@ export default function ParentDashboard() {
             >
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
                     {selectedStudent
                       ? 'Edit Student Profile'
                       : 'Create Student Profile'}
