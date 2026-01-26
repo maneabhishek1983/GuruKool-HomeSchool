@@ -40,8 +40,20 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
       return;
     }
 
-    const active = await timesheetService.getActiveCheckIn(user.id);
-    setActiveCheckIn(active);
+    try {
+      // Use API endpoint to bypass RLS and get active session
+      const response = await fetch(`/api/teacher-sessions/active?userId=${user.id}`);
+      const data = await response.json();
+
+      if (data.activeSession) {
+        setActiveCheckIn(data.activeSession);
+      } else {
+        setActiveCheckIn(null);
+      }
+    } catch (err) {
+      console.error('Error checking active session:', err);
+      setActiveCheckIn(null);
+    }
   };
 
   const handleQRScan = async (data: string) => {
