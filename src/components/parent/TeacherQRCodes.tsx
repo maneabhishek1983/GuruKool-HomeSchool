@@ -253,7 +253,7 @@ export default function TeacherQRCodes({
 
             <div className="text-center">
               <div className="bg-gray-100 p-4 rounded-lg mb-4">
-                <QRCodeDisplay qrData={selectedQRCode.qr_code_data} />
+                <QRCodeDisplay qrCodeId={selectedQRCode.id} />
               </div>
 
               <div className="space-y-2 text-sm text-gray-600">
@@ -366,8 +366,8 @@ export default function TeacherQRCodes({
   );
 }
 
-// QR Code Display Component
-function QRCodeDisplay({ qrData }: { qrData: string }) {
+// QR Code Display Component - Uses simple ID format for easier scanning
+function QRCodeDisplay({ qrCodeId }: { qrCodeId: string }) {
   const [qrImageUrl, setQrImageUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -375,7 +375,9 @@ function QRCodeDisplay({ qrData }: { qrData: string }) {
     const generateQR = async () => {
       try {
         setIsLoading(true);
-        const imageUrl = await TeacherQRService.generateQRCodeImage(qrData);
+        // Use simple format: GK:{id} - much easier to scan than full JSON
+        const simpleCode = `GK:${qrCodeId}`;
+        const imageUrl = await TeacherQRService.generateQRCodeImage(simpleCode);
         setQrImageUrl(imageUrl);
       } catch (error) {
         console.error('Error generating QR code:', error);
@@ -385,7 +387,7 @@ function QRCodeDisplay({ qrData }: { qrData: string }) {
     };
 
     generateQR();
-  }, [qrData]);
+  }, [qrCodeId]);
 
   if (isLoading) {
     return (

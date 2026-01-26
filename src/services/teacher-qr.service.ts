@@ -205,6 +205,7 @@ export class TeacherQRService {
   }
 
   // Validate QR code and create session
+  // Supports both simple format (GK:{id}) and legacy JSON format
   static async validateQRCodeAndCreateSession(
     qrData: string,
     sessionType: 'sign_in' | 'sign_out',
@@ -212,49 +213,57 @@ export class TeacherQRService {
     notes?: string
   ): Promise<TeacherSession | null> {
     try {
-      // Parse QR code data
-      const parsedData = JSON.parse(qrData);
+      let qrCode;
 
-      if (parsedData.type !== 'teacher_auth') {
-        throw new Error('Invalid QR code type');
+      // Check if it's the new simple format: GK:{uuid}
+      if (qrData.startsWith('GK:')) {
+        const qrCodeId = qrData.substring(3); // Remove 'GK:' prefix
+
+        // Look up QR code by ID
+        const { data, error } = await supabase
+          .from('teacher_qr_codes')
+          .select('*')
+          .eq('id', qrCodeId)
+          .eq('is_active', true)
+          .single();
+
+        if (error || !data) {
+          throw new Error('QR code not found or inactive');
+        }
+        qrCode = data;
+      } else {
+        // Legacy JSON format - try to parse
+        try {
+          const parsedData = JSON.parse(qrData);
+
+          if (parsedData.type !== 'teacher_auth') {
+            throw new Error('Invalid QR code type');
+          }
+
+          // Look up QR code by teacher/student/parent IDs
+          const { data, error } = await supabase
+            .from('teacher_qr_codes')
+            .select('*')
+            .eq('teacher_id', parsedData.teacherId)
+            .eq('student_id', parsedData.studentId)
+            .eq('parent_id', parsedData.parentId)
+            .eq('is_active', true)
+            .single();
+
+          if (error || !data) {
+            throw new Error('QR code not found or inactive');
+          }
+          qrCode = data;
+        } catch (parseError) {
+          throw new Error('Invalid QR code format. Expected GK:{id} or valid JSON.');
+        }
       }
 
-      // Check expiration
-      if (parsedData.expiresAt && Date.now() > parsedData.expiresAt) {
-        throw new Error('QR code has expired. Please request a new one from the parent.');
-      }
-
-      // Verify signature using server-side API
-      const validationResponse = await fetch('/api/qr/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ qrData }),
-      });
-
-      if (!validationResponse.ok) {
-        const error = await validationResponse.json();
-        throw new Error(error.error || 'Invalid QR code');
-      }
-
-      // Check if QR code exists and is active
-      const { data: qrCode, error: qrError } = await supabase
-        .from('teacher_qr_codes')
-        .select('*')
-        .eq('teacher_id', parsedData.teacherId)
-        .eq('student_id', parsedData.studentId)
-        .eq('parent_id', parsedData.parentId)
-        .eq('is_active', true)
-        .single();
-
-      if (qrError || !qrCode) {
-        throw new Error('QR code not found or inactive');
-      }
-
-      // Create session
+      // Create session using data from database
       const sessionData = {
-        teacher_id: parsedData.teacherId,
-        student_id: parsedData.studentId,
-        parent_id: parsedData.parentId,
+        teacher_id: qrCode.teacher_id,
+        student_id: qrCode.student_id,
+        parent_id: qrCode.parent_id,
         session_type: sessionType,
         location: location || {},
         notes: notes || '',

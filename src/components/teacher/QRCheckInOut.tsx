@@ -48,11 +48,18 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
     setScannedData(data);
     setError(null);
 
-    // Try to parse QR code to validate format
+    // Check for new simple format: GK:{uuid}
+    if (data.startsWith('GK:')) {
+      // Valid simple format, proceed to action selection
+      setStep('select_action');
+      return;
+    }
+
+    // Try legacy JSON format
     try {
       const parsedData = JSON.parse(data);
 
-      // Check if it's the new TeacherQRService format
+      // Check if it's the TeacherQRService format
       if (parsedData.type === 'teacher_auth') {
         // Valid format, proceed to action selection
         setStep('select_action');
@@ -86,13 +93,21 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
     setStep('processing');
 
     try {
-      // Parse QR data to determine which API to use
-      const parsedData = JSON.parse(scannedData);
-
       let result: TimesheetEntry | null = null;
 
-      // Use new TeacherQRService API for teacher_auth type
-      if (parsedData.type === 'teacher_auth') {
+      // Check if it's the new simple format (GK:{id}) or legacy JSON format
+      const isSimpleFormat = scannedData.startsWith('GK:');
+      const isTeacherAuthFormat = !isSimpleFormat && (() => {
+        try {
+          const parsed = JSON.parse(scannedData);
+          return parsed.type === 'teacher_auth';
+        } catch {
+          return false;
+        }
+      })();
+
+      // Use TeacherQRService API for both simple format and teacher_auth type
+      if (isSimpleFormat || isTeacherAuthFormat) {
         // Call new API endpoint
         const response = await fetch('/api/teacher-sessions/scan', {
           method: 'POST',
@@ -129,7 +144,7 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
           updated_at: data.session.updated_at,
         };
       } else {
-        // Fall back to timesheet service for backward compatibility
+        // Fall back to timesheet service for other formats
         if (selectedAction === 'check_in') {
           result = await timesheetService.checkIn(user.id, scannedData);
         } else {
