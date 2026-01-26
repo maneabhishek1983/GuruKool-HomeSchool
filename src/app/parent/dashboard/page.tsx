@@ -20,6 +20,7 @@ import {
 } from '@/components/layouts/LiquidLearningLayout';
 import { FloatingActionButton } from '@/design-system/components/interactive/FloatingActionButton';
 import ParentDashboardHero from '@/components/parent/ParentDashboardHero';
+import StudentMediaGallery from '@/components/parent/StudentMediaGallery';
 
 // Dashboard Components
 import {
@@ -584,6 +585,15 @@ export default function ParentDashboard() {
           totalSessions={sessions.length}
           monthlyHours={`${monthlyHours}h`}
           avgProgress={avgProgress}
+        />
+
+        {/* Student Media Gallery - Netflix Style */}
+        <StudentMediaGallery
+          className="mb-8"
+          onUpload={() => {
+            // TODO: Implement upload modal
+            console.log('Upload media clicked');
+          }}
         />
 
         {/* Content based on active tab */}
