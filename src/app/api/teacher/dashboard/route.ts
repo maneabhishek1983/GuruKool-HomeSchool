@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
       .select(
         `
         student_id,
-        students:student_id (id, name, grade, country)
+        students:student_id (id, name, grade, country, parent_id)
       `
       )
       .eq('teacher_id', teacherId)
@@ -133,19 +133,27 @@ export async function GET(request: NextRequest) {
       const studentsData = assignment.students as unknown;
       const studentData = Array.isArray(studentsData)
         ? (studentsData[0] as
-            | { id: string; name: string; grade: string; country: string }
+            | {
+                id: string;
+                name: string;
+                grade: string;
+                country: string;
+                parent_id: string;
+              }
             | undefined)
         : (studentsData as {
             id: string;
             name: string;
             grade: string;
             country: string;
+            parent_id: string;
           } | null);
       return {
         id: studentData?.id || assignment.student_id,
         name: studentData?.name || 'Unknown',
         grade: studentData?.grade || 'N/A',
         country: studentData?.country || 'N/A',
+        parentId: studentData?.parent_id || '',
         progress: Math.floor(Math.random() * 20) + 80, // TODO: Calculate real progress
       };
     });

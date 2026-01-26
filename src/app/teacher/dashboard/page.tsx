@@ -36,6 +36,7 @@ type TabId = 'checkin' | 'timesheet' | 'overview' | 'data-sheets' | 'sessions';
 const tabs = [
   { id: 'checkin' as TabId, label: 'Check-In/Out', icon: '📍' },
   { id: 'timesheet' as TabId, label: 'Timesheet Report', icon: '📊' },
+  { id: 'data-sheets' as TabId, label: 'Data Sheets', icon: '📝' },
   { id: 'overview' as TabId, label: 'Overview', icon: '📈' },
   { id: 'sessions' as TabId, label: 'Sessions', icon: '📅' },
 ];
@@ -640,8 +641,9 @@ export default function TeacherDashboard() {
               exit={{ opacity: 0, y: -20 }}
             >
               <DataSheetsManager
-                teacherId={user?.id || 'teacher-1'}
+                teacherId={user?.id || ''}
                 selectedDate={new Date().toISOString().split('T')[0] || ''}
+                assignedStudents={assignedStudents}
               />
             </motion.div>
           )}
