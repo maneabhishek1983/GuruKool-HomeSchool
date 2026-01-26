@@ -1,5 +1,18 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, getSupabaseAdmin } from '@/lib/supabase';
 import QRCode from 'qrcode';
+
+// Helper to get the appropriate Supabase client
+// Uses admin client on server-side for bypassing RLS
+function getServerSupabase() {
+  if (typeof window === 'undefined') {
+    try {
+      return getSupabaseAdmin();
+    } catch {
+      return supabase;
+    }
+  }
+  return supabase;
+}
 
 export interface TeacherQRCode {
   id: string;
@@ -213,6 +226,8 @@ export class TeacherQRService {
     notes?: string
   ): Promise<TeacherSession | null> {
     try {
+      // Use admin client on server-side to bypass RLS
+      const db = getServerSupabase();
       let qrCode;
 
       // Check if it's the new simple format: GK:{uuid}
@@ -220,7 +235,7 @@ export class TeacherQRService {
         const qrCodeId = qrData.substring(3); // Remove 'GK:' prefix
 
         // Look up QR code by ID
-        const { data, error } = await supabase
+        const { data, error } = await db
           .from('teacher_qr_codes')
           .select('*')
           .eq('id', qrCodeId)
@@ -228,7 +243,7 @@ export class TeacherQRService {
           .single();
 
         if (error || !data) {
-          throw new Error('QR code not found or inactive');
+          throw new Error(`QR code not found or inactive (ID: ${qrCodeId})`);
         }
         qrCode = data;
       } else {
@@ -241,7 +256,7 @@ export class TeacherQRService {
           }
 
           // Look up QR code by teacher/student/parent IDs
-          const { data, error } = await supabase
+          const { data, error } = await db
             .from('teacher_qr_codes')
             .select('*')
             .eq('teacher_id', parsedData.teacherId)
@@ -255,6 +270,9 @@ export class TeacherQRService {
           }
           qrCode = data;
         } catch (parseError) {
+          if (parseError instanceof Error && parseError.message.includes('QR code')) {
+            throw parseError;
+          }
           throw new Error('Invalid QR code format. Expected GK:{id} or valid JSON.');
         }
       }
@@ -270,18 +288,18 @@ export class TeacherQRService {
         qr_code_used: qrCode.id,
       };
 
-      const { data: session, error: sessionError } = await supabase
+      const { data: session, error: sessionError } = await db
         .from('teacher_sessions')
         .insert(sessionData)
         .select()
         .single();
 
       if (sessionError) {
-        throw sessionError;
+        throw new Error(`Failed to create session: ${sessionError.message}`);
       }
 
       // Update QR code usage
-      await supabase
+      await db
         .from('teacher_qr_codes')
         .update({
           last_used: new Date().toISOString(),
@@ -292,7 +310,8 @@ export class TeacherQRService {
       return session;
     } catch (error) {
       console.error('Error validating QR code and creating session:', error);
-      return null;
+      // Re-throw the error so the API can show the specific message
+      throw error;
     }
   }
 
