@@ -20,10 +20,12 @@ interface LiquidLearningLayoutProps {
 // Animated mesh gradient orbs
 function MeshBackgroundOrbs({ theme }: { theme: string }) {
   const orbColors = {
-    primary: ['bg-sky-500/30', 'bg-violet-500/30', 'bg-fuchsia-500/30'],
+    // GuruKool brand theme - Professional blue & teal
+    primary: ['bg-blue-500/30', 'bg-teal-500/30', 'bg-amber-500/20'],
+    gurukool: ['bg-blue-600/30', 'bg-teal-500/30', 'bg-amber-400/20'],
     sunset: ['bg-amber-500/30', 'bg-red-500/30', 'bg-pink-500/30'],
-    ocean: ['bg-cyan-500/30', 'bg-blue-500/30', 'bg-violet-500/30'],
-    forest: ['bg-green-500/30', 'bg-emerald-500/30', 'bg-cyan-500/30'],
+    ocean: ['bg-cyan-500/30', 'bg-blue-500/30', 'bg-teal-500/30'],
+    forest: ['bg-green-500/30', 'bg-emerald-500/30', 'bg-teal-500/30'],
     aurora: ['bg-violet-500/30', 'bg-pink-500/30', 'bg-cyan-500/30'],
   };
 
@@ -273,16 +275,18 @@ export function GlassStatCard({
   className?: string;
 }) {
   const colorClasses = {
-    primary: 'from-sky-500 to-blue-600',
-    secondary: 'from-violet-500 to-purple-600',
+    // GuruKool brand colors
+    primary: 'from-blue-600 to-blue-500',
+    secondary: 'from-teal-500 to-teal-400',
     success: 'from-green-500 to-emerald-600',
     warning: 'from-amber-500 to-orange-600',
     error: 'from-red-500 to-rose-600',
   };
 
   const iconBgClasses = {
-    primary: 'bg-sky-100 text-sky-600',
-    secondary: 'bg-violet-100 text-violet-600',
+    // GuruKool brand colors
+    primary: 'bg-blue-100 text-blue-600',
+    secondary: 'bg-teal-100 text-teal-600',
     success: 'bg-green-100 text-green-600',
     warning: 'bg-amber-100 text-amber-600',
     error: 'bg-red-100 text-red-600',
@@ -384,10 +388,12 @@ export function LiquidButton({
   className?: string;
 } & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'style'>) {
   const variantClasses = {
+    // GuruKool brand primary - Professional blue
     primary:
-      'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/30',
+      'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30',
+    // GuruKool secondary - Teal/growth
     secondary:
-      'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30',
+      'bg-gradient-to-r from-teal-500 to-teal-400 text-white shadow-lg shadow-teal-500/25 hover:shadow-xl hover:shadow-teal-500/30',
     success:
       'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/30',
     glass:
