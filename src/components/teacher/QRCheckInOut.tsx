@@ -62,7 +62,8 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
 
     // Check for new simple format: GK:{uuid}
     if (data.startsWith('GK:')) {
-      // Valid simple format, proceed to action selection
+      // Valid simple format, refresh active session state and proceed
+      await checkActiveCheckIn();
       setStep('select_action');
       return;
     }
@@ -73,7 +74,8 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
 
       // Check if it's the TeacherQRService format
       if (parsedData.type === 'teacher_auth') {
-        // Valid format, proceed to action selection
+        // Valid format, refresh active session state and proceed
+        await checkActiveCheckIn();
         setStep('select_action');
         return;
       }
@@ -87,6 +89,7 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
         return;
       }
 
+      await checkActiveCheckIn();
       setStep('select_action');
     } catch (err) {
       setError('Invalid QR code format. Please scan a valid QR code.');

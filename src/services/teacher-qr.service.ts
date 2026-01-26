@@ -277,37 +277,91 @@ export class TeacherQRService {
         }
       }
 
-      // Create session using data from database
-      const sessionData = {
-        teacher_id: qrCode.teacher_id,
-        student_id: qrCode.student_id,
-        parent_id: qrCode.parent_id,
-        session_type: sessionType,
-        location: location || {},
-        notes: notes || '',
-        qr_code_used: qrCode.id,
-      };
-
-      const { data: session, error: sessionError } = await db
+      // Check for existing active session for this teacher
+      const { data: existingSession } = await db
         .from('teacher_sessions')
-        .insert(sessionData)
-        .select()
+        .select('*')
+        .eq('teacher_id', qrCode.teacher_id)
+        .is('session_end', null)
+        .order('session_start', { ascending: false })
+        .limit(1)
         .single();
 
-      if (sessionError) {
-        throw new Error(`Failed to create session: ${sessionError.message}`);
+      if (sessionType === 'sign_in') {
+        // SIGN IN: Prevent duplicate active sessions
+        if (existingSession) {
+          throw new Error('You already have an active session. Please check out first.');
+        }
+
+        // Create new session
+        const sessionData = {
+          teacher_id: qrCode.teacher_id,
+          student_id: qrCode.student_id,
+          parent_id: qrCode.parent_id,
+          session_type: sessionType,
+          session_start: new Date().toISOString(),
+          location: location || {},
+          notes: notes || '',
+          qr_code_used: qrCode.id,
+        };
+
+        const { data: session, error: sessionError } = await db
+          .from('teacher_sessions')
+          .insert(sessionData)
+          .select()
+          .single();
+
+        if (sessionError) {
+          throw new Error(`Failed to create session: ${sessionError.message}`);
+        }
+
+        // Update QR code usage
+        await db
+          .from('teacher_qr_codes')
+          .update({
+            last_used: new Date().toISOString(),
+            usage_count: qrCode.usage_count + 1,
+          })
+          .eq('id', qrCode.id);
+
+        return session;
+      } else {
+        // SIGN OUT: Update existing active session
+        if (!existingSession) {
+          throw new Error('No active session found. Please check in first.');
+        }
+
+        const sessionEnd = new Date();
+        const sessionStart = new Date(existingSession.session_start);
+        const durationMinutes = Math.round((sessionEnd.getTime() - sessionStart.getTime()) / 60000);
+
+        const { data: updatedSession, error: updateError } = await db
+          .from('teacher_sessions')
+          .update({
+            session_end: sessionEnd.toISOString(),
+            duration_minutes: durationMinutes,
+            session_type: 'sign_out',
+            notes: notes || existingSession.notes,
+          })
+          .eq('id', existingSession.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          throw new Error(`Failed to end session: ${updateError.message}`);
+        }
+
+        // Update QR code usage
+        await db
+          .from('teacher_qr_codes')
+          .update({
+            last_used: new Date().toISOString(),
+            usage_count: qrCode.usage_count + 1,
+          })
+          .eq('id', qrCode.id);
+
+        return updatedSession;
       }
-
-      // Update QR code usage
-      await db
-        .from('teacher_qr_codes')
-        .update({
-          last_used: new Date().toISOString(),
-          usage_count: qrCode.usage_count + 1,
-        })
-        .eq('id', qrCode.id);
-
-      return session;
     } catch (error) {
       console.error('Error validating QR code and creating session:', error);
       // Re-throw the error so the API can show the specific message
