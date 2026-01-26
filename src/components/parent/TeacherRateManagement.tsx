@@ -24,7 +24,7 @@ const RATE_TYPES = [
   { value: 'session', label: 'Per Session' },
 ];
 
-const CURRENCIES = ['USD', 'GBP', 'EUR', 'INR'];
+const CURRENCIES = ['GBP', 'USD', 'EUR', 'INR'];
 
 export default function TeacherRateManagement({
   subjects,
@@ -48,7 +48,7 @@ export default function TeacherRateManagement({
       subject: availableSubjects[0] || '',
       rate_type: 'hourly',
       rate_amount: 0,
-      currency: 'USD',
+      currency: 'GBP',
       notes: '',
     };
 

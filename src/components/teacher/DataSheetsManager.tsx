@@ -13,14 +13,24 @@ import {
 import { DataSheetsService } from '@/services/data-sheets.service';
 import { SyllabusService } from '@/services/syllabus.service';
 
+interface AssignedStudent {
+  id: string;
+  name: string;
+  grade: string;
+  country: string;
+  parentId?: string;
+}
+
 interface DataSheetsManagerProps {
   teacherId: string;
   selectedDate?: string;
+  assignedStudents?: AssignedStudent[];
 }
 
 export const DataSheetsManager: React.FC<DataSheetsManagerProps> = ({
   teacherId,
   selectedDate = new Date().toISOString().split('T')[0],
+  assignedStudents: propStudents,
 }) => {
   const [dataSheets, setDataSheets] = useState<DataSheet[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -36,7 +46,8 @@ export const DataSheetsManager: React.FC<DataSheetsManagerProps> = ({
   useEffect(() => {
     loadDataSheets();
     loadStudents();
-  }, [teacherId, selectedDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teacherId, selectedDate, propStudents]);
 
   useEffect(() => {
     if (selectedSheet) {
@@ -61,20 +72,19 @@ export const DataSheetsManager: React.FC<DataSheetsManagerProps> = ({
 
   const loadStudents = async () => {
     try {
-      // This would typically come from teacher assignments
-      // For now, using mock data - in real implementation, get from teacher assignments
-      const mockStudents: Student[] = [
-        {
-          id: '770e8400-e29b-41d4-a716-446655440001',
-          parentId: '550e8400-e29b-41d4-a716-446655440002',
-          name: 'Emma Johnson',
-          age: 6,
-          country: 'UK',
-          gradeLevel: 'Year 1',
+      // Use students passed from parent component if available
+      if (propStudents && propStudents.length > 0) {
+        const formattedStudents: Student[] = propStudents.map(s => ({
+          id: s.id,
+          parentId: s.parentId || '',
+          name: s.name,
+          age: 0, // Not needed for data sheets
+          country: s.country,
+          gradeLevel: s.grade,
           gradeSystem: 'uk_year',
           learningPreferences: {
             learningStyle: 'visual',
-            interests: ['mathematics', 'art'],
+            interests: [],
             attentionSpan: 'medium',
             preferredTime: 'morning',
           },
@@ -82,9 +92,42 @@ export const DataSheetsManager: React.FC<DataSheetsManagerProps> = ({
           academicStandards: {},
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-        },
-      ];
-      setStudents(mockStudents);
+        }));
+        setStudents(formattedStudents);
+        return;
+      }
+
+      // Fetch assigned students from the teacher dashboard API
+      const response = await fetch(
+        `/api/teacher/dashboard?userId=${teacherId}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (data.students && data.students.length > 0) {
+          const formattedStudents: Student[] = data.students.map(
+            (s: AssignedStudent) => ({
+              id: s.id,
+              parentId: s.parentId || '',
+              name: s.name,
+              age: 0,
+              country: s.country,
+              gradeLevel: s.grade,
+              gradeSystem: 'uk_year',
+              learningPreferences: {
+                learningStyle: 'visual',
+                interests: [],
+                attentionSpan: 'medium',
+                preferredTime: 'morning',
+              },
+              specialNeeds: [],
+              academicStandards: {},
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            })
+          );
+          setStudents(formattedStudents);
+        }
+      }
     } catch (error) {
       console.error('Error loading students:', error);
     }
