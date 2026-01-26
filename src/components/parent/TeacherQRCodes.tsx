@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TeacherQRService, TeacherQRCode } from '@/services/teacher-qr.service';
+import { supabase } from '@/lib/supabase';
 
 interface TeacherQRCodesProps {
   teacherId: string;
@@ -27,6 +28,64 @@ export default function TeacherQRCodes({
   const [selectedQRCode, setSelectedQRCode] =
     useState<QRCodeWithDetails | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
+  const [sessionNotification, setSessionNotification] = useState<{
+    type: 'check_in' | 'check_out';
+    message: string;
+  } | null>(null);
+
+  // Real-time subscription for session updates
+  useEffect(() => {
+    if (!showQRModal || !selectedQRCode) return;
+
+    // Subscribe to teacher_sessions changes for this QR code
+    const channel = supabase
+      .channel(`qr-session-${selectedQRCode.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'teacher_sessions',
+          filter: `qr_code_used=eq.${selectedQRCode.id}`,
+        },
+        (payload) => {
+          console.log('Session update received:', payload);
+
+          if (payload.eventType === 'INSERT') {
+            // Teacher checked in
+            setSessionNotification({
+              type: 'check_in',
+              message: 'Teacher has checked in! Session started.',
+            });
+            // Close modal after showing notification
+            setTimeout(() => {
+              setShowQRModal(false);
+              setSessionNotification(null);
+            }, 2000);
+          } else if (payload.eventType === 'UPDATE') {
+            const newData = payload.new as { session_end?: string };
+            if (newData.session_end) {
+              // Teacher checked out
+              setSessionNotification({
+                type: 'check_out',
+                message: 'Teacher has checked out! Session ended.',
+              });
+              // Close modal after showing notification
+              setTimeout(() => {
+                setShowQRModal(false);
+                setSessionNotification(null);
+              }, 2000);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription when modal closes
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [showQRModal, selectedQRCode]);
 
   useEffect(() => {
     loadQRCodes();
@@ -229,6 +288,39 @@ export default function TeacherQRCodes({
             animate={{ opacity: 1, scale: 1 }}
             className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
           >
+            {/* Real-time Session Notification */}
+            {sessionNotification && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`mb-4 p-4 rounded-lg ${
+                  sessionNotification.type === 'check_in'
+                    ? 'bg-green-100 border border-green-300'
+                    : 'bg-blue-100 border border-blue-300'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className={`text-3xl ${
+                    sessionNotification.type === 'check_in' ? 'animate-bounce' : ''
+                  }`}>
+                    {sessionNotification.type === 'check_in' ? '✅' : '👋'}
+                  </div>
+                  <div>
+                    <p className={`font-semibold ${
+                      sessionNotification.type === 'check_in'
+                        ? 'text-green-800'
+                        : 'text-blue-800'
+                    }`}>
+                      {sessionNotification.message}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      This window will close automatically...
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">QR Code</h3>
               <button
@@ -255,6 +347,14 @@ export default function TeacherQRCodes({
               <div className="bg-gray-100 p-4 rounded-lg mb-4">
                 <QRCodeDisplay qrCodeId={selectedQRCode.id} />
               </div>
+
+              {/* Real-time status indicator */}
+              {!sessionNotification && (
+                <div className="flex items-center justify-center space-x-2 mb-4 text-sm text-gray-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>Waiting for teacher to scan...</span>
+                </div>
+              )}
 
               <div className="space-y-2 text-sm text-gray-600">
                 <p>
