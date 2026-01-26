@@ -91,7 +91,8 @@ export default function SessionsList({
   };
 
   const getTeacherName = (teacherId: string): string => {
-    const teacher = teachers.find((t) => t.id === teacherId);
+    // Match by teachers.id OR teachers.userId (sessions can have either)
+    const teacher = teachers.find((t) => t.id === teacherId || t.userId === teacherId);
     return teacher?.name || 'Unknown Teacher';
   };
 
