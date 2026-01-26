@@ -29,12 +29,27 @@ import {
   SessionsList,
 } from '@/components/parent/dashboard';
 
+interface DashboardStatsData {
+  avgProgress: number;
+  monthlyHours: number;
+  studentProgress: {
+    studentId: string;
+    studentName: string;
+    progress: number;
+  }[];
+}
+
 export default function ParentDashboard() {
   const { user, logout } = useAuthContext();
   const router = useRouter();
   const [students, setStudents] = useState<StudentProfile[]>([]);
   const [teachers, setTeachers] = useState<TeacherProfile[]>([]);
   const [sessions, setSessions] = useState<TimesheetEntry[]>([]);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStatsData>({
+    avgProgress: 0,
+    monthlyHours: 0,
+    studentProgress: [],
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,7 +66,9 @@ export default function ParentDashboard() {
   );
 
   // Active tab for dashboard sections
-  const [activeTab, setActiveTab] = useState<'overview' | 'sessions'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'sessions'>(
+    'overview'
+  );
 
   useEffect(() => {
     if (user?.id) {
@@ -77,6 +94,24 @@ export default function ParentDashboard() {
       setStudents(studentsData);
       setTeachers(teachersData);
       setSessions(sessionsData);
+
+      // Fetch real dashboard stats (avgProgress, monthlyHours)
+      try {
+        const statsResponse = await fetch(
+          `/api/parent/dashboard?parentId=${user.id}`
+        );
+        if (statsResponse.ok) {
+          const stats = await statsResponse.json();
+          setDashboardStats({
+            avgProgress: stats.avgProgress || 0,
+            monthlyHours: stats.monthlyHours || 0,
+            studentProgress: stats.studentProgress || [],
+          });
+        }
+      } catch (statsErr) {
+        console.error('Error loading dashboard stats:', statsErr);
+        // Non-critical, continue with defaults
+      }
     } catch (err) {
       console.error('Error loading data:', err);
       setError('Failed to load data. Please try refreshing the page.');
@@ -125,8 +160,8 @@ export default function ParentDashboard() {
         );
 
         if (updatedStudent) {
-          setStudents((prev) =>
-            prev.map((s) => (s.id === selectedStudent.id ? updatedStudent : s))
+          setStudents(prev =>
+            prev.map(s => (s.id === selectedStudent.id ? updatedStudent : s))
           );
           setShowCreateStudentModal(false);
           setSelectedStudent(null);
@@ -140,7 +175,7 @@ export default function ParentDashboard() {
         );
 
         if (newStudent) {
-          setStudents((prev) => [newStudent, ...prev]);
+          setStudents(prev => [newStudent, ...prev]);
           setShowCreateStudentModal(false);
         } else {
           setError('Failed to create student. Please try again.');
@@ -170,7 +205,7 @@ export default function ParentDashboard() {
       );
 
       if (newTeacher) {
-        setTeachers((prev) => [newTeacher, ...prev]);
+        setTeachers(prev => [newTeacher, ...prev]);
         setShowCreateTeacherModal(false);
       } else {
         setError('Failed to create teacher. Please try again.');
@@ -190,7 +225,7 @@ export default function ParentDashboard() {
       const success = await DatabaseService.deleteStudent(studentId);
 
       if (success) {
-        setStudents((prev) => prev.filter((student) => student.id !== studentId));
+        setStudents(prev => prev.filter(student => student.id !== studentId));
       } else {
         setError('Failed to delete student. Please try again.');
       }
@@ -209,7 +244,7 @@ export default function ParentDashboard() {
       const success = await DatabaseService.deleteTeacher(teacherId);
 
       if (success) {
-        setTeachers((prev) => prev.filter((teacher) => teacher.id !== teacherId));
+        setTeachers(prev => prev.filter(teacher => teacher.id !== teacherId));
       } else {
         setError('Failed to delete teacher. Please try again.');
       }
@@ -234,11 +269,14 @@ export default function ParentDashboard() {
   };
 
   // Calculate stats
-  const activeSessions = sessions.filter((s) => s.status === 'checked_in').length;
+  const activeSessions = sessions.filter(s => s.status === 'checked_in').length;
   const totalSessionHours = Math.round(
     sessions.reduce((sum, s) => sum + (s.duration_minutes || 0), 0) / 60
   );
-  const avgProgress = students.length > 0 ? 85 : 0; // TODO: Calculate from real progress data
+  // Use real progress from datasheets (fetched from API)
+  const avgProgress = dashboardStats.avgProgress;
+  // Use monthly hours from API (filters to current month)
+  const monthlyHours = dashboardStats.monthlyHours;
 
   // FAB actions
   const fabActions = [
@@ -449,17 +487,22 @@ export default function ParentDashboard() {
         {/* Dashboard Hero */}
         <ParentDashboardHero
           parentName={user?.name}
-          students={students.map((s) => ({
-            id: s.id,
-            name: s.name,
-            progress: avgProgress,
-            activeSession: sessions.some(
-              (sess) =>
-                sess.student_id === s.id && sess.status === 'checked_in'
-            ),
-          }))}
+          students={students.map(s => {
+            // Get individual student progress from API data
+            const studentData = dashboardStats.studentProgress.find(
+              sp => sp.studentId === s.id
+            );
+            return {
+              id: s.id,
+              name: s.name,
+              progress: studentData?.progress || 0,
+              activeSession: sessions.some(
+                sess => sess.student_id === s.id && sess.status === 'checked_in'
+              ),
+            };
+          })}
           totalStudents={students.length}
-          weeklyHours={totalSessionHours}
+          weeklyHours={monthlyHours}
           onAddStudent={() => setShowCreateStudentModal(true)}
           onViewProgress={() => setActiveTab('sessions')}
           className="mb-8"
@@ -514,7 +557,7 @@ export default function ParentDashboard() {
 
         {/* Tab Navigation */}
         <div className="flex items-center gap-2 mb-8 bg-white/80 backdrop-blur-sm rounded-xl p-1 border border-slate-200/50 w-fit">
-          {(['overview', 'sessions'] as const).map((tab) => (
+          {(['overview', 'sessions'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -539,7 +582,7 @@ export default function ParentDashboard() {
           totalStudents={students.length}
           totalTeachers={teachers.length}
           totalSessions={sessions.length}
-          monthlyHours={`${totalSessionHours}h`}
+          monthlyHours={`${monthlyHours}h`}
           avgProgress={avgProgress}
         />
 
@@ -552,11 +595,11 @@ export default function ParentDashboard() {
               onAddStudent={() => setShowCreateStudentModal(true)}
               onEditStudent={handleEditStudent}
               onDeleteStudent={handleDeleteStudent}
-              onViewDataSheets={(student) => {
+              onViewDataSheets={student => {
                 setSelectedStudent(student);
                 setShowDataSheetsModal(true);
               }}
-              onAssignTeacher={(student) => {
+              onAssignTeacher={student => {
                 setSelectedStudent(student);
                 setShowAssignmentModal(true);
               }}

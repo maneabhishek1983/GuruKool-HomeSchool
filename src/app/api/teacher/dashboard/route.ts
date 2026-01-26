@@ -70,12 +70,14 @@ export async function GET(request: NextRequest) {
     // Get upcoming/next session
     const { data: upcomingSessions } = await supabase
       .from('teacher_sessions')
-      .select(`
+      .select(
+        `
         id,
         session_start,
         student_id,
         students:student_id (name)
-      `)
+      `
+      )
       .eq('teacher_id', teacherId)
       .is('session_end', null)
       .order('session_start', { ascending: true })
@@ -84,19 +86,26 @@ export async function GET(request: NextRequest) {
     // Get assigned students with details
     const { data: assignedStudents } = await supabase
       .from('teacher_qr_codes')
-      .select(`
+      .select(
+        `
         student_id,
         students:student_id (id, name, grade, country)
-      `)
+      `
+      )
       .eq('teacher_id', teacherId)
       .eq('is_active', true)
       .limit(10);
 
     // Format upcoming session
     let upcomingSession = null;
-    if (upcomingSessions && upcomingSessions.length > 0) {
-      const session = upcomingSessions[0];
-      const studentData = session.students as { name: string } | null;
+    const firstSession = upcomingSessions?.[0];
+    if (firstSession) {
+      const session = firstSession;
+      // Handle both single object and array format from Supabase join
+      const studentsData = session.students as unknown;
+      const studentData = Array.isArray(studentsData)
+        ? (studentsData[0] as { name: string } | undefined)
+        : (studentsData as { name: string } | null);
       const sessionTime = new Date(session.session_start);
       const now = new Date();
       const diffMs = sessionTime.getTime() - now.getTime();
@@ -119,8 +128,19 @@ export async function GET(request: NextRequest) {
     }
 
     // Format students list
-    const students = (assignedStudents || []).map((assignment) => {
-      const studentData = assignment.students as { id: string; name: string; grade: string; country: string } | null;
+    const students = (assignedStudents || []).map(assignment => {
+      // Handle both single object and array format from Supabase join
+      const studentsData = assignment.students as unknown;
+      const studentData = Array.isArray(studentsData)
+        ? (studentsData[0] as
+            | { id: string; name: string; grade: string; country: string }
+            | undefined)
+        : (studentsData as {
+            id: string;
+            name: string;
+            grade: string;
+            country: string;
+          } | null);
       return {
         id: studentData?.id || assignment.student_id,
         name: studentData?.name || 'Unknown',
@@ -135,7 +155,9 @@ export async function GET(request: NextRequest) {
         assignedStudents: assignedStudentsCount || 0,
         activeSessions: activeSessionsCount || 0,
         totalHoursThisWeek: totalHours,
-        completedSessionsThisWeek: (weekSessions || []).filter(s => s.session_end).length,
+        completedSessionsThisWeek: (weekSessions || []).filter(
+          s => s.session_end
+        ).length,
       },
       upcomingSession,
       students,

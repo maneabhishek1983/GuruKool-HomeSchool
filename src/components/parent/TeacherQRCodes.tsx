@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TeacherQRService, TeacherQRCode } from '@/services/teacher-qr.service';
 import { supabase } from '@/lib/supabase';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 interface TeacherQRCodesProps {
   teacherId: string;
@@ -35,7 +36,9 @@ export default function TeacherQRCodes({
 
   // Real-time subscription for session updates
   useEffect(() => {
-    if (!showQRModal || !selectedQRCode) return;
+    if (!showQRModal || !selectedQRCode) {
+      return;
+    }
 
     // Subscribe to teacher_sessions changes for this QR code
     const channel = supabase
@@ -48,7 +51,9 @@ export default function TeacherQRCodes({
           table: 'teacher_sessions',
           filter: `qr_code_used=eq.${selectedQRCode.id}`,
         },
-        (payload) => {
+        (
+          payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>
+        ) => {
           console.log('Session update received:', payload);
 
           if (payload.eventType === 'INSERT') {
@@ -300,17 +305,23 @@ export default function TeacherQRCodes({
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <div className={`text-3xl ${
-                    sessionNotification.type === 'check_in' ? 'animate-bounce' : ''
-                  }`}>
+                  <div
+                    className={`text-3xl ${
+                      sessionNotification.type === 'check_in'
+                        ? 'animate-bounce'
+                        : ''
+                    }`}
+                  >
                     {sessionNotification.type === 'check_in' ? '✅' : '👋'}
                   </div>
                   <div>
-                    <p className={`font-semibold ${
-                      sessionNotification.type === 'check_in'
-                        ? 'text-green-800'
-                        : 'text-blue-800'
-                    }`}>
+                    <p
+                      className={`font-semibold ${
+                        sessionNotification.type === 'check_in'
+                          ? 'text-green-800'
+                          : 'text-blue-800'
+                      }`}
+                    >
                       {sessionNotification.message}
                     </p>
                     <p className="text-sm text-gray-600">
@@ -400,8 +411,12 @@ export default function TeacherQRCodes({
                 <button
                   onClick={async () => {
                     try {
-                      await navigator.clipboard.writeText(selectedQRCode.qr_code_data);
-                      alert('✅ Code copied!\n\nShare this with the teacher to paste in the manual entry form.');
+                      await navigator.clipboard.writeText(
+                        selectedQRCode.qr_code_data
+                      );
+                      alert(
+                        '✅ Code copied!\n\nShare this with the teacher to paste in the manual entry form.'
+                      );
                     } catch (err) {
                       // Fallback for older browsers
                       const textArea = document.createElement('textarea');
@@ -410,7 +425,9 @@ export default function TeacherQRCodes({
                       textArea.select();
                       document.execCommand('copy');
                       document.body.removeChild(textArea);
-                      alert('✅ Code copied!\n\nShare this with the teacher to paste in the manual entry form.');
+                      alert(
+                        '✅ Code copied!\n\nShare this with the teacher to paste in the manual entry form.'
+                      );
                     }
                   }}
                   className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors font-medium"
@@ -418,7 +435,8 @@ export default function TeacherQRCodes({
                   📋 Copy Code for Teacher
                 </button>
                 <p className="text-xs text-gray-500 text-center">
-                  If camera scanning doesn't work, copy this code and share it with the teacher
+                  If camera scanning doesn't work, copy this code and share it
+                  with the teacher
                 </p>
                 <button
                   onClick={() => {

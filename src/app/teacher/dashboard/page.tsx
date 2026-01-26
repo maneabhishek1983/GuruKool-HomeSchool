@@ -54,13 +54,15 @@ export default function TeacherDashboard() {
     studentName: string;
     time: string;
   } | null>(null);
-  const [assignedStudents, setAssignedStudents] = useState<Array<{
-    id: string;
-    name: string;
-    grade: string;
-    country: string;
-    progress: number;
-  }>>([]);
+  const [assignedStudents, setAssignedStudents] = useState<
+    Array<{
+      id: string;
+      name: string;
+      grade: string;
+      country: string;
+      progress: number;
+    }>
+  >([]);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   useEffect(() => {
@@ -70,7 +72,9 @@ export default function TeacherDashboard() {
   }, [user]);
 
   const loadDashboardStats = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      return;
+    }
 
     try {
       setIsLoadingStats(true);
@@ -297,7 +301,7 @@ export default function TeacherDashboard() {
           teacherName={user.name}
           activeSessions={dashboardStats.activeSessions}
           totalHours={dashboardStats.totalHoursThisWeek}
-          upcomingSession={upcomingSession || undefined}
+          {...(upcomingSession ? { upcomingSession } : {})}
           onCheckIn={() => setActiveTab('checkin')}
           onViewSchedule={() => setActiveTab('sessions')}
           className="mb-8"
@@ -444,7 +448,9 @@ export default function TeacherDashboard() {
                     ) : assignedStudents.length === 0 ? (
                       <div className="text-center py-8">
                         <div className="text-4xl mb-3">👨‍🎓</div>
-                        <p className="text-slate-600">No students assigned yet</p>
+                        <p className="text-slate-600">
+                          No students assigned yet
+                        </p>
                         <p className="text-sm text-slate-500 mt-1">
                           Students will appear here once a parent assigns you
                         </p>
@@ -648,7 +654,11 @@ export default function TeacherDashboard() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              <TimesheetManager teacherId={user?.id || 'teacher-1'} />
+              <TimesheetManager
+                teacherId={user?.id || ''}
+                userId={user?.id || ''}
+                onStartSession={() => setActiveTab('checkin')}
+              />
             </motion.div>
           )}
         </AnimatePresence>
