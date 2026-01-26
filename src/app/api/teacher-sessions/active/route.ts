@@ -31,43 +31,27 @@ export async function GET(request: NextRequest) {
     // Step 1: Look up teacher record by user_id
     const { data: teacher, error: teacherError } = await supabase
       .from('teachers')
-      .select('id')
+      .select('id, user_id')
       .eq('user_id', userId)
       .single();
 
-    if (teacherError || !teacher) {
-      // No teacher record found - check timesheet_entries directly
-      // (in case they have old-style entries with user_id as teacher_id)
-      const { data: oldEntries } = await supabase
-        .from('timesheet_entries')
-        .select('*')
-        .eq('teacher_id', userId)
-        .eq('status', 'checked_in')
-        .order('check_in_time', { ascending: false })
-        .limit(1);
-
-      if (oldEntries && oldEntries.length > 0) {
-        return NextResponse.json({ activeSession: oldEntries[0] });
-      }
-
-      return NextResponse.json({ activeSession: null });
+    // Collect all possible teacher IDs to check
+    const teacherIdsToCheck: string[] = [userId]; // Always check userId directly
+    if (teacher?.id) {
+      teacherIdsToCheck.push(teacher.id);
     }
 
-    // Step 2: Query teacher_sessions for active session
+    // Step 2: Query teacher_sessions for active session using all possible IDs
     const { data: sessions, error: sessionsError } = await supabase
       .from('teacher_sessions')
       .select('*')
-      .eq('teacher_id', teacher.id)
+      .in('teacher_id', teacherIdsToCheck)
       .is('session_end', null)
       .order('session_start', { ascending: false })
       .limit(1);
 
     if (sessionsError) {
       console.error('Error querying teacher_sessions:', sessionsError);
-      return NextResponse.json(
-        { error: 'Failed to query sessions' },
-        { status: 500 }
-      );
     }
 
     if (sessions && sessions.length > 0) {
@@ -92,11 +76,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ activeSession });
     }
 
-    // Step 3: Also check timesheet_entries (for any synced entries)
+    // Step 3: Also check timesheet_entries using all possible IDs
     const { data: timesheetEntries } = await supabase
       .from('timesheet_entries')
       .select('*')
-      .eq('teacher_id', userId)
+      .in('teacher_id', teacherIdsToCheck)
       .eq('status', 'checked_in')
       .order('check_in_time', { ascending: false })
       .limit(1);
