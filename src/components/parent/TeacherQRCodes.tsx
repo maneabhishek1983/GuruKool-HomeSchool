@@ -30,9 +30,42 @@ export default function TeacherQRCodes({
     useState<QRCodeWithDetails | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
   const [sessionNotification, setSessionNotification] = useState<{
-    type: 'check_in' | 'check_out';
+    type: 'check_in' | 'check_out' | 'active';
     message: string;
   } | null>(null);
+
+  // Check for existing active session when modal opens
+  useEffect(() => {
+    if (!showQRModal || !selectedQRCode) {
+      return;
+    }
+
+    const checkActiveSession = async () => {
+      try {
+        // Query for active session (checked in but not checked out) for this QR code
+        const { data: activeSession } = await supabase
+          .from('teacher_sessions')
+          .select('id, session_start, teacher_id')
+          .eq('qr_code_used', selectedQRCode.id)
+          .is('session_end', null)
+          .order('session_start', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (activeSession) {
+          setSessionNotification({
+            type: 'active',
+            message: 'Teacher is currently checked in!',
+          });
+        }
+      } catch {
+        // No active session found, which is fine
+        console.log('No active session found for this QR code');
+      }
+    };
+
+    checkActiveSession();
+  }, [showQRModal, selectedQRCode]);
 
   // Real-time subscription for session updates
   useEffect(() => {
@@ -299,7 +332,7 @@ export default function TeacherQRCodes({
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`mb-4 p-4 rounded-lg ${
-                  sessionNotification.type === 'check_in'
+                  sessionNotification.type === 'check_in' || sessionNotification.type === 'active'
                     ? 'bg-green-100 border border-green-300'
                     : 'bg-blue-100 border border-blue-300'
                 }`}
@@ -312,21 +345,28 @@ export default function TeacherQRCodes({
                         : ''
                     }`}
                   >
-                    {sessionNotification.type === 'check_in' ? '✅' : '👋'}
+                    {sessionNotification.type === 'check_in' || sessionNotification.type === 'active' ? '✅' : '👋'}
                   </div>
                   <div>
                     <p
                       className={`font-semibold ${
-                        sessionNotification.type === 'check_in'
+                        sessionNotification.type === 'check_in' || sessionNotification.type === 'active'
                           ? 'text-green-800'
                           : 'text-blue-800'
                       }`}
                     >
                       {sessionNotification.message}
                     </p>
-                    <p className="text-sm text-gray-600">
-                      This window will close automatically...
-                    </p>
+                    {sessionNotification.type !== 'active' && (
+                      <p className="text-sm text-gray-600">
+                        This window will close automatically...
+                      </p>
+                    )}
+                    {sessionNotification.type === 'active' && (
+                      <p className="text-sm text-green-600">
+                        Session is in progress
+                      </p>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -380,95 +420,7 @@ export default function TeacherQRCodes({
                 </p>
               </div>
 
-              {/* QR Code Format Info */}
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-left">
-                <p className="text-xs font-semibold text-blue-800 mb-2">
-                  📱 QR Code Information
-                </p>
-                <div className="space-y-1 text-xs text-blue-700">
-                  <p>
-                    <strong>Type:</strong>{' '}
-                    <code className="bg-blue-100 px-1 py-0.5 rounded">
-                      teacher_auth
-                    </code>
-                  </p>
-                  <p>
-                    <strong>Format:</strong> JSON with HMAC-SHA256 signature
-                  </p>
-                  <p>
-                    <strong>Contains:</strong> Teacher ID, Student ID, Parent
-                    ID, Timestamp
-                  </p>
-                  <p>
-                    <strong>Security:</strong> Cryptographically signed and
-                    validated
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-6 space-y-2">
-                {/* Primary action - Copy code for teacher */}
-                <button
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(
-                        selectedQRCode.qr_code_data
-                      );
-                      alert(
-                        '✅ Code copied!\n\nShare this with the teacher to paste in the manual entry form.'
-                      );
-                    } catch (err) {
-                      // Fallback for older browsers
-                      const textArea = document.createElement('textarea');
-                      textArea.value = selectedQRCode.qr_code_data;
-                      document.body.appendChild(textArea);
-                      textArea.select();
-                      document.execCommand('copy');
-                      document.body.removeChild(textArea);
-                      alert(
-                        '✅ Code copied!\n\nShare this with the teacher to paste in the manual entry form.'
-                      );
-                    }
-                  }}
-                  className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors font-medium"
-                >
-                  📋 Copy Code for Teacher
-                </button>
-                <p className="text-xs text-gray-500 text-center">
-                  If camera scanning doesn't work, copy this code and share it
-                  with the teacher
-                </p>
-                <button
-                  onClick={() => {
-                    // Download QR code as image
-                    const link = document.createElement('a');
-                    link.download = `teacher-qr-${selectedQRCode.student_id}.png`;
-                    link.href =
-                      document.querySelector('canvas')?.toDataURL() || '';
-                    link.click();
-                  }}
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  📥 Download QR Code
-                </button>
-                <button
-                  onClick={() => {
-                    // Test QR code format
-                    try {
-                      const parsedData = JSON.parse(
-                        selectedQRCode.qr_code_data
-                      );
-                      alert(
-                        `✅ QR Code Valid!\n\nType: ${parsedData.type}\nTeacher ID: ${parsedData.teacherId}\nStudent ID: ${parsedData.studentId}\nParent ID: ${parsedData.parentId}\nTimestamp: ${new Date(parsedData.timestamp).toLocaleString()}\n\nSignature: ${parsedData.signature.substring(0, 16)}...`
-                      );
-                    } catch (err) {
-                      alert('❌ Invalid QR code format');
-                    }
-                  }}
-                  className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors"
-                >
-                  🧪 Test QR Code Format
-                </button>
+              <div className="mt-6">
                 <button
                   onClick={() => setShowQRModal(false)}
                   className="w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"

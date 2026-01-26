@@ -590,6 +590,7 @@ export default function ParentDashboard() {
         {/* Student Media Gallery - Netflix Style */}
         <StudentMediaGallery
           className="mb-8"
+          students={students.map(s => ({ id: s.id, name: s.name }))}
           onUpload={() => {
             // TODO: Implement upload modal
             console.log('Upload media clicked');

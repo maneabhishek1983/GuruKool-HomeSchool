@@ -17,7 +17,13 @@ interface MediaItem {
   uploaderName?: string;
 }
 
+interface StudentInfo {
+  id: string;
+  name: string;
+}
+
 interface StudentMediaGalleryProps {
+  students?: StudentInfo[];
   studentId?: string;
   studentName?: string;
   mediaItems?: MediaItem[];
@@ -25,46 +31,7 @@ interface StudentMediaGalleryProps {
   className?: string;
 }
 
-// Sample media data - in production, this would come from database
-const sampleMedia: MediaItem[] = [
-  {
-    id: '1',
-    type: 'photo',
-    url: '/api/placeholder/400/300',
-    title: 'Art Project Complete',
-    description: 'Finished watercolor painting of sunset',
-    date: '2026-01-25',
-    studentId: 'student-1',
-    studentName: 'Emma',
-    uploadedBy: 'teacher',
-    uploaderName: 'Mrs. Johnson',
-  },
-  {
-    id: '2',
-    type: 'video',
-    url: '/api/placeholder/400/300',
-    thumbnail: '/api/placeholder/400/300',
-    title: 'Piano Recital',
-    description: 'Playing Moonlight Sonata',
-    date: '2026-01-24',
-    studentId: 'student-1',
-    studentName: 'Emma',
-    uploadedBy: 'parent',
-    uploaderName: 'Dad',
-  },
-  {
-    id: '3',
-    type: 'photo',
-    url: '/api/placeholder/400/300',
-    title: 'Science Experiment',
-    description: 'Volcano eruption project',
-    date: '2026-01-23',
-    studentId: 'student-1',
-    studentName: 'Emma',
-    uploadedBy: 'teacher',
-    uploaderName: 'Mr. Smith',
-  },
-];
+// No sample data - gallery shows empty state until real media is uploaded
 
 // Row component for Netflix-style horizontal scroll
 function MediaRow({
@@ -528,6 +495,7 @@ function EmptyGallery({ onUpload }: { onUpload?: () => void }) {
 }
 
 export default function StudentMediaGallery({
+  students,
   studentId,
   studentName,
   mediaItems,
@@ -536,8 +504,8 @@ export default function StudentMediaGallery({
 }: StudentMediaGalleryProps) {
   const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
 
-  // Use provided media or sample data
-  const allMedia = mediaItems || sampleMedia;
+  // Use only provided media items - no sample data
+  const allMedia = mediaItems || [];
 
   // Filter by student if provided
   const filteredMedia = studentId
