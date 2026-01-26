@@ -45,8 +45,15 @@ export default function SessionsList({
     setError(null);
 
     try {
-      // Fetch all sessions for this parent
-      const entries = await TimesheetService.getParentTimesheet(parentId);
+      // Fetch all sessions for this parent using API (bypasses RLS)
+      const response = await fetch(`/api/teacher-sessions/parent?parentId=${parentId}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch sessions');
+      }
+
+      const entries = data.sessions || [];
 
       // Apply client-side filters
       let filteredEntries = entries;
