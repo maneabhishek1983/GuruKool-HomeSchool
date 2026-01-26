@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
 
 interface MediaItem {
   id: string;
@@ -28,6 +29,7 @@ interface StudentMediaGalleryProps {
   studentName?: string;
   mediaItems?: MediaItem[];
   onUpload?: () => void;
+  onMediaAdded?: (media: MediaItem) => void;
   className?: string;
 }
 
@@ -454,6 +456,365 @@ function MediaViewer({
   );
 }
 
+// Upload modal component
+function UploadModal({
+  students,
+  onClose,
+  onUploadComplete,
+}: {
+  students: StudentInfo[];
+  onClose: () => void;
+  onUploadComplete: (media: MediaItem) => void;
+}) {
+  const [selectedStudent, setSelectedStudent] = useState<StudentInfo | null>(
+    students.length === 1 ? students[0] || null : null
+  );
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Check file size (max 50MB)
+      if (file.size > 50 * 1024 * 1024) {
+        setError('File size must be less than 50MB');
+        return;
+      }
+
+      // Check file type
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+      if (!isImage && !isVideo) {
+        setError('Please select an image or video file');
+        return;
+      }
+
+      setSelectedFile(file);
+      setError(null);
+
+      // Create preview URL
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+
+      // Auto-generate title from filename if empty
+      if (!title) {
+        const fileName = file.name.replace(/\.[^/.]+$/, '');
+        setTitle(fileName.replace(/[-_]/g, ' '));
+      }
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile || !selectedStudent || !title) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const isVideo = selectedFile.type.startsWith('video/');
+      const mediaType = isVideo ? 'video' : 'photo';
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `${selectedStudent.id}/${Date.now()}.${fileExt}`;
+
+      // Try to upload to Supabase Storage
+      let mediaUrl = '';
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('student-media')
+        .upload(fileName, selectedFile, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (uploadError) {
+        // If bucket doesn't exist or upload fails, use local object URL
+        console.warn('Storage upload failed, using local URL:', uploadError);
+        mediaUrl = previewUrl || '';
+      } else {
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('student-media')
+          .getPublicUrl(uploadData.path);
+        mediaUrl = urlData.publicUrl;
+      }
+
+      // Create media item
+      const newMedia: MediaItem = {
+        id: `media-${Date.now()}`,
+        type: mediaType,
+        url: mediaUrl,
+        title: title,
+        ...(description ? { description } : {}),
+        date: new Date().toISOString(),
+        studentId: selectedStudent.id,
+        studentName: selectedStudent.name,
+        uploadedBy: 'parent',
+      };
+
+      // Save to database (optional - depends on whether media table exists)
+      try {
+        await supabase.from('student_media').insert({
+          id: newMedia.id,
+          student_id: newMedia.studentId,
+          type: newMedia.type,
+          url: newMedia.url,
+          title: newMedia.title,
+          description: newMedia.description,
+          uploaded_by: newMedia.uploadedBy,
+          created_at: newMedia.date,
+        });
+      } catch (dbError) {
+        // Table might not exist, continue anyway
+        console.warn('Could not save to database:', dbError);
+      }
+
+      onUploadComplete(newMedia);
+      onClose();
+    } catch (err) {
+      console.error('Upload error:', err);
+      setError('Failed to upload file. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Cleanup preview URL on unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-slate-900">Upload Media</h2>
+            <button
+              onClick={onClose}
+              className="text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Student Selection */}
+          {students.length > 1 && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Select Student *
+              </label>
+              <select
+                value={selectedStudent?.id || ''}
+                onChange={e => {
+                  const student = students.find(s => s.id === e.target.value);
+                  setSelectedStudent(student || null);
+                }}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Choose a student...</option>
+                {students.map(student => (
+                  <option key={student.id} value={student.id}>
+                    {student.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* File Selection */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Photo or Video *
+            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,video/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            {!selectedFile ? (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-blue-400 hover:bg-blue-50 transition-colors"
+              >
+                <svg
+                  className="w-12 h-12 mx-auto text-slate-400 mb-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <p className="text-slate-600">
+                  Click to select a photo or video
+                </p>
+                <p className="text-sm text-slate-400 mt-1">Max 50MB</p>
+              </button>
+            ) : (
+              <div className="relative">
+                {selectedFile.type.startsWith('video/') ? (
+                  <video
+                    src={previewUrl || ''}
+                    className="w-full h-48 object-cover rounded-lg"
+                    controls
+                  />
+                ) : (
+                  <img
+                    src={previewUrl || ''}
+                    alt="Preview"
+                    className="w-full h-48 object-cover rounded-lg"
+                  />
+                )}
+                <button
+                  onClick={() => {
+                    setSelectedFile(null);
+                    if (previewUrl) {
+                      URL.revokeObjectURL(previewUrl);
+                    }
+                    setPreviewUrl(null);
+                  }}
+                  className="absolute top-2 right-2 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center text-white hover:bg-black/80"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Title */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Title *
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="e.g., Math Practice Session"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          {/* Description */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Description (optional)
+            </label>
+            <textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="Add notes about this activity..."
+              rows={3}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleUpload}
+              disabled={
+                uploading || !selectedFile || !selectedStudent || !title
+              }
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {uploading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    />
+                  </svg>
+                  Upload
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 // Empty state component
 function EmptyGallery({ onUpload }: { onUpload?: () => void }) {
   return (
@@ -500,12 +861,35 @@ export default function StudentMediaGallery({
   studentName,
   mediaItems,
   onUpload,
+  onMediaAdded,
   className = '',
 }: StudentMediaGalleryProps) {
   const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [localMedia, setLocalMedia] = useState<MediaItem[]>([]);
 
-  // Use only provided media items - no sample data
-  const allMedia = mediaItems || [];
+  // Use only provided media items + locally added media
+  const allMedia = [...(mediaItems || []), ...localMedia];
+
+  const handleUploadComplete = useCallback(
+    (newMedia: MediaItem) => {
+      setLocalMedia(prev => [newMedia, ...prev]);
+      onMediaAdded?.(newMedia);
+    },
+    [onMediaAdded]
+  );
+
+  const handleUploadClick = () => {
+    if (onUpload) {
+      onUpload();
+    }
+    setShowUploadModal(true);
+  };
+
+  // Get available students for upload modal
+  const availableStudents =
+    students ||
+    (studentId && studentName ? [{ id: studentId, name: studentName }] : []);
 
   // Filter by student if provided
   const filteredMedia = studentId
@@ -548,9 +932,9 @@ export default function StudentMediaGallery({
             Photos and videos from learning activities
           </p>
         </div>
-        {onUpload && (
+        {availableStudents.length > 0 && (
           <button
-            onClick={onUpload}
+            onClick={handleUploadClick}
             className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
           >
             <svg
@@ -572,7 +956,11 @@ export default function StudentMediaGallery({
       </div>
 
       {filteredMedia.length === 0 ? (
-        <EmptyGallery {...(onUpload ? { onUpload } : {})} />
+        <EmptyGallery
+          {...(availableStudents.length > 0
+            ? { onUpload: handleUploadClick }
+            : {})}
+        />
       ) : (
         <>
           {/* Recent Activity Row */}
@@ -621,6 +1009,17 @@ export default function StudentMediaGallery({
           <MediaViewer
             item={selectedItem}
             onClose={() => setSelectedItem(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Upload modal */}
+      <AnimatePresence>
+        {showUploadModal && availableStudents.length > 0 && (
+          <UploadModal
+            students={availableStudents}
+            onClose={() => setShowUploadModal(false)}
+            onUploadComplete={handleUploadComplete}
           />
         )}
       </AnimatePresence>
