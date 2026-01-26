@@ -1,13 +1,45 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import {
-  DataSheet,
-  DataSheetActivity,
-  ActivityType,
-} from '@/types/syllabus.types';
-import { DataSheetsService } from '@/services/data-sheets.service';
+// Activity types are now handled locally with string type
+
+// Local interface to avoid import issues
+interface DataSheet {
+  id: string;
+  studentId: string;
+  teacherId?: string;
+  parentId: string;
+  date: string;
+  title: string;
+  description?: string;
+  activities: DataSheetActivity[];
+  progressSummary?: {
+    overallProgress: number;
+    areasOfStrength: string[];
+    areasForImprovement: string[];
+  };
+  challenges?: { description: string }[];
+  prompts?: any[];
+  notes?: string;
+  isTemplate?: boolean;
+  templateName?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface DataSheetActivity {
+  activityId?: string;
+  activityName: string;
+  activityType: string;
+  completed?: boolean;
+  cooperationLevel?: string;
+  behaviour?: string;
+  observations?: string;
+  status?: string;
+  description?: string;
+  rating?: number;
+}
 
 interface DataSheetsViewerProps {
   studentId: string;
@@ -27,32 +59,48 @@ export const DataSheetsViewer: React.FC<DataSheetsViewerProps> = ({
     'overview' | 'activities' | 'progress'
   >('overview');
 
-  useEffect(() => {
-    loadDataSheets();
-  }, [studentId]);
-
-  const loadDataSheets = async () => {
+  const loadDataSheets = useCallback(async () => {
     setLoading(true);
     try {
-      const sheets = await DataSheetsService.getDataSheetsByStudent(studentId);
-      setDataSheets(sheets);
-      if (sheets.length > 0 && sheets[0]) {
-        setSelectedSheet(sheets[0]);
+      // Use the API endpoint instead of the client-side service
+      const response = await fetch(
+        `/api/data-sheets/student?studentId=${studentId}`
+      );
+      if (response.ok) {
+        const sheets = await response.json();
+        setDataSheets(sheets);
+        if (sheets.length > 0 && sheets[0]) {
+          setSelectedSheet(sheets[0]);
+        }
+      } else {
+        console.error('Failed to fetch data sheets');
       }
     } catch (error) {
       console.error('Error loading data sheets:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [studentId]);
 
-  const getActivityTypeColor = (type: ActivityType) => {
-    const colors = {
+  useEffect(() => {
+    loadDataSheets();
+  }, [loadDataSheets]);
+
+  const getActivityTypeColor = (type: string) => {
+    const colors: Record<string, string> = {
+      // Original activity types
       sensory: 'bg-purple-100 text-purple-800',
       writing: 'bg-blue-100 text-blue-800',
       communication: 'bg-green-100 text-green-800',
       social: 'bg-yellow-100 text-yellow-800',
       academics: 'bg-red-100 text-red-800',
+      academic: 'bg-red-100 text-red-800',
+      // New category types from DataSheetsManager
+      socialization: 'bg-purple-100 text-purple-800',
+      physical_education: 'bg-orange-100 text-orange-800',
+      extracurricular: 'bg-teal-100 text-teal-800',
+      community: 'bg-indigo-100 text-indigo-800',
+      motor: 'bg-pink-100 text-pink-800',
     };
     return colors[type] || 'bg-gray-100 text-gray-800';
   };
