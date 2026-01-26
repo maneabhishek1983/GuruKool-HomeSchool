@@ -9,6 +9,7 @@ import {
   ActivityStatus,
   Student,
   ACTIVITY_TYPES,
+  CountryCode,
 } from '@/types/syllabus.types';
 import { DataSheetsService } from '@/services/data-sheets.service';
 import { SyllabusService } from '@/services/syllabus.service';
@@ -79,14 +80,14 @@ export const DataSheetsManager: React.FC<DataSheetsManagerProps> = ({
           parentId: s.parentId || '',
           name: s.name,
           age: 0, // Not needed for data sheets
-          country: s.country,
+          country: (s.country as CountryCode) || 'UK',
           gradeLevel: s.grade,
-          gradeSystem: 'uk_year',
+          gradeSystem: 'uk_year' as const,
           learningPreferences: {
-            learningStyle: 'visual',
+            learningStyle: 'visual' as const,
             interests: [],
-            attentionSpan: 'medium',
-            preferredTime: 'morning',
+            attentionSpan: 'medium' as const,
+            preferredTime: 'morning' as const,
           },
           specialNeeds: [],
           academicStandards: {},
@@ -110,14 +111,14 @@ export const DataSheetsManager: React.FC<DataSheetsManagerProps> = ({
               parentId: s.parentId || '',
               name: s.name,
               age: 0,
-              country: s.country,
+              country: (s.country as CountryCode) || 'UK',
               gradeLevel: s.grade,
-              gradeSystem: 'uk_year',
+              gradeSystem: 'uk_year' as const,
               learningPreferences: {
-                learningStyle: 'visual',
+                learningStyle: 'visual' as const,
                 interests: [],
-                attentionSpan: 'medium',
-                preferredTime: 'morning',
+                attentionSpan: 'medium' as const,
+                preferredTime: 'morning' as const,
               },
               specialNeeds: [],
               academicStandards: {},
