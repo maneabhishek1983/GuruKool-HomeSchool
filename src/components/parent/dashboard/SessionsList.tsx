@@ -53,7 +53,7 @@ export default function SessionsList({
         throw new Error(data.error || 'Failed to fetch sessions');
       }
 
-      const entries = data.sessions || [];
+      const entries: TimesheetEntry[] = data.sessions || [];
 
       // Apply client-side filters
       let filteredEntries = entries;
@@ -61,24 +61,24 @@ export default function SessionsList({
       // Filter by student if selected
       if (selectedStudent !== 'all') {
         filteredEntries = filteredEntries.filter(
-          (e) => e.student_id === selectedStudent
+          (e: TimesheetEntry) => e.student_id === selectedStudent
         );
       }
 
       // Filter by status
       if (filter === 'active') {
         filteredEntries = filteredEntries.filter(
-          (e) => e.status === 'checked_in'
+          (e: TimesheetEntry) => e.status === 'checked_in'
         );
       } else if (filter === 'completed') {
         filteredEntries = filteredEntries.filter(
-          (e) => e.status === 'checked_out'
+          (e: TimesheetEntry) => e.status === 'checked_out'
         );
       }
 
       // Sort by check-in time (most recent first)
       filteredEntries.sort(
-        (a, b) =>
+        (a: TimesheetEntry, b: TimesheetEntry) =>
           new Date(b.check_in_time).getTime() -
           new Date(a.check_in_time).getTime()
       );
