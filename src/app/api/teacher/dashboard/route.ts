@@ -13,6 +13,80 @@ function getAdminClient() {
   return createClient(url, serviceKey);
 }
 
+// Interface for student data
+interface StudentData {
+  id: string;
+  name: string;
+  grade: string;
+  country: string;
+  parent_id: string;
+}
+
+// Helper to merge and deduplicate students from multiple sources
+function mergeStudentLists(
+  qrStudents: Array<{ student_id: string; students: unknown }>,
+  assignedStudents: StudentData[]
+): Array<{
+  id: string;
+  name: string;
+  grade: string;
+  country: string;
+  parentId: string;
+  source: 'qr' | 'assigned' | 'both';
+}> {
+  const studentMap = new Map<
+    string,
+    {
+      id: string;
+      name: string;
+      grade: string;
+      country: string;
+      parentId: string;
+      source: 'qr' | 'assigned' | 'both';
+    }
+  >();
+
+  // Add students from teacher_qr_codes
+  for (const assignment of qrStudents) {
+    const studentsData = assignment.students as unknown;
+    const studentData = Array.isArray(studentsData)
+      ? (studentsData[0] as StudentData | undefined)
+      : (studentsData as StudentData | null);
+
+    if (studentData?.id) {
+      studentMap.set(studentData.id, {
+        id: studentData.id,
+        name: studentData.name || 'Unknown',
+        grade: studentData.grade || 'N/A',
+        country: studentData.country || 'N/A',
+        parentId: studentData.parent_id || '',
+        source: 'qr',
+      });
+    }
+  }
+
+  // Add students from assigned_teachers array (merge if exists)
+  for (const student of assignedStudents) {
+    const existing = studentMap.get(student.id);
+    if (existing) {
+      // Student exists in both sources
+      existing.source = 'both';
+    } else {
+      // Student only in assigned_teachers
+      studentMap.set(student.id, {
+        id: student.id,
+        name: student.name || 'Unknown',
+        grade: student.grade || 'N/A',
+        country: student.country || 'N/A',
+        parentId: student.parent_id || '',
+        source: 'assigned',
+      });
+    }
+  }
+
+  return Array.from(studentMap.values());
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -36,12 +110,48 @@ export async function GET(request: NextRequest) {
 
     const teacherId = teacher?.id;
 
-    // Get assigned students count (from teacher_qr_codes which tracks assignments)
-    const { count: assignedStudentsCount } = await supabase
+    if (!teacherId) {
+      return NextResponse.json({
+        stats: {
+          assignedStudents: 0,
+          activeSessions: 0,
+          totalHoursThisWeek: 0,
+          completedSessionsThisWeek: 0,
+        },
+        upcomingSession: null,
+        students: [],
+        teacherId: null,
+      });
+    }
+
+    // === SOURCE 1: Get students from teacher_qr_codes (QR-based assignments) ===
+    const { data: qrAssignedStudents } = await supabase
       .from('teacher_qr_codes')
-      .select('student_id', { count: 'exact', head: true })
+      .select(
+        `
+        student_id,
+        students:student_id (id, name, grade, country, parent_id)
+      `
+      )
       .eq('teacher_id', teacherId)
-      .eq('is_active', true);
+      .eq('is_active', true)
+      .limit(50);
+
+    // === SOURCE 2: Get students where teacher is in assigned_teachers JSONB array ===
+    // This catches students assigned via parent portal even if QR code creation failed
+    const { data: directAssignedStudents } = await supabase
+      .from('students')
+      .select('id, name, grade, country, parent_id')
+      .contains('assigned_teachers', [teacherId]);
+
+    // Merge both sources and deduplicate
+    const mergedStudents = mergeStudentLists(
+      qrAssignedStudents || [],
+      (directAssignedStudents as StudentData[]) || []
+    );
+
+    // Get total count from merged list
+    const assignedStudentsCount = mergedStudents.length;
 
     // Get sessions this week
     const startOfWeek = new Date();
@@ -83,19 +193,6 @@ export async function GET(request: NextRequest) {
       .order('session_start', { ascending: true })
       .limit(1);
 
-    // Get assigned students with details
-    const { data: assignedStudents } = await supabase
-      .from('teacher_qr_codes')
-      .select(
-        `
-        student_id,
-        students:student_id (id, name, grade, country, parent_id)
-      `
-      )
-      .eq('teacher_id', teacherId)
-      .eq('is_active', true)
-      .limit(10);
-
     // Format upcoming session
     let upcomingSession = null;
     const firstSession = upcomingSessions?.[0];
@@ -127,40 +224,20 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Format students list
-    const students = (assignedStudents || []).map(assignment => {
-      // Handle both single object and array format from Supabase join
-      const studentsData = assignment.students as unknown;
-      const studentData = Array.isArray(studentsData)
-        ? (studentsData[0] as
-            | {
-                id: string;
-                name: string;
-                grade: string;
-                country: string;
-                parent_id: string;
-              }
-            | undefined)
-        : (studentsData as {
-            id: string;
-            name: string;
-            grade: string;
-            country: string;
-            parent_id: string;
-          } | null);
-      return {
-        id: studentData?.id || assignment.student_id,
-        name: studentData?.name || 'Unknown',
-        grade: studentData?.grade || 'N/A',
-        country: studentData?.country || 'N/A',
-        parentId: studentData?.parent_id || '',
-        progress: Math.floor(Math.random() * 20) + 80, // TODO: Calculate real progress
-      };
-    });
+    // Format students list with progress indicator
+    const students = mergedStudents.map(student => ({
+      id: student.id,
+      name: student.name,
+      grade: student.grade,
+      country: student.country,
+      parentId: student.parentId,
+      progress: Math.floor(Math.random() * 20) + 80, // TODO: Calculate real progress
+      assignmentSource: student.source, // 'qr', 'assigned', or 'both'
+    }));
 
     return NextResponse.json({
       stats: {
-        assignedStudents: assignedStudentsCount || 0,
+        assignedStudents: assignedStudentsCount,
         activeSessions: activeSessionsCount || 0,
         totalHoursThisWeek: totalHours,
         completedSessionsThisWeek: (weekSessions || []).filter(
