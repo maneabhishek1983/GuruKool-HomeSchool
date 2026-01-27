@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { TeacherQRService, TeacherQRCode } from '@/services/teacher-qr.service';
 import { supabase } from '@/lib/supabase';
@@ -35,37 +35,56 @@ export default function TeacherQRCodes({
   } | null>(null);
 
   // Check for existing active session when modal opens
+  const checkActiveSession = useCallback(async () => {
+    if (!selectedQRCode) {
+      return;
+    }
+
+    try {
+      // Query for active session (checked in but not checked out) for this QR code
+      const { data: activeSession } = await supabase
+        .from('teacher_sessions')
+        .select('id, session_start, teacher_id')
+        .eq('qr_code_used', selectedQRCode.id)
+        .is('session_end', null)
+        .order('session_start', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (activeSession) {
+        setSessionNotification(prev => {
+          // Don't overwrite transient status messages
+          if (prev?.type === 'check_in' || prev?.type === 'check_out') {
+            return prev;
+          }
+          // Avoid unnecessary state updates
+          if (prev?.type === 'active') {
+            return prev;
+          }
+          return {
+            type: 'active',
+            message: 'Teacher is currently checked in!',
+          };
+        });
+      }
+    } catch {
+      // No active session found, which is fine
+    }
+  }, [selectedQRCode]);
+
+  // Check active session on mount and poll periodically as fallback
   useEffect(() => {
     if (!showQRModal || !selectedQRCode) {
       return;
     }
 
-    const checkActiveSession = async () => {
-      try {
-        // Query for active session (checked in but not checked out) for this QR code
-        const { data: activeSession } = await supabase
-          .from('teacher_sessions')
-          .select('id, session_start, teacher_id')
-          .eq('qr_code_used', selectedQRCode.id)
-          .is('session_end', null)
-          .order('session_start', { ascending: false })
-          .limit(1)
-          .single();
-
-        if (activeSession) {
-          setSessionNotification({
-            type: 'active',
-            message: 'Teacher is currently checked in!',
-          });
-        }
-      } catch {
-        // No active session found, which is fine
-        console.log('No active session found for this QR code');
-      }
-    };
-
     checkActiveSession();
-  }, [showQRModal, selectedQRCode]);
+
+    // Poll every 3 seconds as a robust fallback for Realtime
+    const interval = setInterval(checkActiveSession, 3000);
+
+    return () => clearInterval(interval);
+  }, [showQRModal, selectedQRCode, checkActiveSession]);
 
   // Real-time subscription for session updates
   useEffect(() => {
@@ -332,7 +351,8 @@ export default function TeacherQRCodes({
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`mb-4 p-4 rounded-lg ${
-                  sessionNotification.type === 'check_in' || sessionNotification.type === 'active'
+                  sessionNotification.type === 'check_in' ||
+                  sessionNotification.type === 'active'
                     ? 'bg-green-100 border border-green-300'
                     : 'bg-blue-100 border border-blue-300'
                 }`}
@@ -345,12 +365,16 @@ export default function TeacherQRCodes({
                         : ''
                     }`}
                   >
-                    {sessionNotification.type === 'check_in' || sessionNotification.type === 'active' ? '✅' : '👋'}
+                    {sessionNotification.type === 'check_in' ||
+                    sessionNotification.type === 'active'
+                      ? '✅'
+                      : '👋'}
                   </div>
                   <div>
                     <p
                       className={`font-semibold ${
-                        sessionNotification.type === 'check_in' || sessionNotification.type === 'active'
+                        sessionNotification.type === 'check_in' ||
+                        sessionNotification.type === 'active'
                           ? 'text-green-800'
                           : 'text-blue-800'
                       }`}
