@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
+    const email = searchParams.get('email');
 
     if (!userId) {
       return NextResponse.json(
@@ -28,11 +29,31 @@ export async function GET(request: NextRequest) {
     const supabase = getAdminClient();
 
     // Get teacher record
-    const { data: teacher } = await supabase
-      .from('teachers')
-      .select('id, name')
-      .eq('user_id', userId)
-      .single();
+    // Get teacher record (prioritizing parent-linked record if duplicate exists)
+    let query = supabase.from('teachers').select('id, name, parent_id');
+
+    if (email) {
+      // If email provided, match by User ID OR Email
+      // This allows linking "Orphan" teacher accounts (from Auth) to "Profile" teacher accounts (from Parent)
+      query = query.or(`user_id.eq.${userId},email.eq.${email}`);
+    } else {
+      query = query.eq('user_id', userId);
+    }
+
+    const { data: teachers } = await query;
+
+    // Logic to pick the best teacher record:
+    // 1. Prefer record with parent_id (means it's managed by a parent and likely has assignments)
+    // 2. Otherwise pick the first one
+    const teacher = teachers?.sort((a, b) => {
+      if (a.parent_id && !b.parent_id) {
+        return -1;
+      }
+      if (!a.parent_id && b.parent_id) {
+        return 1;
+      }
+      return 0;
+    })[0];
 
     const teacherId = teacher?.id;
 

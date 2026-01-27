@@ -80,7 +80,11 @@ export default function TeacherDashboard() {
 
     try {
       setIsLoadingStats(true);
-      const response = await fetch(`/api/teacher/dashboard?userId=${user.id}`);
+      const response = await fetch(
+        `/api/teacher/dashboard?userId=${user.id}&email=${encodeURIComponent(
+          user.email
+        )}`
+      );
       const data = await response.json();
 
       if (response.ok) {
