@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import { Liquid3DOrb } from '@/components/ui/Liquid3DOrb';
+import { LiquidButton } from '@/components/ui/LiquidButton';
 
 interface MediaItem {
   id: string;
@@ -1694,7 +1696,7 @@ function UploadModal({
   );
 }
 
-// Empty state component
+// Empty state component with liquid 3D interactive design
 function EmptyGallery({ onUpload }: { onUpload?: () => void }) {
   return (
     <motion.div
@@ -1702,9 +1704,15 @@ function EmptyGallery({ onUpload }: { onUpload?: () => void }) {
       animate={{ opacity: 1, y: 0 }}
       className="text-center py-16 px-4"
     >
-      <div className="w-24 h-24 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-6">
+      {/* Liquid 3D Orb with image icon */}
+      <Liquid3DOrb
+        size="xl"
+        variant="gradient"
+        interactive
+        className="mx-auto mb-8"
+      >
         <svg
-          className="w-12 h-12 text-slate-500"
+          className="w-16 h-16 text-white/90 drop-shadow-lg"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -1716,19 +1724,56 @@ function EmptyGallery({ onUpload }: { onUpload?: () => void }) {
             d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
           />
         </svg>
-      </div>
-      <h3 className="text-xl font-semibold text-white mb-2">No Media Yet</h3>
-      <p className="text-slate-400 mb-6 max-w-md mx-auto">
+      </Liquid3DOrb>
+
+      <motion.h3
+        className="text-2xl font-bold bg-gradient-to-r from-white via-blue-100 to-teal-100 bg-clip-text text-transparent mb-3"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        No Media Yet
+      </motion.h3>
+
+      <motion.p
+        className="text-slate-400 mb-8 max-w-md mx-auto text-lg"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
         Capture your children&apos;s learning moments. Photos and videos from
         activities will appear here.
-      </p>
+      </motion.p>
+
       {onUpload && (
-        <button
-          onClick={onUpload}
-          className="px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-lg font-medium hover:from-sky-600 hover:to-blue-700 transition-all shadow-lg shadow-sky-500/25"
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.4, type: 'spring', stiffness: 200 }}
         >
-          Upload First Media
-        </button>
+          <LiquidButton
+            variant="primary"
+            size="lg"
+            onClick={onUpload}
+            icon={
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+            }
+          >
+            Upload First Media
+          </LiquidButton>
+        </motion.div>
       )}
     </motion.div>
   );
