@@ -57,12 +57,25 @@ export async function GET(request: NextRequest) {
 
     const teacherId = teacher?.id;
 
-    // Get assigned students count (from teacher_qr_codes which tracks assignments)
-    const { count: assignedStudentsCount } = await supabase
+    // Get assigned students count from teacher_qr_codes
+    const { count: qrStudentsCount } = await supabase
       .from('teacher_qr_codes')
       .select('student_id', { count: 'exact', head: true })
       .eq('teacher_id', teacherId)
       .eq('is_active', true);
+
+    // Also count from teacher_assignments (uses user_id)
+    const { count: assignmentStudentsCount } = await supabase
+      .from('teacher_assignments')
+      .select('student_id', { count: 'exact', head: true })
+      .eq('teacher_id', userId)
+      .eq('is_active', true);
+
+    // Use the higher count (they may overlap)
+    const assignedStudentsCount = Math.max(
+      qrStudentsCount || 0,
+      assignmentStudentsCount || 0
+    );
 
     // Get sessions this week
     const startOfWeek = new Date();
@@ -104,8 +117,8 @@ export async function GET(request: NextRequest) {
       .order('session_start', { ascending: true })
       .limit(1);
 
-    // Get assigned students with details
-    const { data: assignedStudents } = await supabase
+    // Get assigned students with details from teacher_qr_codes
+    const { data: qrAssignedStudents } = await supabase
       .from('teacher_qr_codes')
       .select(
         `
@@ -116,6 +129,33 @@ export async function GET(request: NextRequest) {
       .eq('teacher_id', teacherId)
       .eq('is_active', true)
       .limit(10);
+
+    // Also check teacher_assignments table as fallback (uses user_id, not teachers.id)
+    const { data: assignmentStudents } = await supabase
+      .from('teacher_assignments')
+      .select(
+        `
+        student_id,
+        students:student_id (id, name, grade, country, parent_id)
+      `
+      )
+      .eq('teacher_id', userId)
+      .eq('is_active', true)
+      .limit(10);
+
+    // Merge both sources, deduplicate by student_id
+    const seenStudentIds = new Set<string>();
+    const assignedStudents = [
+      ...(qrAssignedStudents || []),
+      ...(assignmentStudents || []),
+    ].filter(assignment => {
+      const studentId = assignment.student_id;
+      if (seenStudentIds.has(studentId)) {
+        return false;
+      }
+      seenStudentIds.add(studentId);
+      return true;
+    });
 
     // Format upcoming session
     let upcomingSession = null;
