@@ -215,13 +215,13 @@ export default function ParentDashboardHero({
       </div>
 
       {/* Interactive Liquid 3D Orbs */}
-      <div className="absolute -top-16 -right-16 pointer-events-none opacity-60">
+      <div className="absolute top-4 right-4 z-0 pointer-events-none opacity-70">
         <Liquid3DOrb size="xl" variant="primary" interactive={false} />
       </div>
-      <div className="absolute -bottom-16 -left-16 pointer-events-none opacity-60">
+      <div className="absolute bottom-4 left-4 z-0 pointer-events-none opacity-70">
         <Liquid3DOrb size="lg" variant="glow" interactive={false} />
       </div>
-      <div className="absolute top-1/2 right-8 -translate-y-1/2 pointer-events-none opacity-40 hidden lg:block">
+      <div className="absolute top-1/2 right-1/4 -translate-y-1/2 z-0 pointer-events-none opacity-50 hidden lg:block">
         <Liquid3DOrb size="md" variant="secondary" interactive={false} />
       </div>
     </div>
