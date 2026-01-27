@@ -1,8 +1,8 @@
 {
-  "timestamp": "2025-08-17T09:24:33.237Z",
+  "timestamp": "2026-01-27T14:55:32.969Z",
   "summary": {
-    "parentDashboard": 56,
-    "teacherDashboard": 57,
+    "parentDashboard": 33,
+    "teacherDashboard": 50,
     "dataSheets": 43,
     "timesheet": 50,
     "database": 60
@@ -11,10 +11,7 @@
     "parentDashboard": {
       "implemented": [
         "Student Profile Management",
-        "Teacher Assignment",
-        "Basic Progress Tracking",
-        "Academic Standards Display",
-        "Timesheet Summary"
+        "Basic Progress Tracking"
       ],
       "missing": [
         {
@@ -34,14 +31,12 @@
           "critical": false
         }
       ],
-      "score": 56
+      "score": 33
     },
     "teacherDashboard": {
       "implemented": [
         "Basic Dashboard Stats",
-        "Tab Navigation",
-        "Academic Standards Info",
-        "Quick Actions"
+        "Academic Standards Info"
       ],
       "missing": [
         {
@@ -49,15 +44,11 @@
           "critical": true
         },
         {
-          "feature": "Session Management",
-          "critical": true
-        },
-        {
           "feature": "Progress Reports",
           "critical": false
         }
       ],
-      "score": 57
+      "score": 50
     },
     "dataSheets": {
       "implemented": [
@@ -149,7 +140,6 @@
   "criticalIssues": [
     "parentDashboard: Real-time Progress Charts",
     "teacherDashboard: Student Management",
-    "teacherDashboard: Session Management",
     "dataSheets: UI Integration in Teacher Dashboard",
     "dataSheets: Parent Dashboard Data Sheets Access",
     "timesheet: Timesheet UI in Teacher Dashboard",
@@ -164,5 +154,5 @@
     "Integrate DataSheetsManager component into Teacher Dashboard",
     "Create timesheet database schema and UI components"
   ],
-  "overallScore": 53
+  "overallScore": 47
 }
