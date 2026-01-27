@@ -40,16 +40,16 @@ export const glassmorphism = {
       strong: 'rgba(15, 23, 42, 0.3)',
       solid: 'rgba(15, 23, 42, 0.5)',
     },
-    // Colored glass effects
+    // Colored glass effects - GuruKool brand colors
     primary: {
-      subtle: 'rgba(14, 165, 233, 0.1)',
-      standard: 'rgba(14, 165, 233, 0.15)',
-      medium: 'rgba(14, 165, 233, 0.2)',
+      subtle: 'rgba(37, 99, 235, 0.1)', // blue-600
+      standard: 'rgba(37, 99, 235, 0.15)',
+      medium: 'rgba(37, 99, 235, 0.2)',
     },
     secondary: {
-      subtle: 'rgba(217, 70, 239, 0.1)',
-      standard: 'rgba(217, 70, 239, 0.15)',
-      medium: 'rgba(217, 70, 239, 0.2)',
+      subtle: 'rgba(20, 184, 166, 0.1)', // teal-500
+      standard: 'rgba(20, 184, 166, 0.15)',
+      medium: 'rgba(20, 184, 166, 0.2)',
     },
     success: {
       subtle: 'rgba(34, 197, 94, 0.1)',
@@ -78,37 +78,39 @@ export const glassmorphism = {
     darkStrong: 'rgba(0, 0, 0, 0.3)',
   },
 
-  // Glass shadow effects (for floating glass cards)
+  // Glass shadow effects (for floating glass cards) - GuruKool brand colors
   shadows: {
     glass: '0 8px 32px rgba(0, 0, 0, 0.1)',
     glassLg: '0 16px 48px rgba(0, 0, 0, 0.15)',
     glassXl: '0 24px 64px rgba(0, 0, 0, 0.2)',
-    glassPrimary: '0 8px 32px rgba(14, 165, 233, 0.15)',
-    glassSecondary: '0 8px 32px rgba(217, 70, 239, 0.15)',
+    glassPrimary: '0 8px 32px rgba(37, 99, 235, 0.15)', // blue-600
+    glassSecondary: '0 8px 32px rgba(20, 184, 166, 0.15)', // teal-500
     innerGlow: 'inset 0 1px 1px rgba(255, 255, 255, 0.1)',
   },
 } as const;
 
-// Liquid gradients for flowing backgrounds
+// Liquid gradients for flowing backgrounds - GuruKool brand theme
 export const liquidGradients = {
   // Animated background gradients
   flow: {
-    primary: 'linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 50%, #d946ef 100%)',
+    // GuruKool primary: blue to teal
+    primary: 'linear-gradient(135deg, #2563eb 0%, #14b8a6 50%, #f59e0b 100%)',
     sunset: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #ec4899 100%)',
-    ocean: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%)',
-    forest: 'linear-gradient(135deg, #22c55e 0%, #10b981 50%, #06b6d4 100%)',
+    // Ocean: cyan to blue to teal
+    ocean: 'linear-gradient(135deg, #06b6d4 0%, #2563eb 50%, #14b8a6 100%)',
+    forest: 'linear-gradient(135deg, #22c55e 0%, #10b981 50%, #14b8a6 100%)',
     aurora:
-      'linear-gradient(135deg, #8b5cf6 0%, #ec4899 25%, #06b6d4 50%, #22c55e 75%, #eab308 100%)',
+      'linear-gradient(135deg, #2563eb 0%, #14b8a6 25%, #f59e0b 50%, #22c55e 75%, #2563eb 100%)',
   },
 
-  // Mesh gradients for rich backgrounds
+  // Mesh gradients for rich backgrounds - GuruKool brand colors
   mesh: {
     primary: `
-      radial-gradient(at 40% 20%, rgba(14, 165, 233, 0.3) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.3) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, rgba(217, 70, 239, 0.3) 0px, transparent 50%),
-      radial-gradient(at 80% 50%, rgba(14, 165, 233, 0.3) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, rgba(139, 92, 246, 0.3) 0px, transparent 50%)
+      radial-gradient(at 40% 20%, rgba(37, 99, 235, 0.3) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(20, 184, 166, 0.3) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, rgba(245, 158, 11, 0.3) 0px, transparent 50%),
+      radial-gradient(at 80% 50%, rgba(37, 99, 235, 0.3) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(20, 184, 166, 0.3) 0px, transparent 50%)
     `,
     warm: `
       radial-gradient(at 40% 20%, rgba(245, 158, 11, 0.3) 0px, transparent 50%),
@@ -116,9 +118,9 @@ export const liquidGradients = {
       radial-gradient(at 0% 50%, rgba(236, 72, 153, 0.3) 0px, transparent 50%)
     `,
     cool: `
-      radial-gradient(at 40% 20%, rgba(6, 182, 212, 0.3) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, rgba(59, 130, 246, 0.3) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, rgba(139, 92, 246, 0.3) 0px, transparent 50%)
+      radial-gradient(at 40% 20%, rgba(37, 99, 235, 0.3) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(20, 184, 166, 0.3) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, rgba(245, 158, 11, 0.2) 0px, transparent 50%)
     `,
   },
 

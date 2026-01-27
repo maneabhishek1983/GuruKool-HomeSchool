@@ -457,6 +457,7 @@ export class DatabaseService {
   ): TeacherProfile {
     return {
       id: dbTeacher.id,
+      ...(dbTeacher.user_id ? { userId: dbTeacher.user_id } : {}), // For session matching
       name: dbTeacher.name,
       email: dbTeacher.email,
       ...(dbTeacher.phone ? { phone: dbTeacher.phone } : {}),

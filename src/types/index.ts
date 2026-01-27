@@ -475,6 +475,7 @@ export interface Student {
 
 export interface TeacherProfile {
   id: string;
+  userId?: string; // user_id from users table (for session matching)
   name: string;
   email: string;
   phone?: string;

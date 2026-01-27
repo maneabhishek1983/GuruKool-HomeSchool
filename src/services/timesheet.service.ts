@@ -484,19 +484,56 @@ export class TimesheetService {
 
   /**
    * Get active check-in for teacher
-   * FIXED: Now queries BOTH OLD and NEW systems to prevent duplicate check-ins
+   * FIXED: Now handles the ID mismatch between users.id and teachers.id
+   * - timesheet_entries.teacher_id stores users.id (auth user ID)
+   * - teacher_sessions.teacher_id stores teachers.id (teachers table ID)
    */
   static async getActiveCheckIn(
-    teacherId: string
+    userIdOrTeacherId: string
   ): Promise<TimesheetEntry | null> {
     try {
-      const results = await this.queryBothSystems({
-        teacherId,
-        onlyActive: true,
-      });
+      const results: TimesheetEntry[] = [];
 
-      // Return the most recent active check-in (already sorted by queryBothSystems)
-      return results[0] || null;
+      // 1. Query OLD system (timesheet_entries) using the ID directly
+      // This works because timesheet_entries.teacher_id stores users.id
+      const { data: oldEntries } = await supabase
+        .from('timesheet_entries')
+        .select('*')
+        .eq('teacher_id', userIdOrTeacherId)
+        .eq('status', 'checked_in')
+        .order('check_in_time', { ascending: false });
+
+      if (oldEntries) {
+        results.push(...oldEntries);
+      }
+
+      // 2. Look up teacher's ID in teachers table (for teacher_sessions query)
+      const { data: teacherRecord } = await supabase
+        .from('teachers')
+        .select('id')
+        .eq('user_id', userIdOrTeacherId)
+        .single();
+
+      // 3. Query NEW system (teacher_sessions) using teachers.id
+      if (teacherRecord) {
+        const { data: newSessions } = await supabase
+          .from('teacher_sessions')
+          .select('*')
+          .eq('teacher_id', teacherRecord.id)
+          .is('session_end', null) // NULL = still checked in
+          .order('session_start', { ascending: false });
+
+        if (newSessions) {
+          const converted = newSessions.map((session: TeacherSession) =>
+            this.convertTeacherSessionToTimesheetEntry(session)
+          );
+          results.push(...converted);
+        }
+      }
+
+      // Deduplicate and return the most recent
+      const deduplicated = this.deduplicateById(results);
+      return deduplicated[0] || null;
     } catch (error) {
       console.error('Error fetching active check-in:', error);
       return null;

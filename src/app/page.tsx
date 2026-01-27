@@ -49,7 +49,7 @@ export default function EnhancedHomePage() {
           >
             <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white mb-6 leading-tight">
               Cool Learning for{' '}
-              <span className="bg-gradient-to-r from-teal-400 to-orange-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
                 Modern Kids
               </span>
             </h1>
@@ -159,7 +159,7 @@ export default function EnhancedHomePage() {
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-teal-900/90 via-teal-900/50 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-900/90 via-blue-900/50 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   <div className="text-4xl mb-3">📱</div>
                   <h3 className="text-2xl font-bold text-white mb-2">
@@ -182,7 +182,7 @@ export default function EnhancedHomePage() {
           >
             <GlassCard
               blur="lg"
-              className="group relative h-full overflow-hidden cursor-pointer bg-gradient-to-br from-orange-500 to-pink-500"
+              className="group relative h-full overflow-hidden cursor-pointer bg-gradient-to-br from-amber-500 to-amber-400"
             >
               <div className="relative h-full min-h-[200px] p-6 flex flex-col justify-center items-center text-center">
                 <motion.div
@@ -245,7 +245,7 @@ export default function EnhancedHomePage() {
           >
             <GlassCard
               blur="lg"
-              className="group relative h-full overflow-hidden cursor-pointer bg-gradient-to-br from-emerald-500 to-teal-500"
+              className="group relative h-full overflow-hidden cursor-pointer bg-gradient-to-br from-teal-500 to-teal-400"
             >
               <div className="relative h-full min-h-[200px] p-6 flex flex-col justify-center items-center text-center">
                 <motion.div
@@ -268,7 +268,7 @@ export default function EnhancedHomePage() {
       </section>
 
       {/* Stats Section */}
-      <section className="bg-gradient-to-r from-teal-600 to-orange-500 py-16">
+      <section className="bg-gradient-to-r from-blue-600 to-teal-500 py-16">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-white">
             {[
@@ -315,21 +315,21 @@ export default function EnhancedHomePage() {
               name: 'Sarah Johnson',
               role: 'Parent of 2',
               avatar: '👩',
-              color: 'from-teal-500 to-cyan-500',
+              color: 'from-blue-500 to-blue-400',
               text: 'GuruKool transformed our homeschool experience. My kids are more engaged than ever!',
             },
             {
               name: 'Michael Chen',
               role: 'Parent of 3',
               avatar: '👨',
-              color: 'from-orange-500 to-red-500',
+              color: 'from-teal-500 to-teal-400',
               text: "The mentors are incredible. They truly understand each child's unique needs.",
             },
             {
               name: 'Emily Rodriguez',
               role: 'Parent of 1',
               avatar: '👩',
-              color: 'from-purple-500 to-pink-500',
+              color: 'from-amber-500 to-amber-400',
               text: 'Best decision we made for our homeschool. The progress tracking is amazing!',
             },
           ].map((testimonial, index) => (
@@ -370,7 +370,7 @@ export default function EnhancedHomePage() {
 
       {/* CTA Section */}
       <section className="relative py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-teal-600 to-orange-500 opacity-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-teal-500 opacity-10" />
         <div className="relative max-w-4xl mx-auto px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TeacherQRService, TeacherQRCode } from '@/services/teacher-qr.service';
+import { supabase } from '@/lib/supabase';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 interface TeacherQRCodesProps {
   teacherId: string;
@@ -27,6 +29,101 @@ export default function TeacherQRCodes({
   const [selectedQRCode, setSelectedQRCode] =
     useState<QRCodeWithDetails | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
+  const [sessionNotification, setSessionNotification] = useState<{
+    type: 'check_in' | 'check_out' | 'active';
+    message: string;
+  } | null>(null);
+
+  // Check for existing active session when modal opens
+  useEffect(() => {
+    if (!showQRModal || !selectedQRCode) {
+      return;
+    }
+
+    const checkActiveSession = async () => {
+      try {
+        // Query for active session (checked in but not checked out) for this QR code
+        const { data: activeSession } = await supabase
+          .from('teacher_sessions')
+          .select('id, session_start, teacher_id')
+          .eq('qr_code_used', selectedQRCode.id)
+          .is('session_end', null)
+          .order('session_start', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (activeSession) {
+          setSessionNotification({
+            type: 'active',
+            message: 'Teacher is currently checked in!',
+          });
+        }
+      } catch {
+        // No active session found, which is fine
+        console.log('No active session found for this QR code');
+      }
+    };
+
+    checkActiveSession();
+  }, [showQRModal, selectedQRCode]);
+
+  // Real-time subscription for session updates
+  useEffect(() => {
+    if (!showQRModal || !selectedQRCode) {
+      return;
+    }
+
+    // Subscribe to teacher_sessions changes for this QR code
+    const channel = supabase
+      .channel(`qr-session-${selectedQRCode.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'teacher_sessions',
+          filter: `qr_code_used=eq.${selectedQRCode.id}`,
+        },
+        (
+          payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>
+        ) => {
+          console.log('Session update received:', payload);
+
+          if (payload.eventType === 'INSERT') {
+            // Teacher checked in
+            setSessionNotification({
+              type: 'check_in',
+              message: 'Teacher has checked in! Session started.',
+            });
+            // Close modal after showing notification
+            setTimeout(() => {
+              setShowQRModal(false);
+              setSessionNotification(null);
+            }, 2000);
+          } else if (payload.eventType === 'UPDATE') {
+            const newData = payload.new as { session_end?: string };
+            if (newData.session_end) {
+              // Teacher checked out
+              setSessionNotification({
+                type: 'check_out',
+                message: 'Teacher has checked out! Session ended.',
+              });
+              // Close modal after showing notification
+              setTimeout(() => {
+                setShowQRModal(false);
+                setSessionNotification(null);
+              }, 2000);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription when modal closes
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [showQRModal, selectedQRCode]);
 
   useEffect(() => {
     loadQRCodes();
@@ -229,6 +326,52 @@ export default function TeacherQRCodes({
             animate={{ opacity: 1, scale: 1 }}
             className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
           >
+            {/* Real-time Session Notification */}
+            {sessionNotification && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`mb-4 p-4 rounded-lg ${
+                  sessionNotification.type === 'check_in' || sessionNotification.type === 'active'
+                    ? 'bg-green-100 border border-green-300'
+                    : 'bg-blue-100 border border-blue-300'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div
+                    className={`text-3xl ${
+                      sessionNotification.type === 'check_in'
+                        ? 'animate-bounce'
+                        : ''
+                    }`}
+                  >
+                    {sessionNotification.type === 'check_in' || sessionNotification.type === 'active' ? '✅' : '👋'}
+                  </div>
+                  <div>
+                    <p
+                      className={`font-semibold ${
+                        sessionNotification.type === 'check_in' || sessionNotification.type === 'active'
+                          ? 'text-green-800'
+                          : 'text-blue-800'
+                      }`}
+                    >
+                      {sessionNotification.message}
+                    </p>
+                    {sessionNotification.type !== 'active' && (
+                      <p className="text-sm text-gray-600">
+                        This window will close automatically...
+                      </p>
+                    )}
+                    {sessionNotification.type === 'active' && (
+                      <p className="text-sm text-green-600">
+                        Session is in progress
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">QR Code</h3>
               <button
@@ -253,8 +396,16 @@ export default function TeacherQRCodes({
 
             <div className="text-center">
               <div className="bg-gray-100 p-4 rounded-lg mb-4">
-                <QRCodeDisplay qrData={selectedQRCode.qr_code_data} />
+                <QRCodeDisplay qrCodeId={selectedQRCode.id} />
               </div>
+
+              {/* Real-time status indicator */}
+              {!sessionNotification && (
+                <div className="flex items-center justify-center space-x-2 mb-4 text-sm text-gray-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>Waiting for teacher to scan...</span>
+                </div>
+              )}
 
               <div className="space-y-2 text-sm text-gray-600">
                 <p>
@@ -269,64 +420,7 @@ export default function TeacherQRCodes({
                 </p>
               </div>
 
-              {/* QR Code Format Info */}
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-left">
-                <p className="text-xs font-semibold text-blue-800 mb-2">
-                  📱 QR Code Information
-                </p>
-                <div className="space-y-1 text-xs text-blue-700">
-                  <p>
-                    <strong>Type:</strong>{' '}
-                    <code className="bg-blue-100 px-1 py-0.5 rounded">
-                      teacher_auth
-                    </code>
-                  </p>
-                  <p>
-                    <strong>Format:</strong> JSON with HMAC-SHA256 signature
-                  </p>
-                  <p>
-                    <strong>Contains:</strong> Teacher ID, Student ID, Parent
-                    ID, Timestamp
-                  </p>
-                  <p>
-                    <strong>Security:</strong> Cryptographically signed and
-                    validated
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-6 space-y-2">
-                <button
-                  onClick={() => {
-                    // Download QR code as image
-                    const link = document.createElement('a');
-                    link.download = `teacher-qr-${selectedQRCode.student_id}.png`;
-                    link.href =
-                      document.querySelector('canvas')?.toDataURL() || '';
-                    link.click();
-                  }}
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  📥 Download QR Code
-                </button>
-                <button
-                  onClick={() => {
-                    // Test QR code format
-                    try {
-                      const parsedData = JSON.parse(
-                        selectedQRCode.qr_code_data
-                      );
-                      alert(
-                        `✅ QR Code Valid!\n\nType: ${parsedData.type}\nTeacher ID: ${parsedData.teacherId}\nStudent ID: ${parsedData.studentId}\nParent ID: ${parsedData.parentId}\nTimestamp: ${new Date(parsedData.timestamp).toLocaleString()}\n\nSignature: ${parsedData.signature.substring(0, 16)}...`
-                      );
-                    } catch (err) {
-                      alert('❌ Invalid QR code format');
-                    }
-                  }}
-                  className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
-                >
-                  🧪 Test QR Code Format
-                </button>
+              <div className="mt-6">
                 <button
                   onClick={() => setShowQRModal(false)}
                   className="w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
@@ -342,8 +436,8 @@ export default function TeacherQRCodes({
   );
 }
 
-// QR Code Display Component
-function QRCodeDisplay({ qrData }: { qrData: string }) {
+// QR Code Display Component - Uses simple ID format for easier scanning
+function QRCodeDisplay({ qrCodeId }: { qrCodeId: string }) {
   const [qrImageUrl, setQrImageUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -351,7 +445,9 @@ function QRCodeDisplay({ qrData }: { qrData: string }) {
     const generateQR = async () => {
       try {
         setIsLoading(true);
-        const imageUrl = await TeacherQRService.generateQRCodeImage(qrData);
+        // Use simple format: GK:{id} - much easier to scan than full JSON
+        const simpleCode = `GK:${qrCodeId}`;
+        const imageUrl = await TeacherQRService.generateQRCodeImage(simpleCode);
         setQrImageUrl(imageUrl);
       } catch (error) {
         console.error('Error generating QR code:', error);
@@ -361,7 +457,7 @@ function QRCodeDisplay({ qrData }: { qrData: string }) {
     };
 
     generateQR();
-  }, [qrData]);
+  }, [qrCodeId]);
 
   if (isLoading) {
     return (

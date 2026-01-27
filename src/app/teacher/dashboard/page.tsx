@@ -36,6 +36,7 @@ type TabId = 'checkin' | 'timesheet' | 'overview' | 'data-sheets' | 'sessions';
 const tabs = [
   { id: 'checkin' as TabId, label: 'Check-In/Out', icon: '📍' },
   { id: 'timesheet' as TabId, label: 'Timesheet Report', icon: '📊' },
+  { id: 'data-sheets' as TabId, label: 'Data Sheets', icon: '📝' },
   { id: 'overview' as TabId, label: 'Overview', icon: '📈' },
   { id: 'sessions' as TabId, label: 'Sessions', icon: '📅' },
 ];
@@ -46,10 +47,24 @@ export default function TeacherDashboard() {
   const [activeTab, setActiveTab] = useState<TabId>('checkin');
   const [dashboardStats, setDashboardStats] = useState({
     assignedStudents: 0,
-    activeLessons: 0,
-    averageProgress: 0,
-    todayDataSheets: 0,
+    activeSessions: 0,
+    totalHoursThisWeek: 0,
+    completedSessionsThisWeek: 0,
   });
+  const [upcomingSession, setUpcomingSession] = useState<{
+    studentName: string;
+    time: string;
+  } | null>(null);
+  const [assignedStudents, setAssignedStudents] = useState<
+    Array<{
+      id: string;
+      name: string;
+      grade: string;
+      country: string;
+      progress: number;
+    }>
+  >([]);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -58,17 +73,24 @@ export default function TeacherDashboard() {
   }, [user]);
 
   const loadDashboardStats = async () => {
+    if (!user?.id) {
+      return;
+    }
+
     try {
-      // Load real stats from API
-      // For now using placeholder data
-      setDashboardStats({
-        assignedStudents: 12,
-        activeLessons: 8,
-        averageProgress: 87,
-        todayDataSheets: 5,
-      });
+      setIsLoadingStats(true);
+      const response = await fetch(`/api/teacher/dashboard?userId=${user.id}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setDashboardStats(data.stats);
+        setUpcomingSession(data.upcomingSession);
+        setAssignedStudents(data.students || []);
+      }
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
+    } finally {
+      setIsLoadingStats(false);
     }
   };
 
@@ -196,7 +218,7 @@ export default function TeacherDashboard() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200 }}
-                className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/25"
+                className="w-12 h-12 bg-gradient-to-br from-blue-600 to-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25"
               >
                 <svg
                   className="w-7 h-7 text-white"
@@ -213,7 +235,7 @@ export default function TeacherDashboard() {
                 </svg>
               </motion.div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
                   Teacher Dashboard
                 </h1>
                 <p className="text-sm text-slate-600">
@@ -230,7 +252,7 @@ export default function TeacherDashboard() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${
                       activeTab === tab.id
-                        ? 'bg-white text-cyan-700 shadow-sm'
+                        ? 'bg-white text-blue-700 shadow-sm'
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
@@ -262,7 +284,7 @@ export default function TeacherDashboard() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${
                 activeTab === tab.id
-                  ? 'bg-cyan-100 text-cyan-700'
+                  ? 'bg-blue-100 text-blue-700'
                   : 'text-slate-600 hover:text-slate-900 bg-white/50'
               }`}
             >
@@ -278,12 +300,9 @@ export default function TeacherDashboard() {
         {/* Dashboard Hero */}
         <TeacherDashboardHero
           teacherName={user.name}
-          activeSessions={dashboardStats.activeLessons}
-          totalHours={Math.round(dashboardStats.averageProgress)}
-          upcomingSession={{
-            studentName: 'Next Student',
-            time: 'In 30 minutes'
-          }}
+          activeSessions={dashboardStats.activeSessions}
+          totalHours={dashboardStats.totalHoursThisWeek}
+          {...(upcomingSession ? { upcomingSession } : {})}
           onCheckIn={() => setActiveTab('checkin')}
           onViewSchedule={() => setActiveTab('sessions')}
           className="mb-8"
@@ -364,8 +383,8 @@ export default function TeacherDashboard() {
                 </motion.div>
                 <motion.div variants={itemVariants}>
                   <GlassStatCard
-                    title="Active Lessons"
-                    value={dashboardStats.activeLessons}
+                    title="Active Sessions"
+                    value={dashboardStats.activeSessions}
                     color="success"
                     icon={
                       <svg
@@ -386,11 +405,9 @@ export default function TeacherDashboard() {
                 </motion.div>
                 <motion.div variants={itemVariants}>
                   <GlassStatCard
-                    title="Average Progress"
-                    value={`${dashboardStats.averageProgress}%`}
+                    title="Hours This Week"
+                    value={`${dashboardStats.totalHoursThisWeek}h`}
                     color="secondary"
-                    trend="up"
-                    trendValue="+3% this week"
                     icon={
                       <svg
                         className="w-6 h-6"
@@ -402,7 +419,7 @@ export default function TeacherDashboard() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
                     }
@@ -412,7 +429,7 @@ export default function TeacherDashboard() {
 
               {/* Recent Students & Quick Actions Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Recent Students */}
+                {/* Assigned Students */}
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -421,71 +438,62 @@ export default function TeacherDashboard() {
                 >
                   <div className="px-6 py-4 border-b border-slate-200/50 bg-gradient-to-r from-slate-50 to-white">
                     <h2 className="text-lg font-semibold text-slate-900">
-                      Recent Students
+                      Assigned Students
                     </h2>
                   </div>
                   <div className="p-6">
-                    <div className="space-y-4">
-                      {[
-                        {
-                          name: 'Emma Johnson',
-                          grade: 'Year 3',
-                          country: 'UK',
-                          progress: 92,
-                        },
-                        {
-                          name: 'Alex Chen',
-                          grade: 'Grade 4',
-                          country: 'US',
-                          progress: 88,
-                        },
-                        {
-                          name: 'Priya Patel',
-                          grade: 'Class 5',
-                          country: 'India',
-                          progress: 85,
-                        },
-                        {
-                          name: 'Lucas Smith',
-                          grade: 'Year 2',
-                          country: 'UK',
-                          progress: 90,
-                        },
-                      ].map((student, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl border border-slate-100 hover:border-cyan-200 hover:shadow-md transition-all duration-200"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-white font-medium shadow-lg shadow-cyan-500/20">
-                              {student.name.charAt(0)}
+                    {isLoadingStats ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      </div>
+                    ) : assignedStudents.length === 0 ? (
+                      <div className="text-center py-8">
+                        <div className="text-4xl mb-3">👨‍🎓</div>
+                        <p className="text-slate-600">
+                          No students assigned yet
+                        </p>
+                        <p className="text-sm text-slate-500 mt-1">
+                          Students will appear here once a parent assigns you
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {assignedStudents.map((student, index) => (
+                          <motion.div
+                            key={student.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all duration-200"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-teal-500 rounded-full flex items-center justify-center text-white font-medium shadow-lg shadow-blue-500/20">
+                                {student.name.charAt(0)}
+                              </div>
+                              <div>
+                                <p className="font-medium text-slate-900">
+                                  {student.name}
+                                </p>
+                                <p className="text-sm text-slate-600">
+                                  {student.grade} • {student.country}
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-medium text-slate-900">
-                                {student.name}
+                            <div className="text-right">
+                              <p className="text-sm font-semibold text-slate-900">
+                                {student.progress}%
                               </p>
-                              <p className="text-sm text-slate-600">
-                                {student.grade} • {student.country}
-                              </p>
+                              <div className="w-16 h-1.5 bg-slate-200 rounded-full mt-1 overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-blue-500 to-teal-500 rounded-full"
+                                  style={{ width: `${student.progress}%` }}
+                                />
+                              </div>
                             </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-semibold text-slate-900">
-                              {student.progress}%
-                            </p>
-                            <div className="w-16 h-1.5 bg-slate-200 rounded-full mt-1 overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
-                                style={{ width: `${student.progress}%` }}
-                              />
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </motion.div>
 
@@ -505,24 +513,28 @@ export default function TeacherDashboard() {
                     <div className="space-y-3">
                       {[
                         {
-                          label: 'Create Lesson Plan',
-                          icon: '📚',
-                          color: 'from-sky-500 to-blue-600',
-                        },
-                        {
-                          label: 'Track Progress',
-                          icon: '📊',
+                          label: 'Check In / Out',
+                          icon: '📍',
                           color: 'from-green-500 to-emerald-600',
+                          action: () => setActiveTab('checkin'),
                         },
                         {
-                          label: 'Send Feedback',
-                          icon: '💬',
-                          color: 'from-violet-500 to-purple-600',
+                          label: 'View Timesheet',
+                          icon: '📊',
+                          color: 'from-blue-500 to-blue-600',
+                          action: () => setActiveTab('timesheet'),
                         },
                         {
-                          label: 'Schedule Session',
+                          label: 'Manage Sessions',
                           icon: '📅',
                           color: 'from-amber-500 to-orange-600',
+                          action: () => setActiveTab('sessions'),
+                        },
+                        {
+                          label: 'Refresh Data',
+                          icon: '🔄',
+                          color: 'from-teal-500 to-teal-600',
+                          action: () => loadDashboardStats(),
                         },
                       ].map((action, index) => (
                         <motion.button
@@ -532,6 +544,7 @@ export default function TeacherDashboard() {
                           transition={{ delay: 0.1 * index }}
                           whileHover={{ scale: 1.02, x: 4 }}
                           whileTap={{ scale: 0.98 }}
+                          onClick={action.action}
                           className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-md transition-all duration-200 group"
                         >
                           <div className="flex items-center space-x-3">
@@ -600,7 +613,7 @@ export default function TeacherDashboard() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.1 * index }}
-                        className="text-center p-6 bg-gradient-to-b from-white to-slate-50 rounded-xl border border-slate-100 hover:border-cyan-200 hover:shadow-lg transition-all duration-300"
+                        className="text-center p-6 bg-gradient-to-b from-white to-slate-50 rounded-xl border border-slate-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300"
                       >
                         <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mx-auto mb-3">
                           <span className="text-2xl">{standard.flag}</span>
@@ -628,8 +641,9 @@ export default function TeacherDashboard() {
               exit={{ opacity: 0, y: -20 }}
             >
               <DataSheetsManager
-                teacherId={user?.id || 'teacher-1'}
+                teacherId={user?.id || ''}
                 selectedDate={new Date().toISOString().split('T')[0] || ''}
+                assignedStudents={assignedStudents}
               />
             </motion.div>
           )}
@@ -642,7 +656,11 @@ export default function TeacherDashboard() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              <TimesheetManager teacherId={user?.id || 'teacher-1'} />
+              <TimesheetManager
+                teacherId={user?.id || ''}
+                userId={user?.id || ''}
+                onStartSession={() => setActiveTab('checkin')}
+              />
             </motion.div>
           )}
         </AnimatePresence>

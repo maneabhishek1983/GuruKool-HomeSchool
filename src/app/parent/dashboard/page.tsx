@@ -5,45 +5,56 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CreateStudentForm from '@/components/parent/CreateStudentForm';
-import StudentProfileCard from '@/components/parent/StudentProfileCard';
 import { DataSheetsViewer } from '@/components/parent/DataSheetsViewer';
 import TeacherCreationForm from '@/components/parent/TeacherCreationForm';
 import TeacherQRCodes from '@/components/parent/TeacherQRCodes';
 import StudentTeacherAssignment from '@/components/parent/StudentTeacherAssignment';
-import { StudentProfile, Country, TeacherProfile } from '@/types';
+import { StudentProfile, TeacherProfile } from '@/types';
 import { academicStandardsService } from '@/services/academic-standards.service';
 import { DatabaseService } from '@/services/database.service';
+import { TimesheetService, TimesheetEntry } from '@/services/timesheet.service';
 import {
   LiquidLearningLayout,
   GlassHeader,
-  GlassStatCard,
   LiquidButton,
-  SectionTitle,
 } from '@/components/layouts/LiquidLearningLayout';
 import { FloatingActionButton } from '@/design-system/components/interactive/FloatingActionButton';
 import ParentDashboardHero from '@/components/parent/ParentDashboardHero';
+import StudentMediaGallery from '@/components/parent/StudentMediaGallery';
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 },
-  },
-};
+// Dashboard Components
+import {
+  DashboardStats,
+  StudentList,
+  TeacherList,
+  SessionsList,
+} from '@/components/parent/dashboard';
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
-};
+interface DashboardStatsData {
+  avgProgress: number;
+  monthlyHours: number;
+  studentProgress: {
+    studentId: string;
+    studentName: string;
+    progress: number;
+  }[];
+}
 
 export default function ParentDashboard() {
   const { user, logout } = useAuthContext();
   const router = useRouter();
   const [students, setStudents] = useState<StudentProfile[]>([]);
   const [teachers, setTeachers] = useState<TeacherProfile[]>([]);
+  const [sessions, setSessions] = useState<TimesheetEntry[]>([]);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStatsData>({
+    avgProgress: 0,
+    monthlyHours: 0,
+    studentProgress: [],
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Modal states
   const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
   const [showCreateTeacherModal, setShowCreateTeacherModal] = useState(false);
   const [showDataSheetsModal, setShowDataSheetsModal] = useState(false);
@@ -53,6 +64,11 @@ export default function ParentDashboard() {
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<StudentProfile | null>(
     null
+  );
+
+  // Active tab for dashboard sections
+  const [activeTab, setActiveTab] = useState<'overview' | 'sessions'>(
+    'overview'
   );
 
   useEffect(() => {
@@ -70,13 +86,33 @@ export default function ParentDashboard() {
     setError(null);
 
     try {
-      const [studentsData, teachersData] = await Promise.all([
+      const [studentsData, teachersData, sessionsData] = await Promise.all([
         DatabaseService.getStudents(user.id),
         DatabaseService.getTeachers(user.id),
+        TimesheetService.getParentTimesheet(user.id),
       ]);
 
       setStudents(studentsData);
       setTeachers(teachersData);
+      setSessions(sessionsData);
+
+      // Fetch real dashboard stats (avgProgress, monthlyHours)
+      try {
+        const statsResponse = await fetch(
+          `/api/parent/dashboard?parentId=${user.id}`
+        );
+        if (statsResponse.ok) {
+          const stats = await statsResponse.json();
+          setDashboardStats({
+            avgProgress: stats.avgProgress || 0,
+            monthlyHours: stats.monthlyHours || 0,
+            studentProgress: stats.studentProgress || [],
+          });
+        }
+      } catch (statsErr) {
+        console.error('Error loading dashboard stats:', statsErr);
+        // Non-critical, continue with defaults
+      }
     } catch (err) {
       console.error('Error loading data:', err);
       setError('Failed to load data. Please try refreshing the page.');
@@ -118,7 +154,6 @@ export default function ParentDashboard() {
         interests: formData.interests,
       };
 
-      // Check if we're editing an existing student
       if (selectedStudent) {
         const updatedStudent = await DatabaseService.updateStudent(
           selectedStudent.id,
@@ -135,7 +170,6 @@ export default function ParentDashboard() {
           setError('Failed to update student. Please try again.');
         }
       } else {
-        // Creating a new student
         const newStudent = await DatabaseService.createStudent(
           studentData,
           user.id
@@ -234,6 +268,16 @@ export default function ParentDashboard() {
     setSelectedStudent(student);
     setShowCreateStudentModal(true);
   };
+
+  // Calculate stats
+  const activeSessions = sessions.filter(s => s.status === 'checked_in').length;
+  const totalSessionHours = Math.round(
+    sessions.reduce((sum, s) => sum + (s.duration_minutes || 0), 0) / 60
+  );
+  // Use real progress from datasheets (fetched from API)
+  const avgProgress = dashboardStats.avgProgress;
+  // Use monthly hours from API (filters to current month)
+  const monthlyHours = dashboardStats.monthlyHours;
 
   // FAB actions
   const fabActions = [
@@ -400,7 +444,7 @@ export default function ParentDashboard() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200 }}
-                className="w-12 h-12 bg-gradient-to-br from-sky-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/25"
+                className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/25"
               >
                 <svg
                   className="w-7 h-7 text-white"
@@ -417,7 +461,7 @@ export default function ParentDashboard() {
                 </svg>
               </motion.div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
                   Parent Dashboard
                 </h1>
                 <p className="text-sm text-slate-600">
@@ -444,16 +488,24 @@ export default function ParentDashboard() {
         {/* Dashboard Hero */}
         <ParentDashboardHero
           parentName={user?.name}
-          students={students.map(s => ({
-            id: s.id,
-            name: s.name,
-            progress: 0, // Progress tracking not yet implemented
-            activeSession: false,
-          }))}
+          students={students.map(s => {
+            // Get individual student progress from API data
+            const studentData = dashboardStats.studentProgress.find(
+              sp => sp.studentId === s.id
+            );
+            return {
+              id: s.id,
+              name: s.name,
+              progress: studentData?.progress || 0,
+              activeSession: sessions.some(
+                sess => sess.student_id === s.id && sess.status === 'checked_in'
+              ),
+            };
+          })}
           totalStudents={students.length}
-          weeklyHours={0}
+          weeklyHours={monthlyHours}
           onAddStudent={() => setShowCreateStudentModal(true)}
-          onViewProgress={() => {}}
+          onViewProgress={() => setActiveTab('sessions')}
           className="mb-8"
         />
 
@@ -504,343 +556,82 @@ export default function ParentDashboard() {
           )}
         </AnimatePresence>
 
+        {/* Tab Navigation */}
+        <div className="flex items-center gap-2 mb-8 bg-white/80 backdrop-blur-sm rounded-xl p-1 border border-slate-200/50 w-fit">
+          {(['overview', 'sessions'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                activeTab === tab
+                  ? 'bg-sky-500 text-white shadow-md'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              {tab === 'overview' ? 'Overview' : 'Sessions'}
+              {tab === 'sessions' && activeSessions > 0 && (
+                <span className="ml-2 px-1.5 py-0.5 text-xs bg-green-500 text-white rounded-full">
+                  {activeSessions}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
         {/* Statistics Cards */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
-        >
-          <motion.div variants={itemVariants}>
-            <GlassStatCard
-              title="Total Students"
-              value={students.length}
-              color="primary"
-              icon={
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                  />
-                </svg>
-              }
-            />
-          </motion.div>
-          <motion.div variants={itemVariants}>
-            <GlassStatCard
-              title="Active Teachers"
-              value={teachers.length}
-              color="secondary"
-              icon={
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-              }
-            />
-          </motion.div>
-          <motion.div variants={itemVariants}>
-            <GlassStatCard
-              title="This Month"
-              value="24h"
-              color="success"
-              icon={
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              }
-            />
-          </motion.div>
-          <motion.div variants={itemVariants}>
-            <GlassStatCard
-              title="Avg Progress"
-              value={`${students.length > 0 ? 85 : 0}%`}
-              color="warning"
-              trend="up"
-              trendValue="+5% this week"
-              icon={
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-              }
-            />
-          </motion.div>
-        </motion.div>
+        <DashboardStats
+          totalStudents={students.length}
+          totalTeachers={teachers.length}
+          totalSessions={sessions.length}
+          monthlyHours={`${monthlyHours}h`}
+          avgProgress={avgProgress}
+        />
 
-        {/* Students Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+        {/* Student Media Gallery - Netflix Style */}
+        <StudentMediaGallery
           className="mb-8"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <SectionTitle subtitle="Manage your children's learning profiles">
-              Your Students
-            </SectionTitle>
-            {students.length > 0 && (
-              <LiquidButton
-                variant="primary"
-                size="sm"
-                icon={
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                }
-                onClick={() => setShowCreateStudentModal(true)}
-              >
-                Add Student
-              </LiquidButton>
-            )}
-          </div>
+          students={students.map(s => ({ id: s.id, name: s.name }))}
+          onUpload={() => {
+            // TODO: Implement upload modal
+            console.log('Upload media clicked');
+          }}
+        />
 
-          {students.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-12 text-center border border-slate-200/50"
-            >
-              <div className="w-20 h-20 bg-gradient-to-br from-sky-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-10 h-10 text-sky-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">
-                No Students Yet
-              </h3>
-              <p className="text-slate-600 mb-6 max-w-md mx-auto">
-                Get started by creating your first student profile. You'll be
-                able to track their progress and manage their learning journey.
-              </p>
-              <LiquidButton
-                variant="primary"
-                size="lg"
-                onClick={() => setShowCreateStudentModal(true)}
-              >
-                Create Your First Student
-              </LiquidButton>
-            </motion.div>
-          ) : (
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-            >
-              {students.map((student, index) => (
-                <motion.div key={student.id} variants={itemVariants}>
-                  <StudentProfileCard
-                    student={student}
-                    onEdit={() => handleEditStudent(student)}
-                    onDelete={() => handleDeleteStudent(student.id)}
-                    onViewDataSheets={() => {
-                      setSelectedStudent(student);
-                      setShowDataSheetsModal(true);
-                    }}
-                    onAssignTeacher={() => {
-                      setSelectedStudent(student);
-                      setShowAssignmentModal(true);
-                    }}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </motion.div>
+        {/* Content based on active tab */}
+        {activeTab === 'overview' ? (
+          <>
+            {/* Students Section */}
+            <StudentList
+              students={students}
+              onAddStudent={() => setShowCreateStudentModal(true)}
+              onEditStudent={handleEditStudent}
+              onDeleteStudent={handleDeleteStudent}
+              onViewDataSheets={student => {
+                setSelectedStudent(student);
+                setShowDataSheetsModal(true);
+              }}
+              onAssignTeacher={student => {
+                setSelectedStudent(student);
+                setShowAssignmentModal(true);
+              }}
+            />
 
-        {/* Teachers Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mb-8"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <SectionTitle subtitle="Manage your teaching team">
-              Your Teachers
-            </SectionTitle>
-            {teachers.length > 0 && (
-              <LiquidButton
-                variant="secondary"
-                size="sm"
-                icon={
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                }
-                onClick={() => setShowCreateTeacherModal(true)}
-              >
-                Add Teacher
-              </LiquidButton>
-            )}
-          </div>
-
-          {teachers.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-12 text-center border border-slate-200/50"
-            >
-              <div className="w-20 h-20 bg-gradient-to-br from-violet-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-10 h-10 text-violet-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">
-                No Teachers Yet
-              </h3>
-              <p className="text-slate-600 mb-6 max-w-md mx-auto">
-                Add teacher profiles to provide specialized instruction for your
-                students.
-              </p>
-              <LiquidButton
-                variant="secondary"
-                size="lg"
-                onClick={() => setShowCreateTeacherModal(true)}
-              >
-                Add Your First Teacher
-              </LiquidButton>
-            </motion.div>
-          ) : (
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              {teachers.map((teacher, index) => (
-                <motion.div
-                  key={teacher.id}
-                  variants={itemVariants}
-                  whileHover={{ y: -4 }}
-                  className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200/50"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-violet-500/25">
-                        {teacher.name.charAt(0)}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-900">
-                          {teacher.name}
-                        </h3>
-                        <p className="text-sm text-slate-600">
-                          {teacher.email}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2 mb-4">
-                    <div className="text-sm">
-                      <p className="text-slate-600 font-medium">Subjects:</p>
-                      <p className="text-slate-900">
-                        {teacher.subjects.join(', ')}
-                      </p>
-                    </div>
-                    {teacher.hourlyRate && (
-                      <div className="text-sm">
-                        <p className="text-slate-600 font-medium">Rate:</p>
-                        <p className="text-slate-900">
-                          ${teacher.hourlyRate}/hour
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleViewTeacherQRCodes(teacher)}
-                      className="flex-1 px-3 py-2 bg-sky-50 text-sky-600 rounded-lg hover:bg-sky-100 transition-colors text-sm font-medium"
-                    >
-                      View QR
-                    </button>
-                    <button
-                      onClick={() => handleDeleteTeacher(teacher.id)}
-                      className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </motion.div>
+            {/* Teachers Section */}
+            <TeacherList
+              teachers={teachers}
+              onAddTeacher={() => setShowCreateTeacherModal(true)}
+              onViewQRCodes={handleViewTeacherQRCodes}
+              onDeleteTeacher={handleDeleteTeacher}
+            />
+          </>
+        ) : (
+          /* Sessions Section */
+          <SessionsList
+            parentId={user.id}
+            students={students}
+            teachers={teachers}
+          />
+        )}
       </div>
 
       {/* Floating Action Button */}
@@ -863,7 +654,7 @@ export default function ParentDashboard() {
             >
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
                     {selectedStudent
                       ? 'Edit Student Profile'
                       : 'Create Student Profile'}

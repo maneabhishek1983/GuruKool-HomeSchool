@@ -2,187 +2,310 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  DataSheet,
-  DataSheetActivity,
-  ActivityType,
-  ActivityStatus,
-  Student,
-  ACTIVITY_TYPES,
-} from '@/types/syllabus.types';
-import { DataSheetsService } from '@/services/data-sheets.service';
-import { SyllabusService } from '@/services/syllabus.service';
+
+// Co-operation/Willingness level options
+const COOPERATION_LEVELS = [
+  { value: 'excellent', label: 'Excellent', color: 'bg-green-100 text-green-800' },
+  { value: 'good', label: 'Good', color: 'bg-blue-100 text-blue-800' },
+  { value: 'moderate', label: 'Moderate', color: 'bg-yellow-100 text-yellow-800' },
+  { value: 'poor', label: 'Poor', color: 'bg-orange-100 text-orange-800' },
+  { value: 'refused', label: 'Refused', color: 'bg-red-100 text-red-800' },
+];
+
+// Behaviour options
+const BEHAVIOUR_OPTIONS = [
+  { value: 'engaged', label: 'Engaged & Focused' },
+  { value: 'settled', label: 'Settled' },
+  { value: 'excited', label: 'Excited' },
+  { value: 'calm', label: 'Calm' },
+  { value: 'distracted', label: 'Got Distracted' },
+  { value: 'frustrated', label: 'Frustrated' },
+  { value: 'shouting', label: 'Shouting/Loud' },
+  { value: 'pushing', label: 'Pushing' },
+  { value: 'crying', label: 'Crying' },
+  { value: 'tired', label: 'Tired' },
+  { value: 'hyperactive', label: 'Hyperactive' },
+  { value: 'anxious', label: 'Anxious' },
+  { value: 'happy', label: 'Happy' },
+  { value: 'unresponsive', label: 'Unresponsive' },
+];
+
+interface AssignedStudent {
+  id: string;
+  name: string;
+  grade: string;
+  country: string;
+  parentId?: string;
+}
+
+interface StudentActivity {
+  id: string;
+  name: string;
+  category: 'socialization' | 'physical_education' | 'extracurricular' | 'community' | 'sensory' | 'writing' | 'communication' | 'social' | 'motor' | 'academic';
+}
+
+interface ActivityEntry {
+  id: string;
+  activityId: string;
+  activityName: string;
+  category: string;
+  completed: boolean;
+  cooperationLevel: string;
+  behaviour: string;
+  comments: string;
+  date: string;
+}
 
 interface DataSheetsManagerProps {
   teacherId: string;
   selectedDate?: string;
+  assignedStudents?: AssignedStudent[];
 }
 
 export const DataSheetsManager: React.FC<DataSheetsManagerProps> = ({
   teacherId,
-  selectedDate = new Date().toISOString().split('T')[0],
+  selectedDate: initialDate,
+  assignedStudents: propStudents,
 }) => {
-  const [dataSheets, setDataSheets] = useState<DataSheet[]>([]);
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [selectedSheet, setSelectedSheet] = useState<DataSheet | null>(null);
-  const [activities, setActivities] = useState<DataSheetActivity[]>([]);
+  const [selectedDate, setSelectedDate] = useState(initialDate || new Date().toISOString().split('T')[0]);
+  const [students, setStudents] = useState<AssignedStudent[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<AssignedStudent | null>(null);
+  const [studentActivities, setStudentActivities] = useState<StudentActivity[]>([]);
+  const [activityEntries, setActivityEntries] = useState<ActivityEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'activities' | 'progress'
-  >('overview');
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    loadDataSheets();
     loadStudents();
-  }, [teacherId, selectedDate]);
+  }, [teacherId, propStudents]);
 
   useEffect(() => {
-    if (selectedSheet) {
-      loadActivities(selectedSheet.id);
+    if (selectedStudent) {
+      loadStudentActivities(selectedStudent.id);
     }
-  }, [selectedSheet]);
+  }, [selectedStudent, selectedDate]);
 
-  const loadDataSheets = async () => {
+  const loadStudents = async () => {
     setLoading(true);
     try {
-      const sheets = await DataSheetsService.getDataSheetsByTeacher(
-        teacherId,
-        selectedDate
-      );
-      setDataSheets(sheets);
+      if (propStudents && propStudents.length > 0) {
+        setStudents(propStudents);
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(`/api/teacher/dashboard?userId=${teacherId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.students && data.students.length > 0) {
+          setStudents(data.students);
+        }
+      }
     } catch (error) {
-      console.error('Error loading data sheets:', error);
+      console.error('Error loading students:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadStudents = async () => {
+  const loadStudentActivities = async (studentId: string) => {
+    setLoading(true);
     try {
-      // This would typically come from teacher assignments
-      // For now, using mock data - in real implementation, get from teacher assignments
-      const mockStudents: Student[] = [
-        {
-          id: '770e8400-e29b-41d4-a716-446655440001',
-          parentId: '550e8400-e29b-41d4-a716-446655440002',
-          name: 'Emma Johnson',
-          age: 6,
-          country: 'UK',
-          gradeLevel: 'Year 1',
-          gradeSystem: 'uk_year',
-          learningPreferences: {
-            learningStyle: 'visual',
-            interests: ['mathematics', 'art'],
-            attentionSpan: 'medium',
-            preferredTime: 'morning',
-          },
-          specialNeeds: [],
-          academicStandards: {},
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ];
-      setStudents(mockStudents);
-    } catch (error) {
-      console.error('Error loading students:', error);
-    }
-  };
+      // Fetch student profile to get their selected activities
+      const response = await fetch(`/api/students/${studentId}`);
+      if (response.ok) {
+        const student = await response.json();
 
-  const loadActivities = async (dataSheetId: string) => {
-    try {
-      const sheetActivities =
-        await DataSheetsService.getActivitiesByDataSheet(dataSheetId);
-      setActivities(sheetActivities);
-    } catch (error) {
-      console.error('Error loading activities:', error);
-    }
-  };
+        const activities: StudentActivity[] = [];
 
-  const createNewDataSheet = async (student: Student) => {
-    setCreating(true);
-    try {
-      const dateStr = (selectedDate ||
-        new Date().toISOString().split('T')[0]) as string;
-      const newSheet = await DataSheetsService.createDataSheet({
-        studentId: student.id,
-        teacherId: teacherId,
-        parentId: student.parentId || '',
-        date: dateStr,
-        title: `Daily Activities - ${student.name}`,
-        description: `Comprehensive activity tracking for ${student.name} on ${dateStr}`,
-        activities: [],
-        progressSummary: {
-          overallProgress: 0,
-          areasOfStrength: [],
-          areasForImprovement: [],
-        },
-        challenges: [],
-        prompts: [],
-        isTemplate: false,
-      });
+        // Add socialization activities
+        if (student.selectedSocialization) {
+          student.selectedSocialization.forEach((item: { id: string; name: string }) => {
+            activities.push({ id: item.id, name: item.name, category: 'socialization' });
+          });
+        }
 
-      if (newSheet) {
-        // Create default activities
-        await DataSheetsService.createDefaultActivities(newSheet.id, dateStr);
-        setSelectedSheet(newSheet);
-        await loadDataSheets();
+        // Add physical education activities
+        if (student.selectedPhysicalEducation) {
+          student.selectedPhysicalEducation.forEach((item: { id: string; name: string }) => {
+            activities.push({ id: item.id, name: item.name, category: 'physical_education' });
+          });
+        }
+
+        // Add extracurricular activities
+        if (student.selectedExtracurricular) {
+          student.selectedExtracurricular.forEach((item: { id: string; name: string }) => {
+            activities.push({ id: item.id, name: item.name, category: 'extracurricular' });
+          });
+        }
+
+        // Add community involvement
+        if (student.selectedCommunityInvolvement) {
+          student.selectedCommunityInvolvement.forEach((item: { id: string; name: string }) => {
+            activities.push({ id: item.id, name: item.name, category: 'community' });
+          });
+        }
+
+        // Add sensory activities
+        if (student.selectedSensoryActivities) {
+          student.selectedSensoryActivities.forEach((name: string, index: number) => {
+            activities.push({ id: `sensory-${index}`, name, category: 'sensory' });
+          });
+        }
+
+        // Add writing activities
+        if (student.selectedWritingActivities) {
+          student.selectedWritingActivities.forEach((name: string, index: number) => {
+            activities.push({ id: `writing-${index}`, name, category: 'writing' });
+          });
+        }
+
+        // Add communication activities
+        if (student.selectedCommunicationActivities) {
+          student.selectedCommunicationActivities.forEach((name: string, index: number) => {
+            activities.push({ id: `comm-${index}`, name, category: 'communication' });
+          });
+        }
+
+        // Add social activities
+        if (student.selectedSocialActivities) {
+          student.selectedSocialActivities.forEach((name: string, index: number) => {
+            activities.push({ id: `social-${index}`, name, category: 'social' });
+          });
+        }
+
+        // Add motor activities
+        if (student.selectedMotorActivities) {
+          student.selectedMotorActivities.forEach((name: string, index: number) => {
+            activities.push({ id: `motor-${index}`, name, category: 'motor' });
+          });
+        }
+
+        // Add academic activities
+        if (student.selectedAcademicActivities) {
+          student.selectedAcademicActivities.forEach((name: string, index: number) => {
+            activities.push({ id: `academic-${index}`, name, category: 'academic' });
+          });
+        }
+
+        setStudentActivities(activities);
+
+        // Initialize activity entries for the selected date
+        const dateStr = selectedDate || new Date().toISOString().split('T')[0] || '';
+        const entries: ActivityEntry[] = activities.map(activity => ({
+          id: `${activity.id}-${dateStr}`,
+          activityId: activity.id,
+          activityName: activity.name,
+          category: activity.category,
+          completed: false,
+          cooperationLevel: '',
+          behaviour: '',
+          comments: '',
+          date: dateStr,
+        }));
+
+        setActivityEntries(entries);
+
+        // Try to load saved entries from database
+        await loadSavedEntries(studentId, dateStr);
       }
     } catch (error) {
-      console.error('Error creating data sheet:', error);
+      console.error('Error loading student activities:', error);
     } finally {
-      setCreating(false);
+      setLoading(false);
     }
   };
 
-  const updateActivity = async (
-    activityId: string,
-    updates: Partial<DataSheetActivity>
-  ) => {
+  const loadSavedEntries = async (studentId: string, date: string) => {
     try {
-      const updated = await DataSheetsService.updateActivity(
-        activityId,
-        updates
-      );
-      if (updated && selectedSheet) {
-        await loadActivities(selectedSheet.id);
+      const response = await fetch(`/api/data-sheets/entries?studentId=${studentId}&date=${date}`);
+      if (response.ok) {
+        const savedEntries = await response.json();
+        if (savedEntries && savedEntries.length > 0) {
+          // Merge saved entries with current entries
+          setActivityEntries(prev => prev.map(entry => {
+            const saved = savedEntries.find((s: ActivityEntry) => s.activityId === entry.activityId);
+            return saved ? { ...entry, ...saved } : entry;
+          }));
+        }
       }
     } catch (error) {
-      console.error('Error updating activity:', error);
+      console.error('Error loading saved entries:', error);
     }
   };
 
-  const getActivityStatusColor = (status: ActivityStatus) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-800';
-      case 'scheduled':
-        return 'bg-gray-100 text-gray-800';
-      case 'skipped':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getRatingStars = (rating?: number) => {
-    if (!rating) {
-      return null;
-    }
-    return Array.from({ length: 5 }, (_, i) => (
-      <span
-        key={i}
-        className={`text-sm ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`}
-      >
-        ★
-      </span>
+  const updateEntry = (entryId: string, field: keyof ActivityEntry, value: string | boolean) => {
+    setActivityEntries(prev => prev.map(entry =>
+      entry.id === entryId ? { ...entry, [field]: value } : entry
     ));
   };
 
-  if (loading) {
+  const handleSave = async () => {
+    if (!selectedStudent) return;
+
+    setSaving(true);
+    setSaveMessage(null);
+
+    try {
+      const response = await fetch('/api/data-sheets/entries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId: selectedStudent.id,
+          teacherId,
+          date: selectedDate,
+          entries: activityEntries.filter(e => e.completed),
+        }),
+      });
+
+      if (response.ok) {
+        setSaveMessage('Data sheet saved successfully!');
+        setTimeout(() => setSaveMessage(null), 3000);
+      } else {
+        setSaveMessage('Error saving data sheet. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error saving data sheet:', error);
+      setSaveMessage('Error saving data sheet. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'socialization': return 'bg-purple-50 border-purple-200';
+      case 'physical_education': return 'bg-orange-50 border-orange-200';
+      case 'extracurricular': return 'bg-teal-50 border-teal-200';
+      case 'community': return 'bg-indigo-50 border-indigo-200';
+      case 'sensory': return 'bg-pink-50 border-pink-200';
+      case 'writing': return 'bg-blue-50 border-blue-200';
+      case 'communication': return 'bg-green-50 border-green-200';
+      case 'social': return 'bg-yellow-50 border-yellow-200';
+      case 'motor': return 'bg-red-50 border-red-200';
+      case 'academic': return 'bg-cyan-50 border-cyan-200';
+      default: return 'bg-gray-50 border-gray-200';
+    }
+  };
+
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case 'socialization': return 'Socialization';
+      case 'physical_education': return 'Physical Education';
+      case 'extracurricular': return 'Extracurricular';
+      case 'community': return 'Community';
+      case 'sensory': return 'Sensory';
+      case 'writing': return 'Writing';
+      case 'communication': return 'Communication';
+      case 'social': return 'Social';
+      case 'motor': return 'Motor Skills';
+      case 'academic': return 'Academic';
+      default: return category;
+    }
+  };
+
+  if (loading && students.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -193,344 +316,270 @@ export const DataSheetsManager: React.FC<DataSheetsManagerProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Data Sheets</h2>
-          <p className="text-gray-600">
-            Manage daily activities and progress tracking
-          </p>
+          <p className="text-gray-600">Track daily activities and behaviour</p>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-4">
           <input
             type="date"
             value={selectedDate}
-            onChange={e => (window.location.search = `?date=${e.target.value}`)}
+            onChange={e => setSelectedDate(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
       </div>
 
       {/* Student Selection */}
-      {dataSheets.length === 0 && (
+      {!selectedStudent && (
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Create Data Sheet
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {students.map(student => (
-              <motion.div
-                key={student.id}
-                whileHover={{ scale: 1.02 }}
-                className="p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-300"
-                onClick={() => createNewDataSheet(student)}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-blue-600">
-                      {student.name.charAt(0)}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{student.name}</p>
-                    <p className="text-sm text-gray-600">
-                      {student.gradeLevel} • {student.country}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Data Sheets List */}
-      {dataSheets.length > 0 && !selectedSheet && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {dataSheets.map(sheet => (
-            <motion.div
-              key={sheet.id}
-              whileHover={{ scale: 1.02 }}
-              className="bg-white rounded-lg shadow-sm border p-6 cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => setSelectedSheet(sheet)}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {sheet.title}
-                </h3>
-                <div className="text-right">
-                  <p className="text-sm text-gray-600">{sheet.date}</p>
-                </div>
-              </div>
-              <p className="text-gray-600 text-sm mb-4">{sheet.description}</p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span className="text-sm text-gray-600">
-                    {sheet.progressSummary.overallProgress}% Complete
-                  </span>
-                </div>
-                <button className="text-blue-600 text-sm font-medium hover:text-blue-700">
-                  View Details →
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
-
-      {/* Data Sheet Detail View */}
-      {selectedSheet && (
-        <div className="bg-white rounded-lg shadow-sm border">
-          {/* Header */}
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {selectedSheet.title}
-                </h3>
-                <p className="text-gray-600">{selectedSheet.description}</p>
-              </div>
-              <button
-                onClick={() => setSelectedSheet(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ← Back to List
-              </button>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex space-x-4 mt-4">
-              {[
-                { id: 'overview', label: 'Overview' },
-                { id: 'activities', label: 'Activities' },
-                { id: 'progress', label: 'Progress' },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Student</h3>
+          {students.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">
+              No students assigned. Please contact the parent to assign you to their student.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {students.map(student => (
+                <motion.div
+                  key={student.id}
+                  whileHover={{ scale: 1.02 }}
+                  className="p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-md transition-all"
+                  onClick={() => setSelectedStudent(student)}
                 >
-                  {tab.label}
-                </button>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-lg font-medium text-blue-600">
+                        {student.name.charAt(0)}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{student.name}</p>
+                      <p className="text-sm text-gray-600">
+                        {student.grade} • {student.country}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
               ))}
             </div>
+          )}
+        </div>
+      )}
+
+      {/* Data Sheet Form */}
+      {selectedStudent && (
+        <div className="bg-white rounded-lg shadow-sm border">
+          {/* Header */}
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => {
+                  setSelectedStudent(null);
+                  setStudentActivities([]);
+                  setActivityEntries([]);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ← Back
+              </button>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {selectedStudent.name}&apos;s Data Sheet
+                </h3>
+                <p className="text-sm text-gray-600">Date: {selectedDate}</p>
+              </div>
+            </div>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400 flex items-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Saving...
+                </>
+              ) : (
+                'Save Data Sheet'
+              )}
+            </button>
           </div>
 
-          {/* Tab Content */}
+          {/* Save Message */}
+          <AnimatePresence>
+            {saveMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className={`mx-6 mt-4 p-3 rounded-md ${
+                  saveMessage.includes('success')
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-red-100 text-red-800'
+                }`}
+              >
+                {saveMessage}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Activities Table */}
           <div className="p-6">
-            <AnimatePresence mode="wait">
-              {activeTab === 'overview' && (
-                <motion.div
-                  key="overview"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="space-y-6"
-                >
-                  {/* Progress Summary */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <h4 className="font-medium text-blue-900 mb-2">
-                        Overall Progress
-                      </h4>
-                      <div className="text-2xl font-bold text-blue-700">
-                        {selectedSheet.progressSummary.overallProgress}%
-                      </div>
-                    </div>
-                    <div className="bg-green-50 rounded-lg p-4">
-                      <h4 className="font-medium text-green-900 mb-2">
-                        Strengths
-                      </h4>
-                      <div className="text-sm text-green-700">
-                        {selectedSheet.progressSummary.areasOfStrength.length >
-                        0
-                          ? selectedSheet.progressSummary.areasOfStrength.join(
-                              ', '
-                            )
-                          : 'To be assessed'}
-                      </div>
-                    </div>
-                    <div className="bg-orange-50 rounded-lg p-4">
-                      <h4 className="font-medium text-orange-900 mb-2">
-                        Focus Areas
-                      </h4>
-                      <div className="text-sm text-orange-700">
-                        {selectedSheet.progressSummary.areasForImprovement
-                          .length > 0
-                          ? selectedSheet.progressSummary.areasForImprovement.join(
-                              ', '
-                            )
-                          : 'All areas progressing well'}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Activity Types Overview */}
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-4">
-                      Activity Types
-                    </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                      {Object.entries(ACTIVITY_TYPES).map(([type, config]) => {
-                        const typeActivities = activities.filter(
-                          a => a.activityType === type
-                        );
-                        const completed = typeActivities.filter(
-                          a => a.status === 'completed'
-                        ).length;
-
-                        return (
-                          <div
-                            key={type}
-                            className="text-center p-4 bg-gray-50 rounded-lg"
-                          >
-                            <div className="text-2xl mb-2">{config.icon}</div>
-                            <div className="font-medium text-gray-900">
-                              {config.name}
-                            </div>
-                            <div className="text-sm text-gray-600">
-                              {completed}/{typeActivities.length} completed
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {activeTab === 'activities' && (
-                <motion.div
-                  key="activities"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="space-y-4"
-                >
-                  {activities.map(activity => (
-                    <div
-                      key={activity.id}
-                      className="border border-gray-200 rounded-lg p-4"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-xl">
-                            {ACTIVITY_TYPES[activity.activityType].icon}
-                          </span>
-                          <div>
-                            <h5 className="font-medium text-gray-900">
-                              {activity.activityName}
-                            </h5>
-                            <p className="text-sm text-gray-600">
-                              {activity.description}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${getActivityStatusColor(activity.status)}`}
-                          >
-                            {activity.status.replace('_', ' ')}
-                          </span>
-                          {activity.rating && (
-                            <div className="flex items-center">
-                              {getRatingStars(activity.rating)}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {activity.status === 'scheduled' && (
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() =>
-                              updateActivity(activity.id, {
-                                status: 'in_progress',
-                                actualStart: new Date().toISOString(),
-                              })
-                            }
-                            className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200"
-                          >
-                            Start Activity
-                          </button>
-                          <button
-                            onClick={() =>
-                              updateActivity(activity.id, { status: 'skipped' })
-                            }
-                            className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-                          >
-                            Skip
-                          </button>
-                        </div>
-                      )}
-
-                      {activity.status === 'in_progress' && (
-                        <div className="space-y-3">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() =>
-                                updateActivity(activity.id, {
-                                  status: 'completed',
-                                  actualEnd: new Date().toISOString(),
-                                  rating: 4,
-                                })
-                              }
-                              className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-md hover:bg-green-200"
-                            >
-                              Complete Activity
-                            </button>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Progress Notes
-                            </label>
-                            <textarea
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                              rows={2}
-                              placeholder="Add notes about the student's progress..."
-                              onChange={e =>
-                                updateActivity(activity.id, {
-                                  progressNotes: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {activity.status === 'completed' &&
-                        activity.progressNotes && (
-                          <div className="mt-3 p-3 bg-green-50 rounded-md">
-                            <p className="text-sm text-green-800">
-                              {activity.progressNotes}
-                            </p>
-                          </div>
-                        )}
-                    </div>
-                  ))}
-                </motion.div>
-              )}
-
-              {activeTab === 'progress' && (
-                <motion.div
-                  key="progress"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                >
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">
-                      Progress tracking charts and analytics coming soon...
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {loading ? (
+              <div className="flex items-center justify-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : studentActivities.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500 mb-4">
+                  No activities found in student profile.
+                </p>
+                <p className="text-sm text-gray-400">
+                  Activities are set up when creating the student profile.
+                  Ask the parent to add activities for this student.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700 w-10">
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 text-blue-600 rounded"
+                          onChange={(e) => {
+                            setActivityEntries(prev => prev.map(entry => ({
+                              ...entry,
+                              completed: e.target.checked
+                            })));
+                          }}
+                        />
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Activity</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700 w-40">
+                        Co-operation Level
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700 w-44">
+                        Behaviour Exhibited
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Comments</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* Group by category */}
+                    {Object.entries(
+                      activityEntries.reduce((acc, entry) => {
+                        const cat = entry.category;
+                        if (!acc[cat]) acc[cat] = [];
+                        acc[cat].push(entry);
+                        return acc;
+                      }, {} as Record<string, ActivityEntry[]>)
+                    ).map(([category, entries]) => (
+                      <React.Fragment key={category}>
+                        {/* Category Header */}
+                        <tr className={`${getCategoryColor(category)}`}>
+                          <td colSpan={5} className="py-2 px-4 font-semibold text-gray-700 text-sm">
+                            {getCategoryLabel(category)}
+                          </td>
+                        </tr>
+                        {/* Activity Rows */}
+                        {entries.map(entry => (
+                          <tr key={entry.id} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="py-3 px-4">
+                              <input
+                                type="checkbox"
+                                checked={entry.completed}
+                                onChange={(e) => updateEntry(entry.id, 'completed', e.target.checked)}
+                                className="w-4 h-4 text-blue-600 rounded"
+                              />
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="font-medium text-gray-900">{entry.activityName}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <select
+                                value={entry.cooperationLevel}
+                                onChange={(e) => updateEntry(entry.id, 'cooperationLevel', e.target.value)}
+                                disabled={!entry.completed}
+                                className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
+                              >
+                                <option value="">Select...</option>
+                                {COOPERATION_LEVELS.map(level => (
+                                  <option key={level.value} value={level.value}>
+                                    {level.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="py-3 px-4">
+                              <select
+                                value={entry.behaviour}
+                                onChange={(e) => updateEntry(entry.id, 'behaviour', e.target.value)}
+                                disabled={!entry.completed}
+                                className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
+                              >
+                                <option value="">Select...</option>
+                                {BEHAVIOUR_OPTIONS.map(opt => (
+                                  <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="py-3 px-4">
+                              <input
+                                type="text"
+                                value={entry.comments}
+                                onChange={(e) => updateEntry(entry.id, 'comments', e.target.value)}
+                                disabled={!entry.completed}
+                                placeholder="Add comments..."
+                                className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
+
+          {/* Summary */}
+          {activityEntries.filter(e => e.completed).length > 0 && (
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  <span className="font-semibold text-gray-900">
+                    {activityEntries.filter(e => e.completed).length}
+                  </span>
+                  {' '}of{' '}
+                  <span className="font-semibold text-gray-900">
+                    {activityEntries.length}
+                  </span>
+                  {' '}activities completed
+                </div>
+                <div className="flex gap-4 text-sm">
+                  {COOPERATION_LEVELS.filter(level =>
+                    activityEntries.some(e => e.completed && e.cooperationLevel === level.value)
+                  ).map(level => {
+                    const count = activityEntries.filter(
+                      e => e.completed && e.cooperationLevel === level.value
+                    ).length;
+                    return (
+                      <span key={level.value} className={`px-2 py-1 rounded-full ${level.color}`}>
+                        {level.label}: {count}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

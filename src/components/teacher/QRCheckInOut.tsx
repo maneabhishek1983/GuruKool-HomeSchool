@@ -25,6 +25,8 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualCode, setManualCode] = useState('');
 
   // Check for active check-in on mount
   useEffect(() => {
@@ -38,21 +40,42 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
       return;
     }
 
-    const active = await timesheetService.getActiveCheckIn(user.id);
-    setActiveCheckIn(active);
+    try {
+      // Use API endpoint to bypass RLS and get active session
+      const response = await fetch(`/api/teacher-sessions/active?userId=${user.id}`);
+      const data = await response.json();
+
+      if (data.activeSession) {
+        setActiveCheckIn(data.activeSession);
+      } else {
+        setActiveCheckIn(null);
+      }
+    } catch (err) {
+      console.error('Error checking active session:', err);
+      setActiveCheckIn(null);
+    }
   };
 
   const handleQRScan = async (data: string) => {
     setScannedData(data);
     setError(null);
 
-    // Try to parse QR code to validate format
+    // Check for new simple format: GK:{uuid}
+    if (data.startsWith('GK:')) {
+      // Valid simple format, refresh active session state and proceed
+      await checkActiveCheckIn();
+      setStep('select_action');
+      return;
+    }
+
+    // Try legacy JSON format
     try {
       const parsedData = JSON.parse(data);
 
-      // Check if it's the new TeacherQRService format
+      // Check if it's the TeacherQRService format
       if (parsedData.type === 'teacher_auth') {
-        // Valid format, proceed to action selection
+        // Valid format, refresh active session state and proceed
+        await checkActiveCheckIn();
         setStep('select_action');
         return;
       }
@@ -66,6 +89,7 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
         return;
       }
 
+      await checkActiveCheckIn();
       setStep('select_action');
     } catch (err) {
       setError('Invalid QR code format. Please scan a valid QR code.');
@@ -84,13 +108,21 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
     setStep('processing');
 
     try {
-      // Parse QR data to determine which API to use
-      const parsedData = JSON.parse(scannedData);
-
       let result: TimesheetEntry | null = null;
 
-      // Use new TeacherQRService API for teacher_auth type
-      if (parsedData.type === 'teacher_auth') {
+      // Check if it's the new simple format (GK:{id}) or legacy JSON format
+      const isSimpleFormat = scannedData.startsWith('GK:');
+      const isTeacherAuthFormat = !isSimpleFormat && (() => {
+        try {
+          const parsed = JSON.parse(scannedData);
+          return parsed.type === 'teacher_auth';
+        } catch {
+          return false;
+        }
+      })();
+
+      // Use TeacherQRService API for both simple format and teacher_auth type
+      if (isSimpleFormat || isTeacherAuthFormat) {
         // Call new API endpoint
         const response = await fetch('/api/teacher-sessions/scan', {
           method: 'POST',
@@ -127,7 +159,7 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
           updated_at: data.session.updated_at,
         };
       } else {
-        // Fall back to timesheet service for backward compatibility
+        // Fall back to timesheet service for other formats
         if (selectedAction === 'check_in') {
           result = await timesheetService.checkIn(user.id, scannedData);
         } else {
@@ -166,6 +198,8 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
     setAction(null);
     setNotes('');
     setError(null);
+    setShowManualInput(false);
+    setManualCode('');
   };
 
   // Mock QR scan function removed for production security
@@ -238,7 +272,7 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
               exit={{ opacity: 0, scale: 0.95 }}
               className="text-center space-y-6"
             >
-              {!showScanner ? (
+              {!showScanner && !showManualInput ? (
                 <>
                   <div className="w-64 h-64 mx-auto bg-neutral-100 rounded-2xl flex items-center justify-center">
                     <div className="text-center">
@@ -247,19 +281,27 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => setShowScanner(true)}
-                    className="w-full px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-xl transition-colors"
-                  >
-                    📷 Open Camera Scanner
-                  </button>
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => setShowScanner(true)}
+                      className="w-full px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-xl transition-colors"
+                    >
+                      📷 Open Camera Scanner
+                    </button>
+
+                    <button
+                      onClick={() => setShowManualInput(true)}
+                      className="w-full px-6 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-xl transition-colors"
+                    >
+                      📝 Enter Code Manually
+                    </button>
+                  </div>
 
                   <p className="text-xs text-neutral-500">
-                    Point your camera at the parent's QR code displayed in their
-                    portal
+                    Ask the parent to show their QR code, or have them copy the code for you
                   </p>
                 </>
-              ) : (
+              ) : showScanner ? (
                 <>
                   <div className="space-y-4">
                     <QRScanner
@@ -288,6 +330,64 @@ export function QRCheckInOut({ onSuccess, onError }: QRCheckInOutProps) {
                     Position the QR code within the camera frame
                   </p>
                 </>
+              ) : (
+                /* Manual Code Entry Form */
+                <div className="space-y-4">
+                  <div className="text-center mb-4">
+                    <div className="text-4xl mb-2">📝</div>
+                    <h3 className="text-lg font-semibold text-neutral-900">
+                      Enter Code Manually
+                    </h3>
+                    <p className="text-sm text-neutral-600">
+                      Paste the code from the parent's QR code screen
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">
+                      QR Code Data:
+                    </label>
+                    <textarea
+                      value={manualCode}
+                      onChange={e => setManualCode(e.target.value)}
+                      className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm font-mono"
+                      rows={4}
+                      placeholder='Paste the code here (starts with {"type":"teacher_auth"...})'
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => {
+                        if (manualCode.trim()) {
+                          handleQRScan(manualCode.trim());
+                          setManualCode('');
+                          setShowManualInput(false);
+                        }
+                      }}
+                      disabled={!manualCode.trim()}
+                      className="flex-1 px-6 py-3 bg-primary-600 hover:bg-primary-700 disabled:bg-neutral-300 text-white font-medium rounded-xl transition-colors"
+                    >
+                      Submit Code
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowManualInput(false);
+                        setManualCode('');
+                      }}
+                      className="px-6 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-xl transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                    <p className="text-xs text-blue-700">
+                      <strong>Tip:</strong> Ask the parent to click "Copy Code for Teacher" on their QR code screen, then paste it here.
+                    </p>
+                  </div>
+                </div>
               )}
             </motion.div>
           )}
