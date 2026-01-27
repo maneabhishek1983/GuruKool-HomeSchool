@@ -1708,6 +1708,7 @@ function EmptyGallery({ onUpload }: { onUpload?: () => void }) {
       <Liquid3DOrb
         size="xl"
         variant="gradient"
+        theme="creative"
         interactive
         className="mx-auto mb-8"
       >

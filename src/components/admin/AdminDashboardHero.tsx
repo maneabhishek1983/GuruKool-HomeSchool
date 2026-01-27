@@ -218,16 +218,36 @@ export default function AdminDashboardHero({
 
       {/* Interactive Liquid 3D Orbs */}
       <div className="absolute top-4 right-4 z-0 pointer-events-none opacity-70">
-        <Liquid3DOrb size="xl" variant="primary" interactive={false} />
+        <Liquid3DOrb
+          size="xl"
+          variant="primary"
+          theme="numeracy"
+          interactive={false}
+        />
       </div>
       <div className="absolute bottom-4 left-4 z-0 pointer-events-none opacity-70">
-        <Liquid3DOrb size="xl" variant="glow" interactive={false} />
+        <Liquid3DOrb
+          size="xl"
+          variant="glow"
+          theme="stem"
+          interactive={false}
+        />
       </div>
       <div className="absolute top-1/2 left-1/3 -translate-y-1/2 z-0 pointer-events-none opacity-40">
-        <Liquid3DOrb size="lg" variant="gradient" interactive={false} />
+        <Liquid3DOrb
+          size="lg"
+          variant="gradient"
+          theme="numeracy"
+          interactive={false}
+        />
       </div>
       <div className="absolute bottom-1/3 right-1/4 z-0 pointer-events-none opacity-50 hidden lg:block">
-        <Liquid3DOrb size="md" variant="primary" interactive={false} />
+        <Liquid3DOrb
+          size="md"
+          variant="primary"
+          theme="stem"
+          interactive={false}
+        />
       </div>
     </div>
   );

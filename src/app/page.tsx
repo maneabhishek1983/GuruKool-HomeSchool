@@ -90,16 +90,36 @@ export default function EnhancedHomePage() {
 
         {/* Interactive Liquid 3D Orbs */}
         <div className="absolute top-20 left-8 z-5 pointer-events-none opacity-60 hidden md:block">
-          <Liquid3DOrb size="xl" variant="primary" interactive={false} />
+          <Liquid3DOrb
+            size="xl"
+            variant="primary"
+            theme="gurukool"
+            interactive={false}
+          />
         </div>
         <div className="absolute bottom-32 right-8 z-5 pointer-events-none opacity-60 hidden md:block">
-          <Liquid3DOrb size="lg" variant="glow" interactive={false} />
+          <Liquid3DOrb
+            size="lg"
+            variant="glow"
+            theme="literacy"
+            interactive={false}
+          />
         </div>
         <div className="absolute top-1/3 right-16 z-5 pointer-events-none opacity-50 hidden lg:block">
-          <Liquid3DOrb size="md" variant="gradient" interactive={false} />
+          <Liquid3DOrb
+            size="md"
+            variant="gradient"
+            theme="none"
+            interactive={false}
+          />
         </div>
         <div className="absolute bottom-1/4 left-1/4 z-5 pointer-events-none opacity-40 hidden lg:block">
-          <Liquid3DOrb size="lg" variant="secondary" interactive={false} />
+          <Liquid3DOrb
+            size="lg"
+            variant="secondary"
+            theme="creative"
+            interactive={false}
+          />
         </div>
       </section>
 
@@ -389,10 +409,20 @@ export default function EnhancedHomePage() {
 
         {/* Liquid 3D Orbs for CTA */}
         <div className="absolute top-8 left-8 pointer-events-none opacity-50 hidden md:block">
-          <Liquid3DOrb size="lg" variant="primary" interactive={false} />
+          <Liquid3DOrb
+            size="lg"
+            variant="primary"
+            theme="gurukool"
+            interactive={false}
+          />
         </div>
         <div className="absolute bottom-8 right-8 pointer-events-none opacity-50 hidden md:block">
-          <Liquid3DOrb size="lg" variant="gradient" interactive={false} />
+          <Liquid3DOrb
+            size="lg"
+            variant="gradient"
+            theme="literacy"
+            interactive={false}
+          />
         </div>
 
         <div className="relative max-w-4xl mx-auto px-6 text-center">
