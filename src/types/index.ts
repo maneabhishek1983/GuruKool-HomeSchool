@@ -549,3 +549,210 @@ export type {
   TimeSlot,
   SchedulingConstraint,
 } from './session.types';
+
+// ============================================================================
+// Face Recognition Types (v2.0 - Server-Side Verification)
+// ============================================================================
+
+/**
+ * Database record for encrypted student face data
+ */
+export interface StudentFaceRecord {
+  id: string;
+  student_id: string;
+  face_descriptor_encrypted: Buffer; // AES-256-GCM encrypted data
+  descriptor_version: string;
+  quality_score: number;
+  enrollment_metadata: FaceEnrollmentMetadata;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Metadata captured during face enrollment
+ */
+export interface FaceEnrollmentMetadata {
+  device?: string;
+  browser?: string;
+  lighting?: 'poor' | 'fair' | 'good' | 'excellent';
+  angle?: 'frontal' | 'slight_left' | 'slight_right';
+  capturedAt?: string;
+}
+
+/**
+ * Result from client-side face detection (descriptor sent to server for matching)
+ */
+export interface FaceDetectionResult {
+  descriptor: number[]; // 128 floats - sent to server for verification
+  boundingBox: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  qualityScore: number;
+  landmarks: FaceLandmarks | null;
+  // NO matchedStudent field - matching is done server-side only
+}
+
+/**
+ * Face landmarks for quality assessment
+ */
+export interface FaceLandmarks {
+  positions: Array<{ x: number; y: number }>;
+  leftEye?: { x: number; y: number };
+  rightEye?: { x: number; y: number };
+  nose?: { x: number; y: number };
+  mouth?: { x: number; y: number };
+}
+
+/**
+ * Request payload for face enrollment
+ */
+export interface FaceEnrollRequest {
+  studentId: string;
+  descriptor: number[]; // 128-float array
+  qualityScore: number;
+  metadata?: FaceEnrollmentMetadata;
+}
+
+/**
+ * Response from face enrollment API
+ */
+export interface FaceEnrollResponse {
+  success: boolean;
+  recordId?: string;
+  message: string;
+  error?: string;
+}
+
+/**
+ * Request payload for server-side face verification
+ * IMPORTANT: NO confidence field - server calculates this
+ */
+export interface FaceVerifyRequest {
+  studentId: string;
+  capturedDescriptor: number[]; // 128-float array
+  // NO confidence field - server calculates this from distance
+}
+
+/**
+ * Response from server-side face verification
+ */
+export interface FaceVerifyResponse {
+  success: boolean;
+  matched: boolean;
+  confidence: number; // Server-calculated (0-1)
+  distance: number; // Euclidean distance
+  student?: {
+    id: string;
+    name: string;
+    grade: string;
+  };
+  message: string;
+  verifiedAt?: string;
+}
+
+/**
+ * Errors that can occur during face scanning
+ */
+export interface FaceScannerError {
+  code: FaceScannerErrorCode;
+  message: string;
+  details?: string;
+}
+
+/**
+ * Error codes for face scanner
+ */
+export type FaceScannerErrorCode =
+  | 'CAMERA_DENIED'
+  | 'CAMERA_NOT_FOUND'
+  | 'NO_FACE'
+  | 'MULTIPLE_FACES'
+  | 'MODEL_LOAD_FAILED'
+  | 'LOW_QUALITY'
+  | 'SERVER_VERIFY_FAILED'
+  | 'NETWORK_ERROR'
+  | 'RATE_LIMITED'
+  | 'ENCRYPTION_ERROR';
+
+/**
+ * Methods for verifying student identity at check-in
+ */
+export type VerificationMethod =
+  | 'qr_code'
+  | 'face_recognition'
+  | 'biometric'
+  | 'manual';
+
+/**
+ * Model loading progress state
+ */
+export interface ModelLoadingState {
+  isLoading: boolean;
+  progress: number; // 0-100
+  currentModel?: string;
+  error?: string;
+}
+
+/**
+ * Face quality metrics for UI feedback
+ */
+export interface FaceQualityMetrics {
+  overall: number; // 0-1
+  lighting: 'poor' | 'fair' | 'good' | 'excellent';
+  positioning: 'off_center' | 'too_close' | 'too_far' | 'good';
+  angle: 'frontal' | 'slight_left' | 'slight_right' | 'profile';
+  sharpness: number; // 0-1
+}
+
+/**
+ * Assigned student with face enrollment status (for teacher view)
+ * NOTE: Does NOT include face descriptors - those stay server-side
+ */
+export interface AssignedStudentWithFaceStatus {
+  id: string;
+  name: string;
+  grade: string;
+  hasFaceEnrolled: boolean; // true/false only - no descriptors
+  hasActiveSession: boolean;
+  lastCheckIn: string | undefined;
+}
+
+/**
+ * Face verification audit log entry
+ */
+export interface FaceVerificationAuditEntry {
+  id: string;
+  teacher_id: string;
+  student_id: string;
+  verification_result: 'success' | 'failed' | 'no_match' | 'rate_limited';
+  confidence_score: number;
+  distance: number;
+  device_info: Record<string, unknown>;
+  ip_address: string;
+  created_at: string;
+}
+
+/**
+ * Face check-in request (after successful verification)
+ */
+export interface FaceCheckInRequest {
+  studentId: string;
+  action: 'check_in' | 'check_out';
+  verificationConfidence: number; // Server-provided confidence from verify step
+  notes?: string;
+}
+
+/**
+ * Face check-in response
+ */
+export interface FaceCheckInResponse {
+  success: boolean;
+  sessionId?: string;
+  action: 'check_in' | 'check_out';
+  timestamp: string;
+  message: string;
+}
