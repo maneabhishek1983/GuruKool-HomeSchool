@@ -93,13 +93,15 @@ export const TimesheetManager: React.FC<TimesheetManagerProps> = ({
       );
       if (activeResponse.ok) {
         const activeData = await activeResponse.json();
-        if (activeData.hasActiveSession && activeData.session) {
+        // API returns { activeSession: {...} | null }
+        if (activeData.activeSession) {
+          const session = activeData.activeSession;
           setActiveSession({
-            id: activeData.session.id,
-            teacher_id: activeData.session.teacher_id,
-            student_id: activeData.session.student_id,
-            student_name: activeData.session.student_name,
-            session_start: activeData.session.session_start,
+            id: session.id,
+            teacher_id: session.teacher_id,
+            student_id: session.student_id,
+            student_name: session.student_name,
+            session_start: session.session_start || session.check_in_time,
             status: 'active',
           });
         } else {

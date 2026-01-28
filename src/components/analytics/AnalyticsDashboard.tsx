@@ -29,7 +29,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
 } from 'recharts';
 import {
   analyticsService,
@@ -37,7 +37,7 @@ import {
   TeacherPerformance,
   SessionAnalytics,
   ComparativeAnalytics,
-  AnalyticsFilter
+  AnalyticsFilter,
 } from '@/services/analytics.service';
 
 interface AnalyticsDashboardProps {
@@ -46,18 +46,36 @@ interface AnalyticsDashboardProps {
   className?: string;
 }
 
+const LoadingSkeletons = () => (
+  <div className="animate-pulse" data-testid="loading-skeletons">
+    <span className="sr-only">Loading analytics...</span>
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="bg-gray-200 dark:bg-gray-700 rounded-lg h-32" />
+      ))}
+    </div>
+    <div className="mt-6 bg-gray-200 dark:bg-gray-700 rounded-lg h-96" />
+  </div>
+);
+
 export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   userId,
   userRole,
-  className = ''
+  className = '',
 }) => {
-  const [learningProgress, setLearningProgress] = useState<LearningProgress | null>(null);
-  const [teacherPerformance, setTeacherPerformance] = useState<TeacherPerformance | null>(null);
-  const [sessionAnalytics, setSessionAnalytics] = useState<SessionAnalytics | null>(null);
-  const [comparativeAnalytics, setComparativeAnalytics] = useState<ComparativeAnalytics | null>(null);
+  const [learningProgress, setLearningProgress] =
+    useState<LearningProgress | null>(null);
+  const [teacherPerformance, setTeacherPerformance] =
+    useState<TeacherPerformance | null>(null);
+  const [sessionAnalytics, setSessionAnalytics] =
+    useState<SessionAnalytics | null>(null);
+  const [comparativeAnalytics, setComparativeAnalytics] =
+    useState<ComparativeAnalytics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTimeframe, setSelectedTimeframe] = useState('month');
-  const [activeView, setActiveView] = useState<'progress' | 'performance' | 'sessions' | 'comparison'>('progress');
+  const [activeView, setActiveView] = useState<
+    'progress' | 'performance' | 'sessions' | 'comparison'
+  >('progress');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
 
   const colors = {
@@ -70,7 +88,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     purple: '#8B5CF6',
     pink: '#EC4899',
     indigo: '#6366F1',
-    teal: '#14B8A6'
+    teal: '#14B8A6',
   };
 
   const chartColors = [
@@ -81,7 +99,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     colors.purple,
     colors.pink,
     colors.indigo,
-    colors.teal
+    colors.teal,
   ];
 
   useEffect(() => {
@@ -97,7 +115,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         dateRange: timeframe,
         ...(userRole === 'teacher' ? { teacherIds: [userId] } : {}),
         ...(userRole === 'student' ? { studentIds: [userId] } : {}),
-        ...(selectedSubject !== 'all' ? { subjects: [selectedSubject] } : {})
+        ...(selectedSubject !== 'all' ? { subjects: [selectedSubject] } : {}),
       };
 
       // Load different data based on user role
@@ -153,7 +171,6 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       if (comparativeResult && comparativeResult.status === 'fulfilled') {
         setComparativeAnalytics(comparativeResult.value);
       }
-
     } catch (error) {
       console.error('Failed to load analytics data:', error);
     } finally {
@@ -185,7 +202,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     return { startDate, endDate: now };
   };
 
-  const MetricCard = ({ title, value, subtitle, trend, color = 'primary' }: {
+  const MetricCard = ({
+    title,
+    value,
+    subtitle,
+    trend,
+    color = 'primary',
+  }: {
     title: string;
     value: string | number;
     subtitle?: string;
@@ -211,33 +234,18 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           )}
         </div>
         {trend && (
-          <div className={`text-right ${trend.value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <div
+            className={`text-right ${trend.value >= 0 ? 'text-green-600' : 'text-red-600'}`}
+          >
             <p className="text-lg font-semibold">
               {trend.value >= 0 ? '↗' : '↘'} {Math.abs(trend.value)}%
             </p>
-            <p className="text-xs text-gray-500">
-              {trend.label}
-            </p>
+            <p className="text-xs text-gray-500">{trend.label}</p>
           </div>
         )}
       </div>
     </motion.div>
   );
-
-  if (isLoading) {
-    return (
-      <div className={`space-y-6 ${className}`}>
-        <div className="animate-pulse">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-200 dark:bg-gray-700 rounded-lg h-32" />
-            ))}
-          </div>
-          <div className="mt-6 bg-gray-200 dark:bg-gray-700 rounded-lg h-96" />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -257,7 +265,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {/* Subject Selector */}
           <select
             value={selectedSubject}
-            onChange={(e) => setSelectedSubject(e.target.value)}
+            onChange={e => setSelectedSubject(e.target.value)}
             className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-600"
           >
             <option value="all">All Subjects</option>
@@ -269,7 +277,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
           {/* Timeframe Selector */}
           <div className="flex space-x-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-            {['week', 'month', 'quarter', 'year'].map((timeframe) => (
+            {['week', 'month', 'quarter', 'year'].map(timeframe => (
               <button
                 key={timeframe}
                 onClick={() => setSelectedTimeframe(timeframe)}
@@ -293,7 +301,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             { key: 'progress', label: 'Learning Progress', icon: '📈' },
             { key: 'performance', label: 'Performance', icon: '🎯' },
             { key: 'sessions', label: 'Sessions', icon: '📊' },
-            { key: 'comparison', label: 'Comparison', icon: '📈' }
+            { key: 'comparison', label: 'Comparison', icon: '📈' },
           ].map(({ key, label, icon }) => (
             <button
               key={key}
@@ -312,392 +320,425 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       </div>
 
       {/* Content based on active view */}
-      <AnimatePresence mode="wait">
-        {activeView === 'progress' && learningProgress && (
-          <motion.div
-            key="progress"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-6"
-          >
-            {/* Progress Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <MetricCard
-                title="Progress"
-                value={`${learningProgress.progressPercentage.toFixed(1)}%`}
-                subtitle="Overall completion"
-                trend={{ value: 8.5, label: 'This month' }}
-                color="secondary"
-              />
-              <MetricCard
-                title="Total Sessions"
-                value={learningProgress.totalSessions}
-                subtitle="Learning sessions"
-                trend={{ value: 12, label: 'vs last month' }}
-              />
-              <MetricCard
-                title="Study Hours"
-                value={`${learningProgress.totalHours.toFixed(1)}h`}
-                subtitle="Time invested"
-                trend={{ value: 15, label: 'This month' }}
-                color="accent"
-              />
-              <MetricCard
-                title="Average Rating"
-                value={learningProgress.averageRating.toFixed(1)}
-                subtitle="Session quality"
-                trend={{ value: 5, label: 'Improvement' }}
-                color="purple"
-              />
-            </div>
-
-            {/* Progress Trend */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Learning Progress Trend
-              </h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={learningProgress.trendData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Area
-                    type="monotone"
-                    dataKey="score"
-                    stroke={colors.primary}
-                    fill={colors.primary}
-                    fillOpacity={0.3}
-                    name="Progress Score"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Milestones and Areas */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Strength Areas */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Strength Areas
-                </h3>
-                <div className="space-y-3">
-                  {learningProgress.strengthAreas.map((area, index) => (
-                    <div key={area} className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full" />
-                      <span className="text-gray-700 dark:text-gray-300">{area}</span>
-                    </div>
-                  ))}
-                </div>
+      {isLoading ? (
+        <LoadingSkeletons />
+      ) : (
+        <AnimatePresence mode="wait">
+          {activeView === 'progress' && learningProgress && (
+            <motion.div
+              key="progress"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* Progress Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <MetricCard
+                  title="Progress"
+                  value={`${learningProgress.progressPercentage.toFixed(1)}%`}
+                  subtitle="Overall completion"
+                  trend={{ value: 8.5, label: 'This month' }}
+                  color="secondary"
+                />
+                <MetricCard
+                  title="Total Sessions"
+                  value={learningProgress.totalSessions}
+                  subtitle="Learning sessions"
+                  trend={{ value: 12, label: 'vs last month' }}
+                />
+                <MetricCard
+                  title="Study Hours"
+                  value={`${learningProgress.totalHours.toFixed(1)}h`}
+                  subtitle="Time invested"
+                  trend={{ value: 15, label: 'This month' }}
+                  color="accent"
+                />
+                <MetricCard
+                  title="Average Rating"
+                  value={learningProgress.averageRating.toFixed(1)}
+                  subtitle="Session quality"
+                  trend={{ value: 5, label: 'Improvement' }}
+                  color="purple"
+                />
               </div>
 
-              {/* Improvement Areas */}
+              {/* Progress Trend */}
               <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Areas for Improvement
+                  Learning Progress Trend
                 </h3>
-                <div className="space-y-3">
-                  {learningProgress.improvementAreas.map((area, index) => (
-                    <div key={area} className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full" />
-                      <span className="text-gray-700 dark:text-gray-300">{area}</span>
-                    </div>
-                  ))}
-                </div>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={learningProgress.trendData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Area
+                      type="monotone"
+                      dataKey="score"
+                      stroke={colors.primary}
+                      fill={colors.primary}
+                      fillOpacity={0.3}
+                      name="Progress Score"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
-            </div>
 
-            {/* Milestones */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Learning Milestones
-              </h3>
-              <div className="space-y-4">
-                {learningProgress.milestones.map((milestone) => (
-                  <div key={milestone.id} className="border-l-4 border-blue-500 pl-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium text-gray-900 dark:text-white">
-                          {milestone.title}
-                        </h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {milestone.description}
-                        </p>
+              {/* Milestones and Areas */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Strength Areas */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Strength Areas
+                  </h3>
+                  <div className="space-y-3">
+                    {learningProgress.strengthAreas.map((area, index) => (
+                      <div key={area} className="flex items-center space-x-3">
+                        <div className="w-2 h-2 bg-green-500 rounded-full" />
+                        <span className="text-gray-700 dark:text-gray-300">
+                          {area}
+                        </span>
                       </div>
-                      <span className="text-sm font-medium text-blue-600">
-                        {milestone.progress}%
-                      </span>
-                    </div>
-                    <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${milestone.progress}%` }}
-                      />
-                    </div>
+                    ))}
                   </div>
-                ))}
+                </div>
+
+                {/* Improvement Areas */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Areas for Improvement
+                  </h3>
+                  <div className="space-y-3">
+                    {learningProgress.improvementAreas.map((area, index) => (
+                      <div key={area} className="flex items-center space-x-3">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                        <span className="text-gray-700 dark:text-gray-300">
+                          {area}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        )}
 
-        {activeView === 'performance' && teacherPerformance && (
-          <motion.div
-            key="performance"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-6"
-          >
-            {/* Performance Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <MetricCard
-                title="Overall Rating"
-                value={teacherPerformance.averageRating.toFixed(1)}
-                subtitle="Student feedback"
-                trend={{ value: 3.2, label: 'This month' }}
-                color="secondary"
-              />
-              <MetricCard
-                title="Student Retention"
-                value={`${teacherPerformance.studentRetention.toFixed(1)}%`}
-                subtitle="Repeat students"
-                trend={{ value: 5.8, label: 'Improvement' }}
-                color="accent"
-              />
-              <MetricCard
-                title="Punctuality"
-                value={`${teacherPerformance.punctualityScore.toFixed(1)}%`}
-                subtitle="On-time sessions"
-                trend={{ value: -1.2, label: 'Slight decline' }}
-                color="warning"
-              />
-              <MetricCard
-                title="Engagement"
-                value={`${teacherPerformance.engagementScore.toFixed(1)}%`}
-                subtitle="Student engagement"
-                trend={{ value: 7.5, label: 'Improving' }}
-                color="purple"
-              />
-            </div>
-
-            {/* Performance Radar Chart */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Performance Overview
-              </h3>
-              <ResponsiveContainer width="100%" height={400}>
-                <RadarChart data={[
-                  { metric: 'Teaching Quality', score: teacherPerformance.averageRating * 20 },
-                  { metric: 'Punctuality', score: teacherPerformance.punctualityScore },
-                  { metric: 'Preparation', score: teacherPerformance.preparationScore },
-                  { metric: 'Engagement', score: teacherPerformance.engagementScore },
-                  { metric: 'Student Retention', score: teacherPerformance.studentRetention },
-                  { metric: 'Communication', score: 85 }
-                ]}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="metric" />
-                  <PolarRadiusAxis domain={[0, 100]} />
-                  <Radar
-                    name="Performance"
-                    dataKey="score"
-                    stroke={colors.primary}
-                    fill={colors.primary}
-                    fillOpacity={0.3}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Monthly Trends */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Monthly Performance Trends
-              </h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={teacherPerformance.monthlyTrends}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="rating"
-                    stroke={colors.primary}
-                    name="Rating"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="retention"
-                    stroke={colors.secondary}
-                    name="Retention %"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Subject Expertise */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Subject Expertise
-              </h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={teacherPerformance.subjectExpertise}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="subject" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="score" fill={colors.accent} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </motion.div>
-        )}
-
-        {activeView === 'sessions' && sessionAnalytics && (
-          <motion.div
-            key="sessions"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-6"
-          >
-            {/* Session Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <MetricCard
-                title="Total Sessions"
-                value={sessionAnalytics.totalSessions}
-                subtitle="All sessions"
-                color="primary"
-              />
-              <MetricCard
-                title="Completed"
-                value={sessionAnalytics.completedSessions}
-                subtitle={`${((sessionAnalytics.completedSessions / sessionAnalytics.totalSessions) * 100).toFixed(1)}% completion`}
-                color="secondary"
-              />
-              <MetricCard
-                title="Avg Duration"
-                value={`${sessionAnalytics.averageDuration.toFixed(0)}m`}
-                subtitle="Session length"
-                color="accent"
-              />
-              <MetricCard
-                title="Avg Rating"
-                value={sessionAnalytics.averageRating.toFixed(1)}
-                subtitle="Quality score"
-                color="purple"
-              />
-            </div>
-
-            {/* Sessions by Subject */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Milestones */}
               <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Sessions by Subject
+                  Learning Milestones
                 </h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={sessionAnalytics.sessionsBySubject}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      dataKey="count"
-                      nameKey="subject"
+                <div className="space-y-4">
+                  {learningProgress.milestones.map(milestone => (
+                    <div
+                      key={milestone.id}
+                      className="border-l-4 border-blue-500 pl-4"
                     >
-                      {sessionAnalytics.sessionsBySubject.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
-                      ))}
-                    </Pie>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium text-gray-900 dark:text-white">
+                            {milestone.title}
+                          </h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {milestone.description}
+                          </p>
+                        </div>
+                        <span className="text-sm font-medium text-blue-600">
+                          {milestone.progress}%
+                        </span>
+                      </div>
+                      <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${milestone.progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeView === 'performance' && teacherPerformance && (
+            <motion.div
+              key="performance"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* Performance Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <MetricCard
+                  title="Overall Rating"
+                  value={teacherPerformance.averageRating.toFixed(1)}
+                  subtitle="Student feedback"
+                  trend={{ value: 3.2, label: 'This month' }}
+                  color="secondary"
+                />
+                <MetricCard
+                  title="Student Retention"
+                  value={`${teacherPerformance.studentRetention.toFixed(1)}%`}
+                  subtitle="Repeat students"
+                  trend={{ value: 5.8, label: 'Improvement' }}
+                  color="accent"
+                />
+                <MetricCard
+                  title="Punctuality"
+                  value={`${teacherPerformance.punctualityScore.toFixed(1)}%`}
+                  subtitle="On-time sessions"
+                  trend={{ value: -1.2, label: 'Slight decline' }}
+                  color="warning"
+                />
+                <MetricCard
+                  title="Engagement"
+                  value={`${teacherPerformance.engagementScore.toFixed(1)}%`}
+                  subtitle="Student engagement"
+                  trend={{ value: 7.5, label: 'Improving' }}
+                  color="purple"
+                />
+              </div>
+
+              {/* Performance Radar Chart */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Performance Overview
+                </h3>
+                <ResponsiveContainer width="100%" height={400}>
+                  <RadarChart
+                    data={[
+                      {
+                        metric: 'Teaching Quality',
+                        score: teacherPerformance.averageRating * 20,
+                      },
+                      {
+                        metric: 'Punctuality',
+                        score: teacherPerformance.punctualityScore,
+                      },
+                      {
+                        metric: 'Preparation',
+                        score: teacherPerformance.preparationScore,
+                      },
+                      {
+                        metric: 'Engagement',
+                        score: teacherPerformance.engagementScore,
+                      },
+                      {
+                        metric: 'Student Retention',
+                        score: teacherPerformance.studentRetention,
+                      },
+                      { metric: 'Communication', score: 85 },
+                    ]}
+                  >
+                    <PolarGrid />
+                    <PolarAngleAxis dataKey="metric" />
+                    <PolarRadiusAxis domain={[0, 100]} />
+                    <Radar
+                      name="Performance"
+                      dataKey="score"
+                      stroke={colors.primary}
+                      fill={colors.primary}
+                      fillOpacity={0.3}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Monthly Trends */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Monthly Performance Trends
+                </h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={teacherPerformance.monthlyTrends}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
                     <Tooltip />
                     <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Hours by Subject
-                </h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={sessionAnalytics.sessionsBySubject}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="subject" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="hours" fill={colors.secondary} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Time Analysis */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Sessions by Time of Day
-                </h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={sessionAnalytics.sessionsByTimeOfDay}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="hour" />
-                    <YAxis />
-                    <Tooltip />
                     <Line
                       type="monotone"
-                      dataKey="count"
+                      dataKey="rating"
                       stroke={colors.primary}
-                      strokeWidth={2}
+                      name="Rating"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="retention"
+                      stroke={colors.secondary}
+                      name="Retention %"
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
 
+              {/* Subject Expertise */}
               <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Sessions by Day of Week
+                  Subject Expertise
                 </h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={sessionAnalytics.sessionsByDayOfWeek}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={teacherPerformance.subjectExpertise}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="day" />
+                    <XAxis dataKey="subject" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="count" fill={colors.accent} />
+                    <Bar dataKey="score" fill={colors.accent} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-        {activeView === 'comparison' && comparativeAnalytics && (
-          <motion.div
-            key="comparison"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-6"
-          >
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Comparative Analytics
-              </h3>
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                <div className="text-4xl mb-2">📊</div>
-                <div>Comparative data will be displayed here</div>
-                <div className="text-sm mt-1">
-                  Student comparisons, subject analysis, and peer benchmarks
+          {activeView === 'sessions' && sessionAnalytics && (
+            <motion.div
+              key="sessions"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* Session Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <MetricCard
+                  title="Total Sessions"
+                  value={sessionAnalytics.totalSessions}
+                  subtitle="All sessions"
+                  color="primary"
+                />
+                <MetricCard
+                  title="Completed"
+                  value={sessionAnalytics.completedSessions}
+                  subtitle={`${((sessionAnalytics.completedSessions / sessionAnalytics.totalSessions) * 100).toFixed(1)}% completion`}
+                  color="secondary"
+                />
+                <MetricCard
+                  title="Avg Duration"
+                  value={`${sessionAnalytics.averageDuration.toFixed(0)}m`}
+                  subtitle="Session length"
+                  color="accent"
+                />
+                <MetricCard
+                  title="Avg Rating"
+                  value={sessionAnalytics.averageRating.toFixed(1)}
+                  subtitle="Quality score"
+                  color="purple"
+                />
+              </div>
+
+              {/* Sessions by Subject */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Sessions by Subject
+                  </h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={sessionAnalytics.sessionsBySubject}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        dataKey="count"
+                        nameKey="subject"
+                      >
+                        {sessionAnalytics.sessionsBySubject.map(
+                          (entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={chartColors[index % chartColors.length]}
+                            />
+                          )
+                        )}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Hours by Subject
+                  </h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={sessionAnalytics.sessionsBySubject}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="subject" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="hours" fill={colors.secondary} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+              {/* Time Analysis */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Sessions by Time of Day
+                  </h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={sessionAnalytics.sessionsByTimeOfDay}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="hour" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="count"
+                        stroke={colors.primary}
+                        strokeWidth={2}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Sessions by Day of Week
+                  </h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={sessionAnalytics.sessionsByDayOfWeek}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="day" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="count" fill={colors.accent} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeView === 'comparison' && comparativeAnalytics && (
+            <motion.div
+              key="comparison"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Comparative Analytics
+                </h3>
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <div className="text-4xl mb-2">📊</div>
+                  <div>Comparative data will be displayed here</div>
+                  <div className="text-sm mt-1">
+                    Student comparisons, subject analysis, and peer benchmarks
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
     </div>
   );
 };

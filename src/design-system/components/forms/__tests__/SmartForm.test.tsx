@@ -9,7 +9,9 @@ jest.mock('framer-motion', () => ({
   motion: {
     form: ({ children, ...props }: any) => <form {...props}>{children}</form>,
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+    button: ({ children, ...props }: any) => (
+      <button {...props}>{children}</button>
+    ),
     p: ({ children, ...props }: any) => <p {...props}>{children}</p>,
   },
   AnimatePresence: ({ children }: any) => children,
@@ -27,7 +29,12 @@ describe('SmartForm', () => {
   const mockOnSubmit = jest.fn();
 
   beforeEach(() => {
+    jest.useFakeTimers();
     mockOnSubmit.mockClear();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   const TestFormContent = () => (
@@ -54,7 +61,7 @@ describe('SmartForm', () => {
 
   it('validates form on submit', async () => {
     const user = userEvent.setup();
-    
+
     render(
       <SmartForm schema={testSchema} onSubmit={mockOnSubmit}>
         <TestFormContent />
@@ -73,7 +80,7 @@ describe('SmartForm', () => {
 
   it('submits valid form data', async () => {
     const user = userEvent.setup();
-    
+
     render(
       <SmartForm schema={testSchema} onSubmit={mockOnSubmit}>
         <TestFormContent />
@@ -98,8 +105,10 @@ describe('SmartForm', () => {
 
   it('shows loading state during submission', async () => {
     const user = userEvent.setup();
-    const slowSubmit = jest.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
-    
+    const slowSubmit = jest.fn(
+      () => new Promise(resolve => setTimeout(resolve, 100))
+    );
+
     render(
       <SmartForm schema={testSchema} onSubmit={slowSubmit}>
         <TestFormContent />
@@ -123,7 +132,7 @@ describe('SmartForm', () => {
 
   it('resets form when reset button is clicked', async () => {
     const user = userEvent.setup();
-    
+
     render(
       <SmartForm schema={testSchema} onSubmit={mockOnSubmit}>
         <TestFormContent />
@@ -148,8 +157,8 @@ describe('SmartForm', () => {
     };
 
     render(
-      <SmartForm 
-        schema={testSchema} 
+      <SmartForm
+        schema={testSchema}
         onSubmit={mockOnSubmit}
         defaultValues={defaultValues}
       >
@@ -164,10 +173,10 @@ describe('SmartForm', () => {
 
   it('shows real-time validation when enabled', async () => {
     const user = userEvent.setup();
-    
+
     render(
-      <SmartForm 
-        schema={testSchema} 
+      <SmartForm
+        schema={testSchema}
         onSubmit={mockOnSubmit}
         realTimeValidation={true}
       >
@@ -185,9 +194,11 @@ describe('SmartForm', () => {
 
   it('handles submission errors gracefully', async () => {
     const user = userEvent.setup();
-    const errorSubmit = jest.fn().mockRejectedValue(new Error('Submission failed'));
+    const errorSubmit = jest
+      .fn()
+      .mockRejectedValue(new Error('Submission failed'));
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-    
+
     render(
       <SmartForm schema={testSchema} onSubmit={errorSubmit}>
         <TestFormContent />
@@ -202,7 +213,10 @@ describe('SmartForm', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith('Form submission error:', expect.any(Error));
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Form submission error:',
+        expect.any(Error)
+      );
     });
 
     consoleSpy.mockRestore();
@@ -210,8 +224,8 @@ describe('SmartForm', () => {
 
   it('applies custom className', () => {
     const { container } = render(
-      <SmartForm 
-        schema={testSchema} 
+      <SmartForm
+        schema={testSchema}
         onSubmit={mockOnSubmit}
         className="custom-form-class"
       >

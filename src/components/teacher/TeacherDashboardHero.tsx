@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { LiquidButton } from '@/components/ui/LiquidButton';
+import { Liquid3DOrb } from '@/components/ui/Liquid3DOrb';
 
 interface TeacherDashboardHeroProps {
   teacherName?: string;
@@ -183,9 +184,31 @@ export default function TeacherDashboardHero({
         </div>
       </div>
 
-      {/* Decorative Gradient Orbs */}
-      <div className="absolute -top-20 -right-20 w-40 h-40 bg-emerald-400 rounded-full blur-3xl opacity-20" />
-      <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-teal-400 rounded-full blur-3xl opacity-20" />
+      {/* Interactive Liquid 3D Orbs */}
+      <div className="absolute top-4 right-4 z-0 pointer-events-none opacity-70">
+        <Liquid3DOrb
+          size="xl"
+          variant="secondary"
+          theme="stem"
+          interactive={false}
+        />
+      </div>
+      <div className="absolute bottom-4 left-4 z-0 pointer-events-none opacity-70">
+        <Liquid3DOrb
+          size="lg"
+          variant="gradient"
+          theme="literacy"
+          interactive={false}
+        />
+      </div>
+      <div className="absolute top-1/2 right-1/4 -translate-y-1/2 z-0 pointer-events-none opacity-50 hidden lg:block">
+        <Liquid3DOrb
+          size="md"
+          variant="secondary"
+          theme="stem"
+          interactive={false}
+        />
+      </div>
     </div>
   );
 }

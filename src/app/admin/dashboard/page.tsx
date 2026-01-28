@@ -13,6 +13,7 @@ import {
 } from '@/components/layouts/LiquidLearningLayout';
 import { FloatingActionButton } from '@/design-system/components/interactive/FloatingActionButton';
 import AdminDashboardHero from '@/components/admin/AdminDashboardHero';
+import { Liquid3DOrb } from '@/components/ui/Liquid3DOrb';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -190,7 +191,6 @@ export default function AdminDashboard() {
     activeSessions: 0,
     totalParents: users.filter(u => u.role === 'parent').length,
   };
-
 
   const recentActivity = [
     {
@@ -398,32 +398,17 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center space-x-4">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 200 }}
-                className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25"
-              >
-                <svg
-                  className="w-7 h-7 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div className="relative w-12 h-12 flex items-center justify-center">
+                <Liquid3DOrb
+                  size="sm"
+                  variant="secondary"
+                  theme="numeracy"
+                  interactive={true}
+                  className="scale-125"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              </motion.div>
+                  <span className="text-xl">👨‍💼</span>
+                </Liquid3DOrb>
+              </div>
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
                   Admin Dashboard
@@ -439,10 +424,11 @@ export default function AdminDashboard() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${activeTab === tab.id
-                      ? 'bg-white text-violet-700 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                      }`}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${
+                      activeTab === tab.id
+                        ? 'bg-white text-violet-700 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
                   >
                     <span>{tab.icon}</span>
                     <span>{tab.label}</span>
@@ -470,10 +456,11 @@ export default function AdminDashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${activeTab === tab.id
-                ? 'bg-violet-100 text-violet-700'
-                : 'text-slate-600 bg-white/50'
-                }`}
+              className={`flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${
+                activeTab === tab.id
+                  ? 'bg-violet-100 text-violet-700'
+                  : 'text-slate-600 bg-white/50'
+              }`}
             >
               <span>{tab.icon}</span>
               <span>{tab.label}</span>
@@ -488,10 +475,34 @@ export default function AdminDashboard() {
         <AdminDashboardHero
           adminName={user?.name}
           metrics={[
-            { label: 'Total Users', value: stats.totalUsers, icon: '👥', trend: 'up', trendValue: '+12%' },
-            { label: 'Active Sessions', value: stats.activeSessions, icon: '📚', trend: 'neutral', trendValue: String(stats.activeSessions) },
-            { label: 'System Health', value: '99.9%', icon: '💚', trend: 'up', trendValue: 'Optimal' },
-            { label: 'Total Parents', value: stats.totalParents, icon: '👨‍👩‍👧', trend: 'up', trendValue: '+8%' },
+            {
+              label: 'Total Users',
+              value: stats.totalUsers,
+              icon: '👥',
+              trend: 'up',
+              trendValue: '+12%',
+            },
+            {
+              label: 'Active Sessions',
+              value: stats.activeSessions,
+              icon: '📚',
+              trend: 'neutral',
+              trendValue: String(stats.activeSessions),
+            },
+            {
+              label: 'System Health',
+              value: '99.9%',
+              icon: '💚',
+              trend: 'up',
+              trendValue: 'Optimal',
+            },
+            {
+              label: 'Total Parents',
+              value: stats.totalParents,
+              icon: '👨‍👩‍👧',
+              trend: 'up',
+              trendValue: '+8%',
+            },
           ]}
           onViewReports={() => setActiveTab('reports')}
           onManageUsers={() => setActiveTab('users')}

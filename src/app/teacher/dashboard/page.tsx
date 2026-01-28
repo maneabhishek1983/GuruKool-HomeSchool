@@ -17,6 +17,7 @@ import {
 } from '@/components/layouts/LiquidLearningLayout';
 import { FloatingActionButton } from '@/design-system/components/interactive/FloatingActionButton';
 import TeacherDashboardHero from '@/components/teacher/TeacherDashboardHero';
+import { Liquid3DOrb } from '@/components/ui/Liquid3DOrb';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -34,17 +35,17 @@ const itemVariants = {
 type TabId = 'checkin' | 'timesheet' | 'overview' | 'data-sheets' | 'sessions';
 
 const tabs = [
+  { id: 'overview' as TabId, label: 'Overview', icon: '📈' },
   { id: 'checkin' as TabId, label: 'Check-In/Out', icon: '📍' },
   { id: 'timesheet' as TabId, label: 'Timesheet Report', icon: '📊' },
   { id: 'data-sheets' as TabId, label: 'Data Sheets', icon: '📝' },
-  { id: 'overview' as TabId, label: 'Overview', icon: '📈' },
   { id: 'sessions' as TabId, label: 'Sessions', icon: '📅' },
 ];
 
 export default function TeacherDashboard() {
   const { user, logout } = useAuthContext();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabId>('checkin');
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [dashboardStats, setDashboardStats] = useState({
     assignedStudents: 0,
     activeSessions: 0,
@@ -79,7 +80,11 @@ export default function TeacherDashboard() {
 
     try {
       setIsLoadingStats(true);
-      const response = await fetch(`/api/teacher/dashboard?userId=${user.id}`);
+      const response = await fetch(
+        `/api/teacher/dashboard?userId=${user.id}&email=${encodeURIComponent(
+          user.email
+        )}`
+      );
       const data = await response.json();
 
       if (response.ok) {
@@ -214,26 +219,17 @@ export default function TeacherDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center space-x-4">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 200 }}
-                className="w-12 h-12 bg-gradient-to-br from-blue-600 to-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25"
-              >
-                <svg
-                  className="w-7 h-7 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div className="relative w-12 h-12 flex items-center justify-center">
+                <Liquid3DOrb
+                  size="sm"
+                  variant="gradient"
+                  theme="stem"
+                  interactive={true}
+                  className="scale-125"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-              </motion.div>
+                  <span className="text-xl">👨‍🏫</span>
+                </Liquid3DOrb>
+              </div>
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
                   Teacher Dashboard
