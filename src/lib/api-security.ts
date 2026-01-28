@@ -25,13 +25,41 @@ const defaultRateLimitOptions: Required<RateLimitOptions> = {
   keyPrefix: 'api',
 };
 
+/**
+ * Face Verification Rate Limiting Configuration
+ * SECURITY CRITICAL: Prevents brute-force attacks on face matching
+ *
+ * Default: 10 verification attempts per minute per teacher
+ * This is per-teacher, not per-IP, to prevent legitimate teachers
+ * from being blocked when sharing networks
+ */
+export const FACE_VERIFY_RATE_LIMIT: Required<RateLimitOptions> = {
+  windowMs: 60 * 1000, // 1 minute
+  max: parseInt(process.env.FACE_VERIFY_RATE_LIMIT || '10', 10),
+  keyPrefix: 'face:verify',
+};
+
+/**
+ * Face Enrollment Rate Limiting Configuration
+ * Prevents rapid re-enrollment attempts
+ */
+export const FACE_ENROLL_RATE_LIMIT: Required<RateLimitOptions> = {
+  windowMs: 60 * 1000, // 1 minute
+  max: 5,
+  keyPrefix: 'face:enroll',
+};
+
 // In-memory store for rate limiting per route; prefer Redis in production
 const routeRateLimitStore = new Map<
   string,
   { count: number; resetTime: number }
 >();
 
-function getClientIP(request: NextRequest): string {
+/**
+ * Extract client IP address from request
+ * Exported for use in audit logging
+ */
+export function getClientIP(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) {
     const parts = forwarded.split(',');
@@ -45,6 +73,21 @@ function getClientIP(request: NextRequest): string {
   }
   // @ts-ignore - NextRequest may expose ip
   return (request as any).ip || 'unknown';
+}
+
+/**
+ * Extract device info from request headers
+ * Used for audit logging
+ */
+export function getDeviceInfo(request: NextRequest): Record<string, unknown> {
+  const userAgent = request.headers.get('user-agent') || 'unknown';
+  const acceptLanguage = request.headers.get('accept-language') || 'unknown';
+
+  return {
+    userAgent,
+    acceptLanguage,
+    timestamp: new Date().toISOString(),
+  };
 }
 
 export function withRateLimit(options?: RateLimitOptions) {
