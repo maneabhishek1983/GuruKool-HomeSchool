@@ -173,6 +173,65 @@ QR codes contain: `teacherId`, `studentId`, `parentId`, `timestamp`, `signature`
 
 ---
 
+## Face Recognition System
+
+Face recognition provides an alternative verification method with QR code as fallback.
+
+### Security Architecture
+
+**CRITICAL**: All face matching is done SERVER-SIDE. Never trust client-provided confidence scores.
+
+```
+Client (Detection Only)          Server (Verification)
+┌─────────────────────┐         ┌─────────────────────────────┐
+│ 1. Camera capture   │         │ 4. Decrypt stored descriptor│
+│ 2. Face detection   │────────>│ 5. Calculate distance       │
+│ 3. Extract descriptor│         │ 6. Return match result      │
+│    (128 floats)     │         │ 7. Log audit entry          │
+└─────────────────────┘         └─────────────────────────────┘
+```
+
+### Key Components
+
+| Component          | Location                               | Purpose                               |
+| ------------------ | -------------------------------------- | ------------------------------------- |
+| FaceScanner        | `components/shared/FaceScanner.tsx`    | Camera + face detection UI            |
+| FaceCheckIn        | `components/teacher/FaceCheckIn.tsx`   | Teacher verification with QR fallback |
+| FaceEnrollment     | `components/parent/FaceEnrollment.tsx` | Student face enrollment wizard        |
+| face-encryption.ts | `lib/face-encryption.ts`               | AES-256-GCM encryption                |
+| face-matching.ts   | `lib/face-matching.ts`                 | Server-side distance calculation      |
+
+### API Endpoints
+
+| Endpoint                              | Method | Purpose                           |
+| ------------------------------------- | ------ | --------------------------------- |
+| `/api/student/face-enroll`            | POST   | Enroll student face (encrypted)   |
+| `/api/student/face-enroll`            | GET    | Check enrollment status           |
+| `/api/student/face-enroll`            | DELETE | Remove face data                  |
+| `/api/teacher-sessions/verify-face`   | POST   | Server-side face verification     |
+| `/api/teacher-sessions/check-in-face` | POST   | Create session after verification |
+| `/api/teacher/assigned-students`      | GET    | Get students with face status     |
+
+### Environment Variables
+
+```bash
+FACE_ENCRYPTION_KEY=<64-char-hex>  # openssl rand -hex 32
+FACE_MATCH_THRESHOLD=0.4           # Distance threshold (default)
+FACE_VERIFY_RATE_LIMIT=10          # Verifications per minute
+NEXT_PUBLIC_ENABLE_FACE_RECOGNITION=true
+```
+
+### QR Code Fallback
+
+QR code verification is **always available** as a fallback when:
+
+- Face recognition models fail to load
+- Camera access is denied
+- Face doesn't match
+- Network issues prevent server verification
+
+---
+
 ## Database Migrations
 
 Migrations are in `supabase/migrations/` (001-016+). Apply via Supabase Dashboard SQL Editor.
