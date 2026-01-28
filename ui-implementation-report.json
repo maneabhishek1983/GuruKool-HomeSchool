@@ -9,10 +9,7 @@
   },
   "details": {
     "parentDashboard": {
-      "implemented": [
-        "Student Profile Management",
-        "Basic Progress Tracking"
-      ],
+      "implemented": ["Student Profile Management", "Basic Progress Tracking"],
       "missing": [
         {
           "feature": "Real-time Progress Charts",
@@ -34,10 +31,7 @@
       "score": 33
     },
     "teacherDashboard": {
-      "implemented": [
-        "Basic Dashboard Stats",
-        "Academic Standards Info"
-      ],
+      "implemented": ["Basic Dashboard Stats", "Academic Standards Info"],
       "missing": [
         {
           "feature": "Student Management",
