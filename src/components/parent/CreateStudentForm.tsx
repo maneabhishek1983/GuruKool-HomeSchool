@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { academicStandardsService } from '@/services/academic-standards.service';
 import {
@@ -12,7 +12,9 @@ import {
   PhysicalEducationOption,
   ExtracurricularOption,
   CommunityInvolvementOption,
+  FaceDetectionResult,
 } from '@/types';
+import { FaceScanner, FaceScannerError } from '@/components/shared/FaceScanner';
 
 interface StudentFormData {
   name: string;
@@ -37,6 +39,10 @@ interface StudentFormData {
   // Teacher Assignment
   assignedTeachers: string[];
   teacherNotes?: string;
+  // Face Enrollment (descriptor will be sent to server separately)
+  faceEnrollmentPending: boolean;
+  faceDescriptor: number[] | null;
+  faceQualityScore: number | null;
 }
 
 interface InitialStudentData {
@@ -209,9 +215,15 @@ export default function CreateStudentForm({
     interests: initialData?.interests || '',
     assignedTeachers: initialData?.assignedTeachers || [],
     teacherNotes: initialData?.teacherNotes || '',
+    faceEnrollmentPending: false,
+    faceDescriptor: null,
+    faceQualityScore: null,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [faceEnrollmentEnabled, setFaceEnrollmentEnabled] = useState(false);
+  const [faceCaptured, setFaceCaptured] = useState(false);
+  const [faceError, setFaceError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [academicStandard, setAcademicStandard] =
     useState<AcademicStandard | null>(null);
@@ -455,7 +467,7 @@ export default function CreateStudentForm({
   };
 
   const nextStep = () => {
-    if (currentStep < 5) {
+    if (currentStep < 7) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -468,7 +480,7 @@ export default function CreateStudentForm({
 
   const renderStepIndicator = () => (
     <div className="flex items-center justify-center mb-6">
-      {[1, 2, 3, 4, 5, 6].map(step => (
+      {[1, 2, 3, 4, 5, 6, 7].map(step => (
         <div key={step} className="flex items-center">
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
@@ -479,9 +491,9 @@ export default function CreateStudentForm({
           >
             {step}
           </div>
-          {step < 6 && (
+          {step < 7 && (
             <div
-              className={`w-12 h-1 mx-2 ${
+              className={`w-8 h-1 mx-1 ${
                 step < currentStep ? 'bg-blue-600' : 'bg-gray-200'
               }`}
             />
@@ -1483,6 +1495,185 @@ export default function CreateStudentForm({
     </div>
   );
 
+  // Face enrollment handlers
+  const handleFaceDetected = useCallback(
+    (result: FaceDetectionResult) => {
+      if (result.qualityScore >= 0.7 && !faceCaptured) {
+        setFaceCaptured(true);
+        setFormData(prev => ({
+          ...prev,
+          faceEnrollmentPending: true,
+          faceDescriptor: result.descriptor,
+          faceQualityScore: result.qualityScore,
+        }));
+      }
+    },
+    [faceCaptured]
+  );
+
+  const handleFaceError = useCallback((error: FaceScannerError) => {
+    setFaceError(error.message);
+  }, []);
+
+  const handleRetryFace = useCallback(() => {
+    setFaceCaptured(false);
+    setFaceError(null);
+    setFormData(prev => ({
+      ...prev,
+      faceEnrollmentPending: false,
+      faceDescriptor: null,
+      faceQualityScore: null,
+    }));
+  }, []);
+
+  const renderFaceEnrollment = () => (
+    <div className="space-y-6">
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Face Recognition Setup (Optional)
+          </h3>
+          <button
+            type="button"
+            onClick={() => {
+              setFormData(prev => ({
+                ...prev,
+                faceEnrollmentPending: false,
+                faceDescriptor: null,
+                faceQualityScore: null,
+              }));
+              setFaceEnrollmentEnabled(false);
+              setFaceCaptured(false);
+            }}
+            className="text-sm text-gray-500 hover:text-gray-700 underline"
+          >
+            Skip this section
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 mb-6">
+          Set up face recognition for quick and secure check-in/check-out with
+          teachers. This is optional and can be done later from the student
+          profile.
+        </p>
+      </div>
+
+      {!faceEnrollmentEnabled && !faceCaptured && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+          <h4 className="font-semibold text-blue-900 mb-3">
+            Privacy & Data Information
+          </h4>
+          <ul className="space-y-2 text-sm text-blue-800 mb-6">
+            <li className="flex items-start">
+              <span className="mr-2">&#128274;</span>
+              Face data is encrypted using AES-256-GCM encryption
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2">&#128187;</span>
+              All matching happens on our secure servers (never on device)
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2">&#128465;</span>
+              You can delete face data at any time from settings
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2">&#128101;</span>
+              Only assigned teachers can verify using face recognition
+            </li>
+          </ul>
+          <button
+            type="button"
+            onClick={() => setFaceEnrollmentEnabled(true)}
+            className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
+          >
+            Enable Face Recognition
+          </button>
+        </div>
+      )}
+
+      {faceEnrollmentEnabled && !faceCaptured && (
+        <div className="space-y-4">
+          {faceError && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <p className="text-red-700 text-sm">{faceError}</p>
+            </div>
+          )}
+
+          <FaceScanner
+            mode="enroll"
+            onFaceDetected={handleFaceDetected}
+            onError={handleFaceError}
+            minQualityScore={0.7}
+            enabled={faceEnrollmentEnabled}
+          />
+
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <h4 className="font-medium text-amber-900 mb-2">
+              Tips for best results:
+            </h4>
+            <ul className="text-sm text-amber-800 space-y-1">
+              <li>&#8226; Face the camera directly</li>
+              <li>&#8226; Ensure good, even lighting</li>
+              <li>&#8226; Remove glasses if possible</li>
+              <li>&#8226; Keep a neutral expression</li>
+            </ul>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setFaceEnrollmentEnabled(false);
+              setFaceError(null);
+            }}
+            className="w-full px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {faceCaptured && formData.faceQualityScore && (
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+              <span className="text-3xl">&#10004;</span>
+            </div>
+            <h4 className="text-xl font-bold text-gray-900 mb-2">
+              Face Captured Successfully
+            </h4>
+            <p className="text-gray-600 text-sm">
+              Quality Score:{' '}
+              <span className="font-semibold text-green-600">
+                {Math.round(formData.faceQualityScore * 100)}%
+              </span>
+            </p>
+          </div>
+
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <h4 className="font-medium text-green-900 mb-2">Ready to Save</h4>
+            <p className="text-sm text-green-800">
+              The face descriptor has been captured with{' '}
+              {formData.faceQualityScore >= 0.85
+                ? 'excellent'
+                : formData.faceQualityScore >= 0.7
+                  ? 'good'
+                  : 'acceptable'}{' '}
+              quality. It will be securely encrypted and stored when you create
+              the profile.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleRetryFace}
+            className="w-full px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors"
+          >
+            Retake Photo
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
@@ -1497,7 +1688,8 @@ export default function CreateStudentForm({
         return renderLearningPreferences();
       case 6:
         return renderTeacherAssignment();
-
+      case 7:
+        return renderFaceEnrollment();
       default:
         return null;
     }
@@ -1523,7 +1715,7 @@ export default function CreateStudentForm({
           </motion.button>
 
           <div className="flex space-x-3">
-            {currentStep < 6 ? (
+            {currentStep < 7 ? (
               <motion.button
                 type="button"
                 whileHover={{ scale: 1.02 }}
