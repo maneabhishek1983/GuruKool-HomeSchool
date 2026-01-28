@@ -1,17 +1,40 @@
-# Face Recognition Check-In/Check-Out - Implementation Tasks
+# Face Recognition Check-In/Check-Out - Implementation Tasks (v2.0)
+
+## Document Information
+
+| Field            | Value                                               |
+| ---------------- | --------------------------------------------------- |
+| **Version**      | 2.0                                                 |
+| **Status**       | Approved                                            |
+| **Security Rev** | Server-Side Verification (Critical Security Update) |
+| **Related Docs** | PRD v2.0, Design v2.0                               |
+
+---
+
+## Critical Security Update Summary
+
+> **IMPORTANT**: This task list has been updated following a security review. Key changes:
+>
+> 1. **Server-Side Verification**: All face matching calculations MUST happen on the server
+> 2. **Encryption**: Face descriptors are encrypted with AES-256-GCM at rest
+> 3. **No Client Trust**: Server NEVER trusts client-provided confidence scores
+> 4. **Model Caching**: Service Worker + IndexedDB for performance optimization
+
+---
 
 ## Task Overview
 
-| Phase                           | Tasks   | Priority | Estimated Effort |
-| ------------------------------- | ------- | -------- | ---------------- |
-| 1. Setup & Infrastructure       | 5 tasks | P0       | Foundation       |
-| 2. Backend Implementation       | 4 tasks | P0       | Core API         |
-| 3. Frontend - Shared Components | 3 tasks | P0       | Core UI          |
-| 4. Frontend - Parent Flow       | 4 tasks | P0       | Enrollment       |
-| 5. Frontend - Teacher Flow      | 5 tasks | P0       | Verification     |
-| 6. Integration & Polish         | 4 tasks | P1       | UX               |
-| 7. Testing & QA                 | 5 tasks | P1       | Quality          |
-| 8. Documentation & Deployment   | 3 tasks | P2       | Launch           |
+| Phase                            | Tasks   | Priority | Focus Area         |
+| -------------------------------- | ------- | -------- | ------------------ |
+| 1. Setup & Infrastructure        | 7 tasks | P0       | Foundation         |
+| 2. Security & Encryption         | 4 tasks | P0       | **NEW - Critical** |
+| 3. Backend Implementation        | 5 tasks | P0       | Core API           |
+| 4. Frontend - Shared Components  | 4 tasks | P0       | Core UI            |
+| 5. Frontend - Parent Flow        | 4 tasks | P0       | Enrollment         |
+| 6. Frontend - Teacher Flow       | 5 tasks | P0       | Verification       |
+| 7. Integration & Polish          | 5 tasks | P1       | UX                 |
+| 8. Testing & Security Validation | 6 tasks | P0       | **Security Focus** |
+| 9. Documentation & Deployment    | 4 tasks | P2       | Launch             |
 
 ---
 
@@ -20,6 +43,7 @@
 ### Task 1.1: Install face-api.js and Dependencies
 
 **Status:** [ ] Not Started
+**Priority:** P0
 
 **Description:** Add face-api.js library and configure for Next.js
 
@@ -30,32 +54,45 @@
 **Commands:**
 
 ```bash
-npm install face-api.js @tensorflow/tfjs-core @tensorflow/tfjs-backend-webgl
+npm install face-api.js @tensorflow/tfjs-core @tensorflow/tfjs-backend-webgl idb
 ```
+
+**Dependencies Added:**
+
+- `face-api.js` - Face detection and embedding extraction
+- `@tensorflow/tfjs-core` - TensorFlow.js core
+- `@tensorflow/tfjs-backend-webgl` - GPU acceleration
+- `idb` - IndexedDB wrapper for model caching
 
 **Acceptance Criteria:**
 
-- [ ] face-api.js installed successfully
+- [ ] All packages installed successfully
 - [ ] No TypeScript errors
-- [ ] Build passes
+- [ ] Build passes (`npm run build`)
+- [ ] No peer dependency warnings
 
 ---
 
 ### Task 1.2: Download and Host Face Detection Models
 
 **Status:** [ ] Not Started
+**Priority:** P0
 
 **Description:** Download face-api.js models and host in public directory
 
 **Files to create:**
 
-- `public/models/face-api/ssd_mobilenetv1_model-weights_manifest.json`
-- `public/models/face-api/ssd_mobilenetv1_model-shard1`
-- `public/models/face-api/face_landmark_68_model-weights_manifest.json`
-- `public/models/face-api/face_landmark_68_model-shard1`
-- `public/models/face-api/face_recognition_model-weights_manifest.json`
-- `public/models/face-api/face_recognition_model-shard1`
-- `public/models/face-api/face_recognition_model-shard2`
+```
+public/models/face-api/
+├── ssd_mobilenetv1_model-weights_manifest.json
+├── ssd_mobilenetv1_model-shard1
+├── ssd_mobilenetv1_model-shard2
+├── face_landmark_68_model-weights_manifest.json
+├── face_landmark_68_model-shard1
+├── face_recognition_model-weights_manifest.json
+├── face_recognition_model-shard1
+└── face_recognition_model-shard2
+```
 
 **Download from:**
 https://github.com/justadudewhohacks/face-api.js/tree/master/weights
@@ -65,82 +102,118 @@ https://github.com/justadudewhohacks/face-api.js/tree/master/weights
 - [ ] All model files present in `public/models/face-api/`
 - [ ] Models load successfully in browser
 - [ ] Total size ~13MB verified
+- [ ] Models accessible at `/models/face-api/*`
 
 ---
 
-### Task 1.3: Create Database Migration
+### Task 1.3: Create Service Worker for Model Caching
 
 **Status:** [ ] Not Started
+**Priority:** P0
 
-**Description:** Create migration for `student_face_records` table
+**Description:** Implement Service Worker to cache face-api models for faster loading
 
 **Files to create:**
 
-- `supabase/migrations/013_student_face_records.sql`
+- `public/sw.js`
+- `src/lib/service-worker-registration.ts`
 
-**SQL Schema:**
+**Implementation:**
 
-```sql
-CREATE TABLE student_face_records (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-  face_descriptor JSONB NOT NULL,
-  descriptor_version VARCHAR(50) DEFAULT 'face-api-v0.22.2',
-  quality_score FLOAT CHECK (quality_score >= 0 AND quality_score <= 1),
-  enrollment_metadata JSONB DEFAULT '{}',
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT unique_active_face_per_student UNIQUE (student_id) WHERE (is_active = TRUE)
-);
+```typescript
+// public/sw.js
+const MODEL_CACHE = 'face-api-models-v1';
+const MODEL_FILES = [
+  '/models/face-api/ssd_mobilenetv1_model-weights_manifest.json',
+  '/models/face-api/ssd_mobilenetv1_model-shard1',
+  '/models/face-api/ssd_mobilenetv1_model-shard2',
+  '/models/face-api/face_landmark_68_model-weights_manifest.json',
+  '/models/face-api/face_landmark_68_model-shard1',
+  '/models/face-api/face_recognition_model-weights_manifest.json',
+  '/models/face-api/face_recognition_model-shard1',
+  '/models/face-api/face_recognition_model-shard2',
+];
 
--- Indexes
-CREATE INDEX idx_face_records_student ON student_face_records(student_id);
-CREATE INDEX idx_face_records_active ON student_face_records(is_active) WHERE is_active = TRUE;
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(MODEL_CACHE).then(cache => cache.addAll(MODEL_FILES))
+  );
+});
 
--- RLS Policies
-ALTER TABLE student_face_records ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Parents can manage student face records"
-ON student_face_records FOR ALL
-USING (
-  student_id IN (SELECT id FROM students WHERE parent_id = auth.uid())
-);
-
-CREATE POLICY "Teachers can read assigned student face records"
-ON student_face_records FOR SELECT
-USING (
-  student_id IN (
-    SELECT s.id FROM students s
-    JOIN teacher_qr_codes tqc ON tqc.student_id = s.id
-    JOIN teachers t ON t.id = tqc.teacher_id
-    WHERE t.user_id = auth.uid() AND tqc.is_active = TRUE
-  )
-  OR student_id IN (
-    SELECT id FROM students
-    WHERE assigned_teachers @> ARRAY[(SELECT id FROM teachers WHERE user_id = auth.uid())]::uuid[]
-  )
-);
-
--- Modify teacher_sessions
-ALTER TABLE teacher_sessions
-ADD COLUMN IF NOT EXISTS verification_method VARCHAR(50) DEFAULT 'qr_code',
-ADD COLUMN IF NOT EXISTS face_confidence FLOAT;
+self.addEventListener('fetch', event => {
+  if (event.request.url.includes('/models/face-api/')) {
+    event.respondWith(
+      caches.match(event.request).then(response => {
+        return response || fetch(event.request);
+      })
+    );
+  }
+});
 ```
+
+**Acceptance Criteria:**
+
+- [ ] Service Worker registered on app load
+- [ ] Models cached after first download
+- [ ] Subsequent loads use cached models (< 3s load time)
+- [ ] Cache invalidation works on version change
+
+---
+
+### Task 1.4: Create IndexedDB Model Storage Fallback
+
+**Status:** [ ] Not Started
+**Priority:** P1
+
+**Description:** IndexedDB fallback for browsers with limited Service Worker support
+
+**Files to create:**
+
+- `src/lib/model-storage.ts`
+
+**Acceptance Criteria:**
+
+- [ ] Models can be stored in IndexedDB
+- [ ] Models can be retrieved from IndexedDB
+- [ ] Works on Safari iOS (where SW support varies)
+
+---
+
+### Task 1.5: Create Database Migration
+
+**Status:** [ ] Not Started
+**Priority:** P0
+
+**Description:** Create migration for `student_face_records` table with encryption support
+
+**Files to create:**
+
+- `supabase/migrations/017_student_face_records.sql`
+
+**Key Changes from v1.0:**
+
+- `face_descriptor` → `face_descriptor_encrypted` (BYTEA)
+- Added `face_verification_audit` table
+- Added service role policy for server-side verification
+
+**SQL Schema:** (See DESIGN.md Section 3.1)
 
 **Acceptance Criteria:**
 
 - [ ] Migration file created
 - [ ] Applied successfully in Supabase Dashboard
 - [ ] RLS policies working (test with parent/teacher users)
+- [ ] Service role can access for verification
+- [ ] Audit table created with proper policies
 
 ---
 
-### Task 1.4: Create Face Recognition Types
+### Task 1.6: Create Face Recognition Types
 
 **Status:** [ ] Not Started
+**Priority:** P0
 
-**Description:** Add TypeScript types for face recognition
+**Description:** Add TypeScript types for face recognition (v2.0 with server verification)
 
 **Files to modify:**
 
@@ -149,16 +222,12 @@ ADD COLUMN IF NOT EXISTS face_confidence FLOAT;
 **Types to add:**
 
 ```typescript
-// Face Recognition Types
-export interface FaceDescriptor {
-  data: number[]; // 128 floats
-  version: string;
-}
+// Face Recognition Types (v2.0 - Server-Side Verification)
 
 export interface StudentFaceRecord {
   id: string;
   student_id: string;
-  face_descriptor: number[];
+  face_descriptor_encrypted: Buffer; // Encrypted data
   descriptor_version: string;
   quality_score: number;
   enrollment_metadata: {
@@ -172,7 +241,7 @@ export interface StudentFaceRecord {
 }
 
 export interface FaceDetectionResult {
-  descriptor: Float32Array | number[];
+  descriptor: number[]; // 128 floats - sent to server for verification
   boundingBox: {
     x: number;
     y: number;
@@ -180,11 +249,26 @@ export interface FaceDetectionResult {
     height: number;
   };
   qualityScore: number;
-  matchedStudent?: {
+  landmarks: any;
+  // NO matchedStudent - matching done server-side
+}
+
+export interface FaceVerifyRequest {
+  studentId: string;
+  capturedDescriptor: number[];
+}
+
+export interface FaceVerifyResponse {
+  success: boolean;
+  matched: boolean;
+  confidence: number; // Server-calculated
+  distance: number;
+  student?: {
     id: string;
     name: string;
-    confidence: number;
+    grade: string;
   };
+  message: string;
 }
 
 export interface FaceScannerError {
@@ -193,7 +277,8 @@ export interface FaceScannerError {
     | 'NO_FACE'
     | 'MULTIPLE_FACES'
     | 'MODEL_LOAD_FAILED'
-    | 'LOW_QUALITY';
+    | 'LOW_QUALITY'
+    | 'SERVER_VERIFY_FAILED';
   message: string;
 }
 
@@ -209,74 +294,257 @@ export type VerificationMethod =
 - [ ] Types added to index.ts
 - [ ] Exported correctly
 - [ ] No TypeScript errors
+- [ ] Server verification types included
 
 ---
 
-### Task 1.5: Create Face Recognition Service
+### Task 1.7: Add Environment Variables
 
 **Status:** [ ] Not Started
+**Priority:** P0
 
-**Description:** Create service for face recognition operations
+**Description:** Add required environment variables for face recognition
+
+**Files to modify:**
+
+- `.env.local`
+- `.env.example`
+
+**Variables to add:**
+
+```bash
+# Face Recognition
+FACE_ENCRYPTION_KEY=<run: openssl rand -hex 32>
+FACE_MATCH_THRESHOLD=0.4
+FACE_VERIFY_RATE_LIMIT=10
+NEXT_PUBLIC_ENABLE_FACE_RECOGNITION=true
+```
+
+**Acceptance Criteria:**
+
+- [ ] Variables added to .env.example
+- [ ] Local .env has valid encryption key
+- [ ] Feature flag controls UI visibility
+
+---
+
+## Phase 2: Security & Encryption (NEW - Critical)
+
+### Task 2.1: Create Face Encryption Service
+
+**Status:** [ ] Not Started
+**Priority:** P0 - **CRITICAL SECURITY**
+
+**Description:** Implement AES-256-GCM encryption for face descriptors
 
 **Files to create:**
 
-- `src/services/face-recognition.service.ts`
+- `src/lib/face-encryption.ts`
 
-**Methods:**
+**Implementation:**
 
 ```typescript
-export class FaceRecognitionService {
-  private static modelsLoaded = false;
+// src/lib/face-encryption.ts
+import crypto from 'crypto';
 
-  // Load face-api.js models
-  static async loadModels(): Promise<void>;
+const ENCRYPTION_KEY = process.env.FACE_ENCRYPTION_KEY!;
+const ALGORITHM = 'aes-256-gcm';
+const IV_LENGTH = 12;
+const AUTH_TAG_LENGTH = 16;
 
-  // Check if models are loaded
-  static isReady(): boolean;
+export async function encryptFaceDescriptor(
+  descriptor: number[]
+): Promise<Buffer> {
+  const descriptorBuffer = Buffer.from(new Float32Array(descriptor).buffer);
+  const iv = crypto.randomBytes(IV_LENGTH);
+  const key = Buffer.from(ENCRYPTION_KEY, 'hex');
+  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
 
-  // Detect face and extract descriptor
-  static async detectFace(
-    videoElement: HTMLVideoElement
-  ): Promise<FaceDetectionResult | null>;
+  const encrypted = Buffer.concat([
+    cipher.update(descriptorBuffer),
+    cipher.final(),
+  ]);
+  const authTag = cipher.getAuthTag();
 
-  // Compare two descriptors
-  static compareDescriptors(
-    descriptor1: number[],
-    descriptor2: number[]
-  ): number; // Returns confidence 0-1
+  return Buffer.concat([iv, encrypted, authTag]);
+}
 
-  // Find best match from list
-  static findBestMatch(
-    capturedDescriptor: number[],
-    studentDescriptors: Array<{
-      id: string;
-      name: string;
-      descriptor: number[];
-    }>,
-    minConfidence?: number
-  ): { student: { id: string; name: string }; confidence: number } | null;
+export async function decryptFaceDescriptor(
+  encryptedData: Buffer
+): Promise<number[]> {
+  const iv = encryptedData.subarray(0, IV_LENGTH);
+  const authTag = encryptedData.subarray(-AUTH_TAG_LENGTH);
+  const ciphertext = encryptedData.subarray(IV_LENGTH, -AUTH_TAG_LENGTH);
 
-  // Calculate quality score
-  static calculateQualityScore(detection: faceapi.FaceDetection): number;
+  const key = Buffer.from(ENCRYPTION_KEY, 'hex');
+  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+  decipher.setAuthTag(authTag);
+
+  const decrypted = Buffer.concat([
+    decipher.update(ciphertext),
+    decipher.final(),
+  ]);
+
+  const float32Array = new Float32Array(decrypted.buffer);
+  return Array.from(float32Array);
 }
 ```
 
 **Acceptance Criteria:**
 
-- [ ] Service created with all methods
-- [ ] Models load successfully
-- [ ] Face detection works
-- [ ] Matching algorithm accurate
+- [ ] Encrypt function works with 128-float arrays
+- [ ] Decrypt function recovers original values
+- [ ] Different IVs produce different ciphertext
+- [ ] Auth tag validation prevents tampering
+- [ ] Unit tests pass
 
 ---
 
-## Phase 2: Backend Implementation
-
-### Task 2.1: Create Face Enrollment API
+### Task 2.2: Create Face Matching Service (Server-Side Only)
 
 **Status:** [ ] Not Started
+**Priority:** P0 - **CRITICAL SECURITY**
 
-**Description:** API endpoint for saving face embeddings
+**Description:** Implement server-side face matching utilities
+
+**Files to create:**
+
+- `src/lib/face-matching.ts`
+
+**Implementation:**
+
+```typescript
+// src/lib/face-matching.ts
+
+export function calculateEuclideanDistance(
+  descriptor1: number[],
+  descriptor2: number[]
+): number {
+  if (descriptor1.length !== 128 || descriptor2.length !== 128) {
+    throw new Error('Descriptors must be 128-dimensional');
+  }
+
+  let sum = 0;
+  for (let i = 0; i < 128; i++) {
+    const diff = descriptor1[i] - descriptor2[i];
+    sum += diff * diff;
+  }
+
+  return Math.sqrt(sum);
+}
+
+export function distanceToConfidence(distance: number): number {
+  return Math.max(0, Math.min(1, 1 - distance));
+}
+
+export const FACE_MATCH_THRESHOLDS = {
+  HIGH_CONFIDENCE: 0.3,
+  MEDIUM_CONFIDENCE: 0.4,
+  LOW_CONFIDENCE: 0.5,
+};
+```
+
+**Acceptance Criteria:**
+
+- [ ] Distance calculation is mathematically correct
+- [ ] Identical descriptors return 0 distance
+- [ ] Different descriptors return > 0.4 distance
+- [ ] Confidence conversion works correctly
+- [ ] Unit tests pass
+
+---
+
+### Task 2.3: Create Rate Limiting for Face Verification
+
+**Status:** [ ] Not Started
+**Priority:** P0
+
+**Description:** Implement rate limiting for face verification API
+
+**Files to modify:**
+
+- `src/lib/api-security.ts`
+
+**Implementation:**
+
+```typescript
+// Add to existing rate limiting
+export const FACE_VERIFY_RATE_LIMIT = {
+  keyPrefix: 'face:verify',
+  max: parseInt(process.env.FACE_VERIFY_RATE_LIMIT || '10'),
+  windowMs: 60 * 1000, // 1 minute
+};
+```
+
+**Acceptance Criteria:**
+
+- [ ] Rate limit enforced on verify-face endpoint
+- [ ] Returns 429 after 10 attempts/minute
+- [ ] Teacher-specific rate limiting (per teacher ID)
+- [ ] Audit log includes rate-limited attempts
+
+---
+
+### Task 2.4: Create Audit Logging Service
+
+**Status:** [ ] Not Started
+**Priority:** P1
+
+**Description:** Implement audit logging for face verification attempts
+
+**Files to create:**
+
+- `src/services/face-audit.service.ts`
+
+**Implementation:**
+
+```typescript
+// src/services/face-audit.service.ts
+import { getSupabaseAdmin } from '@/lib/supabase';
+
+interface AuditEntry {
+  teacherId: string;
+  studentId: string;
+  result: 'success' | 'failed' | 'no_match';
+  confidence: number;
+  distance: number;
+  deviceInfo: object;
+  ipAddress: string;
+}
+
+export async function logFaceVerificationAttempt(
+  entry: AuditEntry
+): Promise<void> {
+  const adminClient = getSupabaseAdmin();
+  await adminClient.from('face_verification_audit').insert({
+    teacher_id: entry.teacherId,
+    student_id: entry.studentId,
+    verification_result: entry.result,
+    confidence_score: entry.confidence,
+    distance: entry.distance,
+    device_info: entry.deviceInfo,
+    ip_address: entry.ipAddress,
+  });
+}
+```
+
+**Acceptance Criteria:**
+
+- [ ] All verification attempts logged
+- [ ] Includes device info and IP
+- [ ] No sensitive data (descriptors) logged
+- [ ] Admin can query audit logs
+
+---
+
+## Phase 3: Backend Implementation
+
+### Task 3.1: Create Face Enrollment API
+
+**Status:** [ ] Not Started
+**Priority:** P0
+
+**Description:** API endpoint for saving encrypted face embeddings
 
 **Files to create:**
 
@@ -284,51 +552,78 @@ export class FaceRecognitionService {
 
 **Endpoint:** `POST /api/student/face-enroll`
 
-**Implementation:**
+**Key Changes from v1.0:**
 
-```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { z } from 'zod';
-
-const faceEnrollSchema = z.object({
-  studentId: z.string().uuid(),
-  faceDescriptor: z.array(z.number()).length(128),
-  qualityScore: z.number().min(0).max(1),
-  metadata: z
-    .object({
-      device: z.string().optional(),
-      lighting: z.enum(['poor', 'fair', 'good', 'excellent']).optional(),
-      angle: z.enum(['frontal', 'slight_left', 'slight_right']).optional(),
-    })
-    .optional(),
-});
-
-export async function POST(request: NextRequest) {
-  // 1. Authenticate user
-  // 2. Validate request body
-  // 3. Verify parent owns student
-  // 4. Deactivate existing face record
-  // 5. Insert new face record
-  // 6. Return success
-}
-```
+- Encrypt descriptor before storage
+- Validate parent ownership
+- Deactivate old records before insert
 
 **Acceptance Criteria:**
 
-- [ ] Endpoint responds to POST
 - [ ] Validates 128-float descriptor
+- [ ] Encrypts before storage
 - [ ] Checks parent ownership
-- [ ] Saves to database
-- [ ] Returns appropriate errors
+- [ ] Deactivates existing records
+- [ ] Returns record ID on success
+- [ ] Rate limited (20 req/min)
 
 ---
 
-### Task 2.2: Create Face Check-In API
+### Task 3.2: Create Face Verification API (CRITICAL - Server-Side)
 
 **Status:** [ ] Not Started
+**Priority:** P0 - **CRITICAL SECURITY**
 
-**Description:** API endpoint for face-based check-in/check-out
+**Description:** Server-side face verification endpoint
+
+**Files to create:**
+
+- `src/app/api/teacher-sessions/verify-face/route.ts`
+
+**Endpoint:** `POST /api/teacher-sessions/verify-face`
+
+> **SECURITY CRITICAL**: This endpoint performs ALL matching logic server-side.
+> The client sends `capturedDescriptor`, NOT `confidence`.
+
+**Request Schema:**
+
+```typescript
+const verifyFaceSchema = z.object({
+  studentId: z.string().uuid(),
+  capturedDescriptor: z.array(z.number()).length(128),
+  // NO confidence field - server calculates this
+});
+```
+
+**Implementation Flow:**
+
+1. Authenticate teacher
+2. Validate teacher is assigned to student
+3. Fetch encrypted descriptor using admin client
+4. Decrypt descriptor (server-side only)
+5. Calculate Euclidean distance (server-side only)
+6. Log audit entry
+7. Return match result with server-calculated confidence
+
+**Acceptance Criteria:**
+
+- [ ] Authenticates teacher
+- [ ] Validates student assignment
+- [ ] Fetches and decrypts descriptor
+- [ ] Calculates distance server-side
+- [ ] Logs verification attempt
+- [ ] Returns match result
+- [ ] IGNORES any client-provided confidence
+- [ ] Rate limited (10 req/min per teacher)
+
+---
+
+### Task 3.3: Create Face Check-In API (After Verification)
+
+**Status:** [ ] Not Started
+**Priority:** P0
+
+**Description:** Create session after successful face verification
 
 **Files to create:**
 
@@ -336,51 +631,33 @@ export async function POST(request: NextRequest) {
 
 **Endpoint:** `POST /api/teacher-sessions/check-in-face`
 
-**Request Schema:**
-
-```typescript
-const faceCheckInSchema = z.object({
-  studentId: z.string().uuid(),
-  confidence: z.number().min(0).max(1),
-  action: z.enum(['check_in', 'check_out']),
-  notes: z.string().optional(),
-  location: z
-    .object({
-      latitude: z.number(),
-      longitude: z.number(),
-      accuracy: z.number(),
-    })
-    .optional(),
-});
-```
-
-**Implementation:**
-
-- Reuse session creation logic from `TeacherQRService.validateQRCodeAndCreateSession()`
-- Set `verification_method: 'face_recognition'`
-- Store `face_confidence` in session record
+> **NOTE**: Should only be called after successful verify-face response
 
 **Acceptance Criteria:**
 
 - [ ] Creates session on check-in
 - [ ] Updates session on check-out
-- [ ] Records verification_method
-- [ ] Records confidence score
-- [ ] Real-time notification works
+- [ ] Records `verification_method: 'face_recognition'`
+- [ ] Records server-calculated confidence
+- [ ] Triggers real-time notification to parent
 
 ---
 
-### Task 2.3: Create Get Assigned Faces API
+### Task 3.4: Create Get Assigned Students API (No Descriptors)
 
 **Status:** [ ] Not Started
+**Priority:** P0
 
-**Description:** API for teachers to get face data of assigned students
+**Description:** Get assigned students with enrollment status (NO descriptors returned)
 
 **Files to create:**
 
-- `src/app/api/teacher/assigned-faces/route.ts`
+- `src/app/api/teacher/assigned-students/route.ts`
 
-**Endpoint:** `GET /api/teacher/assigned-faces`
+**Endpoint:** `GET /api/teacher/assigned-students`
+
+> **SECURITY NOTE**: This endpoint does NOT return face descriptors.
+> Descriptors are only accessed server-side during verification.
 
 **Response:**
 
@@ -391,110 +668,147 @@ const faceCheckInSchema = z.object({
       id: string;
       name: string;
       grade: string;
-      faceDescriptor: number[] | null;
-      hasFaceEnrolled: boolean;
+      hasFaceEnrolled: boolean; // true/false only
       hasActiveSession: boolean;
     }
   ]
 }
 ```
 
-**Implementation:**
-
-- Get teacher's assigned students (use existing dashboard logic)
-- Join with `student_face_records`
-- Return face descriptors for enrolled students
-
 **Acceptance Criteria:**
 
 - [ ] Returns assigned students
-- [ ] Includes face descriptors where available
-- [ ] RLS prevents unauthorized access
+- [ ] Indicates face enrollment status (boolean only)
+- [ ] Does NOT return descriptors
 - [ ] Indicates active session status
 
 ---
 
-### Task 2.4: Create Face Delete API
+### Task 3.5: Create Face Delete API
 
 **Status:** [ ] Not Started
+**Priority:** P1
 
 **Description:** API for parents to delete face data
 
-**Files to create:**
+**Files to modify:**
 
 - `src/app/api/student/face-enroll/route.ts` (add DELETE handler)
 
 **Endpoint:** `DELETE /api/student/face-enroll?studentId={id}`
 
-**Implementation:**
-
-- Verify parent owns student
-- Soft delete (set is_active = false) or hard delete
-- Return confirmation
-
 **Acceptance Criteria:**
 
-- [ ] Deletes face record
-- [ ] Verifies ownership
-- [ ] Returns appropriate response
+- [ ] Verifies parent ownership
+- [ ] Soft deletes face record (is_active = false)
+- [ ] Returns confirmation
+- [ ] Logs deletion for audit
 
 ---
 
-## Phase 3: Frontend - Shared Components
+## Phase 4: Frontend - Shared Components
 
-### Task 3.1: Create FaceScanner Component
+### Task 4.1: Create Face Recognition Service (Client)
 
 **Status:** [ ] Not Started
+**Priority:** P0
 
-**Description:** Reusable camera component with face detection
+**Description:** Client-side service for model loading and face detection
+
+**Files to create:**
+
+- `src/services/face-recognition.service.ts`
+
+**Key Methods:**
+
+```typescript
+export class FaceRecognitionService {
+  private static modelsLoaded = false;
+
+  // Load face-api.js models (with caching)
+  static async loadModels(onProgress?: (p: number) => void): Promise<void>;
+
+  // Check if models are loaded
+  static isReady(): boolean;
+
+  // Detect face and extract descriptor (client-side)
+  static async detectFace(
+    videoElement: HTMLVideoElement
+  ): Promise<FaceDetectionResult | null>;
+
+  // Calculate quality score
+  static calculateQualityScore(detection: faceapi.FaceDetection): number;
+
+  // Preload models in background
+  static preloadModelsInBackground(): void;
+}
+```
+
+**Acceptance Criteria:**
+
+- [ ] Models load with progress callback
+- [ ] Uses Service Worker cache when available
+- [ ] Face detection works
+- [ ] Quality score calculation works
+- [ ] Background preload available
+
+---
+
+### Task 4.2: Create FaceScanner Component (Detection Only)
+
+**Status:** [ ] Not Started
+**Priority:** P0
+
+**Description:** Camera component with face detection (no matching - server-side only)
 
 **Files to create:**
 
 - `src/components/shared/FaceScanner.tsx`
 
-**Props Interface:**
+**Props:**
 
 ```typescript
 interface FaceScannerProps {
   mode: 'enroll' | 'verify';
   onFaceDetected: (result: FaceDetectionResult) => void;
   onError: (error: FaceScannerError) => void;
-  assignedStudents?: Array<{ id: string; name: string; descriptor: number[] }>;
-  minConfidence?: number;
+  minQualityScore?: number; // Default: 0.7
   showDebug?: boolean;
 }
 ```
 
-**Features:**
+**Key Features:**
 
 - [ ] Camera permission handling
-- [ ] Real-time face detection box overlay
-- [ ] Quality indicators (lighting, distance)
+- [ ] Model loading with progress
+- [ ] Real-time face detection box
+- [ ] Quality indicators
 - [ ] Status messages
-- [ ] Frame processing optimization (skip frames)
-- [ ] Error handling with user-friendly messages
+- [ ] Frame skip optimization (every 3rd frame)
+- [ ] **NO local matching** - sends descriptor to parent component
 
 **Acceptance Criteria:**
 
 - [ ] Camera opens with permission
 - [ ] Face detection box visible
-- [ ] Quality score calculated
-- [ ] Callback fires on detection
+- [ ] Quality score displayed
+- [ ] Callback fires with descriptor
 - [ ] Works on mobile browsers
 
 ---
 
-### Task 3.2: Create Model Loading Hook
+### Task 4.3: Create Model Loading Hook
 
 **Status:** [ ] Not Started
+**Priority:** P0
 
-**Description:** React hook for loading face-api.js models
+**Description:** React hook for loading face-api.js models with progress
 
 **Files to create:**
 
 - `src/hooks/useFaceRecognition.ts`
 
-**Hook Interface:**
+**Interface:**
 
 ```typescript
 function useFaceRecognition() {
@@ -503,29 +817,24 @@ function useFaceRecognition() {
     isReady: boolean;
     error: string | null;
     loadProgress: number; // 0-100
+    loadModels: () => Promise<void>;
   };
 }
 ```
 
-**Features:**
-
-- [ ] Lazy model loading
-- [ ] Progress tracking
-- [ ] Error handling
-- [ ] Singleton pattern (don't reload if already loaded)
-
 **Acceptance Criteria:**
 
-- [ ] Models load on first use
-- [ ] Progress indicator works
-- [ ] Error state handled
-- [ ] Doesn't reload unnecessarily
+- [ ] Lazy model loading
+- [ ] Progress tracking (0-100%)
+- [ ] Error handling
+- [ ] Singleton pattern (no reload if loaded)
 
 ---
 
-### Task 3.3: Create Face Quality Indicator Component
+### Task 4.4: Create Face Quality Indicator Component
 
 **Status:** [ ] Not Started
+**Priority:** P1
 
 **Description:** Visual indicator for face capture quality
 
@@ -533,137 +842,60 @@ function useFaceRecognition() {
 
 - `src/components/shared/FaceQualityIndicator.tsx`
 
-**Props:**
-
-```typescript
-interface FaceQualityIndicatorProps {
-  qualityScore: number; // 0-1
-  issues?: Array<'lighting' | 'distance' | 'angle' | 'blur'>;
-}
-```
-
 **UI:**
 
 ```
-Quality: ████████░░ 80%
-✓ Good lighting
-✓ Face centered
-⚠ Move closer
+Quality: [========= ] 85%
+- Lighting: Good
+- Position: Centered
+- Distance: OK
 ```
 
 **Acceptance Criteria:**
 
-- [ ] Shows progress bar
-- [ ] Lists quality issues
-- [ ] Color coded (red/yellow/green)
+- [ ] Progress bar display
+- [ ] Individual quality metrics
+- [ ] Color coding (red/yellow/green)
+- [ ] Accessible labels
 
 ---
 
-## Phase 4: Frontend - Parent Flow (Enrollment)
+## Phase 5: Frontend - Parent Flow (Enrollment)
 
-### Task 4.1: Create FaceEnrollment Component
+### Task 5.1: Create FaceEnrollment Component
 
 **Status:** [ ] Not Started
+**Priority:** P0
 
-**Description:** Wizard component for face enrollment during student creation
+**Description:** Wizard component for face enrollment
 
 **Files to create:**
 
 - `src/components/parent/FaceEnrollment.tsx`
 
-**Props:**
+**Steps:**
 
-```typescript
-interface FaceEnrollmentProps {
-  studentId: string;
-  studentName: string;
-  onComplete: () => void;
-  onSkip?: () => void;
-}
-```
-
-**Wizard Steps:**
-
-1. **Prepare** - Instructions, lighting tips
-2. **Capture** - Camera view with face detection
-3. **Confirm** - Preview captured face, confirm or retake
-
-**UI States:**
-
-- [ ] Instruction screen
-- [ ] Camera active with detection
-- [ ] Capturing (brief freeze)
-- [ ] Preview with quality score
-- [ ] Success confirmation
-- [ ] Error state with retry
+1. Consent & Prepare
+2. Camera Capture
+3. Preview & Confirm
 
 **Acceptance Criteria:**
 
 - [ ] Three-step wizard works
+- [ ] Consent dialog shown first
 - [ ] Skip option available
 - [ ] Quality check before save
 - [ ] API call on confirm
-- [ ] Error handling
+- [ ] Error handling with retry
 
 ---
 
-### Task 4.2: Integrate Enrollment into Student Profile Creation
+### Task 5.2: Create Face Consent Dialog
 
 **Status:** [ ] Not Started
+**Priority:** P0
 
-**Description:** Add FaceEnrollment step to student profile wizard
-
-**Files to modify:**
-
-- `src/app/parent/students/new/page.tsx` (or equivalent)
-- `src/components/parent/StudentProfileForm.tsx` (if exists)
-
-**Changes:**
-
-- Add FaceEnrollment as step 4 (after teacher assignment)
-- Make it optional (skip button)
-- Show success indicator in profile after enrollment
-
-**Acceptance Criteria:**
-
-- [ ] Face enrollment step visible in wizard
-- [ ] Can skip to complete without face
-- [ ] Face data saved on complete
-- [ ] Profile shows face enrollment status
-
----
-
-### Task 4.3: Create Face Data Management UI
-
-**Status:** [ ] Not Started
-
-**Description:** Allow parents to view/update/delete face data
-
-**Files to modify:**
-
-- `src/app/parent/students/[id]/page.tsx` (or profile edit page)
-
-**Features:**
-
-- [ ] Show face enrollment status
-- [ ] "Update Face" button (re-enrollment)
-- [ ] "Remove Face Data" button with confirmation
-- [ ] Last updated timestamp
-
-**Acceptance Criteria:**
-
-- [ ] Status visible on student profile
-- [ ] Update triggers re-enrollment flow
-- [ ] Delete removes face record
-- [ ] Confirmation dialog for delete
-
----
-
-### Task 4.4: Add Consent Dialog
-
-**Status:** [ ] Not Started
-
-**Description:** Consent dialog before face enrollment
+**Description:** GDPR-compliant consent dialog before enrollment
 
 **Files to create:**
 
@@ -671,154 +903,105 @@ interface FaceEnrollmentProps {
 
 **Content:**
 
-```
-Face Recognition Enrollment
-
-By proceeding, you agree to:
-• We capture facial features (not images) for check-in verification
-• Data is encrypted and stored securely
-• You can delete this data anytime from settings
-• This is optional - QR code check-in is always available
-
-[I Agree]  [Skip - Use QR Code]
-```
+- Data usage explanation
+- Encryption statement
+- Deletion rights
+- Skip option
 
 **Acceptance Criteria:**
 
-- [ ] Dialog shows before enrollment
-- [ ] Can agree or skip
+- [ ] Clear consent text
+- [ ] Agree/Skip buttons
 - [ ] Skip bypasses enrollment
-- [ ] Agree proceeds to camera
 
 ---
 
-## Phase 5: Frontend - Teacher Flow (Verification)
-
-### Task 5.1: Create FaceCheckIn Component
+### Task 5.3: Integrate Enrollment into Student Profile
 
 **Status:** [ ] Not Started
+**Priority:** P0
 
-**Description:** Face verification component for teachers
+**Description:** Add FaceEnrollment as optional step in student creation
+
+**Files to modify:**
+
+- `src/app/parent/students/new/page.tsx`
+- Related profile components
+
+**Acceptance Criteria:**
+
+- [ ] Face enrollment step in wizard
+- [ ] Optional (can skip)
+- [ ] Profile shows enrollment status
+
+---
+
+### Task 5.4: Create Face Data Management UI
+
+**Status:** [ ] Not Started
+**Priority:** P1
+
+**Description:** Allow parents to update/delete face data
+
+**Files to modify:**
+
+- `src/app/parent/students/[id]/page.tsx`
+
+**Features:**
+
+- [ ] Show enrollment status
+- [ ] "Update Face" button
+- [ ] "Remove Face Data" button
+- [ ] Confirmation dialog
+
+---
+
+## Phase 6: Frontend - Teacher Flow (Server Verification)
+
+### Task 6.1: Create FaceCheckIn Component (Server Verification)
+
+**Status:** [ ] Not Started
+**Priority:** P0
+
+**Description:** Face verification component with server-side matching
 
 **Files to create:**
 
 - `src/components/teacher/FaceCheckIn.tsx`
 
-**Props:**
-
-```typescript
-interface FaceCheckInProps {
-  teacherId: string;
-  onSessionCreated: (session: TeacherSession) => void;
-  onSwitchToQR: () => void;
-}
-```
-
 **Flow:**
 
-1. Load assigned students with face data
-2. Start camera and continuous scanning
-3. On match, show student info + confidence
-4. Check-in/Check-out buttons
-5. Confirmation and session creation
+1. Load assigned students (with `hasFaceEnrolled` status)
+2. Start camera and detect face
+3. Teacher selects student from list
+4. Send captured descriptor to server for verification
+5. Display server response (match/no match)
+6. Check-in/out on confirmation
 
-**UI States:**
+**Key Differences from v1.0:**
 
-- [ ] Loading assigned students
-- [ ] Camera scanning (no match yet)
-- [ ] Match found (show student card)
-- [ ] Processing check-in
-- [ ] Success
-- [ ] No match / low confidence
-
-**Acceptance Criteria:**
-
-- [ ] Loads face data for assigned students only
-- [ ] Real-time face matching
-- [ ] Shows confidence percentage
-- [ ] Check-in/out creates session
-- [ ] Real-time notification to parent
-
----
-
-### Task 5.2: Create Manual Student Select Fallback
-
-**Status:** [ ] Not Started
-
-**Description:** Allow teacher to manually select student if face fails
-
-**Files to create:**
-
-- `src/components/teacher/ManualStudentSelect.tsx`
-
-**UI:**
-
-```
-Face not recognized? Select manually:
-
-┌─────┐  ┌─────┐  ┌─────┐
-│ 👤  │  │ 👤  │  │ 👤  │
-│ Ali │  │Ridhwan│ │ Sara│
-└─────┘  └─────┘  └─────┘
-```
-
-**Features:**
-
-- [ ] Grid of assigned students
-- [ ] Click to select
-- [ ] Proceed to check-in/out
+- NO local matching
+- Always shows student selection first
+- Server verifies face match
+- Displays "Server Verified" badge
 
 **Acceptance Criteria:**
 
-- [ ] Shows all assigned students
-- [ ] Selection triggers check-in flow
-- [ ] Records verification_method as 'manual'
+- [ ] Loads students without descriptors
+- [ ] Camera detects face
+- [ ] Sends descriptor to verify-face API
+- [ ] Displays server-calculated confidence
+- [ ] Check-in creates session
+- [ ] QR fallback available
 
 ---
 
-### Task 5.3: Integrate Face Check-In into Teacher Dashboard
+### Task 6.2: Create Face Match Result Card
 
 **Status:** [ ] Not Started
+**Priority:** P0
 
-**Description:** Add Face Check-In option to teacher check-in interface
-
-**Files to modify:**
-
-- `src/components/teacher/QRCheckInOut.tsx`
-- Or create new: `src/components/teacher/UnifiedCheckIn.tsx`
-
-**Changes:**
-
-- Add toggle/tabs: "QR Scan" | "Face Scan"
-- Render appropriate component based on selection
-- Remember user's preferred method
-
-**UI:**
-
-```
-┌──────────────────────────────────────┐
-│  ┌──────────┐  ┌──────────┐          │
-│  │ QR Scan  │  │Face Scan │          │
-│  └──────────┘  └──────────┘          │
-│                                       │
-│  [Selected scanner component here]    │
-│                                       │
-└──────────────────────────────────────┘
-```
-
-**Acceptance Criteria:**
-
-- [ ] Toggle between QR and Face
-- [ ] Both methods work
-- [ ] Preference persisted (localStorage)
-
----
-
-### Task 5.4: Add Face Match Confidence Display
-
-**Status:** [ ] Not Started
-
-**Description:** Show match confidence and student info on detection
+**Description:** Display server verification result
 
 **Files to create:**
 
@@ -829,215 +1012,263 @@ Face not recognized? Select manually:
 ```typescript
 interface FaceMatchCardProps {
   student: { id: string; name: string; grade: string };
-  confidence: number;
+  confidence: number; // Server-calculated
+  matched: boolean;
   hasActiveSession: boolean;
   onCheckIn: () => void;
   onCheckOut: () => void;
-  onReject: () => void;
+  onTryAgain: () => void;
 }
-```
-
-**UI:**
-
-```
-┌─────────────────────────────────────┐
-│          Student Identified!         │
-│                                      │
-│            [Photo/Avatar]            │
-│                                      │
-│           Ridhwan Shaik              │
-│           Grade 5                    │
-│           Match: 94% ✓               │
-│                                      │
-│  ┌──────────┐    ┌──────────┐       │
-│  │ CHECK IN │    │CHECK OUT │       │
-│  └──────────┘    └──────────┘       │
-│                                      │
-│  [Not this student?]                 │
-└─────────────────────────────────────┘
 ```
 
 **Acceptance Criteria:**
 
 - [ ] Shows student info
-- [ ] Confidence percentage with color coding
-- [ ] Check-in disabled if already active
-- [ ] Check-out disabled if not active
-- [ ] Reject/retry option
+- [ ] Shows "Server Verified" badge
+- [ ] Confidence percentage with color
+- [ ] Check-in/out buttons
+- [ ] Disabled states based on session
 
 ---
 
-### Task 5.5: Add Session Notes Input
+### Task 6.3: Create Manual Student Select Fallback
 
 **Status:** [ ] Not Started
+**Priority:** P1
 
-**Description:** Optional notes input after face check-in
+**Description:** Manual selection when face verification fails
 
-**Files to modify:**
+**Files to create:**
 
-- `src/components/teacher/FaceCheckIn.tsx`
-
-**Feature:**
-
-- After selecting check-in/out action
-- Show optional notes textarea
-- Include notes in session creation
+- `src/components/teacher/ManualStudentSelect.tsx`
 
 **Acceptance Criteria:**
 
-- [ ] Notes input shown after action select
-- [ ] Can skip or add notes
-- [ ] Notes saved with session
+- [ ] Grid of assigned students
+- [ ] Shows face enrollment status
+- [ ] Selection proceeds to check-in
+- [ ] Records `verification_method: 'manual'`
 
 ---
 
-## Phase 6: Integration & Polish
-
-### Task 6.1: Add Loading States and Animations
+### Task 6.4: Integrate Face Check-In into Teacher Dashboard
 
 **Status:** [ ] Not Started
+**Priority:** P0
 
-**Description:** Smooth loading states throughout face recognition flow
+**Description:** Add Face Scan tab to check-in interface
 
 **Files to modify:**
 
-- All face recognition components
+- `src/components/teacher/QRCheckInOut.tsx` or
+- Create: `src/components/teacher/UnifiedCheckIn.tsx`
+
+**UI:**
+
+```
+[QR Scan] | [Face Scan]
+```
+
+**Acceptance Criteria:**
+
+- [ ] Toggle between QR and Face
+- [ ] Both methods work
+- [ ] Preference saved in localStorage
+- [ ] Preload models when tab visible
+
+---
+
+### Task 6.5: Add Session Notes Input
+
+**Status:** [ ] Not Started
+**Priority:** P2
+
+**Description:** Optional notes after face check-in
+
+**Acceptance Criteria:**
+
+- [ ] Notes input after action
+- [ ] Can skip or add
+- [ ] Saved with session
+
+---
+
+## Phase 7: Integration & Polish
+
+### Task 7.1: Implement Model Preloading
+
+**Status:** [ ] Not Started
+**Priority:** P1
+
+**Description:** Preload face-api models when teacher dashboard loads
+
+**Files to modify:**
+
+- `src/app/teacher/dashboard/page.tsx`
+
+**Implementation:**
+
+```typescript
+useEffect(() => {
+  // Preload models in background on dashboard load
+  FaceRecognitionService.preloadModelsInBackground();
+}, []);
+```
+
+**Acceptance Criteria:**
+
+- [ ] Models preload on dashboard visit
+- [ ] No blocking of UI
+- [ ] Face Scan tab loads instantly
+
+---
+
+### Task 7.2: Add Loading States and Animations
+
+**Status:** [ ] Not Started
+**Priority:** P1
+
+**Description:** Smooth loading states throughout flow
 
 **Animations:**
 
-- [ ] Model loading progress
-- [ ] Face detection pulse
-- [ ] Match success celebration
-- [ ] Error shake
-
-**Acceptance Criteria:**
-
-- [ ] No jarring state changes
-- [ ] Clear progress indicators
-- [ ] Smooth transitions
+- [ ] Model loading progress bar
+- [ ] Face detection pulse animation
+- [ ] Server verification spinner
+- [ ] Match success animation
+- [ ] Error shake animation
 
 ---
 
-### Task 6.2: Optimize Camera Performance
+### Task 7.3: Optimize Camera Performance
 
 **Status:** [ ] Not Started
+**Priority:** P1
 
-**Description:** Ensure smooth camera performance on mobile
+**Description:** Ensure smooth camera on mobile
 
 **Optimizations:**
 
-- [ ] Skip frames (process every 3rd)
-- [ ] Lower detection resolution
-- [ ] Debounce match callbacks
+- [ ] Process every 3rd frame
+- [ ] Lower detection resolution (320x240)
+- [ ] Debounce detection callbacks
 - [ ] Clean up on unmount
 - [ ] Handle orientation changes
 
-**Acceptance Criteria:**
-
-- [ ] 30+ FPS on mid-range mobile
-- [ ] No memory leaks
-- [ ] Works in landscape/portrait
-
 ---
 
-### Task 6.3: Add Offline Indicator
+### Task 7.4: Add Offline Indicator
 
 **Status:** [ ] Not Started
+**Priority:** P2
 
-**Description:** Warn when offline (face matching works, but session save fails)
-
-**Files to modify:**
-
-- Face recognition components
-
-**Behavior:**
-
-- Show "Offline" indicator
-- Face detection still works
-- Queue session creation for later
-- Or show warning that online required
+**Description:** Show offline status (face detection works, server verification fails)
 
 **Acceptance Criteria:**
 
-- [ ] Offline state detected
-- [ ] User warned appropriately
-- [ ] Graceful degradation
+- [ ] Detects offline status
+- [ ] Shows "Offline - Server verification unavailable"
+- [ ] Offers QR fallback
 
 ---
 
-### Task 6.4: GuruKool Theme Integration
+### Task 7.5: Apply GuruKool Theme
 
 **Status:** [ ] Not Started
+**Priority:** P2
 
-**Description:** Apply GuruKool brand theme to face recognition UI
-
-**Files to modify:**
-
-- All face recognition components
+**Description:** Apply brand theme to face recognition UI
 
 **Theme elements:**
 
 - Watermorphism effects
 - Brand colors (#C9A227, #2E3A3E)
 - Consistent typography
-- Motion design
-
-**Acceptance Criteria:**
-
-- [ ] Matches existing UI style
-- [ ] Consistent with parent/teacher dashboards
-- [ ] Accessible color contrast
 
 ---
 
-## Phase 7: Testing & QA
+## Phase 8: Testing & Security Validation
 
-### Task 7.1: Unit Tests for Face Matching
+### Task 8.1: Unit Tests - Encryption Service
 
 **Status:** [ ] Not Started
-
-**Description:** Test face matching algorithm
+**Priority:** P0
 
 **Files to create:**
 
-- `__tests__/services/face-recognition.test.ts`
+- `__tests__/lib/face-encryption.test.ts`
 
 **Test cases:**
 
-- [ ] Same person matches with high confidence
-- [ ] Different people don't match
-- [ ] Edge case: similar faces
-- [ ] Quality score calculation
-- [ ] Error handling
+- [ ] Encrypt/decrypt round-trip preserves data
+- [ ] Different IVs produce different ciphertext
+- [ ] Invalid auth tag throws error
+- [ ] Invalid key throws error
 
 ---
 
-### Task 7.2: Integration Tests for APIs
+### Task 8.2: Unit Tests - Face Matching Service
 
 **Status:** [ ] Not Started
+**Priority:** P0
 
-**Description:** Test face recognition API endpoints
+**Files to create:**
+
+- `__tests__/lib/face-matching.test.ts`
+
+**Test cases:**
+
+- [ ] Identical descriptors → distance 0
+- [ ] Similar descriptors → distance < 0.4
+- [ ] Different descriptors → distance > 0.4
+- [ ] Invalid length throws error
+- [ ] Confidence conversion correct
+
+---
+
+### Task 8.3: Integration Tests - Verify Face API
+
+**Status:** [ ] Not Started
+**Priority:** P0 - **SECURITY CRITICAL**
+
+**Files to create:**
+
+- `__tests__/api/verify-face.test.ts`
+
+**Test cases:**
+
+- [ ] Unauthenticated → 401
+- [ ] Non-teacher → 403
+- [ ] Unassigned student → 403
+- [ ] Valid face → matched: true
+- [ ] Different face → matched: false
+- [ ] **Client-provided confidence IGNORED** (security test)
+- [ ] Rate limiting works
+
+---
+
+### Task 8.4: Integration Tests - Enrollment API
+
+**Status:** [ ] Not Started
+**Priority:** P0
 
 **Files to create:**
 
 - `__tests__/api/face-enroll.test.ts`
-- `__tests__/api/check-in-face.test.ts`
 
 **Test cases:**
 
-- [ ] Enrollment saves descriptor
-- [ ] Unauthorized access blocked
+- [ ] Valid enrollment saves encrypted data
+- [ ] Non-parent access denied
 - [ ] Invalid descriptor rejected
-- [ ] Check-in creates session
-- [ ] Check-out updates session
+- [ ] Old record deactivated
 
 ---
 
-### Task 7.3: E2E Tests with Camera Mock
+### Task 8.5: E2E Tests with Camera Mock
 
 **Status:** [ ] Not Started
-
-**Description:** End-to-end tests for face recognition flows
+**Priority:** P1
 
 **Files to create:**
 
@@ -1046,69 +1277,58 @@ interface FaceMatchCardProps {
 
 **Test cases:**
 
-- [ ] Parent enrollment flow
-- [ ] Teacher check-in flow
-- [ ] Fallback to QR
-- [ ] Error handling
-
-**Note:** Use Playwright camera mocking
+- [ ] Parent can enroll student face
+- [ ] Teacher can verify and check-in
+- [ ] Wrong face shows no match
+- [ ] QR fallback works
 
 ---
 
-### Task 7.4: Manual QA Checklist
+### Task 8.6: Security Penetration Testing
 
 **Status:** [ ] Not Started
+**Priority:** P0
 
-**Test Matrix:**
+**Test cases:**
 
-| Scenario               | Chrome | Safari | Mobile Chrome | Mobile Safari |
-| ---------------------- | ------ | ------ | ------------- | ------------- |
-| Model loading          | [ ]    | [ ]    | [ ]           | [ ]           |
-| Camera permission      | [ ]    | [ ]    | [ ]           | [ ]           |
-| Face detection         | [ ]    | [ ]    | [ ]           | [ ]           |
-| Enrollment save        | [ ]    | [ ]    | [ ]           | [ ]           |
-| Teacher matching       | [ ]    | [ ]    | [ ]           | [ ]           |
-| Check-in creation      | [ ]    | [ ]    | [ ]           | [ ]           |
-| Real-time notification | [ ]    | [ ]    | [ ]           | [ ]           |
+| Test Case                  | Expected Result                |
+| -------------------------- | ------------------------------ |
+| Spoofing confidence value  | Server ignores, calculates own |
+| Cross-parent access        | 403 Forbidden                  |
+| Unassigned student access  | 403 Forbidden                  |
+| Brute force descriptors    | Rate limited after 10 attempts |
+| SQL injection in studentId | Validation error               |
+| Reading encrypted data     | Unusable without key           |
+
+**Acceptance Criteria:**
+
+- [ ] All security tests pass
+- [ ] No way to bypass server verification
+- [ ] Audit logs capture all attempts
 
 ---
 
-### Task 7.5: Security Testing
+## Phase 9: Documentation & Deployment
+
+### Task 9.1: Update CLAUDE.md
 
 **Status:** [ ] Not Started
-
-**Tests:**
-
-- [ ] RLS policies prevent cross-parent access
-- [ ] Teacher can only access assigned students
-- [ ] Invalid descriptors rejected
-- [ ] Rate limiting on enrollment
-- [ ] No face images stored
-
----
-
-## Phase 8: Documentation & Deployment
-
-### Task 8.1: Update CLAUDE.md
-
-**Status:** [ ] Not Started
-
-**Description:** Document face recognition in project README
+**Priority:** P1
 
 **Sections to add:**
 
-- [ ] Face recognition overview
-- [ ] API endpoints
-- [ ] Component locations
-- [ ] Configuration options
+- Face recognition overview
+- Security architecture summary
+- API endpoints
+- Environment variables
+- Testing commands
 
 ---
 
-### Task 8.2: Create User Guide
+### Task 9.2: Create User Guide
 
 **Status:** [ ] Not Started
-
-**Description:** User-facing documentation
+**Priority:** P2
 
 **Files to create:**
 
@@ -1116,30 +1336,47 @@ interface FaceMatchCardProps {
 
 **Sections:**
 
-- [ ] How to enroll face (parents)
-- [ ] How to check-in with face (teachers)
-- [ ] Troubleshooting
-- [ ] Privacy information
+- Parent: How to enroll
+- Teacher: How to check-in
+- Troubleshooting
+- Privacy information
 
 ---
 
-### Task 8.3: Feature Flag Setup
+### Task 9.3: Feature Flag Setup
 
 **Status:** [ ] Not Started
-
-**Description:** Add feature flag for gradual rollout
+**Priority:** P1
 
 **Implementation:**
 
-- Environment variable: `NEXT_PUBLIC_ENABLE_FACE_RECOGNITION=true`
+- `NEXT_PUBLIC_ENABLE_FACE_RECOGNITION=true/false`
 - Conditional rendering in UI
-- Default: disabled
+- Default: disabled in production initially
 
 **Acceptance Criteria:**
 
-- [ ] Feature hidden when flag is false
-- [ ] Full functionality when flag is true
+- [ ] Feature hidden when disabled
+- [ ] Full functionality when enabled
 - [ ] No errors when disabled
+
+---
+
+### Task 9.4: Production Deployment Checklist
+
+**Status:** [ ] Not Started
+**Priority:** P0
+
+**Checklist:**
+
+- [ ] `FACE_ENCRYPTION_KEY` set in production
+- [ ] Database migration applied
+- [ ] Service Worker deployed
+- [ ] Models cached in CDN
+- [ ] Rate limiting configured
+- [ ] Audit logging enabled
+- [ ] Feature flag off initially
+- [ ] Security tests pass in staging
 
 ---
 
@@ -1147,84 +1384,138 @@ interface FaceMatchCardProps {
 
 ### Phase 1: Setup & Infrastructure
 
-- [ ] 1.1 Install face-api.js
-- [ ] 1.2 Download and host models
-- [ ] 1.3 Create database migration
-- [ ] 1.4 Create TypeScript types
-- [ ] 1.5 Create face recognition service
+- [ ] 1.1 Install dependencies
+- [ ] 1.2 Download models
+- [ ] 1.3 Create Service Worker
+- [ ] 1.4 Create IndexedDB storage
+- [ ] 1.5 Create database migration
+- [ ] 1.6 Create TypeScript types
+- [ ] 1.7 Add environment variables
 
-### Phase 2: Backend Implementation
+### Phase 2: Security & Encryption (CRITICAL)
 
-- [ ] 2.1 Create face enrollment API
-- [ ] 2.2 Create face check-in API
-- [ ] 2.3 Create get assigned faces API
-- [ ] 2.4 Create face delete API
+- [ ] 2.1 Create encryption service
+- [ ] 2.2 Create matching service (server-side)
+- [ ] 2.3 Create rate limiting
+- [ ] 2.4 Create audit logging
 
-### Phase 3: Frontend - Shared Components
+### Phase 3: Backend Implementation
 
-- [ ] 3.1 Create FaceScanner component
-- [ ] 3.2 Create model loading hook
-- [ ] 3.3 Create quality indicator component
+- [ ] 3.1 Create face enrollment API
+- [ ] 3.2 Create face verification API (CRITICAL)
+- [ ] 3.3 Create face check-in API
+- [ ] 3.4 Create assigned students API
+- [ ] 3.5 Create face delete API
 
-### Phase 4: Frontend - Parent Flow
+### Phase 4: Frontend - Shared
 
-- [ ] 4.1 Create FaceEnrollment component
-- [ ] 4.2 Integrate into student profile creation
-- [ ] 4.3 Create face data management UI
-- [ ] 4.4 Add consent dialog
+- [ ] 4.1 Create face recognition service
+- [ ] 4.2 Create FaceScanner component
+- [ ] 4.3 Create model loading hook
+- [ ] 4.4 Create quality indicator
 
-### Phase 5: Frontend - Teacher Flow
+### Phase 5: Frontend - Parent
 
-- [ ] 5.1 Create FaceCheckIn component
-- [ ] 5.2 Create manual student select fallback
-- [ ] 5.3 Integrate into teacher dashboard
-- [ ] 5.4 Add face match confidence display
-- [ ] 5.5 Add session notes input
+- [ ] 5.1 Create FaceEnrollment component
+- [ ] 5.2 Create consent dialog
+- [ ] 5.3 Integrate into student profile
+- [ ] 5.4 Create face data management UI
 
-### Phase 6: Integration & Polish
+### Phase 6: Frontend - Teacher
 
-- [ ] 6.1 Add loading states and animations
-- [ ] 6.2 Optimize camera performance
-- [ ] 6.3 Add offline indicator
-- [ ] 6.4 GuruKool theme integration
+- [ ] 6.1 Create FaceCheckIn component
+- [ ] 6.2 Create FaceMatchCard
+- [ ] 6.3 Create manual select fallback
+- [ ] 6.4 Integrate into dashboard
+- [ ] 6.5 Add session notes
 
-### Phase 7: Testing & QA
+### Phase 7: Integration & Polish
 
-- [ ] 7.1 Unit tests for face matching
-- [ ] 7.2 Integration tests for APIs
-- [ ] 7.3 E2E tests with camera mock
-- [ ] 7.4 Manual QA checklist
-- [ ] 7.5 Security testing
+- [ ] 7.1 Implement model preloading
+- [ ] 7.2 Add loading animations
+- [ ] 7.3 Optimize camera performance
+- [ ] 7.4 Add offline indicator
+- [ ] 7.5 Apply GuruKool theme
 
-### Phase 8: Documentation & Deployment
+### Phase 8: Testing & Security (CRITICAL)
 
-- [ ] 8.1 Update CLAUDE.md
-- [ ] 8.2 Create user guide
-- [ ] 8.3 Feature flag setup
+- [ ] 8.1 Unit tests - encryption
+- [ ] 8.2 Unit tests - matching
+- [ ] 8.3 Integration tests - verify API
+- [ ] 8.4 Integration tests - enrollment
+- [ ] 8.5 E2E tests
+- [ ] 8.6 Security penetration testing
+
+### Phase 9: Documentation & Deployment
+
+- [ ] 9.1 Update CLAUDE.md
+- [ ] 9.2 Create user guide
+- [ ] 9.3 Feature flag setup
+- [ ] 9.4 Production deployment checklist
 
 ---
 
 ## Dependencies Graph
 
 ```
-1.1 Install ──┬──> 1.5 Service ──> 3.1 Scanner ──┬──> 4.1 Enrollment
-1.2 Models ───┘                                   │
-                                                  └──> 5.1 FaceCheckIn
-1.3 Migration ──> 2.1 Enroll API ──> 4.2 Profile Integration
-              ──> 2.2 CheckIn API ──> 5.3 Dashboard Integration
-              ──> 2.3 AssignedFaces ─┘
+Phase 1 (Setup)
+├── 1.1 Install ──┬──> 1.5 Migration ──> Phase 3 (Backend)
+├── 1.2 Models ───┤
+├── 1.3 SW ───────┤
+├── 1.4 IndexedDB ┤
+├── 1.6 Types ────┴──> All phases
+└── 1.7 Env vars ────> Phase 2
 
-1.4 Types ──> All components
+Phase 2 (Security) - CRITICAL PATH
+├── 2.1 Encryption ──> 3.1, 3.2
+├── 2.2 Matching ────> 3.2
+├── 2.3 Rate limit ──> 3.2
+└── 2.4 Audit ───────> 3.2
+
+Phase 3 (Backend)
+├── 3.1 Enroll ──> 5.1 (Parent enrollment)
+├── 3.2 Verify ──> 6.1 (Teacher check-in) - CRITICAL
+├── 3.3 Check-in -> 6.1
+└── 3.4 Assigned -> 6.1
+
+Phase 4 (Shared Components)
+├── 4.1 Service ──> 4.2, 5.1, 6.1
+├── 4.2 Scanner ──> 5.1, 6.1
+└── 4.3 Hook ─────> 5.1, 6.1
+
+Phase 5 (Parent) ──> Phase 6 (Teacher) ──> Phase 7 (Polish)
+                                             |
+                                             v
+                                      Phase 8 (Testing)
+                                             |
+                                             v
+                                      Phase 9 (Deploy)
 ```
 
 ---
 
 ## Risk Mitigation
 
-| Risk                  | Mitigation                                    |
-| --------------------- | --------------------------------------------- |
-| Model loading slow    | Show progress indicator, preload on app start |
-| Camera denied         | Clear error message, QR fallback              |
-| Low accuracy          | Allow manual fallback, tune threshold         |
-| Privacy concerns      | Clear consent, no image storage               |
-| Browser compatibility | Feature detection, graceful degradation       |
+| Risk                      | Mitigation                                    |
+| ------------------------- | --------------------------------------------- |
+| Model loading slow        | Service Worker cache, preload on dashboard    |
+| Camera denied             | Clear error message, QR fallback              |
+| Low match accuracy        | Server-side threshold tuning, manual fallback |
+| Client-side tampering     | **Server-side verification (mandatory)**      |
+| Privacy concerns          | Encryption, clear consent, deletion option    |
+| Browser compatibility     | Feature detection, graceful degradation       |
+| Network failures          | Offline indicator, QR fallback                |
+| Encryption key compromise | Key rotation procedure, audit logging         |
+
+---
+
+## Version History
+
+| Version | Date         | Changes                                       |
+| ------- | ------------ | --------------------------------------------- |
+| 1.0     | January 2026 | Initial draft with client-side matching       |
+| 2.0     | January 2026 | **Security update**: Server-side verification |
+|         |              | Added encryption service                      |
+|         |              | Added audit logging                           |
+|         |              | Added Service Worker caching                  |
+|         |              | Removed client-side matching                  |
