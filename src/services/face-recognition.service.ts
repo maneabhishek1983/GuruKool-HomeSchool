@@ -79,31 +79,70 @@ export class FaceRecognitionService {
 
   /**
    * Internal method to load models
+   * Loads models in parallel with a timeout for mobile network resilience
    */
   private async doLoadModels(
     onProgress?: (progress: number) => void
   ): Promise<void> {
+    // 30-second timeout for model loading (mobile networks can be slow)
+    const MODEL_LOAD_TIMEOUT_MS = 30000;
+
+    // Declare progress interval outside try so it can be cleaned up in catch/finally
+    let progressInterval: ReturnType<typeof setInterval> | undefined;
+
     try {
       onProgress?.(10);
 
-      // Load SSD MobileNet for face detection
-      await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
-      onProgress?.(40);
+      // Load all three models in parallel for faster initialization
+      // This is especially important on mobile where sequential loads
+      // over 3G/4G multiply total wait time
+      const loadWithTimeout = Promise.all([
+        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+      ]);
 
-      // Load face landmark model for alignment
-      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-      onProgress?.(70);
+      // Simulate incremental progress during parallel load
+      let progressValue = 10;
+      progressInterval = setInterval(() => {
+        progressValue = Math.min(90, progressValue + 10);
+        onProgress?.(progressValue);
+      }, 1500);
 
-      // Load face recognition model for descriptor extraction
-      await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+      // Race between model loading and timeout
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          reject(
+            new Error(
+              'Face detection models took too long to load. ' +
+                'Please check your internet connection and try again.'
+            )
+          );
+        }, MODEL_LOAD_TIMEOUT_MS);
+      });
+
+      await Promise.race([loadWithTimeout, timeoutPromise]);
+      clearInterval(progressInterval);
+
       onProgress?.(100);
 
       console.log('[FaceRecognition] Models loaded successfully');
     } catch (error) {
+      clearInterval(progressInterval);
       console.error('[FaceRecognition] Failed to load models:', error);
-      throw new Error(
-        `Failed to load face recognition models: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+      const message = error instanceof Error ? error.message : 'Unknown error';
+
+      // Provide mobile-friendly error messages
+      if (
+        message.includes('Failed to fetch') ||
+        message.includes('NetworkError')
+      ) {
+        throw new Error(
+          'Unable to download face detection models. Please check your internet connection and try again.'
+        );
+      }
+
+      throw new Error(`Failed to load face recognition models: ${message}`);
     }
   }
 

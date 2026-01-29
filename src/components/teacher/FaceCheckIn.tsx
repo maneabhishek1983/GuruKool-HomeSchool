@@ -117,7 +117,10 @@ export function FaceCheckIn({ onSuccess, onError }: FaceCheckInProps) {
       setStep('verifying');
 
       try {
-        // Send descriptor to server for verification
+        // Send descriptor to server for verification with timeout for mobile networks
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
         const response = await fetch('/api/teacher-sessions/verify-face', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -125,14 +128,21 @@ export function FaceCheckIn({ onSuccess, onError }: FaceCheckInProps) {
             studentId: selectedStudent.id,
             capturedDescriptor: result.descriptor,
           }),
+          signal: controller.signal,
         });
+
+        clearTimeout(timeoutId);
 
         const data: FaceVerifyResponse = await response.json();
         setVerifyResult(data);
         setStep('result');
       } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Face verification failed';
         setError(
-          err instanceof Error ? err.message : 'Face verification failed'
+          err instanceof DOMException && err.name === 'AbortError'
+            ? 'Verification timed out. Please check your connection and try again.'
+            : message
         );
         setStep('error');
       }
@@ -504,8 +514,14 @@ export function FaceCheckIn({ onSuccess, onError }: FaceCheckInProps) {
                   setError(err);
                   setStep('error');
                 }}
-                width={400}
-                qrbox={250}
+                width={Math.min(
+                  typeof window !== 'undefined' ? window.innerWidth - 48 : 400,
+                  400
+                )}
+                qrbox={Math.min(
+                  typeof window !== 'undefined' ? window.innerWidth - 96 : 250,
+                  250
+                )}
                 fps={10}
               />
 
