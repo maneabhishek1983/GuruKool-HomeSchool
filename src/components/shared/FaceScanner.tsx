@@ -95,11 +95,25 @@ export function FaceScanner({
     try {
       setStatusMessage('Requesting camera access...');
 
+      // Check for secure context (HTTPS) - required on mobile browsers
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        onError({
+          code: 'CAMERA_DENIED',
+          message:
+            window.isSecureContext === false
+              ? 'Camera requires a secure connection (HTTPS). Please access this page over HTTPS.'
+              : 'Camera API not available on this browser. Please use a modern browser like Chrome, Safari, or Firefox.',
+        });
+        return;
+      }
+
+      // Use flexible constraints that work across mobile devices
+      // Avoid fixed dimensions that some mobile cameras can't satisfy
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'user',
-          width: { ideal: 640 },
-          height: { ideal: 480 },
+          width: { ideal: 640, min: 320 },
+          height: { ideal: 480, min: 240 },
         },
         audio: false,
       });
@@ -107,19 +121,64 @@ export function FaceScanner({
       streamRef.current = stream;
 
       if (videoRef.current) {
+        // Set webkit-playsinline for older iOS Safari (enables inline video)
+        videoRef.current.setAttribute('webkit-playsinline', 'true');
         videoRef.current.srcObject = stream;
+
+        // Wait for video metadata to load before playing
+        // Mobile browsers need this - they won't play until stream is ready
+        await new Promise<void>((resolve, reject) => {
+          const video = videoRef.current!;
+          const timeoutId = setTimeout(() => {
+            reject(new Error('Camera stream timed out. Please try again.'));
+          }, 10000);
+
+          video.onloadedmetadata = () => {
+            clearTimeout(timeoutId);
+            resolve();
+          };
+
+          // If already loaded (e.g., desktop), resolve immediately
+          if (video.readyState >= 1) {
+            clearTimeout(timeoutId);
+            resolve();
+          }
+        });
+
         await videoRef.current.play();
         setCameraReady(true);
         setStatusMessage('Camera ready');
       }
     } catch (err) {
       console.error('[FaceScanner] Camera error:', err);
+
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      let userMessage = 'Camera access denied. Please allow camera access.';
+
+      if (
+        errorMessage.includes('NotAllowedError') ||
+        errorMessage.includes('Permission')
+      ) {
+        userMessage =
+          'Camera permission denied. Please allow camera access in your browser settings and reload the page.';
+      } else if (errorMessage.includes('NotFoundError')) {
+        userMessage = 'No camera found on this device.';
+      } else if (
+        errorMessage.includes('NotReadableError') ||
+        errorMessage.includes('TrackStartError')
+      ) {
+        userMessage =
+          'Camera is in use by another app. Please close other apps using the camera and try again.';
+      } else if (errorMessage.includes('OverconstrainedError')) {
+        userMessage =
+          'Camera does not support the required settings. Please try a different device.';
+      } else if (errorMessage.includes('timed out')) {
+        userMessage = errorMessage;
+      }
+
       onError({
         code: 'CAMERA_DENIED',
-        message:
-          err instanceof Error
-            ? err.message
-            : 'Camera access denied. Please allow camera access.',
+        message: userMessage,
       });
     }
   }, [onError]);
@@ -276,6 +335,7 @@ export function FaceScanner({
 
       {/* Video Container */}
       <div className="relative aspect-[4/3] bg-neutral-900 rounded-xl overflow-hidden">
+        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <video
           ref={videoRef}
           autoPlay
