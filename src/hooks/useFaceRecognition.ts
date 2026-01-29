@@ -72,6 +72,7 @@ export function useFaceRecognition(
 
   const serviceRef = useRef<FaceRecognitionService | null>(null);
   const loadedRef = useRef(false);
+  const loadingRef = useRef(false);
 
   // Initialize service reference
   useEffect(() => {
@@ -79,14 +80,17 @@ export function useFaceRecognition(
     setIsReady(serviceRef.current.isReady());
   }, []);
 
-  // Load models
+  // Load models (uses ref-based guard to prevent concurrent loading,
+  // since state-based isLoading guard has a race window due to async batching)
   const loadModels = useCallback(async () => {
-    if (loadedRef.current || isLoading) {
+    if (loadedRef.current || loadingRef.current) {
       return;
     }
+    loadingRef.current = true;
 
     const service = serviceRef.current;
     if (!service) {
+      loadingRef.current = false;
       return;
     }
 
@@ -95,6 +99,7 @@ export function useFaceRecognition(
       setIsReady(true);
       setLoadProgress(100);
       loadedRef.current = true;
+      loadingRef.current = false;
       onModelsLoaded?.();
       return;
     }
@@ -119,9 +124,10 @@ export function useFaceRecognition(
       setError(errorMessage);
       onError?.(err instanceof Error ? err : new Error(errorMessage));
     } finally {
+      loadingRef.current = false;
       setIsLoading(false);
     }
-  }, [isLoading, onModelsLoaded, onError]);
+  }, [onModelsLoaded, onError]);
 
   // Auto-load if enabled
   useEffect(() => {

@@ -19,6 +19,7 @@ import { useAuthContext } from '@/lib/authContext';
 import { FaceScanner } from '@/components/shared/FaceScanner';
 import { QRScanner } from '@/components/shared/QRScanner';
 import type { FaceDetectionResult, FaceVerifyResponse } from '@/types';
+import { useFaceRecognitionAvailability } from '@/hooks/useFaceRecognitionAvailability';
 
 type VerificationMethod = 'face' | 'qr';
 type CheckInStep =
@@ -49,6 +50,8 @@ interface FaceCheckInProps {
  */
 export function FaceCheckIn({ onSuccess, onError }: FaceCheckInProps) {
   const { user } = useAuthContext();
+  const { canUseFaceRecognition, isSecureContext, unavailableReason } =
+    useFaceRecognitionAvailability();
   const [method, setMethod] = useState<VerificationMethod>('face');
   const [step, setStep] = useState<CheckInStep>('select_method');
   const [students, setStudents] = useState<Student[]>([]);
@@ -107,6 +110,14 @@ export function FaceCheckIn({ onSuccess, onError }: FaceCheckInProps) {
     }
   };
 
+  // Auto-fallback: if face recognition is unavailable, switch to QR immediately
+  useEffect(() => {
+    if (!canUseFaceRecognition && step === 'select_method') {
+      setMethod('qr');
+      setStep('scanning');
+    }
+  }, [canUseFaceRecognition, step]);
+
   // Handle face detection
   const handleFaceDetected = useCallback(
     async (result: FaceDetectionResult) => {
@@ -148,6 +159,15 @@ export function FaceCheckIn({ onSuccess, onError }: FaceCheckInProps) {
       }
     },
     [selectedStudent, step]
+  );
+
+  // Memoize face scanner error handler to prevent re-render loops in FaceScanner
+  const handleFaceScannerError = useCallback(
+    (err: { code: string; message: string }) => {
+      setError(err.message);
+      setStep('error');
+    },
+    []
   );
 
   // Handle QR scan
@@ -313,27 +333,62 @@ export function FaceCheckIn({ onSuccess, onError }: FaceCheckInProps) {
                 Choose Verification Method
               </h3>
 
+              {/* HTTPS warning banner */}
+              {!isSecureContext && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                  <p className="text-sm text-amber-800">
+                    Face recognition requires HTTPS. Use QR code on this
+                    connection, or switch to a secure (HTTPS) connection for
+                    face scanning.
+                  </p>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 {/* Face Recognition Option */}
                 <motion.button
                   onClick={() => {
-                    setMethod('face');
-                    setStep('select_student');
+                    if (canUseFaceRecognition) {
+                      setMethod('face');
+                      setStep('select_student');
+                    }
                   }}
-                  className="p-6 bg-purple-50 hover:bg-purple-100 border-2 border-purple-200 rounded-xl transition-colors text-center"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  disabled={!canUseFaceRecognition}
+                  className={`p-6 border-2 rounded-xl transition-colors text-center ${
+                    canUseFaceRecognition
+                      ? 'bg-purple-50 hover:bg-purple-100 border-purple-200'
+                      : 'bg-neutral-100 border-neutral-200 cursor-not-allowed opacity-60'
+                  }`}
+                  {...(canUseFaceRecognition
+                    ? { whileHover: { scale: 1.02 }, whileTap: { scale: 0.98 } }
+                    : {})}
                 >
                   <div className="text-4xl mb-3">&#128100;</div>
-                  <h4 className="font-semibold text-purple-800 mb-1">
+                  <h4
+                    className={`font-semibold mb-1 ${
+                      canUseFaceRecognition
+                        ? 'text-purple-800'
+                        : 'text-neutral-500'
+                    }`}
+                  >
                     Face Scan
                   </h4>
-                  <p className="text-xs text-purple-600">
-                    Verify with face recognition
+                  <p
+                    className={`text-xs ${
+                      canUseFaceRecognition
+                        ? 'text-purple-600'
+                        : 'text-neutral-400'
+                    }`}
+                  >
+                    {canUseFaceRecognition
+                      ? 'Verify with face recognition'
+                      : (unavailableReason ?? 'Unavailable')}
                   </p>
-                  <span className="inline-block mt-2 px-2 py-1 bg-purple-200 text-purple-800 text-xs rounded-full">
-                    Recommended
-                  </span>
+                  {canUseFaceRecognition && (
+                    <span className="inline-block mt-2 px-2 py-1 bg-purple-200 text-purple-800 text-xs rounded-full">
+                      Recommended
+                    </span>
+                  )}
                 </motion.button>
 
                 {/* QR Code Option (Always Available) */}
@@ -348,9 +403,11 @@ export function FaceCheckIn({ onSuccess, onError }: FaceCheckInProps) {
                 >
                   <div className="text-4xl mb-3">&#128247;</div>
                   <h4 className="font-semibold text-blue-800 mb-1">QR Code</h4>
-                  <p className="text-xs text-blue-600">Scan parent's QR code</p>
+                  <p className="text-xs text-blue-600">
+                    Scan parent&apos;s QR code
+                  </p>
                   <span className="inline-block mt-2 px-2 py-1 bg-blue-200 text-blue-800 text-xs rounded-full">
-                    Fallback
+                    {canUseFaceRecognition ? 'Fallback' : 'Available'}
                   </span>
                 </motion.button>
               </div>
@@ -467,10 +524,7 @@ export function FaceCheckIn({ onSuccess, onError }: FaceCheckInProps) {
               <FaceScanner
                 mode="verify"
                 onFaceDetected={handleFaceDetected}
-                onError={err => {
-                  setError(err.message);
-                  setStep('error');
-                }}
+                onError={handleFaceScannerError}
                 minQualityScore={0.6}
                 enabled={step === 'scanning'}
               />

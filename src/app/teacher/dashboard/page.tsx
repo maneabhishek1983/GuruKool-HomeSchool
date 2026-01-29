@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useAuthContext } from '@/lib/authContext';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,6 +8,12 @@ import { DataSheetsManager } from '@/components/teacher/DataSheetsManager';
 import { TimesheetManager } from '@/components/teacher/TimesheetManager';
 import { QRCheckInOut } from '@/components/teacher/QRCheckInOut';
 import { MonthlyTimesheetReport } from '@/components/teacher/MonthlyTimesheetReport';
+import { useFaceRecognitionAvailability } from '@/hooks/useFaceRecognitionAvailability';
+
+// Lazy-load FaceCheckIn to avoid bundling face-api.js when not needed
+const FaceCheckIn = React.lazy(
+  () => import('@/components/teacher/FaceCheckIn')
+);
 import {
   LiquidLearningLayout,
   GlassHeader,
@@ -45,6 +51,7 @@ const tabs = [
 export default function TeacherDashboard() {
   const { user, logout } = useAuthContext();
   const router = useRouter();
+  const { canUseFaceRecognition } = useFaceRecognitionAvailability();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [dashboardStats, setDashboardStats] = useState({
     assignedStudents: 0,
@@ -72,6 +79,20 @@ export default function TeacherDashboard() {
       loadDashboardStats();
     }
   }, [user]);
+
+  // Preload face-api models when face recognition is available
+  useEffect(() => {
+    if (canUseFaceRecognition) {
+      import('@/services/face-recognition.service').then(mod => {
+        const service = mod.FaceRecognitionService.getInstance();
+        if (!service.isReady()) {
+          service.loadModels().catch(() => {
+            // Silently fail — FaceCheckIn will handle errors
+          });
+        }
+      });
+    }
+  }, [canUseFaceRecognition]);
 
   const loadDashboardStats = async () => {
     if (!user?.id) {
@@ -313,15 +334,35 @@ export default function TeacherDashboard() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              <QRCheckInOut
-                onSuccess={entry => {
-                  console.log('Check-in/out successful:', entry);
-                  loadDashboardStats();
-                }}
-                onError={error => {
-                  console.error('Check-in/out error:', error);
-                }}
-              />
+              {canUseFaceRecognition ? (
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+                    </div>
+                  }
+                >
+                  <FaceCheckIn
+                    onSuccess={entry => {
+                      console.log('Check-in/out successful:', entry);
+                      loadDashboardStats();
+                    }}
+                    onError={error => {
+                      console.error('Check-in/out error:', error);
+                    }}
+                  />
+                </Suspense>
+              ) : (
+                <QRCheckInOut
+                  onSuccess={entry => {
+                    console.log('Check-in/out successful:', entry);
+                    loadDashboardStats();
+                  }}
+                  onError={error => {
+                    console.error('Check-in/out error:', error);
+                  }}
+                />
+              )}
             </motion.div>
           )}
 

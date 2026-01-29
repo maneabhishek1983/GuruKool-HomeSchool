@@ -67,11 +67,26 @@ export function FaceScanner({
   const streamRef = useRef<MediaStream | null>(null);
   const animationRef = useRef<number | null>(null);
   const lastDetectionRef = useRef<number>(0);
+  const cameraStartingRef = useRef(false);
 
   const [cameraReady, setCameraReady] = useState(false);
   const [currentDetection, setCurrentDetection] =
     useState<FaceDetectionResult | null>(null);
   const [statusMessage, setStatusMessage] = useState('Initializing...');
+
+  // Memoize error handler to prevent infinite re-render loop.
+  // Without this, a new function reference is created every render,
+  // causing loadModels in useFaceRecognition to be recreated,
+  // which triggers the initialization useEffect to re-fire continuously.
+  const handleModelError = useCallback(
+    (err: Error) => {
+      onError({
+        code: 'MODEL_LOAD_FAILED',
+        message: err.message,
+      });
+    },
+    [onError]
+  );
 
   const {
     isLoading,
@@ -82,16 +97,15 @@ export function FaceScanner({
     detectFace,
     assessQuality,
   } = useFaceRecognition({
-    onError: err => {
-      onError({
-        code: 'MODEL_LOAD_FAILED',
-        message: err.message,
-      });
-    },
+    onError: handleModelError,
   });
 
-  // Start camera
+  // Start camera (with re-entrancy guard to prevent concurrent getUserMedia calls)
   const startCamera = useCallback(async () => {
+    if (cameraStartingRef.current) {
+      return;
+    }
+    cameraStartingRef.current = true;
     try {
       setStatusMessage('Requesting camera access...');
 
@@ -180,6 +194,8 @@ export function FaceScanner({
         code: 'CAMERA_DENIED',
         message: userMessage,
       });
+    } finally {
+      cameraStartingRef.current = false;
     }
   }, [onError]);
 
@@ -267,14 +283,28 @@ export function FaceScanner({
     onFaceDetected,
   ]);
 
-  // Initialize
+  // Initialize: load models first, then start camera.
+  // Uses cancellation flag to prevent starting camera if component
+  // unmounted or effect was cleaned up during model loading.
   useEffect(() => {
+    let cancelled = false;
+
     if (enabled) {
-      loadModels();
-      startCamera();
+      const init = async () => {
+        await loadModels();
+        if (!cancelled) {
+          await startCamera();
+        }
+      };
+      init().catch(err => {
+        if (!cancelled) {
+          console.error('[FaceScanner] Initialization failed:', err);
+        }
+      });
     }
 
     return () => {
+      cancelled = true;
       stopCamera();
     };
   }, [enabled, loadModels, startCamera, stopCamera]);

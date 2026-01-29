@@ -132,6 +132,17 @@ const pwaConfig = withPWA({
         },
       },
     },
+    {
+      urlPattern: /\/models\/face-api\/.*/i,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'face-api-models',
+        expiration: {
+          maxEntries: 16,
+          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+        },
+      },
+    },
   ],
 });
 
