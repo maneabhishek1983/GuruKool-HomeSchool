@@ -50,9 +50,30 @@ The application automatically detects when face recognition is unavailable and f
 
 When auto-fallback activates, the teacher sees the QR code check-in UI directly. If face recognition is available (HTTPS + camera API), the teacher sees both Face Scan and QR Code options with Face Scan recommended.
 
-### 4. Other Potential Issues
+### 4. iOS Safari Specific Behavior
+
+iOS Safari has several platform-specific behaviors that affect face recognition:
+
+#### Background/Foreground Camera Restart
+
+iOS kills the MediaStream when the PWA is backgrounded (user switches to another app). The app detects this via the `visibilitychange` event and automatically restarts the camera when the user returns. If the camera appears frozen after returning to the app, wait a moment for the automatic restart.
+
+#### Camera Permissions in PWA Mode
+
+Unlike Android, iOS does **not** persist camera permissions across PWA sessions. Users may need to re-grant camera access each time they open the PWA from the home screen. This is an iOS platform limitation.
+
+#### Memory Constraints
+
+- Face-api.js models (~12MB) consume significant memory on iOS devices
+- The detection canvas dimensions are set once (not every frame) to avoid WebGL context recreation that causes memory leaks on iOS WebKit
+- If the page becomes unresponsive, try closing other Safari tabs to free memory
+
+#### iOS 7-Day Cache Eviction
+
+Safari deletes all script-writable storage (Cache API, IndexedDB, service worker registrations) after 7 days of user inactivity. This means face-api models will need to be re-downloaded if the user hasn't visited in over a week.
+
+### 5. Other Potential Issues
 
 - **Permissions**: Ensure you clicked "Allow" when the browser asked for camera permissions. If you denied it once, you must go to Browser Settings > Site Settings > Camera to reset it.
-- **iOS Safari**: Requires user interaction to play video sometimes? (We have `autoplay` and `playsInline` set, which usually works).
 - **Memory**: If the page crashes, the Face API models might be too heavy for the device. (We use `ssd_mobilenetv1` which is optimized for mobile).
 - **Model Caching**: Face-api models (~12MB) are cached via the PWA service worker and IndexedDB/Cache API for faster subsequent loads on mobile.

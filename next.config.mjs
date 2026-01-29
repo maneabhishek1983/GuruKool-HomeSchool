@@ -59,6 +59,8 @@ const nextConfig = {
       "base-uri 'self'",
       "form-action 'self'",
       "object-src 'none'",
+      "worker-src 'self' blob:",
+      "child-src 'self' blob:",
       'upgrade-insecure-requests',
     ].join('; ');
 

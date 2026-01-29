@@ -68,6 +68,7 @@ export function FaceScanner({
   const animationRef = useRef<number | null>(null);
   const lastDetectionRef = useRef<number>(0);
   const cameraStartingRef = useRef(false);
+  const canvasDimsRef = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
 
   const [cameraReady, setCameraReady] = useState(false);
   const [currentDetection, setCurrentDetection] =
@@ -234,8 +235,16 @@ export function FaceScanner({
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       if (ctx && videoRef.current) {
-        canvas.width = videoRef.current.videoWidth;
-        canvas.height = videoRef.current.videoHeight;
+        // Only reassign canvas dimensions when they change.
+        // On iOS WebKit, each reassignment tears down and recreates the
+        // 2D context, causing a memory leak when done every 200ms.
+        const vw = videoRef.current.videoWidth;
+        const vh = videoRef.current.videoHeight;
+        if (canvasDimsRef.current.w !== vw || canvasDimsRef.current.h !== vh) {
+          canvas.width = vw;
+          canvas.height = vh;
+          canvasDimsRef.current = { w: vw, h: vh };
+        }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         if (detection) {
@@ -321,6 +330,41 @@ export function FaceScanner({
       }
     };
   }, [cameraReady, isReady, enabled, runDetection]);
+
+  // Handle page visibility changes (iOS PWA background/foreground).
+  // iOS Safari kills the MediaStream when the PWA is backgrounded.
+  // When the user returns, we detect the dead stream and restart the camera.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // Pause detection loop when backgrounded (saves battery)
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+          animationRef.current = null;
+        }
+      } else if (document.visibilityState === 'visible' && enabled) {
+        // Check if stream tracks are still alive (iOS kills them on background)
+        const stream = streamRef.current;
+        const tracksAlive = stream
+          ?.getTracks()
+          .some(t => t.readyState === 'live');
+
+        if (!tracksAlive && cameraReady) {
+          // Stream died while backgrounded — restart camera
+          stopCamera();
+          startCamera();
+        } else if (isReady && cameraReady) {
+          // Stream still alive — resume detection loop
+          runDetection();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [enabled, cameraReady, isReady, stopCamera, startCamera, runDetection]);
 
   // Quality assessment for current detection
   const quality = assessQuality(
