@@ -253,7 +253,7 @@ GitHub Actions workflow (`.github/workflows/comprehensive-testing.yml`) runs on 
 
 1. **Session Store Singleton**: `EnhancedSessionStore.getInstance()`. Call `clearAll()` in test `beforeEach`.
 
-2. **Middleware files in `src/middleware/`**: These are NOT Next.js middleware. There is no `src/middleware.ts`. Rate limiting and CSRF are in `lib/api-security.ts` (`withRateLimit()`, `withCSRFProtection()`).
+2. **Two middleware layers**: The actual Next.js middleware is at root `middleware.ts` — it handles session propagation, role-based route protection (parent/teacher/admin), Redis rate limiting for API routes, CSRF tokens, and request ID correlation. Separately, `src/middleware/` contains reusable utilities (`csrf.ts`, `rate-limit.ts`) imported by the root middleware. Additionally, `lib/api-security.ts` provides `withRateLimit()` for per-route rate limiting inside API handlers.
 
 3. **Scripts use manual .env parsing**: No `dotenv` dependency. Scripts read `.env` directly.
 
