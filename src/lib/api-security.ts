@@ -55,6 +55,17 @@ const routeRateLimitStore = new Map<
   { count: number; resetTime: number }
 >();
 
+// Periodic cleanup of expired rate limit entries to prevent memory leaks
+const RATE_LIMIT_CLEANUP_INTERVAL = 60 * 1000; // 1 minute
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of routeRateLimitStore.entries()) {
+    if (entry.resetTime < now) {
+      routeRateLimitStore.delete(key);
+    }
+  }
+}, RATE_LIMIT_CLEANUP_INTERVAL);
+
 /**
  * Extract client IP address from request
  * Exported for use in audit logging

@@ -89,6 +89,27 @@ function mergeStudentLists(
 
 export async function GET(request: NextRequest) {
   try {
+    // Authenticate the request
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'Unauthorized', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
+    const authClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: { user: authUser }, error: authError } = await authClient.auth.getUser();
+    if (authError || !authUser) {
+      return NextResponse.json(
+        { error: 'Invalid authentication', code: 'AUTH_INVALID' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const email = searchParams.get('email');
@@ -98,6 +119,22 @@ export async function GET(request: NextRequest) {
         { error: 'userId is required' },
         { status: 400 }
       );
+    }
+
+    // Verify the authenticated user is requesting their own data
+    if (authUser.id !== userId) {
+      const adminCheck = getAdminClient();
+      const { data: userData } = await adminCheck
+        .from('users')
+        .select('role')
+        .eq('id', authUser.id)
+        .single();
+      if ((userData as any)?.role !== 'admin') {
+        return NextResponse.json(
+          { error: 'Forbidden: can only access your own dashboard' },
+          { status: 403 }
+        );
+      }
     }
 
     const supabase = getAdminClient();
@@ -251,7 +288,7 @@ export async function GET(request: NextRequest) {
       grade: student.grade,
       country: student.country,
       parentId: student.parentId,
-      progress: Math.floor(Math.random() * 20) + 80, // TODO: Calculate real progress
+      progress: 0, // Progress should be calculated from actual data sheet activities
       assignmentSource: student.source, // 'qr', 'assigned', or 'both'
     }));
 

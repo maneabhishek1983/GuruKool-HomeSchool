@@ -2,6 +2,7 @@ import '@/lib/server-only';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withRateLimit } from '@/lib/api-security';
+import { createClient } from '@supabase/supabase-js';
 
 const schema = z.object({
   qrData: z.string().min(10),
@@ -54,6 +55,27 @@ export const POST = withRateLimit({
   max: 30, // 30 validations per minute
 })(async (request: NextRequest) => {
   try {
+    // Authenticate the request
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'Unauthorized', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Invalid authentication', code: 'AUTH_INVALID' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const validation = schema.safeParse(body);
 

@@ -128,12 +128,18 @@ export class SyncManager {
     failed: number;
     conflicts: number;
   }> {
+    // Atomic check-and-set to prevent race condition
     if (this.isSyncing) {
       logger.warn('app', 'Sync already in progress');
       return { completed: 0, failed: 0, conflicts: 0 };
     }
-
+    // Set flag immediately before any async work to minimize race window
     this.isSyncing = true;
+    // Double-check pattern: verify flag is still ours after microtask
+    await Promise.resolve();
+    if (!this.isSyncing) {
+      return { completed: 0, failed: 0, conflicts: 0 };
+    }
     logger.info('app', 'Starting sync process');
 
     let completed = 0;

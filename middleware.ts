@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { csrfProtectionMiddleware } from '@/middleware/csrf';
-import { applyRateLimit } from '@/middleware/rate-limit';
 import { checkRateLimit as checkRedisRateLimit } from '@/lib/rate-limit-redis';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -34,7 +33,7 @@ export async function middleware(request: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
-  // Apply rate limiting for API routes (prefer Redis limiter)
+  // Apply rate limiting for API routes (Redis preferred, in-memory fallback)
   if (pathname.startsWith('/api/')) {
     const redisCheck = await checkRedisRateLimit(request, {
       windowMs: 60000,
@@ -42,7 +41,7 @@ export async function middleware(request: NextRequest) {
       keyPrefix: 'api',
     });
     if (redisCheck.limited) {
-      const response = NextResponse.json(
+      const rateLimitResponse = NextResponse.json(
         {
           error: 'Too many requests',
           code: 'RATE_LIMIT_EXCEEDED',
@@ -52,16 +51,11 @@ export async function middleware(request: NextRequest) {
         },
         { status: 429 }
       );
-      response.headers.set('X-Request-ID', requestId);
-      response.headers.set(
+      rateLimitResponse.headers.set('X-Request-ID', requestId);
+      rateLimitResponse.headers.set(
         'Retry-After',
         String(Math.ceil((redisCheck.resetAt.getTime() - Date.now()) / 1000))
       );
-      return response;
-    }
-    const rateLimitResponse = applyRateLimit(request);
-    if (rateLimitResponse.status !== 200) {
-      rateLimitResponse.headers.set('X-Request-ID', requestId);
       return rateLimitResponse;
     }
   }

@@ -32,16 +32,12 @@ export function FallbackAuth({ onSuccess, onCancel, className = '' }: FallbackAu
       // Simulate authentication delay
       await new Promise(resolve => setTimeout(resolve, 1500));
 
-      // Demo authentication
-      if (email === 'teacher@example.com' && password === 'password') {
-        const result = await login(email, password);
-        if (result.success && result.user) {
-          onSuccess?.();
-        } else {
-          throw new Error(result.error || 'Invalid credentials');
-        }
+      // Authenticate via Supabase
+      const result = await login(email, password);
+      if (result.success && result.user) {
+        onSuccess?.();
       } else {
-        throw new Error('Invalid credentials');
+        throw new Error(result.error || 'Invalid credentials');
       }
     } catch (err) {
       setError('Invalid email or password. Please try again.');
@@ -58,16 +54,9 @@ export function FallbackAuth({ onSuccess, onCancel, className = '' }: FallbackAu
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      if (verificationCode === '123456') {
-        const result = await login('teacher@example.com', 'password');
-        if (result.success && result.user) {
-          onSuccess?.();
-        } else {
-          throw new Error(result.error || 'Invalid verification code');
-        }
-      } else {
-        throw new Error('Invalid verification code');
-      }
+      // Phone verification should use Supabase OTP verification
+      // For now, reject - this flow requires proper phone auth setup
+      throw new Error('Phone verification is not yet configured. Please use email login.');
     } catch (err) {
       setError('Invalid verification code. Please try again.');
     } finally {
@@ -83,16 +72,9 @@ export function FallbackAuth({ onSuccess, onCancel, className = '' }: FallbackAu
     try {
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      if (backupCode === 'BACKUP123') {
-        const result = await login('teacher@example.com', 'password');
-        if (result.success && result.user) {
-          onSuccess?.();
-        } else {
-          throw new Error(result.error || 'Invalid backup code');
-        }
-      } else {
-        throw new Error('Invalid backup code');
-      }
+      // Backup code verification should validate against stored backup codes
+      // For now, reject - this flow requires proper backup code setup
+      throw new Error('Backup code verification is not yet configured. Please use email login.');
     } catch (err) {
       setError('Invalid backup code. Please try again.');
     } finally {

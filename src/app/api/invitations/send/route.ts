@@ -137,11 +137,8 @@ export const POST = withRateLimit({
     // For now, return the URL so it can be sent manually or displayed in UI
     // In production, integrate with email service (SendGrid, AWS SES, etc.)
 
-    console.log('Teacher Invitation Created:');
-    console.log('  Teacher:', teacher.name, `(${teacher.email})`);
-    console.log('  Parent:', parent.name);
-    console.log('  Invitation URL:', invitationUrl);
-    console.log('  Expires:', new Date(invitation.expires_at).toLocaleString());
+    // Log creation event without sensitive data (no token/URL in logs)
+    console.log(`Teacher invitation created for ${teacher.email} by parent ${parent.name}`);
 
     return NextResponse.json(
       {

@@ -32,7 +32,12 @@ export class NetworkManager {
   private connectionListeners: Set<(status: NetworkStatus) => void> = new Set();
   private syncTimer: NodeJS.Timeout | null = null;
   private queueProcessor: NodeJS.Timeout | null = null;
+  private connectivityCheckInterval: NodeJS.Timeout | null = null;
   private isProcessingQueue = false;
+  // Store bound references so they can be properly removed
+  private boundHandleOnline = this.handleOnline.bind(this);
+  private boundHandleOffline = this.handleOffline.bind(this);
+  private boundHandleConnectionChange = this.handleConnectionChange.bind(this);
 
   private constructor() {
     this.networkStatus = this.getInitialNetworkStatus();
@@ -71,9 +76,9 @@ export class NetworkManager {
    * Set up event listeners for network changes
    */
   private initializeEventListeners(): void {
-    // Listen for online/offline events
-    window.addEventListener('online', this.handleOnline.bind(this));
-    window.addEventListener('offline', this.handleOffline.bind(this));
+    // Listen for online/offline events using stored bound references
+    window.addEventListener('online', this.boundHandleOnline);
+    window.addEventListener('offline', this.boundHandleOffline);
 
     // Listen for connection changes (if available)
     const connection =
@@ -84,12 +89,12 @@ export class NetworkManager {
     if (connection) {
       connection.addEventListener(
         'change',
-        this.handleConnectionChange.bind(this)
+        this.boundHandleConnectionChange
       );
     }
 
-    // Periodic connectivity check
-    setInterval(() => {
+    // Periodic connectivity check (store interval for cleanup)
+    this.connectivityCheckInterval = setInterval(() => {
       this.checkConnectivity();
     }, 30000); // Check every 30 seconds
 
@@ -548,8 +553,9 @@ export class NetworkManager {
    * Clean up resources
    */
   public cleanup(): void {
-    window.removeEventListener('online', this.handleOnline.bind(this));
-    window.removeEventListener('offline', this.handleOffline.bind(this));
+    // Use stored bound references so removal actually works
+    window.removeEventListener('online', this.boundHandleOnline);
+    window.removeEventListener('offline', this.boundHandleOffline);
 
     const connection =
       (navigator as any).connection ||
@@ -558,7 +564,7 @@ export class NetworkManager {
     if (connection) {
       connection.removeEventListener(
         'change',
-        this.handleConnectionChange.bind(this)
+        this.boundHandleConnectionChange
       );
     }
 
@@ -568,6 +574,10 @@ export class NetworkManager {
 
     if (this.queueProcessor) {
       clearInterval(this.queueProcessor);
+    }
+
+    if (this.connectivityCheckInterval) {
+      clearInterval(this.connectivityCheckInterval);
     }
 
     this.connectionListeners.clear();

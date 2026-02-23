@@ -24,9 +24,16 @@ const CRON_SECRET = process.env.CRON_SECRET;
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify authorization
+    // Verify authorization - CRON_SECRET is required
+    if (!CRON_SECRET) {
+      console.error('CRON_SECRET not configured - cron endpoint disabled');
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      );
+    }
     const authHeader = request.headers.get('authorization');
-    if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
+    if (authHeader !== `Bearer ${CRON_SECRET}`) {
       console.error('Unauthorized cron request');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

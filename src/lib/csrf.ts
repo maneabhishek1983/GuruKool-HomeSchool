@@ -7,8 +7,17 @@ export interface CSRFToken {
  * Generate a new CSRF token
  */
 export function generateToken(): string {
-  const token =
-    globalThis.crypto?.randomUUID?.() || `${Math.random()}-${Date.now()}`;
+  let token: string;
+  if (globalThis.crypto?.randomUUID) {
+    token = globalThis.crypto.randomUUID();
+  } else if (globalThis.crypto?.getRandomValues) {
+    // Fallback using crypto.getRandomValues for environments without randomUUID
+    const bytes = new Uint8Array(16);
+    globalThis.crypto.getRandomValues(bytes);
+    token = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  } else {
+    throw new Error('No cryptographically secure random source available');
+  }
   const timestamp = Date.now();
   const tokenData: CSRFToken = { token, timestamp };
   return Buffer.from(JSON.stringify(tokenData)).toString('base64');

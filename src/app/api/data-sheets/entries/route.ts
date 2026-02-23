@@ -4,9 +4,32 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+async function authenticateRequest(request: NextRequest) {
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader) {
+    return null;
+  }
+  const supabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) {
+    return null;
+  }
+  return user;
+}
+
 // GET - Retrieve activity entries for a student on a specific date
 export async function GET(request: NextRequest) {
   try {
+    const user = await authenticateRequest(request);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get('studentId');
     const date = searchParams.get('date');
@@ -56,6 +79,14 @@ export async function GET(request: NextRequest) {
 // POST - Save activity entries (creates or updates data sheet)
 export async function POST(request: NextRequest) {
   try {
+    const user = await authenticateRequest(request);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { studentId, teacherId, date, entries } = body;
 

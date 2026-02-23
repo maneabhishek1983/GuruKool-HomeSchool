@@ -7,6 +7,25 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 // GET - Retrieve data sheets for a student
 export async function GET(request: NextRequest) {
   try {
+    // Authenticate the request
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'Unauthorized', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
+    const authClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Invalid authentication', code: 'AUTH_INVALID' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get('studentId');
 

@@ -80,7 +80,8 @@ class QRAuthService {
   cleanupExpiredTokens() {
     const now = new Date();
     for (const [tokenId, token] of this.tokens.entries()) {
-      if (new Date(token.expiresAt) < now) {
+      // Delete expired tokens AND used tokens (they can't be reused)
+      if (new Date(token.expiresAt) < now || token.used) {
         this.tokens.delete(tokenId);
       }
     }
