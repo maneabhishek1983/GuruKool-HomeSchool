@@ -34,7 +34,7 @@ export function getSupabaseAdmin() {
     if (!serviceKey) {
       throw new Error('SUPABASE_SERVICE_ROLE_KEY not set');
     }
-    supabaseAdminInstance = createClient(supabaseUrl, serviceKey);
+    supabaseAdminInstance = createClient(supabaseUrl!, serviceKey);
   }
   return supabaseAdminInstance;
 }
