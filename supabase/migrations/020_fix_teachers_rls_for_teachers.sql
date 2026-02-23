@@ -16,6 +16,10 @@
 
 -- Solution: Add a policy that allows teachers to read their own record
 
+-- Drop existing policies if they exist (makes migration idempotent)
+DROP POLICY IF EXISTS "Teachers can read own teacher record" ON teachers;
+DROP POLICY IF EXISTS "Teachers can update own teacher record" ON teachers;
+
 -- Allow teachers to SELECT their own teacher record (by user_id)
 CREATE POLICY "Teachers can read own teacher record" ON teachers
     FOR SELECT USING (auth.uid() = user_id);
