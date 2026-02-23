@@ -182,9 +182,9 @@ export default function ErrorPage({
                 )}
 
                 {type === '404' && (
-                  <Link href="/search">
+                  <Link href="/">
                     <LiquidButton variant="secondary" size="lg">
-                      🔍 Search
+                      🔍 Browse Site
                     </LiquidButton>
                   </Link>
                 )}
@@ -221,10 +221,7 @@ export default function ErrorPage({
             Need help? Check out these resources:
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link href="/help" className="text-blue-600 dark:text-blue-400 hover:underline">
-              Help Center
-            </Link>
-            <Link href="/contact" className="text-blue-600 dark:text-blue-400 hover:underline">
+            <Link href="/contact-admin" className="text-blue-600 dark:text-blue-400 hover:underline">
               Contact Support
             </Link>
             <Link href="/status" className="text-blue-600 dark:text-blue-400 hover:underline">

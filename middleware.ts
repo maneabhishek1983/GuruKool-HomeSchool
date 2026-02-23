@@ -12,7 +12,15 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip middleware for static assets and Next.js internal routes
-  if (pathname.startsWith('/_next/') || pathname.startsWith('/favicon.ico')) {
+  if (
+    pathname.startsWith('/_next/') ||
+    pathname === '/favicon.ico' ||
+    pathname === '/manifest.json' ||
+    pathname.endsWith('.png') ||
+    pathname.endsWith('.jpg') ||
+    pathname.endsWith('.svg') ||
+    pathname.endsWith('.ico')
+  ) {
     return NextResponse.next();
   }
 
