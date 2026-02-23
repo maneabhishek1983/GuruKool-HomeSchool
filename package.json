@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "bash scripts/setup-face-models.sh",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
