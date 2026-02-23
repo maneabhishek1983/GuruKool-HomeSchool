@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GuruKool HomeSchool is a Next.js 14 application for managing homeschooling with AI-powered features, teacher-student tracking, QR code authentication, and academic standards support for UK, US, and India.
+GuruKool HomeSchool is a Next.js 14 PWA for managing homeschooling with AI-powered features, teacher-student tracking, QR code / face recognition authentication, and academic standards support for UK, US, and India.
 
 - **Node.js**: 20 (see `.nvmrc`)
 - **Package Manager**: npm
@@ -25,6 +25,7 @@ npm test                 # Jest unit tests
 npm test -- <pattern>    # Single test file (e.g., npm test -- session)
 npm run test:e2e         # Playwright E2E tests
 npm run test:coverage    # Coverage report
+npm run storybook        # Component dev at localhost:6006
 
 # Code Quality
 npm run lint:fix         # ESLint with auto-fix
@@ -36,7 +37,7 @@ npm run verify:rls       # Verify RLS policies
 npm run db:push          # Push migrations to Supabase
 ```
 
-**Pre-commit**: Husky runs `lint-staged` automatically on staged files.
+**Pre-commit**: Husky runs `lint-staged` which auto-runs `eslint --fix` + `prettier --write` on `*.{js,jsx,ts,tsx}` and `prettier --write` on `*.{json,md,css}`.
 
 ---
 
@@ -46,7 +47,7 @@ npm run db:push          # Push migrations to Supabase
 
 | Layer     | Technology                                        |
 | --------- | ------------------------------------------------- |
-| Framework | Next.js 14 (App Router)                           |
+| Framework | Next.js 14 (App Router), PWA via next-pwa         |
 | UI        | React 18, Tailwind CSS, Mantine UI, Framer Motion |
 | State     | Zustand (client), React Query (server)            |
 | Database  | Supabase (PostgreSQL + Auth + Realtime)           |
@@ -125,7 +126,7 @@ export const POST = withRateLimit({
 });
 ```
 
-**Note**: Current rate limiting uses in-memory Map (not distributed). TODO: Migrate to Redis.
+**Note**: Rate limiting currently uses in-memory Map. Upstash Redis is configured (see `.env.example`) but migration is incomplete.
 
 ### Parent Data Isolation
 
@@ -151,6 +152,7 @@ Strict mode with additional safety checks:
 - `noUncheckedIndexedAccess: true` - Arrays require explicit undefined checks
 - `exactOptionalPropertyTypes: true` - `foo?: string` means `string | undefined`, not `null`
 - `noImplicitReturns: true` - All code paths must return
+- `noFallthroughCasesInSwitch: true` - Switch cases must break/return
 
 Path aliases: `@/*` → `src/*`, `@/components/*`, `@/lib/*`, `@/services/*`, etc.
 
@@ -158,26 +160,19 @@ Path aliases: `@/*` → `src/*`, `@/components/*`, `@/lib/*`, `@/services/*`, et
 
 ## QR Authentication System
 
-Teachers use student-specific QR codes for check-in/check-out:
-
-| Component           | Location                                  | Purpose                   |
-| ------------------- | ----------------------------------------- | ------------------------- |
-| QRScanner           | `components/shared/QRScanner.tsx`         | Production camera scanner |
-| QRScannerSimulation | `components/demo/QRScannerSimulation.tsx` | Mock for testing          |
-| QRManualEntry       | `components/shared/QRManualEntry.tsx`     | Fallback text input       |
+Teachers use student-specific QR codes for check-in/check-out.
 
 QR codes contain: `teacherId`, `studentId`, `parentId`, `timestamp`, `signature`
 
 - 5-minute expiration
 - HMAC signature for validation
+- QR code is always available as fallback when face recognition fails
 
 ---
 
 ## Face Recognition System
 
 Face recognition provides an alternative verification method with QR code as fallback.
-
-### Security Architecture
 
 **CRITICAL**: All face matching is done SERVER-SIDE. Never trust client-provided confidence scores.
 
@@ -191,44 +186,9 @@ Client (Detection Only)          Server (Verification)
 └─────────────────────┘         └─────────────────────────────┘
 ```
 
-### Key Components
+Key files: `lib/face-encryption.ts` (AES-256-GCM), `lib/face-matching.ts` (server-side distance). Face-api.js models are in `public/models/face-api/`.
 
-| Component          | Location                               | Purpose                               |
-| ------------------ | -------------------------------------- | ------------------------------------- |
-| FaceScanner        | `components/shared/FaceScanner.tsx`    | Camera + face detection UI            |
-| FaceCheckIn        | `components/teacher/FaceCheckIn.tsx`   | Teacher verification with QR fallback |
-| FaceEnrollment     | `components/parent/FaceEnrollment.tsx` | Student face enrollment wizard        |
-| face-encryption.ts | `lib/face-encryption.ts`               | AES-256-GCM encryption                |
-| face-matching.ts   | `lib/face-matching.ts`                 | Server-side distance calculation      |
-
-### API Endpoints
-
-| Endpoint                              | Method | Purpose                           |
-| ------------------------------------- | ------ | --------------------------------- |
-| `/api/student/face-enroll`            | POST   | Enroll student face (encrypted)   |
-| `/api/student/face-enroll`            | GET    | Check enrollment status           |
-| `/api/student/face-enroll`            | DELETE | Remove face data                  |
-| `/api/teacher-sessions/verify-face`   | POST   | Server-side face verification     |
-| `/api/teacher-sessions/check-in-face` | POST   | Create session after verification |
-| `/api/teacher/assigned-students`      | GET    | Get students with face status     |
-
-### Environment Variables
-
-```bash
-FACE_ENCRYPTION_KEY=<64-char-hex>  # openssl rand -hex 32
-FACE_MATCH_THRESHOLD=0.4           # Distance threshold (default)
-FACE_VERIFY_RATE_LIMIT=10          # Verifications per minute
-NEXT_PUBLIC_ENABLE_FACE_RECOGNITION=true
-```
-
-### QR Code Fallback
-
-QR code verification is **always available** as a fallback when:
-
-- Face recognition models fail to load
-- Camera access is denied
-- Face doesn't match
-- Network issues prevent server verification
+API endpoints: `/api/student/face-enroll` (POST/GET/DELETE), `/api/teacher-sessions/verify-face` (POST), `/api/teacher-sessions/check-in-face` (POST).
 
 ---
 
@@ -247,39 +207,45 @@ Critical relationships:
 
 ## AI Agent System
 
-Extend `BaseAgent` from `@/agents/base.agent`:
-
-```typescript
-class MyAgent extends BaseAgent {
-  id = 'my-agent';
-  name = 'My Agent';
-  capabilities = ['capability1'];
-  priority = 5;
-
-  async execute(context: AgentContext): Promise<AgentResult> {
-    // Implementation
-  }
-}
-```
-
-Register in `src/agents/registry.ts`. The Orchestrator handles priority-based execution.
+Extend `BaseAgent` from `@/agents/base.agent`. Register in `src/agents/registry.ts`. The Orchestrator handles priority-based execution.
 
 ---
 
 ## Environment Variables
 
+See `.env.example` for all variables with descriptions.
+
 **Required** (all environments):
 
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` (server-only)
-- `JWT_SECRET`, `NEXT_PUBLIC_QR_SECRET`
+- `JWT_SECRET`
+- `QR_SECRET` (server-only; `.env.example` uses `QR_SECRET`, not `NEXT_PUBLIC_QR_SECRET`)
 
-**AI** (dev only uses OpenAI; production uses Chomsky):
+**Face Recognition**:
+
+- `FACE_ENCRYPTION_KEY` (64-char hex, generate with `openssl rand -hex 32`)
+- `FACE_MATCH_THRESHOLD` (default 0.4), `FACE_VERIFY_RATE_LIMIT` (default 10/min)
+- `NEXT_PUBLIC_ENABLE_FACE_RECOGNITION` (feature flag)
+
+**AI** (dev uses OpenAI; production uses Chomsky LLM + OKTA + APIM):
 
 - `OPENAI_API_KEY` (local dev only)
 - `PINECONE_API_KEY`, `PINECONE_ENVIRONMENT`
 
-**Strategy**: Local dev uses OpenAI; production uses Chomsky LLM + OKTA + APIM.
+**Optional**: `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` (distributed rate limiting), `SENTRY_DSN` (error tracking), `ENABLE_DEMO_CREDENTIALS` (dev/staging only).
+
+---
+
+## CI/CD
+
+GitHub Actions workflow (`.github/workflows/comprehensive-testing.yml`) runs on push to main/develop, PRs, and daily at 2 AM UTC. Includes unit tests, E2E (Playwright across Chromium/Firefox/WebKit), security tests, regression tests, and performance tests. Auto-comments results on PRs.
+
+---
+
+## Security Headers
+
+`next.config.mjs` configures CSP, HSTS, X-Frame-Options, and other security headers for all routes. The `poweredByHeader` is disabled. Camera permission is allowed (`self`) for face recognition.
 
 ---
 
@@ -287,13 +253,17 @@ Register in `src/agents/registry.ts`. The Orchestrator handles priority-based ex
 
 1. **Session Store Singleton**: `EnhancedSessionStore.getInstance()`. Call `clearAll()` in test `beforeEach`.
 
-2. **Middleware files in `src/middleware/`**: These are NOT Next.js middleware. Actual implementation is `withRateLimit()` and `withCSRFProtection()` in `lib/api-security.ts`.
+2. **Two middleware layers**: The actual Next.js middleware is at root `middleware.ts` — it handles session propagation, role-based route protection (parent/teacher/admin), Redis rate limiting for API routes, CSRF tokens, and request ID correlation. Separately, `src/middleware/` contains reusable utilities (`csrf.ts`, `rate-limit.ts`) imported by the root middleware. Additionally, `lib/api-security.ts` provides `withRateLimit()` for per-route rate limiting inside API handlers.
 
 3. **Scripts use manual .env parsing**: No `dotenv` dependency. Scripts read `.env` directly.
 
 4. **Real-time via Supabase**: Migrated from WebSocket to Supabase Realtime. No separate WS server needed.
 
 5. **CSRF not used on API routes**: Bearer tokens are already CSRF-safe.
+
+6. **PWA disabled in development**: Service worker only active in production builds (configured in `next.config.mjs`).
+
+7. **ESLint rules**: `no-console` is `warn` (not error) — console statements won't block builds but will show warnings. `eqeqeq` is `error` — always use `===`.
 
 ---
 
@@ -302,7 +272,6 @@ Register in `src/agents/registry.ts`. The Orchestrator handles priority-based ex
 - **No Mock Data**: Never generate dummy/mock data in production code
 - **Type Check Before Push**: Always run `npm run type-check` before pushing
 - **Chomsky LLM**: Keep `chomsky--0.17.9/` directory for production
-- **Kluster.ai**: See `.cursor/rules/kluster-code-verify.mdc` for verification rules
 
 ---
 

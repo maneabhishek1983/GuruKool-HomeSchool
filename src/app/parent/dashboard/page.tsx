@@ -22,6 +22,7 @@ import { FloatingActionButton } from '@/design-system/components/interactive/Flo
 import ParentDashboardHero from '@/components/parent/ParentDashboardHero';
 import StudentMediaGallery from '@/components/parent/StudentMediaGallery';
 import { Liquid3DOrb } from '@/components/ui/Liquid3DOrb';
+import { supabase } from '@/lib/supabase';
 
 // Dashboard Components
 import {
@@ -99,8 +100,16 @@ export default function ParentDashboard() {
 
       // Fetch real dashboard stats (avgProgress, monthlyHours)
       try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         const statsResponse = await fetch(
-          `/api/parent/dashboard?parentId=${user.id}`
+          `/api/parent/dashboard?parentId=${user.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${session?.access_token || ''}`,
+            },
+          }
         );
         if (statsResponse.ok) {
           const stats = await statsResponse.json();

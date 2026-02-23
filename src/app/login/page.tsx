@@ -246,13 +246,13 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<'parent' | 'teacher' | 'admin' | 'student'>('parent');
-  const [isSignupMode, setIsSignupMode] = useState(false);
+  const searchParams = useSearchParams();
+  const [isSignupMode, setIsSignupMode] = useState(searchParams.get('mode') === 'signup');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { login, signup } = useAuthContext();
 
   useEffect(() => {

@@ -202,10 +202,18 @@ export class SecurityService {
         throw new Error('No active encryption key available');
       }
 
-      // In a real implementation, this would use actual crypto libraries
-      // For this example, we'll simulate encryption
-      const encrypted = Buffer.from(data).toString('base64');
-      const result = `${key.id}:${encrypted}`;
+      // AES-256-GCM encryption
+      const crypto = await import('crypto');
+      const iv = crypto.randomBytes(12);
+      const cipher = crypto.createCipheriv(
+        'aes-256-gcm',
+        Buffer.from(key.key, 'hex').subarray(0, 32),
+        iv
+      );
+      let ciphertext = cipher.update(data, 'utf8', 'base64');
+      ciphertext += cipher.final('base64');
+      const authTag = cipher.getAuthTag().toString('base64');
+      const result = `${key.id}:${iv.toString('base64')}:${authTag}:${ciphertext}`;
 
       await this.logAuditEvent(
         'data_encryption',
@@ -248,18 +256,28 @@ export class SecurityService {
 
     try {
       const parts = encryptedData.split(':');
-      if (parts.length !== 2) {
+      if (parts.length !== 4) {
         throw new Error('Invalid encrypted data format');
       }
 
-      const [keyId, encryptedPart] = parts;
+      const [keyId, ivBase64, authTagBase64, ciphertext] = parts;
       const key = this.activeKeys.get(keyId || '');
       if (!key) {
         throw new Error('Encryption key not found');
       }
 
-      // In a real implementation, this would use actual crypto libraries
-      const decrypted = Buffer.from(encryptedPart || '', 'base64').toString();
+      // AES-256-GCM decryption
+      const crypto = await import('crypto');
+      const iv = Buffer.from(ivBase64 || '', 'base64');
+      const authTag = Buffer.from(authTagBase64 || '', 'base64');
+      const decipher = crypto.createDecipheriv(
+        'aes-256-gcm',
+        Buffer.from(key.key, 'hex').subarray(0, 32),
+        iv
+      );
+      decipher.setAuthTag(authTag);
+      let decrypted = decipher.update(ciphertext || '', 'base64', 'utf8');
+      decrypted += decipher.final('utf8');
 
       await this.logAuditEvent(
         'data_decryption',

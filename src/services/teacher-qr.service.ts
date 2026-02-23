@@ -79,7 +79,10 @@ export class TeacherQRService {
     studentId: string,
     parentId: string
   ): Promise<string> {
-    const secret = process.env.NEXT_PUBLIC_QR_SECRET || 'default-secret';
+    const secret = process.env.NEXT_PUBLIC_QR_SECRET;
+    if (!secret) {
+      throw new Error('NEXT_PUBLIC_QR_SECRET environment variable is not configured');
+    }
     const data = `${teacherId}-${studentId}-${parentId}`;
 
     // Use Web Crypto API for HMAC-SHA256 (works in both browser and Node.js)

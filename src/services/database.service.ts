@@ -196,7 +196,8 @@ export class DatabaseService {
 
   static async updateStudent(
     studentId: string,
-    updates: Partial<StudentProfile>
+    updates: Partial<StudentProfile>,
+    parentId?: string
   ): Promise<StudentProfile | null> {
     try {
       const dbUpdates: any = {};
@@ -230,10 +231,17 @@ export class DatabaseService {
         dbUpdates.teacher_notes = updates.teacherNotes;
       }
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('students')
         .update(dbUpdates)
-        .eq('id', studentId)
+        .eq('id', studentId);
+
+      // Enforce parent data isolation when parentId is provided
+      if (parentId) {
+        query = query.eq('parent_id', parentId);
+      }
+
+      const { data, error } = await query
         .select()
         .single();
 
@@ -248,12 +256,19 @@ export class DatabaseService {
     }
   }
 
-  static async deleteStudent(studentId: string): Promise<boolean> {
+  static async deleteStudent(studentId: string, parentId?: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      let query = supabase
         .from('students')
         .delete()
         .eq('id', studentId);
+
+      // Enforce parent data isolation when parentId is provided
+      if (parentId) {
+        query = query.eq('parent_id', parentId);
+      }
+
+      const { error } = await query;
 
       if (error) {
         throw error;

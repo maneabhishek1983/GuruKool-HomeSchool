@@ -129,7 +129,7 @@ export function withAuth(options: AuthMiddlewareOptions = {}) {
         const context: AuthContext = {
           user: {
             id: authUser.id,
-            email: authUser.email!,
+            email: authUser.email || '',
             role: userRole,
           },
           supabase,

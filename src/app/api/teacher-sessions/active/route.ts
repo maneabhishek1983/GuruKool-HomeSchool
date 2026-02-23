@@ -15,6 +15,27 @@ function getAdminClient() {
 
 export async function GET(request: NextRequest) {
   try {
+    // Authenticate the request
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'Unauthorized', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
+    const authClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Invalid authentication', code: 'AUTH_INVALID' },
+        { status: 401 }
+      );
+    }
+
     // Get user ID from query params
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -24,6 +45,22 @@ export async function GET(request: NextRequest) {
         { error: 'userId is required' },
         { status: 400 }
       );
+    }
+
+    // Verify the authenticated user is requesting their own data
+    if (user.id !== userId) {
+      const adminCheck = getAdminClient();
+      const { data: userData } = await adminCheck
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      if ((userData as any)?.role !== 'admin') {
+        return NextResponse.json(
+          { error: 'Forbidden: can only access your own sessions' },
+          { status: 403 }
+        );
+      }
     }
 
     const supabase = getAdminClient();

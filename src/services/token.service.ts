@@ -13,7 +13,13 @@ export interface TokenPayload {
 
 export class TokenService {
   private static instance: TokenService;
-  private readonly JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
+  private readonly JWT_SECRET = (() => {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('JWT_SECRET environment variable is not configured');
+    }
+    return secret;
+  })();
   private readonly ACCESS_TOKEN_EXPIRY = '24h';
   private readonly REFRESH_TOKEN_EXPIRY = '7d';
 

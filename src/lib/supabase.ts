@@ -2,10 +2,14 @@ import { createClient } from '@supabase/supabase-js';
 import { createBrowserClient } from '@supabase/ssr';
 
 // Supabase configuration
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'your-anon-key';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    'Missing required Supabase environment variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set'
+  );
+}
 
 // Singleton pattern to prevent multiple instances
 let supabaseInstance: ReturnType<typeof createBrowserClient> | null = null;
@@ -30,7 +34,7 @@ export function getSupabaseAdmin() {
     if (!serviceKey) {
       throw new Error('SUPABASE_SERVICE_ROLE_KEY not set');
     }
-    supabaseAdminInstance = createClient(supabaseUrl, serviceKey);
+    supabaseAdminInstance = createClient(supabaseUrl!, serviceKey);
   }
   return supabaseAdminInstance;
 }
