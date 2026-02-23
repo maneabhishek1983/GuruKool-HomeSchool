@@ -53,6 +53,7 @@ const nextConfig = {
       "img-src 'self' data: blob: https:",
       "font-src 'self' data: https://fonts.gstatic.com",
       "manifest-src 'self'",
+      "worker-src 'self' blob:",
       ...connectSrc,
       ...frameSrc,
       "frame-ancestors 'self' https://vercel.live https://*.vercel.app",
