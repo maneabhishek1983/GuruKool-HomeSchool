@@ -235,6 +235,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
+      // If teacher role, also create a teachers table record
+      // This allows the teacher to appear in the teacher dashboard and be assignable
+      if (role === 'teacher') {
+        const { error: teacherError } = await supabase.from('teachers').insert([
+          {
+            user_id: authData.user.id,
+            name,
+            email,
+            // parent_id is null for self-registered teachers
+            // They can be linked to a parent later if needed
+          },
+        ]);
+
+        if (teacherError) {
+          // Log but don't fail signup - teacher can still use the app
+          // Parent can create a linked teacher profile later if needed
+          console.warn('Could not create teacher profile:', teacherError);
+        }
+      }
+
       const newUser: User = {
         id: profileData.id,
         name: profileData.name,
@@ -271,7 +291,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log('Supabase auth response:', {
         hasUser: !!data?.user,
-        error: error?.message
+        error: error?.message,
       });
 
       if (error) {
@@ -309,6 +329,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('users')
         .update({ last_active: new Date().toISOString() })
         .eq('id', data.user.id);
+
+      // Ensure teacher has a teachers table record (for self-registered teachers)
+      if (userProfile.role === 'teacher') {
+        const { data: existingTeacher } = await supabase
+          .from('teachers')
+          .select('id')
+          .eq('user_id', data.user.id)
+          .single();
+
+        if (!existingTeacher) {
+          // Create teachers record for this user
+          await supabase.from('teachers').insert([
+            {
+              user_id: data.user.id,
+              name: userProfile.name,
+              email: userProfile.email,
+            },
+          ]);
+        }
+      }
 
       setUser(userProfile);
       setAuthMethod('traditional');
