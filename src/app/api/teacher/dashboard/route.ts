@@ -157,7 +157,9 @@ export async function GET(request: NextRequest) {
     const supabase = getAdminClient();
 
     // Get teacher record (prioritizing parent-linked record if duplicate exists)
-    let query = supabase.from('teachers').select('id, name, parent_id');
+    let query = supabase
+      .from('teachers')
+      .select('id, name, parent_id, user_id, email');
 
     if (email) {
       // If email provided, match by User ID OR Email
@@ -167,7 +169,21 @@ export async function GET(request: NextRequest) {
       query = query.eq('user_id', userId);
     }
 
-    const { data: teachers } = await query;
+    const { data: teachers, error: teacherQueryError } = await query;
+
+    // Debug logging
+    console.log('Teacher dashboard query:', {
+      userId,
+      email,
+      teachersFound: teachers?.length || 0,
+      teachers: teachers?.map(t => ({
+        id: t.id,
+        user_id: t.user_id,
+        email: t.email,
+        parent_id: t.parent_id,
+      })),
+      error: teacherQueryError?.message,
+    });
 
     // Logic to pick the best teacher record:
     // 1. Prefer record with parent_id (means it's managed by a parent and likely has assignments)
@@ -199,7 +215,7 @@ export async function GET(request: NextRequest) {
     }
 
     // === SOURCE 1: Get students from teacher_qr_codes (QR-based assignments) ===
-    const { data: qrAssignedStudents } = await supabase
+    const { data: qrAssignedStudents, error: qrError } = await supabase
       .from('teacher_qr_codes')
       .select(
         `
@@ -213,10 +229,24 @@ export async function GET(request: NextRequest) {
 
     // === SOURCE 2: Get students where teacher is in assigned_teachers JSONB array ===
     // This catches students assigned via parent portal even if QR code creation failed
-    const { data: directAssignedStudents } = await supabase
+    const { data: directAssignedStudents, error: directError } = await supabase
       .from('students')
-      .select('id, name, grade, country, parent_id')
+      .select('id, name, grade, country, parent_id, assigned_teachers')
       .contains('assigned_teachers', [teacherId]);
+
+    // Debug logging for student queries
+    console.log('Student assignment queries:', {
+      teacherId,
+      qrStudentsCount: qrAssignedStudents?.length || 0,
+      qrError: qrError?.message,
+      directStudentsCount: directAssignedStudents?.length || 0,
+      directError: directError?.message,
+      directStudents: directAssignedStudents?.map(s => ({
+        id: s.id,
+        name: s.name,
+        assigned_teachers: s.assigned_teachers,
+      })),
+    });
 
     // Merge both sources and deduplicate
     const mergedStudents = mergeStudentLists(

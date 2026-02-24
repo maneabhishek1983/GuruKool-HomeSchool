@@ -332,21 +332,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Ensure teacher has a teachers table record (for self-registered teachers)
       if (userProfile.role === 'teacher') {
-        const { data: existingTeacher } = await supabase
+        const { data: existingTeacher, error: checkError } = await supabase
           .from('teachers')
           .select('id')
           .eq('user_id', data.user.id)
-          .single();
+          .maybeSingle();
+
+        console.log('Teacher record check:', {
+          userId: data.user.id,
+          existingTeacher,
+          checkError: checkError?.message,
+        });
 
         if (!existingTeacher) {
           // Create teachers record for this user
-          await supabase.from('teachers').insert([
-            {
-              user_id: data.user.id,
-              name: userProfile.name,
-              email: userProfile.email,
-            },
-          ]);
+          const { data: newTeacher, error: insertError } = await supabase
+            .from('teachers')
+            .insert([
+              {
+                user_id: data.user.id,
+                name: userProfile.name,
+                email: userProfile.email,
+              },
+            ])
+            .select()
+            .single();
+
+          console.log('Teacher record creation:', {
+            newTeacher,
+            insertError: insertError?.message,
+          });
         }
       }
 
