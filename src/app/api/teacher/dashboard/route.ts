@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 // Admin client for bypassing RLS
 function getAdminClient() {
@@ -89,40 +91,55 @@ function mergeStudentLists(
 
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate the request
+    // Authenticate the request - try Authorization header first, fall back to cookies
+    let authUser = null;
+
     const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
+    if (authHeader) {
+      const authClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      const {
+        data: { user },
+        error,
+      } = await authClient.auth.getUser();
+      if (!error && user) {
+        authUser = user;
+      }
+    }
+
+    // Fall back to cookie-based auth (browser requests)
+    if (!authUser) {
+      const cookieStore = cookies();
+      const cookieClient = createRouteHandlerClient({
+        cookies: () => cookieStore,
+      });
+      const {
+        data: { user },
+        error,
+      } = await cookieClient.auth.getUser();
+      if (!error && user) {
+        authUser = user;
+      }
+    }
+
+    if (!authUser) {
       return NextResponse.json(
         { error: 'Unauthorized', code: 'AUTH_REQUIRED' },
         { status: 401 }
       );
     }
-    const authClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-    const { data: { user: authUser }, error: authError } = await authClient.auth.getUser();
-    if (authError || !authUser) {
-      return NextResponse.json(
-        { error: 'Invalid authentication', code: 'AUTH_INVALID' },
-        { status: 401 }
-      );
-    }
 
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const email = searchParams.get('email');
+    // Use authenticated user's ID; fall back to query param for backward compatibility
+    const userId = authUser.id;
+    const email = searchParams.get('email') || authUser.email;
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
-      );
-    }
-
-    // Verify the authenticated user is requesting their own data
-    if (authUser.id !== userId) {
+    // If a different userId is passed, verify admin access
+    const requestedUserId = searchParams.get('userId');
+    if (requestedUserId && requestedUserId !== authUser.id) {
       const adminCheck = getAdminClient();
       const { data: userData } = await adminCheck
         .from('users')
