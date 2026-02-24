@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   StudentProfile,
+  TeacherProfile,
   Country,
   AcademicStandard,
   SocializationOption,
@@ -14,6 +15,7 @@ import {
 
 interface StudentProfileCardProps {
   student: StudentProfile;
+  teachers?: TeacherProfile[];
   onEdit?: () => void;
   onDelete?: () => void;
   onViewDataSheets?: () => void;
@@ -43,7 +45,9 @@ function ExpandableSection({
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
       >
-        <h4 className={`text-lg font-semibold text-gray-900 flex items-center ${iconColor}`}>
+        <h4
+          className={`text-lg font-semibold text-gray-900 flex items-center ${iconColor}`}
+        >
           {icon}
           {title}
         </h4>
@@ -72,9 +76,7 @@ function ExpandableSection({
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <div className="p-4">
-              {children}
-            </div>
+            <div className="p-4">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -84,12 +86,17 @@ function ExpandableSection({
 
 export default function StudentProfileCard({
   student,
+  teachers = [],
   onEdit,
   onDelete,
   onViewDataSheets,
   onAssignTeacher,
   className = '',
 }: StudentProfileCardProps) {
+  // Get assigned teacher details from teacher IDs
+  const assignedTeacherDetails = (student.assignedTeachers || [])
+    .map(teacherId => teachers.find(t => t.id === teacherId))
+    .filter((t): t is TeacherProfile => t !== undefined);
   const getCountryFlag = (country: Country) => {
     switch (country) {
       case 'UK':
@@ -333,6 +340,114 @@ export default function StudentProfileCard({
               </div>
             </div>
           </div>
+        </ExpandableSection>
+
+        {/* Assigned Teachers - Expandable */}
+        <ExpandableSection
+          title={`Assigned Teachers (${assignedTeacherDetails.length})`}
+          iconColor="text-emerald-600"
+          defaultExpanded={true}
+          icon={
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+          }
+        >
+          {assignedTeacherDetails.length === 0 ? (
+            <div className="text-center py-4">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg
+                  className="w-6 h-6 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                  />
+                </svg>
+              </div>
+              <p className="text-sm text-gray-500 mb-3">
+                No teachers assigned yet
+              </p>
+              {onAssignTeacher && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={onAssignTeacher}
+                  className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                >
+                  + Assign a teacher
+                </motion.button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {assignedTeacherDetails.map(teacher => (
+                <div
+                  key={teacher.id}
+                  className="flex items-start space-x-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100"
+                >
+                  <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
+                    {teacher.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h5 className="font-medium text-emerald-900 truncate">
+                      {teacher.name}
+                    </h5>
+                    <p className="text-xs text-emerald-600 truncate">
+                      {teacher.email}
+                    </p>
+                    {teacher.subjects.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {teacher.subjects.slice(0, 3).map((subject, idx) => (
+                          <span
+                            key={idx}
+                            className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded"
+                          >
+                            {subject}
+                          </span>
+                        ))}
+                        {teacher.subjects.length > 3 && (
+                          <span className="text-xs text-emerald-600">
+                            +{teacher.subjects.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {teacher.hourlyRate > 0 && (
+                      <p className="text-xs text-emerald-500 mt-1">
+                        ${teacher.hourlyRate}/hr
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {onAssignTeacher && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={onAssignTeacher}
+                  className="w-full text-sm text-emerald-600 hover:text-emerald-700 font-medium py-2 border border-dashed border-emerald-300 rounded-lg hover:bg-emerald-50 transition-colors"
+                >
+                  + Assign another teacher
+                </motion.button>
+              )}
+            </div>
+          )}
         </ExpandableSection>
 
         {/* Homeschooling Options - Expandable */}

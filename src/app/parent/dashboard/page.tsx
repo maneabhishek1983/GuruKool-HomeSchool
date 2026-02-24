@@ -586,6 +586,12 @@ export default function ParentDashboard() {
           totalSessions={sessions.length}
           monthlyHours={`${monthlyHours}h`}
           avgProgress={avgProgress}
+          students={students}
+          teachers={teachers}
+          onAssignTeacher={student => {
+            setSelectedStudent(student);
+            setShowAssignmentModal(true);
+          }}
         />
 
         {/* Student Media Gallery - Netflix Style */}
@@ -604,6 +610,7 @@ export default function ParentDashboard() {
             {/* Students Section */}
             <StudentList
               students={students}
+              teachers={teachers}
               onAddStudent={() => setShowCreateStudentModal(true)}
               onEditStudent={handleEditStudent}
               onDeleteStudent={handleDeleteStudent}
