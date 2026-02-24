@@ -71,7 +71,8 @@ export const GET = withRedisRateLimit({
         const { data: assignments, error: assignmentsError } = await adminClient
           .from('teacher_assignments')
           .select('student_id')
-          .eq('teacher_id', user.id); // Use user.id for teacher_assignments FK
+          .eq('teacher_id', user.id) // teacher_assignments uses users.id
+          .eq('is_active', true);
 
         if (!assignmentsError && assignments && assignments.length > 0) {
           const studentIds = assignments.map(a =>
