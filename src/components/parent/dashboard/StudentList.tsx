@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { StudentProfile } from '@/types';
+import { StudentProfile, TeacherProfile } from '@/types';
 import StudentProfileCard from '@/components/parent/StudentProfileCard';
 import {
   LiquidButton,
@@ -23,6 +23,7 @@ const itemVariants = {
 
 interface StudentListProps {
   students: StudentProfile[];
+  teachers?: TeacherProfile[];
   onAddStudent: () => void;
   onEditStudent: (student: StudentProfile) => void;
   onDeleteStudent: (studentId: string) => void;
@@ -32,6 +33,7 @@ interface StudentListProps {
 
 export default function StudentList({
   students,
+  teachers = [],
   onAddStudent,
   onEditStudent,
   onDeleteStudent,
@@ -100,14 +102,10 @@ export default function StudentList({
             No Students Yet
           </h3>
           <p className="text-slate-600 mb-6 max-w-md mx-auto">
-            Get started by creating your first student profile. You'll be
-            able to track their progress and manage their learning journey.
+            Get started by creating your first student profile. You'll be able
+            to track their progress and manage their learning journey.
           </p>
-          <LiquidButton
-            variant="primary"
-            size="lg"
-            onClick={onAddStudent}
-          >
+          <LiquidButton variant="primary" size="lg" onClick={onAddStudent}>
             Create Your First Student
           </LiquidButton>
         </motion.div>
@@ -118,10 +116,11 @@ export default function StudentList({
           animate="visible"
           className="grid grid-cols-1 lg:grid-cols-2 gap-6"
         >
-          {students.map((student) => (
+          {students.map(student => (
             <motion.div key={student.id} variants={itemVariants}>
               <StudentProfileCard
                 student={student}
+                teachers={teachers}
                 onEdit={() => onEditStudent(student)}
                 onDelete={() => onDeleteStudent(student.id)}
                 onViewDataSheets={() => onViewDataSheets(student)}
