@@ -351,6 +351,23 @@ export async function GET(request: NextRequest) {
       upcomingSession,
       students,
       teacherId,
+      // Debug info - remove after fixing
+      _debug: {
+        authUserId: userId,
+        authEmail: email,
+        teacherRecordFound: !!teacher,
+        teacherRecord: teacher
+          ? {
+              id: teacher.id,
+              user_id: teacher.user_id,
+              email: teacher.email,
+              parent_id: teacher.parent_id,
+            }
+          : null,
+        allTeachersFound: teachers?.length || 0,
+        qrStudentsCount: qrAssignedStudents?.length || 0,
+        directStudentsCount: directAssignedStudents?.length || 0,
+      },
     });
   } catch (error) {
     console.error('Error fetching teacher dashboard:', error);
