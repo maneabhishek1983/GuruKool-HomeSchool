@@ -48,7 +48,7 @@ export const GET = withRedisRateLimit({
       // We query from students table where assigned_teachers contains this teacher
       const { data: students, error: studentsError } = await adminClient
         .from('students')
-        .select('id, name, grade')
+        .select('id, name, grade_level')
         .contains('assigned_teachers', [teacherId]);
 
       if (studentsError) {
@@ -80,7 +80,7 @@ export const GET = withRedisRateLimit({
           );
           const { data: assignedStudents } = await adminClient
             .from('students')
-            .select('id, name, grade')
+            .select('id, name, grade_level')
             .in('id', studentIds);
 
           studentList = assignedStudents || [];
@@ -135,7 +135,7 @@ export const GET = withRedisRateLimit({
           return {
             id,
             name: String((student as { name: string }).name),
-            grade: String((student as { grade: string }).grade),
+            grade: String((student as { grade_level: string }).grade_level),
             hasFaceEnrolled: faceEnrollmentMap.get(id) || false,
             hasActiveSession: activeSessionMap.has(id),
             lastCheckIn: activeSessionMap.get(id),
