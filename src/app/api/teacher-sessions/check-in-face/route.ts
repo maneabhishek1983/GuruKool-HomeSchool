@@ -97,10 +97,22 @@ export const POST = withRedisRateLimit({
         );
       }
 
+      // Check assignment via both methods for compatibility:
+      // 1. teacher_assignments table (teacher_id stores users.id)
+      // 2. students.assigned_teachers JSONB array (stores teachers.id)
+      const { data: assignment } = await adminClient
+        .from('teacher_assignments')
+        .select('id')
+        .eq('teacher_id', user.id) // teacher_assignments uses users.id
+        .eq('student_id', studentId)
+        .eq('is_active', true)
+        .single();
+
       const assignedTeachers = (student as { assigned_teachers?: string[] })
         .assigned_teachers;
       const isAssigned =
-        Array.isArray(assignedTeachers) && assignedTeachers.includes(teacherId);
+        assignment !== null ||
+        (Array.isArray(assignedTeachers) && assignedTeachers.includes(teacherId));
 
       if (!isAssigned && user.role !== 'admin') {
         return NextResponse.json(

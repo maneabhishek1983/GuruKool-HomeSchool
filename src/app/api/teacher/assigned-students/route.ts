@@ -48,7 +48,7 @@ export const GET = withRedisRateLimit({
       // We query from students table where assigned_teachers contains this teacher
       const { data: students, error: studentsError } = await adminClient
         .from('students')
-        .select('id, name, grade')
+        .select('id, name, grade_level')
         .contains('assigned_teachers', [teacherId]);
 
       if (studentsError) {
@@ -67,10 +67,12 @@ export const GET = withRedisRateLimit({
       let studentList = students || [];
 
       if (studentList.length === 0) {
+        // NOTE: teacher_assignments.teacher_id stores users.id (FK constraint)
         const { data: assignments, error: assignmentsError } = await adminClient
           .from('teacher_assignments')
           .select('student_id')
-          .eq('teacher_id', teacherId);
+          .eq('teacher_id', user.id) // teacher_assignments uses users.id
+          .eq('is_active', true);
 
         if (!assignmentsError && assignments && assignments.length > 0) {
           const studentIds = assignments.map(a =>
@@ -78,7 +80,7 @@ export const GET = withRedisRateLimit({
           );
           const { data: assignedStudents } = await adminClient
             .from('students')
-            .select('id, name, grade')
+            .select('id, name, grade_level')
             .in('id', studentIds);
 
           studentList = assignedStudents || [];
@@ -133,7 +135,7 @@ export const GET = withRedisRateLimit({
           return {
             id,
             name: String((student as { name: string }).name),
-            grade: String((student as { grade: string }).grade),
+            grade: String((student as { grade_level: string }).grade_level),
             hasFaceEnrolled: faceEnrollmentMap.get(id) || false,
             hasActiveSession: activeSessionMap.has(id),
             lastCheckIn: activeSessionMap.get(id),

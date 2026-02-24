@@ -117,11 +117,15 @@ export const POST = withRedisRateLimit({
       teacherId = String((teacher as { id: string }).id);
 
       // Verify teacher is assigned to this student
-      const { data: assignment, error: assignmentError } = await adminClient
+      // Check both assignment methods for compatibility:
+      // 1. teacher_assignments table (teacher_id stores users.id)
+      // 2. students.assigned_teachers JSONB array (stores teachers.id)
+      const { data: assignment } = await adminClient
         .from('teacher_assignments')
         .select('id')
-        .eq('teacher_id', teacherId)
+        .eq('teacher_id', user.id) // teacher_assignments uses users.id
         .eq('student_id', studentId)
+        .eq('is_active', true)
         .single();
 
       // Also check if student has teacher in assigned_teachers array
@@ -159,7 +163,7 @@ export const POST = withRedisRateLimit({
       const assignedTeachers = (student as { assigned_teachers?: string[] })
         .assigned_teachers;
       const isAssigned =
-        !assignmentError ||
+        assignment !== null ||
         (Array.isArray(assignedTeachers) &&
           assignedTeachers.includes(teacherId));
 
