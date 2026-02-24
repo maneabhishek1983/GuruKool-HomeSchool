@@ -117,10 +117,12 @@ export const POST = withRedisRateLimit({
       teacherId = String((teacher as { id: string }).id);
 
       // Verify teacher is assigned to this student
+      // NOTE: teacher_assignments.teacher_id stores users.id (FK constraint)
+      // while students.assigned_teachers stores teachers.id
       const { data: assignment, error: assignmentError } = await adminClient
         .from('teacher_assignments')
         .select('id')
-        .eq('teacher_id', teacherId)
+        .eq('teacher_id', user.id) // Use user.id for teacher_assignments FK
         .eq('student_id', studentId)
         .single();
 

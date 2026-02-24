@@ -67,10 +67,11 @@ export const GET = withRedisRateLimit({
       let studentList = students || [];
 
       if (studentList.length === 0) {
+        // NOTE: teacher_assignments.teacher_id stores users.id (FK constraint)
         const { data: assignments, error: assignmentsError } = await adminClient
           .from('teacher_assignments')
           .select('student_id')
-          .eq('teacher_id', teacherId);
+          .eq('teacher_id', user.id); // Use user.id for teacher_assignments FK
 
         if (!assignmentsError && assignments && assignments.length > 0) {
           const studentIds = assignments.map(a =>
