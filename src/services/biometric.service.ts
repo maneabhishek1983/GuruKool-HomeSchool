@@ -18,6 +18,10 @@ export interface BiometricAuthResult {
   signature: string;
   authenticatorData: string;
   clientDataJSON: string;
+  /** Opaque challenge token issued by /api/biometric/challenge. Must be echoed at verify time. */
+  challengeToken: string;
+  /** Optional userHandle from the authenticator, base64-encoded. */
+  userHandle?: string;
 }
 
 export class BiometricService {
@@ -215,7 +219,14 @@ export class BiometricService {
         throw new Error('Failed to get authentication challenge');
       }
 
-      const { challenge, credentialIds } = await challengeResponse.json();
+      const { challenge, challengeToken, credentialIds } =
+        await challengeResponse.json();
+
+      if (!challengeToken) {
+        throw new Error(
+          'Server did not return a challenge token. Update server to latest version.'
+        );
+      }
 
       if (!credentialIds || credentialIds.length === 0) {
         throw new Error(
@@ -248,6 +259,10 @@ export class BiometricService {
         signature: this.arrayBufferToBase64(response.signature),
         authenticatorData: this.arrayBufferToBase64(response.authenticatorData),
         clientDataJSON: this.arrayBufferToBase64(response.clientDataJSON),
+        challengeToken,
+        ...(response.userHandle
+          ? { userHandle: this.arrayBufferToBase64(response.userHandle) }
+          : {}),
       };
     } catch (error) {
       console.error('Biometric authentication error:', error);
@@ -283,6 +298,10 @@ export class BiometricService {
           signature: authResult.signature,
           authenticatorData: authResult.authenticatorData,
           clientDataJSON: authResult.clientDataJSON,
+          challengeToken: authResult.challengeToken,
+          ...(authResult.userHandle
+            ? { userHandle: authResult.userHandle }
+            : {}),
         }),
       });
 

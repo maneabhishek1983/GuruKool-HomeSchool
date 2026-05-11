@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { withRateLimit } from '@/lib/api-security';
 import { requireTeacher } from '@/lib/api-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
+import { issueChallengeToken } from '@/lib/webauthn-challenge-token';
 import crypto from 'crypto';
 
 const schema = z.object({
@@ -83,11 +84,20 @@ export const POST = withRateLimit({
         credentialIds = credentials.map((c: any) => c.credential_id);
       }
 
-      // Store challenge temporarily (you might want to use Redis for this in production)
-      // For now, we'll just return it and rely on signature verification
+      // Issue a stateless HMAC-signed token binding this challenge to the user
+      // and action. The client must echo it back at /verify time; the server
+      // validates the HMAC and TTL before passing the challenge into
+      // @simplewebauthn/server. Replay defense comes from the counter check
+      // in /verify, not the token itself.
+      const challengeToken = issueChallengeToken({
+        challenge,
+        userId: user.id,
+        action,
+      });
 
       return NextResponse.json({
         challenge,
+        challengeToken,
         credentialIds: action === 'authenticate' ? credentialIds : undefined,
         expiresAt: expiresAt.toISOString(),
       });

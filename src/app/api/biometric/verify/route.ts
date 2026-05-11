@@ -4,6 +4,9 @@ import { z } from 'zod';
 import { withRateLimit } from '@/lib/api-security';
 import { requireTeacher } from '@/lib/api-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase-server';
+import { WebAuthnService } from '@/services/webauthn.service';
+import { verifyChallengeToken } from '@/lib/webauthn-challenge-token';
+import type { AuthenticationResponseJSON } from '@simplewebauthn/server';
 
 const schema = z.object({
   teacherId: z.string().uuid(),
@@ -11,19 +14,26 @@ const schema = z.object({
   signature: z.string().min(1),
   authenticatorData: z.string().min(1),
   clientDataJSON: z.string().min(1),
+  // Returned by /api/biometric/challenge; binds the response to the issued challenge.
+  challengeToken: z.string().min(1),
+  userHandle: z.string().optional(),
 });
 
 /**
  * POST /api/biometric/verify
- * 
- * Verify a biometric authentication signature
- * 
- * Note: This is a simplified implementation. In production, you should use
- * a proper WebAuthn library like @simplewebauthn/server for full verification.
+ *
+ * Verifies a WebAuthn assertion against a previously-issued challenge token.
+ *
+ * Security properties:
+ *   1. Challenge integrity: signed HMAC token bound to userId+action+expiry.
+ *   2. Signature verification: @simplewebauthn/server validates the
+ *      authenticator's signature against the stored public key, origin, and RP ID.
+ *   3. Replay prevention: counter must strictly advance. Update is conditional
+ *      on the stored counter still being <= old counter, blocking races.
  */
 export const POST = withRateLimit({
   keyPrefix: 'api:biometric:verify',
-  max: 60, // 60 verifications per minute
+  max: 60,
 })(
   requireTeacher(async (request: NextRequest, user) => {
     try {
@@ -40,22 +50,42 @@ export const POST = withRateLimit({
         );
       }
 
-      const { teacherId, credentialId, signature, authenticatorData, clientDataJSON } = validation.data;
+      const {
+        teacherId,
+        credentialId,
+        signature,
+        authenticatorData,
+        clientDataJSON,
+        challengeToken,
+        userHandle,
+      } = validation.data;
 
-      // Verify teacher ID matches authenticated user
       if (teacherId !== user.id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      }
+
+      // 1. Validate the challenge token and recover the original challenge.
+      let verifiedToken;
+      try {
+        verifiedToken = verifyChallengeToken(challengeToken, {
+          userId: user.id,
+          action: 'authenticate',
+        });
+      } catch (err) {
         return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 403 }
+          { error: 'Invalid or expired challenge', verified: false },
+          { status: 401 }
         );
       }
 
       const supabase = getSupabaseAdmin();
 
-      // Fetch credential from database
+      // 2. Load the stored credential.
       const { data: credential, error: fetchError } = await supabase
         .from('teacher_biometric_credentials')
-        .select('*')
+        .select(
+          'id, credential_id, public_key, counter, device_name, transports'
+        )
         .eq('credential_id', credentialId)
         .eq('teacher_id', teacherId)
         .eq('is_active', true)
@@ -63,92 +93,126 @@ export const POST = withRateLimit({
 
       if (fetchError || !credential) {
         return NextResponse.json(
-          { error: 'Biometric credential not found or inactive' },
+          {
+            error: 'Biometric credential not found or inactive',
+            verified: false,
+          },
           { status: 404 }
         );
       }
 
-      // In a production environment, you would:
-      // 1. Verify the signature using the public key
-      // 2. Check the authenticator data
-      // 3. Verify the client data JSON
-      // 4. Check and increment the counter to prevent replay attacks
-      // 
-      // For now, we'll do a simplified verification:
-      // - Check that all required fields are present
-      // - Update last_used_at timestamp
-      // - Increment counter
-      
-      // Basic validation: ensure signature and data are not empty
-      if (!signature || !authenticatorData || !clientDataJSON) {
+      const storedCounter = (credential as any).counter as number;
+      const credPublicKey = (credential as any).public_key as string;
+      const transports = (credential as any).transports as
+        | string[]
+        | null
+        | undefined;
+
+      // 3. Reconstruct the AuthenticationResponseJSON and verify the signature.
+      const response: AuthenticationResponseJSON = {
+        id: credentialId,
+        rawId: credentialId,
+        type: 'public-key',
+        clientExtensionResults: {},
+        response: {
+          authenticatorData,
+          clientDataJSON,
+          signature,
+          ...(userHandle ? { userHandle } : {}),
+        },
+      };
+
+      const webauthn = new WebAuthnService();
+      const result = await webauthn.verifyAuthenticationResponse({
+        response,
+        expectedChallenge: verifiedToken.challenge,
+        credential: {
+          credentialId,
+          credentialPublicKey: credPublicKey,
+          counter: storedCounter,
+          transports: (transports as any) ?? undefined,
+        },
+      });
+
+      if (!result.verified) {
         return NextResponse.json(
-          { error: 'Invalid biometric data' },
-          { status: 400 }
+          {
+            error: result.error || 'Signature verification failed',
+            verified: false,
+          },
+          { status: 401 }
         );
       }
 
-      // TODO: Implement proper WebAuthn signature verification
-      // For now, we'll accept the signature as valid if the credential exists
-      // This is NOT secure for production - you MUST implement proper verification
-      
-      // Update credential usage
-      const { error: updateError } = await supabase
+      // 4. Replay defense: counter must strictly advance, and the update must
+      //    only succeed if the stored counter is still what we read.
+      const newCounter = result.newCounter ?? storedCounter + 1;
+      if (newCounter <= storedCounter) {
+        return NextResponse.json(
+          {
+            error: 'Replay detected (counter did not advance)',
+            verified: false,
+          },
+          { status: 401 }
+        );
+      }
+
+      const { data: updated, error: updateError } = await supabase
         .from('teacher_biometric_credentials')
         .update({
+          counter: newCounter,
           last_used_at: new Date().toISOString(),
-          counter: (credential as any).counter + 1,
         })
-        .eq('id', (credential as any).id);
+        .eq('id', (credential as any).id)
+        .eq('counter', storedCounter) // optimistic concurrency
+        .select('id')
+        .single();
 
-      if (updateError) {
-        console.error('Error updating credential:', updateError);
-        // Don't fail the verification if update fails
+      if (updateError || !updated) {
+        // Either someone else just advanced the counter (replay) or DB error.
+        return NextResponse.json(
+          {
+            error: 'Counter update conflict — possible concurrent verify',
+            verified: false,
+          },
+          { status: 409 }
+        );
       }
 
       return NextResponse.json({
         verified: true,
-        credentialId: (credential as any).credential_id,
+        credentialId,
         deviceName: (credential as any).device_name,
         message: 'Biometric authentication successful',
       });
     } catch (error) {
       console.error('Biometric verification error:', error);
       return NextResponse.json(
-        { error: 'Failed to verify biometric authentication' },
+        { error: 'Failed to verify biometric authentication', verified: false },
         { status: 500 }
       );
     }
   })
 );
 
-/**
- * GET /api/biometric/verify
- * 
- * Test endpoint to verify API is working
- */
 export async function GET() {
   return NextResponse.json({
     message: 'Biometric Verification API',
-    version: '1.0',
-    warning: 'This is a simplified implementation. Production use requires proper WebAuthn verification.',
+    version: '2.0',
     endpoints: {
       POST: {
-        description: 'Verify biometric authentication signature',
+        description:
+          'Verify a WebAuthn assertion. Requires a challengeToken from /api/biometric/challenge.',
         body: {
           teacherId: 'string (UUID, required)',
           credentialId: 'string (required)',
-          signature: 'string (required, base64 encoded)',
-          authenticatorData: 'string (required, base64 encoded)',
-          clientDataJSON: 'string (required, base64 encoded)',
+          signature: 'string (required, base64url)',
+          authenticatorData: 'string (required, base64url)',
+          clientDataJSON: 'string (required, base64url)',
+          challengeToken: 'string (required) — opaque token from /challenge',
+          userHandle: 'string (optional, base64url)',
         },
       },
     },
-    todo: [
-      'Implement proper WebAuthn signature verification',
-      'Use @simplewebauthn/server library',
-      'Verify authenticator data',
-      'Verify client data JSON',
-      'Check counter for replay attack prevention',
-    ],
   });
 }

@@ -14,6 +14,14 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFaceRecognition } from '@/hooks/useFaceRecognition';
 import type { FaceDetectionResult } from '@/types';
+import { BlinkDetector, dualEyeEAR, type Point2D } from '@/lib/face-liveness';
+
+/**
+ * Liveness defaults to ON in 'verify' mode, OFF in 'enroll' mode.
+ * Emergency disable via NEXT_PUBLIC_FACE_LIVENESS_REQUIRED=false.
+ */
+const LIVENESS_DISABLED_VIA_ENV =
+  process.env.NEXT_PUBLIC_FACE_LIVENESS_REQUIRED === 'false';
 
 export interface FaceScannerError {
   code:
@@ -39,6 +47,12 @@ export interface FaceScannerProps {
   showDebug?: boolean;
   /** Whether scanning is enabled */
   enabled?: boolean;
+  /**
+   * Whether to require a detected blink before firing onFaceDetected.
+   * Defaults: true in verify mode, false in enroll mode. Can be force-disabled
+   * globally via NEXT_PUBLIC_FACE_LIVENESS_REQUIRED=false.
+   */
+  requireLiveness?: boolean;
 }
 
 /**
@@ -61,6 +75,7 @@ export function FaceScanner({
   minQualityScore = 0.6,
   showDebug = false,
   enabled = true,
+  requireLiveness,
 }: FaceScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -69,11 +84,17 @@ export function FaceScanner({
   const lastDetectionRef = useRef<number>(0);
   const cameraStartingRef = useRef(false);
   const canvasDimsRef = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
+  const blinkDetectorRef = useRef<BlinkDetector>(new BlinkDetector());
+
+  // Resolve liveness requirement: explicit prop > mode default. Env can force-off.
+  const livenessRequired =
+    !LIVENESS_DISABLED_VIA_ENV && (requireLiveness ?? mode === 'verify');
 
   const [cameraReady, setCameraReady] = useState(false);
   const [currentDetection, setCurrentDetection] =
     useState<FaceDetectionResult | null>(null);
   const [statusMessage, setStatusMessage] = useState('Initializing...');
+  const [livenessSatisfied, setLivenessSatisfied] = useState(!livenessRequired);
 
   // Memoize error handler to prevent infinite re-render loop.
   // Without this, a new function reference is created every render,
@@ -266,15 +287,36 @@ export function FaceScanner({
             boundingBox.height
           );
 
-          // Update status
-          setStatusMessage(quality.message);
+          // Liveness: feed eye landmarks to the blink detector.
+          if (livenessRequired && detection.landmarks) {
+            const positions = (detection.landmarks as { positions?: Point2D[] })
+              .positions;
+            const ear = positions ? dualEyeEAR(positions) : null;
+            if (blinkDetectorRef.current.push(ear)) {
+              setLivenessSatisfied(true);
+            }
+          }
 
-          // Callback if quality is sufficient
-          if (qualityScore >= minQualityScore) {
+          // Update status — liveness instructions take priority over quality hints.
+          if (livenessRequired && !livenessSatisfied) {
+            setStatusMessage('Blink slowly to confirm liveness');
+          } else {
+            setStatusMessage(quality.message);
+          }
+
+          // Callback only when quality is sufficient AND liveness was satisfied.
+          if (
+            qualityScore >= minQualityScore &&
+            (livenessSatisfied || !livenessRequired)
+          ) {
             onFaceDetected(detection);
           }
         } else {
           setStatusMessage('No face detected. Please face the camera.');
+          // Lost face → reset blink state so we don't accept stale blinks.
+          if (livenessRequired) {
+            blinkDetectorRef.current.push(null);
+          }
         }
       }
     } catch (err) {
@@ -290,6 +332,8 @@ export function FaceScanner({
     assessQuality,
     minQualityScore,
     onFaceDetected,
+    livenessRequired,
+    livenessSatisfied,
   ]);
 
   // Initialize: load models first, then start camera.

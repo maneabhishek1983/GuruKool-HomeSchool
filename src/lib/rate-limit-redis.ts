@@ -3,10 +3,10 @@ import { Redis } from '@upstash/redis';
 
 /**
  * Distributed Rate Limiting using Upstash Redis
- * 
+ *
  * This implementation works across multiple Vercel serverless instances
  * and survives cold starts by using Redis as the state store.
- * 
+ *
  * Features:
  * - Per-IP rate limiting
  * - Per-user rate limiting (when authenticated)
@@ -43,9 +43,11 @@ interface RateLimitOptions {
   useUserId?: boolean;
 
   /**
-   * Custom key generator function
+   * Custom key generator function. May be async — useful when the bucket
+   * depends on JSON body fields (e.g. per-student rate limit on a face-verify
+   * route). Use `request.clone().json()` inside to avoid consuming the body.
    */
-  keyGenerator?: (request: NextRequest) => string;
+  keyGenerator?: (request: NextRequest) => string | Promise<string>;
 }
 
 const defaultOptions: Required<Omit<RateLimitOptions, 'keyGenerator'>> = {
@@ -107,7 +109,7 @@ function getClientIP(request: NextRequest): string {
 async function getUserId(request: NextRequest): Promise<string | null> {
   // TODO: Implement based on your authentication system
   // Example: Extract from JWT token, session cookie, etc.
-  
+
   // For now, return null (not implemented)
   return null;
 }
@@ -124,9 +126,10 @@ async function generateKey(
     ...options,
   };
 
-  // Use custom key generator if provided
+  // Use custom key generator if provided (sync or async)
   if (keyGenerator) {
-    return `${keyPrefix}:${keyGenerator(request)}`;
+    const sub = await keyGenerator(request);
+    return `${keyPrefix}:${sub}`;
   }
 
   // Use user ID if enabled and available
@@ -166,7 +169,7 @@ async function banIP(
 
 /**
  * Rate limiting middleware using Redis
- * 
+ *
  * @example
  * ```typescript
  * export const GET = withRedisRateLimit({ max: 100, windowMs: 60000 })(
@@ -191,7 +194,8 @@ export function withRedisRateLimit(options?: RateLimitOptions) {
             {
               error: 'Access denied',
               code: 'IP_BANNED',
-              message: 'Your IP address has been temporarily banned due to excessive requests.',
+              message:
+                'Your IP address has been temporarily banned due to excessive requests.',
             },
             { status: 403 }
           );

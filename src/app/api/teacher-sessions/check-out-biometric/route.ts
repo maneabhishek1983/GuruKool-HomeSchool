@@ -14,12 +14,14 @@ const schema = z.object({
   signature: z.string().min(1),
   authenticatorData: z.string().min(1),
   clientDataJSON: z.string().min(1),
+  challengeToken: z.string().min(1),
+  userHandle: z.string().optional(),
   notes: z.string().optional(),
 });
 
 /**
  * POST /api/teacher-sessions/check-out-biometric
- * 
+ *
  * Check out with biometric authentication and location verification
  */
 export const POST = withRateLimit({
@@ -50,6 +52,8 @@ export const POST = withRateLimit({
         signature,
         authenticatorData,
         clientDataJSON,
+        challengeToken,
+        userHandle,
         notes,
       } = validation.data;
 
@@ -58,7 +62,9 @@ export const POST = withRateLimit({
       // Step 1: Verify session exists and belongs to teacher
       const { data: session, error: sessionError } = await supabase
         .from('teacher_sessions')
-        .select('*, students(id, home_latitude, home_longitude, geofence_radius_meters)')
+        .select(
+          '*, students(id, home_latitude, home_longitude, geofence_radius_meters)'
+        )
         .eq('id', sessionId)
         .eq('teacher_id', user.id)
         .is('checked_out_at', null)
@@ -72,17 +78,25 @@ export const POST = withRateLimit({
       }
 
       // Step 2: Verify biometric authentication
-      const verifyResponse = await fetch(`${request.nextUrl.origin}/api/biometric/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          teacherId: user.id,
-          credentialId,
-          signature,
-          authenticatorData,
-          clientDataJSON,
-        }),
-      });
+      const verifyResponse = await fetch(
+        `${request.nextUrl.origin}/api/biometric/verify`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: request.headers.get('authorization') || '',
+          },
+          body: JSON.stringify({
+            teacherId: user.id,
+            credentialId,
+            signature,
+            authenticatorData,
+            clientDataJSON,
+            challengeToken,
+            ...(userHandle ? { userHandle } : {}),
+          }),
+        }
+      );
 
       if (!verifyResponse.ok) {
         return NextResponse.json(
@@ -100,16 +114,19 @@ export const POST = withRateLimit({
       }
 
       // Step 3: Verify location
-      const locationResponse = await fetch(`${request.nextUrl.origin}/api/location/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          studentId: (session as any).student_id,
-          latitude,
-          longitude,
-          accuracy,
-        }),
-      });
+      const locationResponse = await fetch(
+        `${request.nextUrl.origin}/api/location/verify`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            studentId: (session as any).student_id,
+            latitude,
+            longitude,
+            accuracy,
+          }),
+        }
+      );
 
       if (!locationResponse.ok) {
         return NextResponse.json(
@@ -134,7 +151,9 @@ export const POST = withRateLimit({
       // Step 4: Calculate session duration
       const checkedInAt = new Date((session as any).checked_in_at);
       const checkedOutAt = new Date();
-      const durationMinutes = Math.round((checkedOutAt.getTime() - checkedInAt.getTime()) / 60000);
+      const durationMinutes = Math.round(
+        (checkedOutAt.getTime() - checkedInAt.getTime()) / 60000
+      );
 
       // Step 5: Update session
       const { data: updatedSession, error: updateError } = await supabase
@@ -183,7 +202,8 @@ export const POST = withRateLimit({
         locationVerified: true,
         biometricVerified: true,
         distance: locationResult.distance,
-        message: 'Checked out successfully with biometric and location verification',
+        message:
+          'Checked out successfully with biometric and location verification',
       });
     } catch (error) {
       console.error('Check-out error:', error);
@@ -197,7 +217,7 @@ export const POST = withRateLimit({
 
 /**
  * GET /api/teacher-sessions/check-out-biometric
- * 
+ *
  * Test endpoint to verify API is working
  */
 export async function GET() {
@@ -206,7 +226,8 @@ export async function GET() {
     version: '1.0',
     endpoints: {
       POST: {
-        description: 'Check out with biometric authentication and location verification',
+        description:
+          'Check out with biometric authentication and location verification',
         body: {
           sessionId: 'string (UUID, required)',
           latitude: 'number (required, -90 to 90)',

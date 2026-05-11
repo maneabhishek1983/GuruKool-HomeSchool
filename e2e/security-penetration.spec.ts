@@ -24,7 +24,7 @@ test.describe('Security & Penetration Testing', () => {
 
       for (const route of protectedRoutes) {
         const response = await page.goto(route);
-        expect(response?.status()).toBeOneOf([401, 403, 302]); // Should redirect or deny access
+        expect([401, 403, 302, 307]).toContain(response?.status()); // Should redirect or deny access
       }
     });
 
@@ -88,7 +88,7 @@ test.describe('Security & Penetration Testing', () => {
 
       for (const path of predictablePaths) {
         const response = await page.goto(path);
-        expect(response?.status()).toBeOneOf([404, 403, 401]); // Should not exist or be protected
+        expect([404, 403, 401]).toContain(response?.status()); // Should not exist or be protected
       }
     });
 
@@ -262,7 +262,7 @@ test.describe('Security & Penetration Testing', () => {
       });
 
       // Should require CSRF token or authentication
-      expect(response.status()).toBeOneOf([401, 403, 400]);
+      expect([401, 403, 400]).toContain(response.status());
     });
 
     test('CSRF token validation', async ({ page }) => {

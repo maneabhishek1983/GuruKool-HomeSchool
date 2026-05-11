@@ -9,6 +9,22 @@ on:
     # Run security tests daily at 2 AM UTC
     - cron: '0 2 * * *'
 
+# Inherited by every step in every job. These reference repo secrets — see
+# README in docs/ for the list. Jobs that don't need a particular secret
+# simply won't read it.
+env:
+  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  NEXT_PUBLIC_QR_SECRET: ${{ secrets.NEXT_PUBLIC_QR_SECRET }}
+  FACE_ENCRYPTION_KEY: ${{ secrets.FACE_ENCRYPTION_KEY }}
+  E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+  # Safety: refuse to run destructive auth.setup.ts against anything not matching
+  # this substring. Override per-repo if your test project URL differs.
+  E2E_ALLOW_HOST: ${{ vars.E2E_ALLOW_HOST }}
+  E2E_PROD_HOST_PATTERN: ${{ vars.E2E_PROD_HOST_PATTERN }}
+
 jobs:
   # Unit and Integration Tests
   unit-tests:
@@ -22,7 +38,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           
       - name: Install dependencies
@@ -56,7 +72,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           
       - name: Install dependencies
@@ -65,13 +81,18 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
         
-      - name: Start application
-        run: npm run dev &
+      - name: Build application
+        run: npm run build
         env:
-          NODE_ENV: test
-          
+          NODE_ENV: production
+
+      - name: Start application
+        run: npm run start &
+        env:
+          NODE_ENV: production
+
       - name: Wait for application to start
-        run: npx wait-on http://localhost:3000
+        run: npx wait-on http://localhost:3000 -t 120000
         
       - name: Run E2E tests
         run: npm run test:e2e
@@ -79,7 +100,7 @@ jobs:
           BASE_URL: http://localhost:3000
           
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
@@ -98,7 +119,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           
       - name: Install dependencies
@@ -107,13 +128,18 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
         
-      - name: Start application
-        run: npm run dev &
+      - name: Build application
+        run: npm run build
         env:
-          NODE_ENV: test
-          
+          NODE_ENV: production
+
+      - name: Start application
+        run: npm run start &
+        env:
+          NODE_ENV: production
+
       - name: Wait for application to start
-        run: npx wait-on http://localhost:3000
+        run: npx wait-on http://localhost:3000 -t 120000
         
       - name: Run security tests
         run: npm run test:security
@@ -121,7 +147,7 @@ jobs:
           BASE_URL: http://localhost:3000
           
       - name: Upload security test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: security-test-results
@@ -140,7 +166,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           
       - name: Install dependencies
@@ -149,13 +175,18 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
         
-      - name: Start application
-        run: npm run dev &
+      - name: Build application
+        run: npm run build
         env:
-          NODE_ENV: test
-          
+          NODE_ENV: production
+
+      - name: Start application
+        run: npm run start &
+        env:
+          NODE_ENV: production
+
       - name: Wait for application to start
-        run: npx wait-on http://localhost:3000
+        run: npx wait-on http://localhost:3000 -t 120000
         
       - name: Run regression tests
         run: npm run test:regression
@@ -163,7 +194,7 @@ jobs:
           BASE_URL: http://localhost:3000
           
       - name: Upload regression test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: regression-test-results
@@ -182,19 +213,24 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           
       - name: Install dependencies
         run: npm ci
         
-      - name: Start application
-        run: npm run dev &
+      - name: Build application
+        run: npm run build
         env:
-          NODE_ENV: test
-          
+          NODE_ENV: production
+
+      - name: Start application
+        run: npm run start &
+        env:
+          NODE_ENV: production
+
       - name: Wait for application to start
-        run: npx wait-on http://localhost:3000
+        run: npx wait-on http://localhost:3000 -t 120000
         
       - name: Run performance tests
         run: npm run test:performance
@@ -202,7 +238,7 @@ jobs:
           BASE_URL: http://localhost:3000
           
       - name: Upload performance test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: performance-test-results
@@ -222,7 +258,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           
       - name: Install dependencies
@@ -231,13 +267,18 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
         
-      - name: Start application
-        run: npm run dev &
+      - name: Build application
+        run: npm run build
         env:
-          NODE_ENV: test
-          
+          NODE_ENV: production
+
+      - name: Start application
+        run: npm run start &
+        env:
+          NODE_ENV: production
+
       - name: Wait for application to start
-        run: npx wait-on http://localhost:3000
+        run: npx wait-on http://localhost:3000 -t 120000
         
       - name: Run comprehensive tests
         run: npm run test:comprehensive
@@ -245,7 +286,7 @@ jobs:
           BASE_URL: http://localhost:3000
           
       - name: Upload comprehensive test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: comprehensive-test-results
@@ -264,7 +305,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           
       - name: Install dependencies
@@ -273,13 +314,18 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
         
-      - name: Start application
-        run: npm run dev &
+      - name: Build application
+        run: npm run build
         env:
-          NODE_ENV: test
-          
+          NODE_ENV: production
+
+      - name: Start application
+        run: npm run start &
+        env:
+          NODE_ENV: production
+
       - name: Wait for application to start
-        run: npx wait-on http://localhost:3000
+        run: npx wait-on http://localhost:3000 -t 120000
         
       - name: Run accessibility tests
         run: npx playwright test --grep "accessibility"
@@ -287,10 +333,51 @@ jobs:
           BASE_URL: http://localhost:3000
           
       - name: Upload accessibility test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: accessibility-test-results
+          path: test-results/
+          retention-days: 30
+
+  # API Contract Tests — auth boundary on every /api/* route.
+  # Runs without DB seeding; catches accidental data leaks before any UI test runs.
+  api-contract-tests:
+    name: API Contract Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Run API contract tests
+        run: npx playwright test --project=api-contract
+        env:
+          PLAYWRIGHT_WEB_SERVER_COMMAND: npm run start
+          BASE_URL: http://localhost:3000
+
+      - name: Upload api-contract results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-contract-results
           path: test-results/
           retention-days: 30
 
@@ -300,7 +387,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        browser: [chromium, firefox, webkit]
+        browser: [chromium, firefox, webkit, 'Mobile Chrome', 'Mobile Safari']
     
     steps:
       - name: Checkout code
@@ -309,7 +396,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           
       - name: Install dependencies
@@ -318,24 +405,29 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
         
-      - name: Start application
-        run: npm run dev &
+      - name: Build application
+        run: npm run build
         env:
-          NODE_ENV: test
-          
+          NODE_ENV: production
+
+      - name: Start application
+        run: npm run start &
+        env:
+          NODE_ENV: production
+
       - name: Wait for application to start
-        run: npx wait-on http://localhost:3000
+        run: npx wait-on http://localhost:3000 -t 120000
         
       - name: Run cross-browser tests
-        run: npx playwright test --project=${{ matrix.browser }}
+        run: npx playwright test --project="${{ matrix.browser }}"
         env:
           BASE_URL: http://localhost:3000
           
       - name: Upload cross-browser test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: cross-browser-test-results-${{ matrix.browser }}
+          name: cross-browser-test-results-${{ strategy.job-index }}
           path: test-results/
           retention-days: 30
 
@@ -351,7 +443,7 @@ jobs:
         uses: actions/checkout@v4
         
       - name: Download all test results
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: test-results/
           
@@ -452,7 +544,7 @@ jobs:
         uses: actions/checkout@v4
         
       - name: Download test results
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: test-results/
           

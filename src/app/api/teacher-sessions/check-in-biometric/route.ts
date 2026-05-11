@@ -24,6 +24,8 @@ const schema = z.object({
   signature: z.string().min(1),
   authenticatorData: z.string().min(1),
   clientDataJSON: z.string().min(1),
+  challengeToken: z.string().min(1),
+  userHandle: z.string().optional(),
 });
 
 /**
@@ -59,6 +61,8 @@ export const POST = withRateLimit({
         signature,
         authenticatorData,
         clientDataJSON,
+        challengeToken,
+        userHandle,
       } = validation.data;
 
       const supabase = getSupabaseAdmin();
@@ -68,13 +72,20 @@ export const POST = withRateLimit({
         `${request.nextUrl.origin}/api/biometric/verify`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            // Forward caller auth so the internal /verify route's requireTeacher
+            // middleware sees the same user. Without this, the call 401s.
+            Authorization: request.headers.get('authorization') || '',
+          },
           body: JSON.stringify({
             teacherId: user.id,
             credentialId,
             signature,
             authenticatorData,
             clientDataJSON,
+            challengeToken,
+            ...(userHandle ? { userHandle } : {}),
           }),
         }
       );
