@@ -35,7 +35,6 @@ const PROTECTED_ROUTES: RouteCase[] = [
   { path: '/api/credentials', methods: ['GET', 'POST'] },
   { path: '/api/data-sheets/entries', methods: ['GET', 'POST'] },
   { path: '/api/data-sheets/student', methods: ['GET'] },
-  { path: '/api/debug/teachers', methods: ['GET'] },
   { path: '/api/geofence/exception/approve', methods: ['GET', 'POST'] },
   { path: '/api/geofence/exception/request', methods: ['GET', 'POST'] },
   { path: '/api/invitations/accept', methods: ['GET', 'POST'] },
