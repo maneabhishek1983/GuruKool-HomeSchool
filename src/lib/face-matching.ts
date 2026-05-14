@@ -9,6 +9,18 @@
  */
 
 /**
+ * The descriptor format the running server understands.
+ *
+ * Tied to the face-api.js model bundle in `public/models/face-api/`. If the
+ * model is upgraded, every comparison against an older stored descriptor is
+ * meaningless (different feature space → garbage Euclidean distance). Bump
+ * this string when the models change so `verify-face` can refuse stale
+ * enrollments and prompt re-enroll instead of silently false-rejecting
+ * (or worse, false-accepting).
+ */
+export const CURRENT_DESCRIPTOR_VERSION = 'face-api-0.22.2';
+
+/**
  * Match confidence thresholds
  * Based on face-api.js recommendations for FaceNet descriptor distances
  */
