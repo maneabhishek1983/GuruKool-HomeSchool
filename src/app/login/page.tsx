@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Fraunces, Crimson_Pro } from 'next/font/google';
 import { useAuthContext } from '@/lib/authContext';
-import { triggerConfetti } from '@/lib/confetti';
 
 const fraunces = Fraunces({
   subsets: ['latin'],
@@ -226,7 +225,6 @@ function LoginForm() {
         const result = await signup(email, password, name, role);
         if (result.success) {
           setSuccess('Account opened. Redirecting…');
-          triggerConfetti('fireworks');
           setTimeout(() => router.push(routeFor(result.user?.role)), 1400);
         } else {
           setError(result.error || 'Signup failed.');
@@ -234,7 +232,6 @@ function LoginForm() {
       } else {
         const result = await login(email, password);
         if (result.success) {
-          triggerConfetti('success');
           router.push(routeFor(result.user?.role));
         } else {
           setError(result.error || 'Sign-in failed.');
