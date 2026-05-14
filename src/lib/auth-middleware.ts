@@ -1,7 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import type { Database } from '@/types/supabase';
+
+/**
+ * Build a Supabase client from a Bearer token instead of cookies.
+ *
+ * Returns null if the request has no Bearer token, so callers can fall back
+ * to the cookie path. The returned client carries the user's JWT in its
+ * Authorization header, so `auth.getUser()` resolves to the token holder
+ * and RLS policies see the correct `auth.uid()`.
+ *
+ * This is what test harnesses, mobile clients, and third-party integrations
+ * use — they never get our auth-helpers cookie.
+ */
+function clientFromBearer(
+  request: NextRequest
+): SupabaseClient<Database> | null {
+  const header = request.headers.get('authorization');
+  if (!header || !header.toLowerCase().startsWith('bearer ')) {
+    return null;
+  }
+  const token = header.slice(7).trim();
+  if (!token) {
+    return null;
+  }
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anon) {
+    throw new Error(
+      'Bearer auth requested but NEXT_PUBLIC_SUPABASE_URL/ANON_KEY are missing. ' +
+        'Refusing to silently fall back to cookie auth — fix the deploy env.'
+    );
+  }
+
+  return createClient<Database>(url, anon, {
+    auth: { autoRefreshToken: false, persistSession: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+}
 
 /**
  * Authentication Middleware for API Routes
@@ -21,7 +60,7 @@ interface AuthContext {
     email: string;
     role: 'parent' | 'teacher' | 'admin';
   };
-  supabase: ReturnType<typeof createRouteHandlerClient<Database>>;
+  supabase: SupabaseClient<Database>;
 }
 
 interface AuthMiddlewareOptions {
@@ -58,11 +97,16 @@ export function withAuth(options: AuthMiddlewareOptions = {}) {
   ): (request: NextRequest) => Promise<Response> {
     return async function authenticated(request: NextRequest) {
       try {
-        // Create Supabase client
-        const cookieStore = cookies();
-        const supabase = createRouteHandlerClient<Database>({
-          cookies: () => cookieStore,
-        });
+        // Prefer Authorization: Bearer <jwt> when provided. This lets
+        // non-browser callers (test harnesses, mobile, server-to-server)
+        // authenticate without the auth-helpers cookie. Falls back to the
+        // cookie-based client for browser sessions.
+        const bearerClient = clientFromBearer(request);
+        const supabase: SupabaseClient<Database> =
+          bearerClient ??
+          (createRouteHandlerClient<Database>({
+            cookies: () => cookies(),
+          }) as unknown as SupabaseClient<Database>);
 
         // Get current user
         const {

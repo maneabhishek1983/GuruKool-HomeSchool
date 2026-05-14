@@ -7,6 +7,7 @@ import { decryptFaceDescriptor } from '@/lib/face-encryption';
 import {
   compareFaceDescriptors,
   validateDescriptor,
+  CURRENT_DESCRIPTOR_VERSION,
 } from '@/lib/face-matching';
 import { logFaceVerificationAttempt } from '@/services/face-audit.service';
 import { getClientIP, getDeviceInfo } from '@/lib/api-security';
@@ -208,7 +209,7 @@ export const POST = withRedisRateLimit({
         // Also check if student has teacher in assigned_teachers array
         const { data: student, error: studentError } = await adminClient
           .from('students')
-          .select('id, name, grade, assigned_teachers')
+          .select('id, name, grade_level, assigned_teachers')
           .eq('id', studentId)
           .single();
 
@@ -216,7 +217,7 @@ export const POST = withRedisRateLimit({
           await logFaceVerificationAttempt({
             teacherId,
             studentId,
-            result: 'error',
+            result: 'failed',
             confidence: 0,
             distance: 0,
             deviceInfo,
@@ -271,7 +272,7 @@ export const POST = withRedisRateLimit({
         // Fetch encrypted face descriptor from database
         const { data: faceRecord, error: faceError } = await adminClient
           .from('student_face_records')
-          .select('face_descriptor_encrypted')
+          .select('face_descriptor_encrypted, descriptor_version')
           .eq('student_id', studentId)
           .eq('is_active', true)
           .single();
@@ -300,12 +301,50 @@ export const POST = withRedisRateLimit({
           );
         }
 
-        // Decrypt the enrolled face descriptor (server-side only)
-        const encryptedData = (
-          faceRecord as { face_descriptor_encrypted: Buffer }
+        // Reject stale enrollments. A descriptor produced by a different
+        // face-api model version is not comparable to current captures —
+        // distances become meaningless, so refuse rather than risk a
+        // silent false-reject (or worse, false-accept). The client should
+        // prompt the parent to re-enroll.
+        const storedVersion = (faceRecord as { descriptor_version: string })
+          .descriptor_version;
+        if (storedVersion !== CURRENT_DESCRIPTOR_VERSION) {
+          await logFaceVerificationAttempt({
+            teacherId,
+            studentId,
+            result: 'failed',
+            confidence: 0,
+            distance: 0,
+            deviceInfo,
+            ipAddress,
+            errorMessage: `Descriptor version mismatch: stored=${storedVersion} current=${CURRENT_DESCRIPTOR_VERSION}`,
+          });
+          return NextResponse.json(
+            {
+              success: false,
+              matched: false,
+              confidence: 0,
+              distance: 0,
+              code: 'REENROLL_REQUIRED',
+              message: 'Face enrollment is out of date. Please re-enroll.',
+            } as FaceVerifyResponse,
+            { status: 409 }
+          );
+        }
+
+        // Decrypt the enrolled face descriptor (server-side only).
+        // PostgREST returns BYTEA as a string like "\x<hex>" — decode it
+        // back to bytes before handing to the decryption routine.
+        const raw = (
+          faceRecord as { face_descriptor_encrypted: Buffer | string }
         ).face_descriptor_encrypted;
+        const encryptedBuffer = Buffer.isBuffer(raw)
+          ? raw
+          : typeof raw === 'string' && raw.startsWith('\\x')
+            ? Buffer.from(raw.slice(2), 'hex')
+            : Buffer.from(raw as unknown as ArrayBuffer);
         const enrolledDescriptor = await decryptFaceDescriptor(
-          Buffer.from(encryptedData)
+          Buffer.from(encryptedBuffer)
         );
 
         // Compare descriptors (SERVER-SIDE CALCULATION)
@@ -332,7 +371,7 @@ export const POST = withRedisRateLimit({
         const studentInfo = {
           id: String((student as { id: string }).id),
           name: String((student as { name: string }).name),
-          grade: String((student as { grade: string }).grade),
+          grade: String((student as { grade_level: string }).grade_level),
         };
 
         return NextResponse.json({

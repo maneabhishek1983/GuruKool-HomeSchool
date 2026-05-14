@@ -652,6 +652,13 @@ export interface FaceVerifyResponse {
   };
   message: string;
   verifiedAt?: string;
+  /**
+   * Machine-readable error code for failure cases. Examples:
+   *   - 'REENROLL_REQUIRED' — stored descriptor was generated with an
+   *     incompatible model version; client should prompt re-enrollment.
+   * Absent on success.
+   */
+  code?: string;
 }
 
 /**
@@ -728,7 +735,12 @@ export interface FaceVerificationAuditEntry {
   id: string;
   teacher_id: string;
   student_id: string;
-  verification_result: 'success' | 'failed' | 'no_match' | 'rate_limited';
+  verification_result:
+    | 'success'
+    | 'failed'
+    | 'no_match'
+    | 'rate_limited'
+    | 'error';
   confidence_score: number;
   distance: number;
   device_info: Record<string, unknown>;
