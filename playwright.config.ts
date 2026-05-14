@@ -47,42 +47,75 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
 
+    // Face recognition API specs — bearer-token auth, no browser session,
+    // no setup dependency. The specs self-bootstrap their auth users via
+    // the service-role client so a broken UI-login fixture can't block them.
+    {
+      name: 'face-api',
+      testMatch: /face-api(?:-extended)?\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+
     // UI specs — share auth state from `setup`. Skip auth.setup.ts itself.
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
       dependencies: ['setup'],
-      testIgnore: [/auth\.setup\.ts/, /api-contract\.spec\.ts/],
+      testIgnore: [
+        /auth\.setup\.ts/,
+        /api-contract\.spec\.ts/,
+        /face-api(?:-extended)?\.spec\.ts/,
+      ],
     },
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
       dependencies: ['setup'],
-      testIgnore: [/auth\.setup\.ts/, /api-contract\.spec\.ts/],
+      testIgnore: [
+        /auth\.setup\.ts/,
+        /api-contract\.spec\.ts/,
+        /face-api(?:-extended)?\.spec\.ts/,
+      ],
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
       dependencies: ['setup'],
-      testIgnore: [/auth\.setup\.ts/, /api-contract\.spec\.ts/],
+      testIgnore: [
+        /auth\.setup\.ts/,
+        /api-contract\.spec\.ts/,
+        /face-api(?:-extended)?\.spec\.ts/,
+      ],
     },
     {
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
       dependencies: ['setup'],
-      testIgnore: [/auth\.setup\.ts/, /api-contract\.spec\.ts/],
+      testIgnore: [
+        /auth\.setup\.ts/,
+        /api-contract\.spec\.ts/,
+        /face-api(?:-extended)?\.spec\.ts/,
+      ],
     },
     {
       name: 'Mobile Safari',
       use: { ...devices['iPhone 12'] },
       dependencies: ['setup'],
-      testIgnore: [/auth\.setup\.ts/, /api-contract\.spec\.ts/],
+      testIgnore: [
+        /auth\.setup\.ts/,
+        /api-contract\.spec\.ts/,
+        /face-api(?:-extended)?\.spec\.ts/,
+      ],
     },
     {
       name: 'Tablet',
       use: { ...devices['iPad Pro 11'] },
       dependencies: ['setup'],
-      testIgnore: [/auth\.setup\.ts/, /api-contract\.spec\.ts/],
+      testIgnore: [
+        /auth\.setup\.ts/,
+        /api-contract\.spec\.ts/,
+        /face-api(?:-extended)?\.spec\.ts/,
+      ],
     },
 
     // Role-scoped projects — pre-authenticated. Tag a spec with @role-admin etc.

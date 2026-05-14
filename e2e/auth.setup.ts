@@ -143,4 +143,60 @@ setup.describe('auth fixtures', () => {
       });
     });
   }
+
+  /**
+   * A second teacher that is intentionally NOT assigned to the E2E test
+   * student. The face-api spec uses this to verify the 403 path on
+   * /verify-face and /face-challenge. We don't bother logging in via the UI
+   * — the API specs use the password grant directly to mint a bearer token.
+   */
+  setup('seed unassigned teacher (api-only fixture)', async () => {
+    setup.skip(
+      !SUPABASE_AVAILABLE,
+      'Supabase test credentials missing — skipping unassigned teacher fixture.'
+    );
+
+    assertNotProd(url!);
+
+    const admin = createClient(url!, serviceKey!, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    const email = 'e2e-teacher-unassigned@gurukool.test';
+
+    const { data: existing } = await admin.auth.admin.listUsers();
+    const prior = existing?.users?.find(u => u.email === email);
+    if (prior) {
+      await admin.auth.admin.deleteUser(prior.id);
+    }
+
+    const { data: created, error: createErr } =
+      await admin.auth.admin.createUser({
+        email,
+        password: PASSWORD,
+        email_confirm: true,
+      });
+    if (createErr || !created.user) {
+      throw new Error(
+        `Failed to create unassigned teacher: ${createErr?.message}`
+      );
+    }
+
+    const { error: profileErr } = await admin.from('users').upsert({
+      id: created.user.id,
+      email,
+      name: 'E2E Unassigned Teacher',
+      role: 'teacher',
+      created_at: new Date().toISOString(),
+      last_active: new Date().toISOString(),
+    });
+    if (profileErr) {
+      throw new Error(
+        `Failed to upsert unassigned teacher profile: ${profileErr.message}`
+      );
+    }
+    // Intentionally do NOT call ensureTestTeacher / assignTeacherToStudent
+    // here — the face-api spec's beforeAll handles teacher-row creation and
+    // explicitly leaves this user unassigned.
+  });
 });
