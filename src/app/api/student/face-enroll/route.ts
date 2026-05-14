@@ -4,7 +4,10 @@ import { withRedisRateLimit } from '@/lib/rate-limit-redis';
 import { requireParentOrAdmin } from '@/lib/auth-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { encryptFaceDescriptor } from '@/lib/face-encryption';
-import { validateDescriptor } from '@/lib/face-matching';
+import {
+  validateDescriptor,
+  CURRENT_DESCRIPTOR_VERSION,
+} from '@/lib/face-matching';
 import type { FaceEnrollResponse } from '@/types';
 
 /**
@@ -129,8 +132,14 @@ export const POST = withRedisRateLimit({
         .from('student_face_records')
         .insert({
           student_id: studentId,
-          face_descriptor_encrypted: encryptedDescriptor,
-          descriptor_version: 'face-api-0.22.2',
+          // Supabase PostgREST does not auto-serialize Node Buffers into
+          // BYTEA — it JSON-stringifies them, which round-trips as the
+          // literal string {"type":"Buffer","data":[...]}. Encode as a
+          // Postgres BYTEA hex literal ("\x" + hex) so the bytes land
+          // intact and verify-face can decrypt them.
+          face_descriptor_encrypted:
+            '\\x' + Buffer.from(encryptedDescriptor).toString('hex'),
+          descriptor_version: CURRENT_DESCRIPTOR_VERSION,
           quality_score: qualityScore,
           enrollment_metadata: enrollmentMetadata,
           is_active: true,
