@@ -9,7 +9,7 @@ describe('AnalyticsAgent', () => {
 
   beforeEach(() => {
     analyticsAgent = new AnalyticsAgent();
-    
+
     mockUser = {
       id: 'user-123',
       email: 'test@example.com',
@@ -57,7 +57,7 @@ describe('AnalyticsAgent', () => {
         actualEnd: new Date('2024-01-01T10:00:00Z'),
         location: {
           address: '123 Test St',
-          coordinates: { latitude: 40.7128, longitude: -74.0060 },
+          coordinates: { latitude: 40.7128, longitude: -74.006 },
           verified: true,
         },
         status: 'completed',
@@ -77,7 +77,7 @@ describe('AnalyticsAgent', () => {
         actualEnd: new Date('2024-01-02T15:00:00Z'),
         location: {
           address: '123 Test St',
-          coordinates: { latitude: 40.7128, longitude: -74.0060 },
+          coordinates: { latitude: 40.7128, longitude: -74.006 },
           verified: true,
         },
         status: 'completed',
@@ -105,7 +105,9 @@ describe('AnalyticsAgent', () => {
       expect(analyticsAgent.name).toBe('Analytics Agent');
       expect(analyticsAgent.priority).toBe(6);
       expect(analyticsAgent.capabilities).toContain('learning-analytics');
-      expect(analyticsAgent.capabilities).toContain('learning-pattern-analysis');
+      expect(analyticsAgent.capabilities).toContain(
+        'learning-pattern-analysis'
+      );
       expect(analyticsAgent.capabilities).toContain('gap-detection');
       expect(analyticsAgent.capabilities).toContain('weekly-reports');
       expect(analyticsAgent.capabilities).toContain('alert-generation');
@@ -131,12 +133,14 @@ describe('AnalyticsAgent', () => {
         ...mockContext,
         eventType: 'learning_pattern_analysis',
         historicalData: {
-          sessions: Array(6).fill(null).map((_, i) => ({
-            ...mockSessions[0],
-            id: `session-${i + 1}`,
-            scheduledStart: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)),
-            subject: i % 2 === 0 ? 'mathematics' : 'science',
-          })),
+          sessions: Array(6)
+            .fill(null)
+            .map((_, i) => ({
+              ...mockSessions[0],
+              id: `session-${i + 1}`,
+              scheduledStart: new Date(Date.now() - i * 24 * 60 * 60 * 1000),
+              subject: i % 2 === 0 ? 'mathematics' : 'science',
+            })),
           analytics: [],
           interactions: [],
         },
@@ -293,11 +297,13 @@ describe('AnalyticsAgent', () => {
       const trendContext = {
         ...mockContext,
         eventType: 'trend_analysis', // Explicitly set event type
-        sessionData: Array(6).fill(null).map((_, i) => ({
-          ...mockSessions[0],
-          id: `session-${i + 1}`,
-          scheduledStart: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)),
-        })),
+        sessionData: Array(6)
+          .fill(null)
+          .map((_, i) => ({
+            ...mockSessions[0],
+            id: `session-${i + 1}`,
+            scheduledStart: new Date(Date.now() - i * 24 * 60 * 60 * 1000),
+          })),
       };
 
       const result = await analyticsAgent.execute(trendContext);
@@ -374,7 +380,9 @@ describe('AnalyticsAgent', () => {
       const result = await analyticsAgent.execute(errorContext);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Insufficient historical data for learning pattern analysis');
+      expect(result.error).toContain(
+        'Insufficient historical data for learning pattern analysis'
+      );
     });
 
     it('should handle general analytics fallback', async () => {
@@ -415,11 +423,13 @@ describe('AnalyticsAgent', () => {
         ...mockContext,
         eventType: 'learning_pattern_analysis',
         historicalData: {
-          sessions: Array(6).fill(null).map((_, i) => ({
-            ...mockSessions[0],
-            id: `session-${i + 1}`,
-            scheduledStart: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)),
-          })),
+          sessions: Array(6)
+            .fill(null)
+            .map((_, i) => ({
+              ...mockSessions[0],
+              id: `session-${i + 1}`,
+              scheduledStart: new Date(Date.now() - i * 24 * 60 * 60 * 1000),
+            })),
           analytics: [],
           interactions: [],
         },
@@ -428,7 +438,7 @@ describe('AnalyticsAgent', () => {
       const result = await analyticsAgent.execute(patternContext);
       expect(result.success).toBe(true);
       expect(result.insights).toBeDefined();
-      
+
       if (result.insights && result.insights.length > 0) {
         const insight = result.insights[0];
         expect(insight).toHaveProperty('id');
@@ -436,9 +446,9 @@ describe('AnalyticsAgent', () => {
         expect(insight).toHaveProperty('content');
         expect(insight).toHaveProperty('confidence');
         expect(insight).toHaveProperty('createdAt');
-        expect(typeof insight.confidence).toBe('number');
-        expect(insight.confidence).toBeGreaterThanOrEqual(0);
-        expect(insight.confidence).toBeLessThanOrEqual(1);
+        expect(typeof insight!.confidence).toBe('number');
+        expect(insight!.confidence).toBeGreaterThanOrEqual(0);
+        expect(insight!.confidence).toBeLessThanOrEqual(1);
       }
     });
   });

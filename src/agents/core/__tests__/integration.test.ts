@@ -46,15 +46,29 @@ describe('Core AI Agent Architecture Integration', () => {
       user: null,
       sessionData: [],
       preferences: {
-        notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+        notifications: {
+          email: true,
+          push: true,
+          sms: false,
+          inApp: true,
+          frequency: 'immediate',
+        },
         dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
         privacy: { dataSharing: false, analytics: true, aiTraining: true },
-        accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+        accessibility: {
+          fontSize: 'medium',
+          highContrast: false,
+          reducedMotion: false,
+          screenReader: false,
+        },
       },
       historicalData: { sessions: [], analytics: [], interactions: [] },
     };
 
-    const result = await orchestrator.executeAgent('simple-test-agent', context);
+    const result = await orchestrator.executeAgent(
+      'simple-test-agent',
+      context
+    );
 
     expect(result.success).toBe(true);
     expect(result.data.message).toBe('Simple test execution completed');
@@ -67,15 +81,29 @@ describe('Core AI Agent Architecture Integration', () => {
       user: null,
       sessionData: [],
       preferences: {
-        notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+        notifications: {
+          email: true,
+          push: true,
+          sms: false,
+          inApp: true,
+          frequency: 'immediate',
+        },
         dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
         privacy: { dataSharing: false, analytics: true, aiTraining: true },
-        accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+        accessibility: {
+          fontSize: 'medium',
+          highContrast: false,
+          reducedMotion: false,
+          screenReader: false,
+        },
       },
       historicalData: { sessions: [], analytics: [], interactions: [] },
     };
 
-    const result = await orchestrator.executeAgent('non-existent-agent', context);
+    const result = await orchestrator.executeAgent(
+      'non-existent-agent',
+      context
+    );
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("Agent 'non-existent-agent' not found");
@@ -110,10 +138,21 @@ describe('Core AI Agent Architecture Integration', () => {
       user: null,
       sessionData: [],
       preferences: {
-        notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+        notifications: {
+          email: true,
+          push: true,
+          sms: false,
+          inApp: true,
+          frequency: 'immediate',
+        },
         dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
         privacy: { dataSharing: false, analytics: true, aiTraining: true },
-        accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+        accessibility: {
+          fontSize: 'medium',
+          highContrast: false,
+          reducedMotion: false,
+          screenReader: false,
+        },
       },
       historicalData: { sessions: [], analytics: [], interactions: [] },
     };
@@ -121,8 +160,8 @@ describe('Core AI Agent Architecture Integration', () => {
     const results = await orchestrator.executeByCapability('test', context);
 
     expect(results).toHaveLength(1);
-    expect(results[0].success).toBe(true);
-    expect(results[0].data.message).toBe('Simple test execution completed');
+    expect(results[0]!.success).toBe(true);
+    expect(results[0]!.data.message).toBe('Simple test execution completed');
   });
 
   it('should validate AgentContext structure', () => {
@@ -133,20 +172,42 @@ describe('Core AI Agent Architecture Integration', () => {
         name: 'Test User',
         role: 'parent',
         preferences: {
-          notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+          notifications: {
+            email: true,
+            push: true,
+            sms: false,
+            inApp: true,
+            frequency: 'immediate',
+          },
           dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
           privacy: { dataSharing: false, analytics: true, aiTraining: true },
-          accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+          accessibility: {
+            fontSize: 'medium',
+            highContrast: false,
+            reducedMotion: false,
+            screenReader: false,
+          },
         },
         createdAt: new Date(),
         lastActive: new Date(),
       },
       sessionData: [],
       preferences: {
-        notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+        notifications: {
+          email: true,
+          push: true,
+          sms: false,
+          inApp: true,
+          frequency: 'immediate',
+        },
         dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
         privacy: { dataSharing: false, analytics: true, aiTraining: true },
-        accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+        accessibility: {
+          fontSize: 'medium',
+          highContrast: false,
+          reducedMotion: false,
+          screenReader: false,
+        },
       },
       historicalData: { sessions: [], analytics: [], interactions: [] },
       timestamp: Date.now(),
@@ -167,15 +228,29 @@ describe('Core AI Agent Architecture Integration', () => {
       user: null,
       sessionData: [],
       preferences: {
-        notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+        notifications: {
+          email: true,
+          push: true,
+          sms: false,
+          inApp: true,
+          frequency: 'immediate',
+        },
         dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
         privacy: { dataSharing: false, analytics: true, aiTraining: true },
-        accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+        accessibility: {
+          fontSize: 'medium',
+          highContrast: false,
+          reducedMotion: false,
+          screenReader: false,
+        },
       },
       historicalData: { sessions: [], analytics: [], interactions: [] },
     };
 
-    const result = await orchestrator.executeAgent('simple-test-agent', context);
+    const result = await orchestrator.executeAgent(
+      'simple-test-agent',
+      context
+    );
 
     expect(result.success).toBe(true);
     expect(result.data).toBeDefined();

@@ -10,7 +10,10 @@ class TestAgent extends BaseAIAgent {
 
   private shouldFail = false;
   private executionDelay = 0;
-  private customValidation?: (context: AgentContext) => { isValid: boolean; error?: string };
+  private customValidation?: (context: AgentContext) => {
+    isValid: boolean;
+    error?: string;
+  };
 
   public async execute(context: AgentContext): Promise<AgentResult> {
     if (this.executionDelay > 0) {
@@ -23,13 +26,15 @@ class TestAgent extends BaseAIAgent {
 
     const insights = [];
     if (context.sessionId) {
-      insights.push(this.createInsight(
-        context.sessionId,
-        'recommendation',
-        'Test insight generated',
-        0.8,
-        { testData: true }
-      ));
+      insights.push(
+        this.createInsight(
+          context.sessionId,
+          'recommendation',
+          'Test insight generated',
+          0.8,
+          { testData: true }
+        )
+      );
     }
 
     return this.createSuccessResult(
@@ -42,7 +47,15 @@ class TestAgent extends BaseAIAgent {
         },
       },
       insights,
-      [{ id: 'test-action', type: 'test', description: 'Test action', priority: 1, automated: false }]
+      [
+        {
+          id: 'test-action',
+          type: 'test',
+          description: 'Test action',
+          priority: 1,
+          automated: false,
+        },
+      ]
     );
   }
 
@@ -55,11 +68,16 @@ class TestAgent extends BaseAIAgent {
     this.executionDelay = delay;
   }
 
-  public setCustomValidation(validation: (context: AgentContext) => { isValid: boolean; error?: string }): void {
+  public setCustomValidation(
+    validation: (context: AgentContext) => { isValid: boolean; error?: string }
+  ): void {
     this.customValidation = validation;
   }
 
-  protected validateContext(context: AgentContext): { isValid: boolean; error?: string } {
+  protected validateContext(context: AgentContext): {
+    isValid: boolean;
+    error?: string;
+  } {
     if (this.customValidation) {
       return this.customValidation(context);
     }
@@ -108,10 +126,25 @@ describe('BaseAIAgent', () => {
     name: 'Test User',
     role: 'parent' as const,
     preferences: {
-      notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' as const },
-      dashboard: { layout: 'detailed' as const, theme: 'light' as const, widgets: [] },
+      notifications: {
+        email: true,
+        push: true,
+        sms: false,
+        inApp: true,
+        frequency: 'immediate' as const,
+      },
+      dashboard: {
+        layout: 'detailed' as const,
+        theme: 'light' as const,
+        widgets: [],
+      },
       privacy: { dataSharing: false, analytics: true, aiTraining: true },
-      accessibility: { fontSize: 'medium' as const, highContrast: false, reducedMotion: false, screenReader: false }
+      accessibility: {
+        fontSize: 'medium' as const,
+        highContrast: false,
+        reducedMotion: false,
+        screenReader: false,
+      },
     },
     createdAt: new Date(),
     lastActive: new Date(),
@@ -182,7 +215,7 @@ describe('BaseAIAgent', () => {
 
     it('should handle execution errors', async () => {
       testAgent.setShouldFail(true);
-      
+
       const result = await testAgent.executeWithTracking(baseContext);
 
       expect(result.success).toBe(false);
@@ -193,17 +226,17 @@ describe('BaseAIAgent', () => {
     it('should track performance metrics', async () => {
       // Set a small delay to ensure measurable execution time
       testAgent.setExecutionDelay(2);
-      
+
       await testAgent.executeWithTracking(baseContext);
       await testAgent.executeWithTracking(baseContext);
-      
+
       testAgent.setShouldFail(true);
       await testAgent.executeWithTracking(baseContext);
 
       const stats = testAgent.getPerformanceStats();
       expect(stats.executionCount).toBe(3);
       expect(stats.errorCount).toBe(1);
-      expect(stats.errorRate).toBeCloseTo(1/3);
+      expect(stats.errorRate).toBeCloseTo(1 / 3);
       expect(stats.averageExecutionTime).toBeGreaterThan(0);
       expect(stats.lastExecution).toBeInstanceOf(Date);
       expect(stats.isHealthy).toBe(false);
@@ -237,22 +270,25 @@ describe('BaseAIAgent', () => {
 
     it('should validate user-dependent agents', async () => {
       const contextWithoutUser = { ...baseContext, user: null };
-      const result = await userDependentAgent.executeWithTracking(contextWithoutUser);
-      
+      const result =
+        await userDependentAgent.executeWithTracking(contextWithoutUser);
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('User context is required');
     });
 
     it('should validate session-dependent agents', async () => {
       const contextWithoutSessions = { ...baseContext, sessionData: [] };
-      const result = await sessionDependentAgent.executeWithTracking(contextWithoutSessions);
-      
+      const result = await sessionDependentAgent.executeWithTracking(
+        contextWithoutSessions
+      );
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('Session data is required');
     });
 
     it('should use custom validation', async () => {
-      testAgent.setCustomValidation((context) => {
+      testAgent.setCustomValidation(context => {
         if (!context.timestamp) {
           return { isValid: false, error: 'Timestamp is required' };
         }
@@ -262,7 +298,9 @@ describe('BaseAIAgent', () => {
       const contextWithoutTimestamp = { ...baseContext };
       delete contextWithoutTimestamp.timestamp;
 
-      const result = await testAgent.executeWithTracking(contextWithoutTimestamp);
+      const result = await testAgent.executeWithTracking(
+        contextWithoutTimestamp
+      );
       expect(result.success).toBe(false);
       expect(result.error).toContain('Timestamp is required');
     });
@@ -300,14 +338,14 @@ describe('BaseAIAgent', () => {
 
       expect(result.success).toBe(true);
       expect(result.insights).toHaveLength(1);
-      
+
       const insight = result.insights![0];
-      expect(insight.sessionId).toBe('session1');
-      expect(insight.type).toBe('recommendation');
-      expect(insight.content).toBe('Test insight generated');
-      expect(insight.confidence).toBe(0.8);
-      expect(insight.metadata?.agentId).toBe('test-agent');
-      expect(insight.metadata?.testData).toBe(true);
+      expect(insight!.sessionId).toBe('session1');
+      expect(insight!.type).toBe('recommendation');
+      expect(insight!.content).toBe('Test insight generated');
+      expect(insight!.confidence).toBe(0.8);
+      expect(insight!.metadata?.agentId).toBe('test-agent');
+      expect(insight!.metadata?.testData).toBe(true);
     });
 
     it('should clamp confidence values', async () => {
@@ -320,8 +358,18 @@ describe('BaseAIAgent', () => {
 
         public async execute(context: AgentContext): Promise<AgentResult> {
           const insights = [
-            this.createInsight('session1', 'recommendation', 'High confidence', 1.5), // Should clamp to 1
-            this.createInsight('session1', 'recommendation', 'Negative confidence', -0.5), // Should clamp to 0
+            this.createInsight(
+              'session1',
+              'recommendation',
+              'High confidence',
+              1.5
+            ), // Should clamp to 1
+            this.createInsight(
+              'session1',
+              'recommendation',
+              'Negative confidence',
+              -0.5
+            ), // Should clamp to 0
           ];
 
           return this.createSuccessResult({ test: true }, insights);
@@ -332,8 +380,8 @@ describe('BaseAIAgent', () => {
       const result = await confidenceAgent.executeWithTracking(baseContext);
 
       expect(result.insights).toHaveLength(2);
-      expect(result.insights![0].confidence).toBe(1);
-      expect(result.insights![1].confidence).toBe(0);
+      expect(result.insights![0]!.confidence).toBe(1);
+      expect(result.insights![1]!.confidence).toBe(0);
     });
   });
 
@@ -377,11 +425,9 @@ describe('BaseAIAgent', () => {
       // Access protected method through type assertion
       (testAgent as any).log('info', 'Test message', { test: true });
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        '[Test Agent]',
-        'Test message',
-        { test: true }
-      );
+      expect(consoleSpy).toHaveBeenCalledWith('[Test Agent]', 'Test message', {
+        test: true,
+      });
     });
   });
 
@@ -391,13 +437,25 @@ describe('BaseAIAgent', () => {
       const fallback = 0;
 
       // Access protected method through type assertion
-      const result1 = (testAgent as any).processContextData({ value: 5 }, processor, fallback);
+      const result1 = (testAgent as any).processContextData(
+        { value: 5 },
+        processor,
+        fallback
+      );
       expect(result1).toBe(10);
 
-      const result2 = (testAgent as any).processContextData(null, processor, fallback);
+      const result2 = (testAgent as any).processContextData(
+        null,
+        processor,
+        fallback
+      );
       expect(result2).toBe(0);
 
-      const result3 = (testAgent as any).processContextData({ invalid: true }, processor, fallback);
+      const result3 = (testAgent as any).processContextData(
+        { invalid: true },
+        processor,
+        fallback
+      );
       expect(result3).toBe(0);
     });
 
@@ -407,7 +465,9 @@ describe('BaseAIAgent', () => {
       expect(sessions).toEqual([mockSession]);
 
       const emptyContext = { ...baseContext, sessionData: [] };
-      const emptySessions = (testAgent as any).extractRelevantSessions(emptyContext);
+      const emptySessions = (testAgent as any).extractRelevantSessions(
+        emptyContext
+      );
       expect(emptySessions).toEqual([]);
     });
   });
@@ -415,10 +475,13 @@ describe('BaseAIAgent', () => {
   describe('Execution Summary', () => {
     it('should generate execution summary', async () => {
       const result = await testAgent.executeWithTracking(baseContext);
-      
+
       // Access protected method through type assertion
-      const summary = (testAgent as any).generateExecutionSummary(baseContext, result);
-      
+      const summary = (testAgent as any).generateExecutionSummary(
+        baseContext,
+        result
+      );
+
       expect(summary).toContain('Agent: Test Agent');
       expect(summary).toContain('Success: true');
       expect(summary).toContain('Execution Time:');
@@ -429,10 +492,13 @@ describe('BaseAIAgent', () => {
     it('should include error in summary', async () => {
       testAgent.setShouldFail(true);
       const result = await testAgent.executeWithTracking(baseContext);
-      
+
       // Access protected method through type assertion
-      const summary = (testAgent as any).generateExecutionSummary(baseContext, result);
-      
+      const summary = (testAgent as any).generateExecutionSummary(
+        baseContext,
+        result
+      );
+
       expect(summary).toContain('Success: false');
       expect(summary).toContain('Error:');
     });

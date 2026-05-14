@@ -1,4 +1,9 @@
-import { AgentContext, AgentResult, AIInsight, RecommendedAction } from '@/types';
+import {
+  AgentContext,
+  AgentResult,
+  AIInsight,
+  RecommendedAction,
+} from '@/types';
 
 describe('Agent Interfaces', () => {
   describe('AgentContext', () => {
@@ -7,10 +12,21 @@ describe('Agent Interfaces', () => {
         user: null,
         sessionData: [],
         preferences: {
-          notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+          notifications: {
+            email: true,
+            push: true,
+            sms: false,
+            inApp: true,
+            frequency: 'immediate',
+          },
           dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
           privacy: { dataSharing: false, analytics: true, aiTraining: true },
-          accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+          accessibility: {
+            fontSize: 'medium',
+            highContrast: false,
+            reducedMotion: false,
+            screenReader: false,
+          },
         },
         historicalData: { sessions: [], analytics: [], interactions: [] },
       };
@@ -29,10 +45,25 @@ describe('Agent Interfaces', () => {
         name: 'Test User',
         role: 'parent' as const,
         preferences: {
-          notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' as const },
-          dashboard: { layout: 'detailed' as const, theme: 'light' as const, widgets: [] },
+          notifications: {
+            email: true,
+            push: true,
+            sms: false,
+            inApp: true,
+            frequency: 'immediate' as const,
+          },
+          dashboard: {
+            layout: 'detailed' as const,
+            theme: 'light' as const,
+            widgets: [],
+          },
           privacy: { dataSharing: false, analytics: true, aiTraining: true },
-          accessibility: { fontSize: 'medium' as const, highContrast: false, reducedMotion: false, screenReader: false }
+          accessibility: {
+            fontSize: 'medium' as const,
+            highContrast: false,
+            reducedMotion: false,
+            screenReader: false,
+          },
         },
         createdAt: new Date(),
         lastActive: new Date(),
@@ -57,10 +88,21 @@ describe('Agent Interfaces', () => {
         user: null,
         sessionData: [],
         preferences: {
-          notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+          notifications: {
+            email: true,
+            push: true,
+            sms: false,
+            inApp: true,
+            frequency: 'immediate',
+          },
           dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
           privacy: { dataSharing: false, analytics: true, aiTraining: true },
-          accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+          accessibility: {
+            fontSize: 'medium',
+            highContrast: false,
+            reducedMotion: false,
+            screenReader: false,
+          },
         },
         historicalData: { sessions: [], analytics: [], interactions: [] },
         tokenData: { token: 'abc123', expiry: Date.now() + 3600000 },
@@ -84,15 +126,29 @@ describe('Agent Interfaces', () => {
         user: null,
         sessionData: [],
         preferences: {
-          notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+          notifications: {
+            email: true,
+            push: true,
+            sms: false,
+            inApp: true,
+            frequency: 'immediate',
+          },
           dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
           privacy: { dataSharing: false, analytics: true, aiTraining: true },
-          accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+          accessibility: {
+            fontSize: 'medium',
+            highContrast: false,
+            reducedMotion: false,
+            screenReader: false,
+          },
         },
         historicalData: { sessions: [], analytics: [], interactions: [] },
         urgencyLevel: 'high',
         batchMode: true,
-        batchData: [{ id: 1, data: 'test' }, { id: 2, data: 'test2' }],
+        batchData: [
+          { id: 1, data: 'test' },
+          { id: 2, data: 'test2' },
+        ],
       };
 
       expect(context.urgencyLevel).toBe('high');
@@ -105,10 +161,21 @@ describe('Agent Interfaces', () => {
         user: null,
         sessionData: [],
         preferences: {
-          notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+          notifications: {
+            email: true,
+            push: true,
+            sms: false,
+            inApp: true,
+            frequency: 'immediate',
+          },
           dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
           privacy: { dataSharing: false, analytics: true, aiTraining: true },
-          accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+          accessibility: {
+            fontSize: 'medium',
+            highContrast: false,
+            reducedMotion: false,
+            screenReader: false,
+          },
         },
         historicalData: { sessions: [], analytics: [], interactions: [] },
         notificationPreferences: {
@@ -116,7 +183,7 @@ describe('Agent Interfaces', () => {
           push: false,
           sms: true,
           inApp: true,
-          frequency: 'daily'
+          frequency: 'daily',
         },
         communicationChannel: 'email',
       };
@@ -130,16 +197,27 @@ describe('Agent Interfaces', () => {
         user: null,
         sessionData: [],
         preferences: {
-          notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+          notifications: {
+            email: true,
+            push: true,
+            sms: false,
+            inApp: true,
+            frequency: 'immediate',
+          },
           dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
           privacy: { dataSharing: false, analytics: true, aiTraining: true },
-          accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+          accessibility: {
+            fontSize: 'medium',
+            highContrast: false,
+            reducedMotion: false,
+            screenReader: false,
+          },
         },
         historicalData: { sessions: [], analytics: [], interactions: [] },
         analyticsScope: 'student',
         timeRange: {
           start: new Date('2024-01-01'),
-          end: new Date('2024-12-31')
+          end: new Date('2024-12-31'),
         },
       };
 
@@ -154,10 +232,21 @@ describe('Agent Interfaces', () => {
         user: null,
         sessionData: [],
         preferences: {
-          notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+          notifications: {
+            email: true,
+            push: true,
+            sms: false,
+            inApp: true,
+            frequency: 'immediate',
+          },
           dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
           privacy: { dataSharing: false, analytics: true, aiTraining: true },
-          accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+          accessibility: {
+            fontSize: 'medium',
+            highContrast: false,
+            reducedMotion: false,
+            screenReader: false,
+          },
         },
         historicalData: { sessions: [], analytics: [], interactions: [] },
         healthCheck: true,
@@ -229,10 +318,10 @@ describe('Agent Interfaces', () => {
       };
 
       expect(result.insights).toHaveLength(2);
-      expect(result.insights![0].type).toBe('recommendation');
-      expect(result.insights![1].type).toBe('alert');
-      expect(result.insights![0].confidence).toBe(0.85);
-      expect(result.insights![1].confidence).toBe(1.0);
+      expect(result.insights![0]!.type).toBe('recommendation');
+      expect(result.insights![1]!.type).toBe('alert');
+      expect(result.insights![0]!.confidence).toBe(0.85);
+      expect(result.insights![1]!.confidence).toBe(1.0);
     });
 
     it('should create AgentResult with recommended actions', () => {
@@ -260,10 +349,10 @@ describe('Agent Interfaces', () => {
       };
 
       expect(result.actions).toHaveLength(2);
-      expect(result.actions![0].type).toBe('schedule');
-      expect(result.actions![1].type).toBe('notification');
-      expect(result.actions![0].automated).toBe(false);
-      expect(result.actions![1].automated).toBe(true);
+      expect(result.actions![0]!.type).toBe('schedule');
+      expect(result.actions![1]!.type).toBe('notification');
+      expect(result.actions![0]!.automated).toBe(false);
+      expect(result.actions![1]!.automated).toBe(true);
     });
 
     it('should create AgentResult with performance metrics', () => {
@@ -282,7 +371,11 @@ describe('Agent Interfaces', () => {
       const result: AgentResult = {
         success: true,
         data: { processed: true },
-        nextActions: ['validate_results', 'send_notifications', 'update_analytics'],
+        nextActions: [
+          'validate_results',
+          'send_notifications',
+          'update_analytics',
+        ],
         metadata: {
           agentId: 'test-agent',
           agentName: 'Test Agent',
@@ -359,10 +452,21 @@ describe('Agent Interfaces', () => {
         user: null,
         sessionData: [],
         preferences: {
-          notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+          notifications: {
+            email: true,
+            push: true,
+            sms: false,
+            inApp: true,
+            frequency: 'immediate',
+          },
           dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
           privacy: { dataSharing: false, analytics: true, aiTraining: true },
-          accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+          accessibility: {
+            fontSize: 'medium',
+            highContrast: false,
+            reducedMotion: false,
+            screenReader: false,
+          },
         },
         historicalData: { sessions: [], analytics: [], interactions: [] },
       };
@@ -391,10 +495,21 @@ describe('Agent Interfaces', () => {
         user: null,
         sessionData: [],
         preferences: {
-          notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+          notifications: {
+            email: true,
+            push: true,
+            sms: false,
+            inApp: true,
+            frequency: 'immediate',
+          },
           dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
           privacy: { dataSharing: false, analytics: true, aiTraining: true },
-          accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+          accessibility: {
+            fontSize: 'medium',
+            highContrast: false,
+            reducedMotion: false,
+            screenReader: false,
+          },
         },
         historicalData: { sessions: [], analytics: [], interactions: [] },
       };

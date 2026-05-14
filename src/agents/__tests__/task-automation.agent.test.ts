@@ -19,10 +19,21 @@ describe('TaskAutomationAgent', () => {
       name: 'Test User',
       role: 'parent',
       preferences: {
-        notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+        notifications: {
+          email: true,
+          push: true,
+          sms: false,
+          inApp: true,
+          frequency: 'immediate',
+        },
         dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
         privacy: { dataSharing: false, analytics: true, aiTraining: true },
-        accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+        accessibility: {
+          fontSize: 'medium',
+          highContrast: false,
+          reducedMotion: false,
+          screenReader: false,
+        },
       },
       createdAt: new Date(),
       lastActive: new Date(),
@@ -40,7 +51,7 @@ describe('TaskAutomationAgent', () => {
       actualEnd: new Date('2024-01-15T11:55:00Z'),
       location: {
         address: '123 Test St',
-        coordinates: { latitude: 40.7128, longitude: -74.0060 },
+        coordinates: { latitude: 40.7128, longitude: -74.006 },
         verified: true,
       },
       status: 'completed',
@@ -51,17 +62,29 @@ describe('TaskAutomationAgent', () => {
 
     mockHistoricalData = {
       sessions: [mockSession],
-      analytics: [{
-        studentId: 'student1',
-        subject: 'Math',
-        progressMetrics: [
-          { metric: 'comprehension', value: 0.8, trend: 'improving', period: 'weekly' },
-          { metric: 'problem_solving', value: 0.7, trend: 'stable', period: 'weekly' },
-        ],
-        learningPatterns: [],
-        recommendations: [],
-        lastUpdated: new Date(),
-      }],
+      analytics: [
+        {
+          studentId: 'student1',
+          subject: 'Math',
+          progressMetrics: [
+            {
+              metric: 'comprehension',
+              value: 0.8,
+              trend: 'improving',
+              period: 'weekly',
+            },
+            {
+              metric: 'problem_solving',
+              value: 0.7,
+              trend: 'stable',
+              period: 'weekly',
+            },
+          ],
+          learningPatterns: [],
+          recommendations: [],
+          lastUpdated: new Date(),
+        },
+      ],
       interactions: [],
     };
 
@@ -110,7 +133,11 @@ describe('TaskAutomationAgent', () => {
     });
 
     it('should determine timesheet_automation for batch mode', () => {
-      const context = { ...baseContext, batchMode: true, batchData: [mockSession] };
+      const context = {
+        ...baseContext,
+        batchMode: true,
+        batchData: [mockSession],
+      };
       const taskType = (agent as any).determineTaskType(context);
       expect(taskType).toBe('timesheet_automation');
     });
@@ -147,7 +174,9 @@ describe('TaskAutomationAgent', () => {
       expect(result.insights!.length).toBeGreaterThan(0);
 
       // Check that timesheet creation was attempted
-      const timesheetTask = result.data.automatedTasks.find((t: any) => t.task === 'timesheet_creation');
+      const timesheetTask = result.data.automatedTasks.find(
+        (t: any) => t.task === 'timesheet_creation'
+      );
       expect(timesheetTask).toBeDefined();
       expect(timesheetTask.status).toBe('completed');
     });
@@ -173,7 +202,9 @@ describe('TaskAutomationAgent', () => {
         location: mockSession.location,
       };
 
-      const timesheetEntry = await (agent as any).createTimesheetEntry(sessionData);
+      const timesheetEntry = await (agent as any).createTimesheetEntry(
+        sessionData
+      );
 
       expect(timesheetEntry.id).toBeDefined();
       expect(timesheetEntry.sessionId).toBe('session1');
@@ -193,16 +224,23 @@ describe('TaskAutomationAgent', () => {
         subject: 'Math',
       };
 
-      const notifications = await (agent as any).sendSessionStartNotifications(sessionData, mockUser);
+      const notifications = await (agent as any).sendSessionStartNotifications(
+        sessionData,
+        mockUser
+      );
 
       expect(notifications.length).toBeGreaterThan(0);
-      
-      const parentNotification = notifications.find((n: any) => n.recipient === 'parent1');
+
+      const parentNotification = notifications.find(
+        (n: any) => n.recipient === 'parent1'
+      );
       expect(parentNotification).toBeDefined();
       expect(parentNotification.type).toBe('session_started');
       expect(parentNotification.channel).toBe('push');
 
-      const teacherNotification = notifications.find((n: any) => n.recipient === 'teacher1');
+      const teacherNotification = notifications.find(
+        (n: any) => n.recipient === 'teacher1'
+      );
       expect(teacherNotification).toBeDefined();
       expect(teacherNotification.type).toBe('session_confirmation');
     });
@@ -250,7 +288,9 @@ describe('TaskAutomationAgent', () => {
         actualEnd: mockSession.actualEnd!.getTime(),
       };
 
-      const finalization = await (agent as any).finalizeTimesheetEntry(sessionData);
+      const finalization = await (agent as any).finalizeTimesheetEntry(
+        sessionData
+      );
 
       expect(finalization.sessionId).toBe('session1');
       expect(finalization.hours).toBeCloseTo(1.83, 1); // ~110 minutes
@@ -266,7 +306,10 @@ describe('TaskAutomationAgent', () => {
         subject: 'Math',
       };
 
-      const summary = await (agent as any).generateSessionSummary(sessionData, mockHistoricalData);
+      const summary = await (agent as any).generateSessionSummary(
+        sessionData,
+        mockHistoricalData
+      );
 
       expect(summary.sessionId).toBe('session1');
       expect(summary.summary).toBeDefined();
@@ -285,7 +328,10 @@ describe('TaskAutomationAgent', () => {
         duration: 2,
       };
 
-      const progressUpdate = await (agent as any).updateProgressTracking(sessionData, mockHistoricalData);
+      const progressUpdate = await (agent as any).updateProgressTracking(
+        sessionData,
+        mockHistoricalData
+      );
 
       expect(progressUpdate.studentId).toBe('student1');
       expect(progressUpdate.subject).toBe('Math');
@@ -305,16 +351,23 @@ describe('TaskAutomationAgent', () => {
         subject: 'Math',
       };
 
-      const followUpActions = await (agent as any).scheduleFollowUpActions(sessionData, mockHistoricalData);
+      const followUpActions = await (agent as any).scheduleFollowUpActions(
+        sessionData,
+        mockHistoricalData
+      );
 
       expect(followUpActions.length).toBeGreaterThan(0);
-      
-      const homeworkReminder = followUpActions.find((a: any) => a.action === 'homework_reminder');
+
+      const homeworkReminder = followUpActions.find(
+        (a: any) => a.action === 'homework_reminder'
+      );
       expect(homeworkReminder).toBeDefined();
       expect(homeworkReminder.recipient).toBe('student1');
       expect(homeworkReminder.automated).toBe(true);
 
-      const progressReview = followUpActions.find((a: any) => a.action === 'progress_review');
+      const progressReview = followUpActions.find(
+        (a: any) => a.action === 'progress_review'
+      );
       expect(progressReview).toBeDefined();
       expect(progressReview.recipient).toBe('parent1');
     });
@@ -363,7 +416,7 @@ describe('TaskAutomationAgent', () => {
         id: 'session2',
         scheduledStart: new Date('2024-01-15T11:30:00Z'),
         scheduledEnd: new Date('2024-01-15T13:30:00Z'),
-        location: mockSession.location, // Same location
+        ...(mockSession.location ? { location: mockSession.location } : {}), // Same location
       };
 
       const sessions = [mockSession, locationConflictSession];
@@ -389,31 +442,45 @@ describe('TaskAutomationAgent', () => {
         },
       ];
 
-      const resolutions = await (agent as any).generateConflictResolutions(conflicts, [mockSession]);
+      const resolutions = await (agent as any).generateConflictResolutions(
+        conflicts,
+        [mockSession]
+      );
 
       expect(resolutions.length).toBe(2);
-      
-      const timeResolution = resolutions.find((r: any) => r.type === 'reschedule');
+
+      const timeResolution = resolutions.find(
+        (r: any) => r.type === 'reschedule'
+      );
       expect(timeResolution).toBeDefined();
       expect(timeResolution.priority).toBe(8);
-      expect(timeResolution.suggestedActions).toContain('Move session to next available slot');
+      expect(timeResolution.suggestedActions).toContain(
+        'Move session to next available slot'
+      );
 
-      const resourceResolution = resolutions.find((r: any) => r.type === 'resource_reallocation');
+      const resourceResolution = resolutions.find(
+        (r: any) => r.type === 'resource_reallocation'
+      );
       expect(resourceResolution).toBeDefined();
       expect(resourceResolution.priority).toBe(9);
-      expect(resourceResolution.suggestedActions).toContain('Find substitute teacher');
+      expect(resourceResolution.suggestedActions).toContain(
+        'Find substitute teacher'
+      );
     });
 
     it('should handle conflict detection execution', async () => {
       const context = {
         ...baseContext,
         eventType: 'conflict_detected',
-        sessionData: [mockSession, {
-          ...mockSession,
-          id: 'session2',
-          scheduledStart: new Date('2024-01-15T11:00:00Z'),
-          scheduledEnd: new Date('2024-01-15T13:00:00Z'),
-        }],
+        sessionData: [
+          mockSession,
+          {
+            ...mockSession,
+            id: 'session2',
+            scheduledStart: new Date('2024-01-15T11:00:00Z'),
+            scheduledEnd: new Date('2024-01-15T13:00:00Z'),
+          },
+        ],
       };
 
       const result = await agent.execute(context);
@@ -459,15 +526,22 @@ describe('TaskAutomationAgent', () => {
         endTime: new Date(),
       };
 
-      const discrepancies = await (agent as any).detectTimesheetDiscrepancies([longSession, shortSession]);
+      const discrepancies = await (agent as any).detectTimesheetDiscrepancies([
+        longSession,
+        shortSession,
+      ]);
 
       expect(discrepancies.length).toBe(2);
-      
-      const longDiscrepancy = discrepancies.find((d: any) => d.type === 'long_session');
+
+      const longDiscrepancy = discrepancies.find(
+        (d: any) => d.type === 'long_session'
+      );
       expect(longDiscrepancy).toBeDefined();
       expect(longDiscrepancy.severity).toBe('medium');
 
-      const shortDiscrepancy = discrepancies.find((d: any) => d.type === 'short_session');
+      const shortDiscrepancy = discrepancies.find(
+        (d: any) => d.type === 'short_session'
+      );
       expect(shortDiscrepancy).toBeDefined();
       expect(shortDiscrepancy.severity).toBe('low');
     });
@@ -555,8 +629,11 @@ describe('TaskAutomationAgent', () => {
         scheduledEnd: new Date('2024-01-15T13:00:00Z'),
       };
 
-      const overlapDuration = (agent as any).calculateOverlapDuration(session1, session2);
-      
+      const overlapDuration = (agent as any).calculateOverlapDuration(
+        session1,
+        session2
+      );
+
       // 1 hour overlap (11:00-12:00)
       expect(overlapDuration).toBe(60 * 60 * 1000); // 1 hour in milliseconds
     });

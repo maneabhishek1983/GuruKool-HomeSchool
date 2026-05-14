@@ -3,7 +3,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { z } from 'zod';
 import { useForm, FormProvider } from 'react-hook-form';
-import { SmartForm, AutoCompleteInput, DateTimePicker, FileUpload } from '../index';
+import {
+  SmartForm,
+  AutoCompleteInput,
+  DateTimePicker,
+  FileUpload,
+} from '../index';
 
 // Mock framer-motion
 jest.mock('framer-motion', () => ({
@@ -12,7 +17,9 @@ jest.mock('framer-motion', () => ({
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     ul: ({ children, ...props }: any) => <ul {...props}>{children}</ul>,
     li: ({ children, ...props }: any) => <li {...props}>{children}</li>,
-    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+    button: ({ children, ...props }: any) => (
+      <button {...props}>{children}</button>
+    ),
     p: ({ children, ...props }: any) => <p {...props}>{children}</p>,
   },
   AnimatePresence: ({ children }: any) => children,
@@ -22,7 +29,7 @@ jest.mock('framer-motion', () => ({
 jest.mock('date-fns', () => ({
   format: jest.fn(() => 'Jan 1, 2024 10:00 AM'),
   isValid: jest.fn(() => true),
-  parseISO: jest.fn((dateStr) => new Date(dateStr)),
+  parseISO: jest.fn(dateStr => new Date(dateStr)),
 }));
 
 const formSchema = z.object({
@@ -142,7 +149,7 @@ describe('Form Components Integration', () => {
 
   it('validates all fields and shows errors', async () => {
     const user = userEvent.setup();
-    
+
     render(<CompleteForm />);
 
     const submitButton = screen.getByRole('button', { name: /submit/i });
@@ -152,8 +159,12 @@ describe('Form Components Integration', () => {
       expect(screen.getByText(/name is required/i)).toBeInTheDocument();
       expect(screen.getByText(/invalid email/i)).toBeInTheDocument();
       expect(screen.getByText(/subject is required/i)).toBeInTheDocument();
-      expect(screen.getByText(/date and time is required/i)).toBeInTheDocument();
-      expect(screen.getByText(/at least one file is required/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/date and time is required/i)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/at least one file is required/i)
+      ).toBeInTheDocument();
     });
 
     expect(mockOnSubmit).not.toHaveBeenCalled();
@@ -166,14 +177,16 @@ describe('Form Components Integration', () => {
     mockOnUpload.mockResolvedValue(['file-url']);
 
     // Create a mock file
-    const mockFile = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
-    
+    const mockFile = new File(['test content'], 'test.pdf', {
+      type: 'application/pdf',
+    });
+
     render(<CompleteForm />);
 
     // Fill out all fields
     await user.type(screen.getByLabelText('Student Name'), 'John Doe');
     await user.type(screen.getByLabelText('Email'), 'john@example.com');
-    
+
     // Use AutoComplete
     const subjectInput = screen.getByLabelText('Subject');
     await user.type(subjectInput, 'Math');
@@ -187,7 +200,9 @@ describe('Form Components Integration', () => {
     await user.type(datetimeInput, '2024-01-01T10:00');
 
     // Upload file
-    const fileInput = screen.getByRole('textbox', { hidden: true }) as HTMLInputElement;
+    const fileInput = screen.getByRole('textbox', {
+      hidden: true,
+    }) as HTMLInputElement;
     await user.upload(fileInput, mockFile);
 
     await waitFor(() => {
@@ -211,8 +226,11 @@ describe('Form Components Integration', () => {
 
   it('handles AI suggestions in AutoComplete', async () => {
     const user = userEvent.setup();
-    mockOnSuggestionsFetch.mockResolvedValue(['Advanced Mathematics', 'Mathematical Analysis']);
-    
+    mockOnSuggestionsFetch.mockResolvedValue([
+      'Advanced Mathematics',
+      'Mathematical Analysis',
+    ]);
+
     render(<CompleteForm />);
 
     const subjectInput = screen.getByLabelText('Subject');
@@ -241,7 +259,7 @@ describe('Form Components Integration', () => {
       },
     ];
     mockOnConflictCheck.mockResolvedValue(mockConflicts);
-    
+
     render(<CompleteForm />);
 
     const datetimeInput = screen.getByLabelText('Session Date & Time');
@@ -266,11 +284,15 @@ describe('Form Components Integration', () => {
       () => new Promise(resolve => setTimeout(() => resolve(['file-url']), 100))
     );
 
-    const mockFile = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
-    
+    const mockFile = new File(['test content'], 'test.pdf', {
+      type: 'application/pdf',
+    });
+
     render(<CompleteForm />);
 
-    const fileInput = screen.getByRole('textbox', { hidden: true }) as HTMLInputElement;
+    const fileInput = screen.getByRole('textbox', {
+      hidden: true,
+    }) as HTMLInputElement;
     await user.upload(fileInput, mockFile);
 
     // Should show upload progress
@@ -287,7 +309,7 @@ describe('Form Components Integration', () => {
 
   it('resets all form fields when reset is clicked', async () => {
     const user = userEvent.setup();
-    
+
     render(<CompleteForm />);
 
     // Fill some fields
@@ -302,13 +324,17 @@ describe('Form Components Integration', () => {
     await user.click(resetButton);
 
     expect(screen.queryByDisplayValue('John Doe')).not.toBeInTheDocument();
-    expect(screen.queryByDisplayValue('john@example.com')).not.toBeInTheDocument();
+    expect(
+      screen.queryByDisplayValue('john@example.com')
+    ).not.toBeInTheDocument();
   });
 
   it('shows loading state during form submission', async () => {
     const user = userEvent.setup();
-    const slowSubmit = jest.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
-    
+    const slowSubmit = jest.fn(
+      () => new Promise<void>(resolve => setTimeout(resolve, 100))
+    );
+
     const SlowForm = () => (
       <SmartForm schema={formSchema} onSubmit={slowSubmit}>
         <input name="name" defaultValue="John Doe" />
@@ -335,20 +361,20 @@ describe('Form Components Integration', () => {
   it('maintains form state across component interactions', async () => {
     const user = userEvent.setup();
     mockOnSuggestionsFetch.mockResolvedValue(['Mathematics']);
-    
+
     render(<CompleteForm />);
 
     // Fill name field
     await user.type(screen.getByLabelText('Student Name'), 'John Doe');
-    
+
     // Use autocomplete
     const subjectInput = screen.getByLabelText('Subject');
     await user.type(subjectInput, 'math');
-    
+
     await waitFor(() => {
       expect(screen.getByText('Mathematics')).toBeInTheDocument();
     });
-    
+
     await user.click(screen.getByText('Mathematics'));
 
     // Verify both fields maintain their values

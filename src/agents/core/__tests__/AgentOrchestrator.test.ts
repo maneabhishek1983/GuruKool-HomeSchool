@@ -63,9 +63,19 @@ describe('AgentOrchestrator', () => {
     // Create new instance for each test
     (AgentOrchestrator as any).instance = undefined;
     orchestrator = AgentOrchestrator.getInstance();
-    
-    mockAgent1 = new MockAgent('agent1', 'Test Agent 1', ['capability1', 'shared'], 10);
-    mockAgent2 = new MockAgent('agent2', 'Test Agent 2', ['capability2', 'shared'], 5);
+
+    mockAgent1 = new MockAgent(
+      'agent1',
+      'Test Agent 1',
+      ['capability1', 'shared'],
+      10
+    );
+    mockAgent2 = new MockAgent(
+      'agent2',
+      'Test Agent 2',
+      ['capability2', 'shared'],
+      5
+    );
     mockAgent3 = new MockAgent('agent3', 'Test Agent 3', ['capability3'], 1);
   });
 
@@ -92,7 +102,7 @@ describe('AgentOrchestrator', () => {
 
     it('should throw error when registering duplicate agent IDs', () => {
       orchestrator.registerAgent(mockAgent1);
-      
+
       expect(() => {
         orchestrator.registerAgent(mockAgent1);
       }).toThrow("Agent with id 'agent1' is already registered");
@@ -141,12 +151,14 @@ describe('AgentOrchestrator', () => {
     });
 
     it('should get agents by capability', () => {
-      const sharedCapabilityAgents = orchestrator.getAgentsByCapability('shared');
+      const sharedCapabilityAgents =
+        orchestrator.getAgentsByCapability('shared');
       expect(sharedCapabilityAgents).toHaveLength(2);
       expect(sharedCapabilityAgents).toContain(mockAgent1);
       expect(sharedCapabilityAgents).toContain(mockAgent2);
 
-      const capability3Agents = orchestrator.getAgentsByCapability('capability3');
+      const capability3Agents =
+        orchestrator.getAgentsByCapability('capability3');
       expect(capability3Agents).toHaveLength(1);
       expect(capability3Agents).toContain(mockAgent3);
     });
@@ -157,10 +169,21 @@ describe('AgentOrchestrator', () => {
       user: null,
       sessionData: [],
       preferences: {
-        notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+        notifications: {
+          email: true,
+          push: true,
+          sms: false,
+          inApp: true,
+          frequency: 'immediate',
+        },
         dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
         privacy: { dataSharing: false, analytics: true, aiTraining: true },
-        accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+        accessibility: {
+          fontSize: 'medium',
+          highContrast: false,
+          reducedMotion: false,
+          screenReader: false,
+        },
       },
       historicalData: { sessions: [], analytics: [], interactions: [] },
     };
@@ -172,7 +195,7 @@ describe('AgentOrchestrator', () => {
 
     it('should execute agent successfully', async () => {
       const result = await orchestrator.executeAgent('agent1', mockContext);
-      
+
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
       expect(result.data.agentId).toBe('agent1');
@@ -181,24 +204,27 @@ describe('AgentOrchestrator', () => {
     });
 
     it('should return error for non-existent agent', async () => {
-      const result = await orchestrator.executeAgent('non-existent', mockContext);
-      
+      const result = await orchestrator.executeAgent(
+        'non-existent',
+        mockContext
+      );
+
       expect(result.success).toBe(false);
       expect(result.error).toBe("Agent 'non-existent' not found");
     });
 
     it('should handle agent execution errors', async () => {
       mockAgent1.setShouldFail(true);
-      
+
       const result = await orchestrator.executeAgent('agent1', mockContext);
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('Mock agent agent1 failed');
     });
 
     it('should enrich context with metadata', async () => {
       const result = await orchestrator.executeAgent('agent1', mockContext);
-      
+
       expect(result.success).toBe(true);
       expect(result.data.contextData.timestamp).toBeDefined();
       expect(result.metadata?.executionId).toBeDefined();
@@ -210,10 +236,21 @@ describe('AgentOrchestrator', () => {
       user: null,
       sessionData: [],
       preferences: {
-        notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+        notifications: {
+          email: true,
+          push: true,
+          sms: false,
+          inApp: true,
+          frequency: 'immediate',
+        },
         dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
         privacy: { dataSharing: false, analytics: true, aiTraining: true },
-        accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+        accessibility: {
+          fontSize: 'medium',
+          highContrast: false,
+          reducedMotion: false,
+          screenReader: false,
+        },
       },
       historicalData: { sessions: [], analytics: [], interactions: [] },
     };
@@ -232,16 +269,16 @@ describe('AgentOrchestrator', () => {
       ];
 
       const results = await orchestrator.executeAgentsParallel(requests);
-      
+
       expect(results).toHaveLength(3);
-      expect(results[0].success).toBe(true);
-      expect(results[1].success).toBe(true);
-      expect(results[2].success).toBe(true);
+      expect(results[0]!.success).toBe(true);
+      expect(results[1]!.success).toBe(true);
+      expect(results[2]!.success).toBe(true);
     });
 
     it('should handle mixed success/failure in parallel execution', async () => {
       mockAgent2.setShouldFail(true);
-      
+
       const requests = [
         { agentId: 'agent1', context: mockContext },
         { agentId: 'agent2', context: mockContext },
@@ -249,11 +286,11 @@ describe('AgentOrchestrator', () => {
       ];
 
       const results = await orchestrator.executeAgentsParallel(requests);
-      
+
       expect(results).toHaveLength(3);
-      expect(results[0].success).toBe(true);
-      expect(results[1].success).toBe(false);
-      expect(results[2].success).toBe(true);
+      expect(results[0]!.success).toBe(true);
+      expect(results[1]!.success).toBe(false);
+      expect(results[2]!.success).toBe(true);
     });
   });
 
@@ -262,10 +299,21 @@ describe('AgentOrchestrator', () => {
       user: null,
       sessionData: [],
       preferences: {
-        notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+        notifications: {
+          email: true,
+          push: true,
+          sms: false,
+          inApp: true,
+          frequency: 'immediate',
+        },
         dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
         privacy: { dataSharing: false, analytics: true, aiTraining: true },
-        accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+        accessibility: {
+          fontSize: 'medium',
+          highContrast: false,
+          reducedMotion: false,
+          screenReader: false,
+        },
       },
       historicalData: { sessions: [], analytics: [], interactions: [] },
     };
@@ -280,11 +328,15 @@ describe('AgentOrchestrator', () => {
       const sequence = [
         { agentId: 'agent1', context: mockContext },
         { agentId: 'agent2', context: mockContext, dependsOn: ['agent1'] },
-        { agentId: 'agent3', context: mockContext, dependsOn: ['agent1', 'agent2'] },
+        {
+          agentId: 'agent3',
+          context: mockContext,
+          dependsOn: ['agent1', 'agent2'],
+        },
       ];
 
       const results = await orchestrator.executeAgentSequence(sequence);
-      
+
       expect(results.size).toBe(3);
       expect(results.get('agent1')?.success).toBe(true);
       expect(results.get('agent2')?.success).toBe(true);
@@ -294,11 +346,15 @@ describe('AgentOrchestrator', () => {
     it('should handle dependency failures', async () => {
       const sequence = [
         { agentId: 'agent1', context: mockContext },
-        { agentId: 'agent2', context: mockContext, dependsOn: ['non-existent'] },
+        {
+          agentId: 'agent2',
+          context: mockContext,
+          dependsOn: ['non-existent'],
+        },
       ];
 
       const results = await orchestrator.executeAgentSequence(sequence);
-      
+
       expect(results.size).toBe(2);
       expect(results.get('agent1')?.success).toBe(true);
       expect(results.get('agent2')?.success).toBe(false);
@@ -307,14 +363,17 @@ describe('AgentOrchestrator', () => {
 
     it('should stop sequence on critical failure', async () => {
       mockAgent1.setShouldFail(true);
-      
+
       const sequence = [
-        { agentId: 'agent1', context: { ...mockContext, urgencyLevel: 'critical' as const } },
+        {
+          agentId: 'agent1',
+          context: { ...mockContext, urgencyLevel: 'critical' as const },
+        },
         { agentId: 'agent2', context: mockContext, dependsOn: ['agent1'] },
       ];
 
       const results = await orchestrator.executeAgentSequence(sequence);
-      
+
       expect(results.size).toBe(1);
       expect(results.get('agent1')?.success).toBe(false);
       expect(results.has('agent2')).toBe(false);
@@ -326,10 +385,21 @@ describe('AgentOrchestrator', () => {
       user: null,
       sessionData: [],
       preferences: {
-        notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+        notifications: {
+          email: true,
+          push: true,
+          sms: false,
+          inApp: true,
+          frequency: 'immediate',
+        },
         dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
         privacy: { dataSharing: false, analytics: true, aiTraining: true },
-        accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+        accessibility: {
+          fontSize: 'medium',
+          highContrast: false,
+          reducedMotion: false,
+          screenReader: false,
+        },
       },
       historicalData: { sessions: [], analytics: [], interactions: [] },
     };
@@ -341,28 +411,37 @@ describe('AgentOrchestrator', () => {
     });
 
     it('should execute agents by capability', async () => {
-      const results = await orchestrator.executeByCapability('shared', mockContext);
-      
+      const results = await orchestrator.executeByCapability(
+        'shared',
+        mockContext
+      );
+
       expect(results).toHaveLength(2);
-      expect(results[0].success).toBe(true);
-      expect(results[1].success).toBe(true);
+      expect(results[0]!.success).toBe(true);
+      expect(results[1]!.success).toBe(true);
     });
 
     it('should sort agents by priority', async () => {
-      const results = await orchestrator.executeByCapability('shared', mockContext);
-      
+      const results = await orchestrator.executeByCapability(
+        'shared',
+        mockContext
+      );
+
       // mockAgent1 has priority 10, mockAgent2 has priority 5
       // Results should be ordered by priority (higher first)
-      expect(results[0].data.agentId).toBe('agent1');
-      expect(results[1].data.agentId).toBe('agent2');
+      expect(results[0]!.data.agentId).toBe('agent1');
+      expect(results[1]!.data.agentId).toBe('agent2');
     });
 
     it('should return error for non-existent capability', async () => {
-      const results = await orchestrator.executeByCapability('non-existent', mockContext);
-      
+      const results = await orchestrator.executeByCapability(
+        'non-existent',
+        mockContext
+      );
+
       expect(results).toHaveLength(1);
-      expect(results[0].success).toBe(false);
-      expect(results[0].error).toContain('No agents found with capability');
+      expect(results[0]!.success).toBe(false);
+      expect(results[0]!.error).toContain('No agents found with capability');
     });
   });
 
@@ -375,7 +454,7 @@ describe('AgentOrchestrator', () => {
 
     it('should provide accurate statistics', () => {
       const stats = orchestrator.getStats();
-      
+
       expect(stats.totalAgents).toBe(3);
       expect(stats.queuedExecutions).toBe(0);
       expect(stats.activeExecutions).toBe(0);
@@ -387,7 +466,7 @@ describe('AgentOrchestrator', () => {
 
     it('should perform health check on all agents', async () => {
       const healthCheck = await orchestrator.healthCheck();
-      
+
       expect(healthCheck.overall).toBe('healthy');
       expect(healthCheck.agents['agent1']).toBe('healthy');
       expect(healthCheck.agents['agent2']).toBe('healthy');
@@ -396,9 +475,9 @@ describe('AgentOrchestrator', () => {
 
     it('should detect unhealthy agents', async () => {
       mockAgent2.setShouldFail(true);
-      
+
       const healthCheck = await orchestrator.healthCheck();
-      
+
       expect(healthCheck.overall).toBe('degraded');
       expect(healthCheck.agents['agent1']).toBe('healthy');
       expect(healthCheck.agents['agent2']).toBe('unhealthy');
@@ -413,17 +492,35 @@ describe('AgentOrchestrator', () => {
     });
 
     it('should respect max concurrent executions', async () => {
-      const slowAgent = new MockAgent('slow', 'Slow Agent', ['test'], 1, false, 50); // Reduced delay
+      const slowAgent = new MockAgent(
+        'slow',
+        'Slow Agent',
+        ['test'],
+        1,
+        false,
+        50
+      ); // Reduced delay
       orchestrator.registerAgent(slowAgent);
 
       const mockContext: AgentContext = {
         user: null,
         sessionData: [],
         preferences: {
-          notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+          notifications: {
+            email: true,
+            push: true,
+            sms: false,
+            inApp: true,
+            frequency: 'immediate',
+          },
           dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
           privacy: { dataSharing: false, analytics: true, aiTraining: true },
-          accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+          accessibility: {
+            fontSize: 'medium',
+            highContrast: false,
+            reducedMotion: false,
+            screenReader: false,
+          },
         },
         historicalData: { sessions: [], analytics: [], interactions: [] },
       };
@@ -434,7 +531,7 @@ describe('AgentOrchestrator', () => {
 
       // Wait for completion
       const results = await Promise.all([promise1, promise2]);
-      
+
       // Both should succeed
       expect(results[0].success).toBe(true);
       expect(results[1].success).toBe(true);
@@ -442,25 +539,36 @@ describe('AgentOrchestrator', () => {
 
     it('should clear queue', async () => {
       orchestrator.setMaxConcurrentExecutions(1); // Set to 1 to allow controlled testing
-      
+
       const mockContext: AgentContext = {
         user: null,
         sessionData: [],
         preferences: {
-          notifications: { email: true, push: true, sms: false, inApp: true, frequency: 'immediate' },
+          notifications: {
+            email: true,
+            push: true,
+            sms: false,
+            inApp: true,
+            frequency: 'immediate',
+          },
           dashboard: { layout: 'detailed', theme: 'light', widgets: [] },
           privacy: { dataSharing: false, analytics: true, aiTraining: true },
-          accessibility: { fontSize: 'medium', highContrast: false, reducedMotion: false, screenReader: false }
+          accessibility: {
+            fontSize: 'medium',
+            highContrast: false,
+            reducedMotion: false,
+            screenReader: false,
+          },
         },
         historicalData: { sessions: [], analytics: [], interactions: [] },
       };
 
       // This will be queued
       const promise = orchestrator.executeAgent('agent1', mockContext);
-      
+
       // Clear the queue
       orchestrator.clearQueue();
-      
+
       // The promise should reject
       await expect(promise).rejects.toThrow('Queue cleared');
     });
