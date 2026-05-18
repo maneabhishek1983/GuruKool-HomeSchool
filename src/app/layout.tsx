@@ -1,4 +1,5 @@
 import React from 'react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { SyncProvider } from '@/lib/syncContext';
 import { AuthProvider } from '@/lib/authContext';
 import { ThemeProvider } from '@/design-system/themes/theme-provider';
@@ -56,6 +57,7 @@ export default function RootLayout({
             </RoleBasedThemeProvider>
           </AuthProvider>
         </ThemeProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
